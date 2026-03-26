@@ -2,16 +2,12 @@ from __future__ import annotations
 
 import argparse
 
+from lightning import seed_everything
+
 from attacks import ATTACK_REGISTRY
-from utils import (
-    apply_transform_to_all,
-    create_benign_splits,
-    create_poison_base_splits,
-    load_dataset_tensors,
-    save_benign_splits,
-    save_poisoned_splits,
-    set_seed,
-)
+from utils import (apply_transform_to_all, create_benign_splits,
+                   create_poison_base_splits, load_dataset_tensors,
+                   save_benign_splits, save_poisoned_splits)
 
 
 def build_base_parser() -> argparse.ArgumentParser:
@@ -165,7 +161,7 @@ def run_poisoned(args: argparse.Namespace) -> str:
 
 def main():
     args = parse_args()
-    set_seed(args.seed)
+    seed_everything(args.seed)
 
     if args.benign or args.attack is None:
         output_dir = run_benign(args)

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import dataclass
 
 import torch
-from torchvision import datasets
+import torch.nn as nn
 import torchvision.transforms.v2 as transforms
+from torchvision import datasets
 
 SUPPORTED_DATASETS = ("cifar10", "cifar100", "gtsrb")
 BENIGN_METADATA = (
@@ -37,8 +39,17 @@ class PoisonBaseSplits:
     clean_test_labels: torch.Tensor
 
 
-def set_seed(seed: int) -> None:
-    torch.manual_seed(int(seed))
+def get_timestamp() -> str:
+    return time.strftime("%Y-%m-%d_%H-%M-%S")
+
+
+def float_eq(a: float, b: float, tol: float = 1e-9) -> bool:
+    return abs(float(a) - float(b)) < float(tol)
+
+
+def enable_dropout(module: nn.Module) -> None:
+    if isinstance(module, (nn.Dropout, nn.Dropout2d, nn.Dropout3d)):
+        module.train()
 
 
 def _tensorize_dataset(dataset) -> tuple[torch.Tensor, torch.Tensor]:

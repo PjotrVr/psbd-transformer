@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from PIL import Image
 import torch
 import torchvision.transforms.v2 as transforms
+from PIL import Image
 
 DEFAULT_ARGS = {
     "target_label": 0,
@@ -87,7 +87,6 @@ def namespace_to_config(args):
 def build_transform(
     config, image_shape: tuple[int, int] | None = None
 ) -> BadNetTransform:
-    del image_shape
     to_tensor = transforms.ToTensor()
     trigger = to_tensor(Image.open(str(config["trigger_path"])).convert("RGB"))
     mask = to_tensor(Image.open(str(config["mask_path"])).convert("L"))

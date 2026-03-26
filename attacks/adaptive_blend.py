@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from PIL import Image
 import torch
 import torchvision.transforms.v2 as transforms
+from PIL import Image
 
 DEFAULT_ARGS = {
     "target_label": 0,
