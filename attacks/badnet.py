@@ -39,7 +39,7 @@ ARGUMENTS = [
 ]
 
 
-class BadNetsTransform:
+class BadNetTransform:
     def __init__(
         self,
         target_label: int,
@@ -67,8 +67,11 @@ class BadNetsTransform:
 
 def add_parser_arguments(parser) -> None:
     for spec in ARGUMENTS:
+        flags = spec["flags"]
+        if not isinstance(flags, list):
+            continue
         parser.add_argument(
-            *spec["flags"],
+            *flags,
             type=spec["type"],
             default=spec["default"],
             help=spec["help"],
@@ -83,13 +86,13 @@ def namespace_to_config(args):
 
 def build_transform(
     config, image_shape: tuple[int, int] | None = None
-) -> BadNetsTransform:
+) -> BadNetTransform:
     del image_shape
     to_tensor = transforms.ToTensor()
     trigger = to_tensor(Image.open(str(config["trigger_path"])).convert("RGB"))
     mask = to_tensor(Image.open(str(config["mask_path"])).convert("L"))
 
-    return BadNetsTransform(
+    return BadNetTransform(
         target_label=int(config["target_label"]),
         trigger=trigger,
         mask=mask,

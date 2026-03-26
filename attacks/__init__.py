@@ -1,8 +1,18 @@
-from . import badnets, wanet
+from . import adaptive_blend, badnet, blend, lc, wanet
 
 ATTACK_REGISTRY = {
-    "badnets": badnets,
+    "adaptive_blend": adaptive_blend,
+    "badnet": badnet,
+    "blend": blend,
+    "lc": lc,
     "wanet": wanet,
 }
 
-__all__ = ["ATTACK_REGISTRY", "badnets", "wanet"]
+__all__ = [
+    "ATTACK_REGISTRY",
+    "adaptive_blend",
+    "badnet",
+    "blend",
+    "lc",
+    "wanet",
+]

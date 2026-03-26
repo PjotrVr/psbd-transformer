@@ -30,7 +30,7 @@ def build_base_parser() -> argparse.ArgumentParser:
         help="Root folder where processed tensors are written.",
     )
     parser.add_argument(
-        "--raw_data_root",
+        "--raw_data_dir",
         type=str,
         default="./raw_data",
         help="Root folder for torchvision raw dataset downloads.",
@@ -80,7 +80,7 @@ def parse_args() -> argparse.Namespace:
 def run_benign(args: argparse.Namespace) -> str:
     train_data, train_labels, test_data, test_labels = load_dataset_tensors(
         dataset_name=args.dataset,
-        raw_data_root=args.raw_data_root,
+        raw_data_dir=args.raw_data_dir,
     )
     splits = create_benign_splits(
         train_data=train_data,
@@ -99,7 +99,7 @@ def run_poisoned(args: argparse.Namespace) -> str:
 
     train_data, train_labels, test_data, test_labels = load_dataset_tensors(
         dataset_name=args.dataset,
-        raw_data_root=args.raw_data_root,
+        raw_data_dir=args.raw_data_dir,
     )
     benign_splits = create_benign_splits(
         train_data=train_data,

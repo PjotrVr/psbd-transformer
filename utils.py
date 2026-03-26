@@ -50,20 +50,20 @@ def _tensorize_dataset(dataset) -> tuple[torch.Tensor, torch.Tensor]:
 
 
 def load_dataset_tensors(
-    dataset_name: str, raw_data_root: str = "./raw_data"
+    dataset_name: str, raw_data_dir: str = "./raw_data"
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     dataset_name = dataset_name.lower()
 
     if dataset_name == "cifar10":
         transform = transforms.Compose([transforms.ToTensor()])
         train_set = datasets.CIFAR10(
-            root=os.path.join(raw_data_root, "cifar10"),
+            root=os.path.join(raw_data_dir, "cifar10"),
             train=True,
             download=True,
             transform=transform,
         )
         test_set = datasets.CIFAR10(
-            root=os.path.join(raw_data_root, "cifar10"),
+            root=os.path.join(raw_data_dir, "cifar10"),
             train=False,
             download=True,
             transform=transform,
@@ -71,13 +71,13 @@ def load_dataset_tensors(
     elif dataset_name == "cifar100":
         transform = transforms.Compose([transforms.ToTensor()])
         train_set = datasets.CIFAR100(
-            root=os.path.join(raw_data_root, "cifar100"),
+            root=os.path.join(raw_data_dir, "cifar100"),
             train=True,
             download=True,
             transform=transform,
         )
         test_set = datasets.CIFAR100(
-            root=os.path.join(raw_data_root, "cifar100"),
+            root=os.path.join(raw_data_dir, "cifar100"),
             train=False,
             download=True,
             transform=transform,
@@ -86,7 +86,7 @@ def load_dataset_tensors(
         transform = transforms.Compose(
             [transforms.Resize((32, 32)), transforms.ToTensor()]
         )
-        gtsrb_root = os.path.join(raw_data_root, "gtsrb")
+        gtsrb_root = os.path.join(raw_data_dir, "gtsrb")
         train_set = datasets.GTSRB(
             root=gtsrb_root, split="train", download=True, transform=transform
         )
