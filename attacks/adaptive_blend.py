@@ -7,6 +7,7 @@ import torchvision.transforms.v2 as transforms
 DEFAULT_ARGS = {
     "target_label": 0,
     "alpha": 0.2,
+    "cover_rate": 0.01,
     "trigger_path": "./triggers/badnet_patch_32.png",
     "pieces": 16,
     "mask_rate": 0.5,
@@ -24,6 +25,12 @@ ARGUMENTS = [
         "type": float,
         "default": DEFAULT_ARGS["alpha"],
         "help": "Blend strength for adaptive trigger injection.",
+    },
+    {
+        "flags": ["--cover_rate"],
+        "type": float,
+        "default": DEFAULT_ARGS["cover_rate"],
+        "help": "Ratio of cover samples (kept for parity with reference implementation).",
     },
     {
         "flags": ["--trigger_path"],
@@ -88,11 +95,13 @@ class AdaptiveBlendTransform:
         trigger: torch.Tensor,
         mask: torch.Tensor,
         alpha: float = 0.2,
+        cover_rate: float = 0.01,
     ):
         self.target_label = int(target_label)
         self.trigger = trigger
         self.mask = mask
         self.alpha = float(alpha)
+        self.cover_rate = float(cover_rate)
 
     def transform(
         self, imgs: torch.Tensor, labels: torch.Tensor
@@ -147,4 +156,5 @@ def build_transform(
         trigger=trigger,
         mask=mask,
         alpha=float(config["alpha"]),
+        cover_rate=float(config["cover_rate"]),
     )

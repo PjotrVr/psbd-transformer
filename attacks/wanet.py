@@ -6,8 +6,10 @@ import torch.nn.functional as F
 
 DEFAULT_ARGS = {
     "target_label": 0,
+    "cover_rate": 0.0,
     "noise_grid_size": 4,
     "warp_strength": 0.5,
+    "grid_rescale": 1.0,
 }
 
 ARGUMENTS = [
@@ -16,6 +18,12 @@ ARGUMENTS = [
         "type": int,
         "default": DEFAULT_ARGS["target_label"],
         "help": "Target label assigned to poisoned samples.",
+    },
+    {
+        "flags": ["--cover_rate"],
+        "type": float,
+        "default": DEFAULT_ARGS["cover_rate"],
+        "help": "Ratio of cover samples (kept for parity with reference implementation).",
     },
     {
         "flags": ["--noise_grid_size"],
@@ -29,6 +37,12 @@ ARGUMENTS = [
         "default": DEFAULT_ARGS["warp_strength"],
         "help": "Warp intensity for WaNet.",
     },
+    {
+        "flags": ["--grid_rescale"],
+        "type": float,
+        "default": DEFAULT_ARGS["grid_rescale"],
+        "help": "Rescale factor applied to final sampling grid.",
+    },
 ]
 
 
@@ -38,10 +52,13 @@ class WaNetTransform:
         target_label: int,
         image_height: int,
         image_width: int,
+        cover_rate: float = 0.0,
         noise_grid_size: int = 4,
         warp_strength: float = 0.5,
+        grid_rescale: float = 1.0,
     ):
         self.target_label = int(target_label)
+        self.cover_rate = float(cover_rate)
 
         noise = torch.rand(1, 2, noise_grid_size, noise_grid_size) * 2 - 1
         noise = F.interpolate(
@@ -59,7 +76,8 @@ class WaNetTransform:
         )
         base_grid = torch.stack([x_grid, y_grid], dim=-1).unsqueeze(0)
         self.grid = torch.clamp(
-            base_grid + noise * float(warp_strength) / float(image_height),
+            (base_grid + noise * float(warp_strength) / float(image_height))
+            * float(grid_rescale),
             -1,
             1,
         )
@@ -106,6 +124,8 @@ def build_transform(
         target_label=int(config["target_label"]),
         image_height=int(image_height),
         image_width=int(image_width),
+        cover_rate=float(config["cover_rate"]),
         noise_grid_size=int(config["noise_grid_size"]),
         warp_strength=float(config["warp_strength"]),
+        grid_rescale=float(config["grid_rescale"]),
     )
