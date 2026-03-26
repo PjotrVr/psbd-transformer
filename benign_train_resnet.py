@@ -232,6 +232,7 @@ def train_resnet_v2(
 
 def main() -> None:
     data_dir = os.path.join("preprocessed_data", "cifar10_benign")
+    train_max_epochs = int(os.environ.get("TRAIN_MAX_EPOCHS", "100"))
 
     train_data = load_tensor(data_dir, "train_data.pt")
     train_labels = load_tensor(data_dir, "train_labels.pt")
@@ -245,7 +246,7 @@ def main() -> None:
         momentum=0.9,
         weight_decay=5e-4,
         milestones=(50, 75),
-        max_epochs=100,
+        max_epochs=train_max_epochs,
         batch_size=128,
         num_workers=4,
         early_stopping_patience=15,

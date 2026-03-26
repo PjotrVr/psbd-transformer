@@ -5,40 +5,25 @@ import os
 
 import torch
 
-from benign_train_resnet import (
-    LightningResNetV2,
-    ResNetTrainConfig,
-    train_resnet_v2,
-)
+from benign_train_resnet import LightningResNetV2, ResNetTrainConfig, train_resnet_v2
 from metrics import evaluate_backdoor_pair, save_metrics_json
 from utils import load_tensor
 
 DATASET_NAME = "cifar10"
 POISON_RATE = 0.1
 TARGET_LABEL = 0
-ATTACK_NAME_CANDIDATES = ("badnet", "badnets")
+ATTACK_NAME = "wanet"
 
 
 def resolve_data_dir() -> str:
-    for attack_name in ATTACK_NAME_CANDIDATES:
-        candidate = os.path.join(
-            "preprocessed_data",
-            f"{DATASET_NAME}_{attack_name}_poison_rate={POISON_RATE}_target={TARGET_LABEL}",
-        )
-        if os.path.isdir(candidate):
-            return candidate
+    candidate = os.path.join(
+        "preprocessed_data",
+        f"{DATASET_NAME}_{ATTACK_NAME}_poison_rate={POISON_RATE}_target={TARGET_LABEL}",
+    )
+    if os.path.isdir(candidate):
+        return candidate
     raise FileNotFoundError(
-        "Could not find poisoned CIFAR10 data folder. "
-        "Expected one of: "
-        + ", ".join(
-            [
-                os.path.join(
-                    "preprocessed_data",
-                    f"{DATASET_NAME}_{attack}_poison_rate={POISON_RATE}_target={TARGET_LABEL}",
-                )
-                for attack in ATTACK_NAME_CANDIDATES
-            ]
-        )
+        "Could not find poisoned CIFAR10 WaNet data folder: " + candidate
     )
 
 
@@ -64,7 +49,6 @@ def main() -> None:
     train_data = torch.cat([clean_train_data, backdoor_train_data], dim=0)
     train_labels = torch.cat([clean_train_labels, backdoor_train_labels], dim=0)
 
-    # Keep validation clean for model selection, and report both clean and backdoor test.
     config = ResNetTrainConfig(
         learning_rate=0.1,
         momentum=0.9,
@@ -85,7 +69,7 @@ def main() -> None:
         val_labels=clean_val_labels,
         test_data=clean_test_data,
         test_labels=clean_test_labels,
-        run_name_prefix="badnet_resnet18v2_cifar10_clean_test",
+        run_name_prefix="wanet_resnet18v2_cifar10_clean_test",
         num_classes=10,
         config=config,
     )
