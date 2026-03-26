@@ -59,14 +59,16 @@ class WaNetTransform:
         self.target_label = int(target_label)
         self.cover_rate = float(cover_rate)
 
-        noise = torch.rand(1, 2, noise_grid_size, noise_grid_size) * 2 - 1
-        noise = F.interpolate(
-            noise,
+        ins = torch.rand(1, 2, noise_grid_size, noise_grid_size) * 2 - 1
+        # Match reference WaNet behavior: normalize local noise magnitude before upsampling.
+        ins = ins / torch.mean(torch.abs(ins))
+        noise_grid = F.interpolate(
+            ins,
             size=(image_height, image_width),
             mode="bicubic",
             align_corners=True,
         )
-        noise = noise.permute(0, 2, 3, 1)
+        noise_grid = noise_grid.permute(0, 2, 3, 1)
 
         y_grid, x_grid = torch.meshgrid(
             torch.linspace(-1, 1, image_height),
@@ -75,7 +77,7 @@ class WaNetTransform:
         )
         base_grid = torch.stack([x_grid, y_grid], dim=-1).unsqueeze(0)
         self.grid = torch.clamp(
-            (base_grid + noise * float(warp_strength) / float(image_height))
+            (base_grid + noise_grid * float(warp_strength) / float(image_height))
             * float(grid_rescale),
             -1,
             1,
