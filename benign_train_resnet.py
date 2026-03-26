@@ -13,7 +13,7 @@ from lightning.pytorch.loggers import CSVLogger
 from torch.utils.data import DataLoader, TensorDataset
 
 from models import resnet18_v2
-from utils import get_timestamp
+from utils import get_timestamp, load_tensor
 
 
 @dataclass
@@ -228,10 +228,6 @@ def train_resnet_v2(
         json.dump(result, handle, indent=2)
 
     return result
-
-
-def load_tensor(data_dir: str, name: str) -> torch.Tensor:
-    return torch.load(os.path.join(data_dir, name), map_location="cpu")
 
 
 def main() -> None:

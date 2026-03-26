@@ -52,6 +52,15 @@ def enable_dropout(module: nn.Module) -> None:
         module.train()
 
 
+def load_tensor(data_dir: str, name: str, mmap=True, weights_only=True) -> torch.Tensor:
+    return torch.load(
+        os.path.join(data_dir, name),
+        map_location="cpu",
+        mmap=mmap,
+        weights_only=weights_only,
+    )
+
+
 def _tensorize_dataset(dataset) -> tuple[torch.Tensor, torch.Tensor]:
     data = torch.stack([dataset[i][0] for i in range(len(dataset))])
     labels = torch.tensor(

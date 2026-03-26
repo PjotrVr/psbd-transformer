@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import json
 import os
 
 import torch
 
-from benign_train_resnet import (LightningResNetV2, ResNetTrainConfig,
-                                 create_trainer, tensor_loader,
-                                 train_resnet_v2)
+from benign_train_resnet import (
+    LightningResNetV2,
+    ResNetTrainConfig,
+    train_resnet_v2,
+)
+from metrics import evaluate_backdoor_pair, save_metrics_json
+from utils import load_tensor
 
 DATASET_NAME = "cifar10"
 POISON_RATE = 0.1
@@ -37,10 +42,6 @@ def resolve_data_dir() -> str:
     )
 
 
-def load_tensor(data_dir: str, name: str) -> torch.Tensor:
-    return torch.load(os.path.join(data_dir, name), map_location="cpu")
-
-
 def main() -> None:
     data_dir = resolve_data_dir()
 
@@ -51,6 +52,8 @@ def main() -> None:
 
     clean_val_data = load_tensor(data_dir, "clean_val_data.pt")
     clean_val_labels = load_tensor(data_dir, "clean_val_labels.pt")
+    backdoor_val_data = load_tensor(data_dir, "backdoor_val_data.pt")
+    backdoor_val_labels = load_tensor(data_dir, "backdoor_val_labels.pt")
 
     clean_test_data = load_tensor(data_dir, "clean_test_data.pt")
     clean_test_labels = load_tensor(data_dir, "clean_test_labels.pt")
@@ -86,22 +89,49 @@ def main() -> None:
         config=config,
     )
 
-    backdoor_loader = tensor_loader(
-        backdoor_test_data,
-        backdoor_test_labels,
+    model = LightningResNetV2.load_from_checkpoint(clean_result["best_checkpoint_path"])
+
+    val_metrics = evaluate_backdoor_pair(
+        model=model,
+        clean_data=clean_val_data,
+        clean_labels=clean_val_labels,
+        backdoor_data=backdoor_val_data,
+        backdoor_labels=backdoor_val_labels,
         batch_size=config.batch_size,
-        shuffle=False,
-        num_workers=config.num_workers,
+    )
+    test_metrics = evaluate_backdoor_pair(
+        model=model,
+        clean_data=clean_test_data,
+        clean_labels=clean_test_labels,
+        backdoor_data=backdoor_test_data,
+        backdoor_labels=backdoor_test_labels,
+        batch_size=config.batch_size,
     )
 
-    model = LightningResNetV2.load_from_checkpoint(clean_result["best_checkpoint_path"])
-    trainer = create_trainer(run_dir=clean_result["run_dir"], config=config)[0]
-    backdoor_metrics = trainer.test(model, dataloaders=backdoor_loader, verbose=True)[0]
+    run_metrics = {
+        "run_dir": clean_result["run_dir"],
+        "best_checkpoint_path": clean_result["best_checkpoint_path"],
+        "val_metrics": val_metrics,
+        "test_metrics": test_metrics,
+        "trainer_test_metrics": clean_result["test_metrics"],
+    }
+
+    save_metrics_json(
+        run_metrics,
+        os.path.join(clean_result["run_dir"], "backdoor_metrics.json"),
+    )
 
     print("Run dir:", clean_result["run_dir"])
     print("Best checkpoint:", clean_result["best_checkpoint_path"])
-    print("Clean test metrics:", clean_result["test_metrics"])
-    print("Backdoor test metrics:", backdoor_metrics)
+    print("Validation metrics:", val_metrics)
+    print("Test metrics:", test_metrics)
+
+    with open(
+        os.path.join(clean_result["run_dir"], "summary.json"),
+        "w",
+        encoding="utf-8",
+    ) as handle:
+        json.dump({**clean_result, "backdoor_metrics": run_metrics}, handle, indent=2)
 
 
 if __name__ == "__main__":
