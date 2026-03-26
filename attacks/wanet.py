@@ -91,7 +91,18 @@ class WaNetTransform:
 
         grid = self.grid.to(poisoned_imgs.device).repeat(len(poisoned_imgs), 1, 1, 1)
         poisoned_imgs = F.grid_sample(poisoned_imgs, grid, align_corners=True)
+
+        num_samples = int(labels.shape[0])
+        num_cover = int(round(float(self.cover_rate) * float(num_samples)))
+        num_cover = max(0, min(num_samples, num_cover))
+
         poisoned_labels.fill_(self.target_label)
+        if num_cover > 0:
+            cover_indices = torch.randperm(num_samples, device=poisoned_labels.device)[
+                :num_cover
+            ]
+            poisoned_labels[cover_indices] = labels[cover_indices]
+
         return poisoned_imgs, poisoned_labels
 
 
