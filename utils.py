@@ -47,7 +47,7 @@ def float_eq(a: float, b: float, tol: float = 1e-9) -> bool:
     return abs(float(a) - float(b)) < float(tol)
 
 
-def enable_dropout(module: nn.Module) -> None:
+def enable_dropout(module: nn.Module):
     if isinstance(module, (nn.Dropout, nn.Dropout2d, nn.Dropout3d)):
         module.train()
 

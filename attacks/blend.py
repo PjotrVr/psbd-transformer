@@ -50,7 +50,7 @@ class BlendTransform:
         return poisoned_imgs, poisoned_labels
 
 
-def add_parser_arguments(parser) -> None:
+def add_parser_arguments(parser):
     for spec in ARGUMENTS:
         flags = spec["flags"]
         if not isinstance(flags, list):

@@ -5,12 +5,13 @@ import os
 
 import torch
 import torch.nn.functional as F
+from torch.utils.data import DataLoader
 
 
+@torch.no_grad()
 def predict_labels(
     model,
-    data: torch.Tensor,
-    batch_size: int = 256,
+    loader: DataLoader,
     device: str | None = None,
 ) -> torch.Tensor:
     if device is None:
@@ -20,23 +21,22 @@ def predict_labels(
     model.eval()
 
     predictions = []
-    with torch.no_grad():
-        total = int(data.shape[0])
-        for start in range(0, total, int(batch_size)):
-            end = min(start + int(batch_size), total)
-            batch = data[start:end].to(device)
-            logits = model(batch)
-            batch_predictions = torch.argmax(logits, dim=1)
-            predictions.append(batch_predictions.cpu())
+    for batch in loader:
+        batch_data = batch[0].to(device)
+        logits = model(batch_data)
+        batch_predictions = torch.argmax(logits, dim=1)
+        predictions.append(batch_predictions.cpu())
+
+    if len(predictions) == 0:
+        return torch.empty(0, dtype=torch.long)
 
     return torch.cat(predictions, dim=0)
 
 
+@torch.no_grad()
 def evaluate_accuracy_and_loss(
     model,
-    data: torch.Tensor,
-    labels: torch.Tensor,
-    batch_size: int = 256,
+    loader: DataLoader,
     device: str | None = None,
 ) -> dict:
     if device is None:
@@ -47,20 +47,19 @@ def evaluate_accuracy_and_loss(
 
     total_loss = 0.0
     total_correct = 0
-    total_count = int(labels.numel())
+    total_count = 0
 
-    with torch.no_grad():
-        for start in range(0, total_count, int(batch_size)):
-            end = min(start + int(batch_size), total_count)
-            batch_data = data[start:end].to(device)
-            batch_labels = labels[start:end].to(device)
+    for batch in loader:
+        batch_data = batch[0].to(device)
+        batch_labels = batch[1].to(device)
 
-            logits = model(batch_data)
-            loss = F.cross_entropy(logits, batch_labels, reduction="sum")
-            batch_predictions = torch.argmax(logits, dim=1)
+        logits = model(batch_data)
+        loss = F.cross_entropy(logits, batch_labels, reduction="sum")
+        batch_predictions = torch.argmax(logits, dim=1)
 
-            total_loss += float(loss.item())
-            total_correct += int((batch_predictions == batch_labels).sum().item())
+        total_loss += float(loss.item())
+        total_correct += int((batch_predictions == batch_labels).sum().item())
+        total_count += int(batch_labels.numel())
 
     if total_count == 0:
         return {"loss": 0.0, "accuracy": 0.0}
@@ -106,33 +105,38 @@ def compute_targeted_asr(
 
 def evaluate_backdoor_pair(
     model,
-    clean_data: torch.Tensor,
-    clean_labels: torch.Tensor,
-    backdoor_data: torch.Tensor,
-    backdoor_labels: torch.Tensor,
-    batch_size: int = 256,
+    clean_loader: DataLoader,
+    backdoor_loader: DataLoader,
     device: str | None = None,
 ) -> dict:
+    clean_labels_list = [batch[1].cpu() for batch in clean_loader]
+    backdoor_labels_list = [batch[1].cpu() for batch in backdoor_loader]
+
+    if len(clean_labels_list) == 0:
+        clean_labels = torch.empty(0, dtype=torch.long)
+    else:
+        clean_labels = torch.cat(clean_labels_list, dim=0)
+
+    if len(backdoor_labels_list) == 0:
+        backdoor_labels = torch.empty(0, dtype=torch.long)
+    else:
+        backdoor_labels = torch.cat(backdoor_labels_list, dim=0)
+
     clean_metrics = evaluate_accuracy_and_loss(
         model=model,
-        data=clean_data,
-        labels=clean_labels,
-        batch_size=batch_size,
+        loader=clean_loader,
         device=device,
     )
 
     backdoor_metrics = evaluate_accuracy_and_loss(
         model=model,
-        data=backdoor_data,
-        labels=backdoor_labels,
-        batch_size=batch_size,
+        loader=backdoor_loader,
         device=device,
     )
 
     backdoor_predictions = predict_labels(
         model=model,
-        data=backdoor_data,
-        batch_size=batch_size,
+        loader=backdoor_loader,
         device=device,
     )
 
@@ -154,7 +158,7 @@ def evaluate_backdoor_pair(
     return result
 
 
-def save_metrics_json(metrics: dict, output_path: str) -> None:
+def save_metrics_json(metrics: dict, output_path: str):
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as handle:
         json.dump(metrics, handle, indent=2)

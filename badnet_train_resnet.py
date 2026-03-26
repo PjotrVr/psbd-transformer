@@ -4,6 +4,7 @@ import json
 import os
 
 import torch
+from torch.utils.data import DataLoader, TensorDataset
 
 from benign_train_resnet import (
     LightningResNetV2,
@@ -42,7 +43,7 @@ def resolve_data_dir() -> str:
     )
 
 
-def main() -> None:
+def main():
     data_dir = resolve_data_dir()
     train_max_epochs = int(os.environ.get("TRAIN_MAX_EPOCHS", "100"))
 
@@ -92,21 +93,44 @@ def main() -> None:
 
     model = LightningResNetV2.load_from_checkpoint(clean_result["best_checkpoint_path"])
 
+    clean_val_loader = DataLoader(
+        TensorDataset(clean_val_data, clean_val_labels),
+        batch_size=config.batch_size,
+        shuffle=False,
+        num_workers=config.num_workers,
+        pin_memory=True,
+    )
+    backdoor_val_loader = DataLoader(
+        TensorDataset(backdoor_val_data, backdoor_val_labels),
+        batch_size=config.batch_size,
+        shuffle=False,
+        num_workers=config.num_workers,
+        pin_memory=True,
+    )
+    clean_test_loader = DataLoader(
+        TensorDataset(clean_test_data, clean_test_labels),
+        batch_size=config.batch_size,
+        shuffle=False,
+        num_workers=config.num_workers,
+        pin_memory=True,
+    )
+    backdoor_test_loader = DataLoader(
+        TensorDataset(backdoor_test_data, backdoor_test_labels),
+        batch_size=config.batch_size,
+        shuffle=False,
+        num_workers=config.num_workers,
+        pin_memory=True,
+    )
+
     val_metrics = evaluate_backdoor_pair(
         model=model,
-        clean_data=clean_val_data,
-        clean_labels=clean_val_labels,
-        backdoor_data=backdoor_val_data,
-        backdoor_labels=backdoor_val_labels,
-        batch_size=config.batch_size,
+        clean_loader=clean_val_loader,
+        backdoor_loader=backdoor_val_loader,
     )
     test_metrics = evaluate_backdoor_pair(
         model=model,
-        clean_data=clean_test_data,
-        clean_labels=clean_test_labels,
-        backdoor_data=backdoor_test_data,
-        backdoor_labels=backdoor_test_labels,
-        batch_size=config.batch_size,
+        clean_loader=clean_test_loader,
+        backdoor_loader=backdoor_test_loader,
     )
 
     run_metrics = {

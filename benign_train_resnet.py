@@ -230,7 +230,7 @@ def train_resnet_v2(
     return result
 
 
-def main() -> None:
+def main():
     data_dir = os.path.join("preprocessed_data", "cifar10_benign")
     train_max_epochs = int(os.environ.get("TRAIN_MAX_EPOCHS", "100"))
 

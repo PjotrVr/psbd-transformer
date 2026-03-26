@@ -237,7 +237,7 @@ def evaluate_psbd(
     }
 
 
-def main() -> None:
+def main():
     data_dir = resolve_poison_data_dir()
     checkpoint_path = resolve_checkpoint_path()
 
