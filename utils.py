@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torchvision.transforms.v2 as transforms
 from torchvision import datasets
+from torch.utils.data import DataLoader, TensorDataset
 
 SUPPORTED_DATASETS = ("cifar10", "cifar100", "gtsrb")
 BENIGN_METADATA = (
@@ -58,6 +59,23 @@ def load_tensor(data_dir: str, name: str, mmap=True, weights_only=True) -> torch
         map_location="cpu",
         mmap=mmap,
         weights_only=weights_only,
+    )
+
+
+def tensor_loader(
+    data: torch.Tensor,
+    labels: torch.Tensor,
+    batch_size: int,
+    shuffle: bool,
+    num_workers: int,
+) -> DataLoader:
+    dataset = TensorDataset(data, labels)
+    return DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers,
+        pin_memory=True,
     )
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import os
 from dataclasses import dataclass
@@ -10,10 +11,9 @@ import torch.nn.functional as F
 from lightning import seed_everything
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger
-from torch.utils.data import DataLoader, TensorDataset
 
 from models import resnet18_v2
-from utils import get_timestamp, load_tensor
+from utils import get_timestamp, load_tensor, tensor_loader
 
 
 @dataclass
@@ -30,7 +30,7 @@ class ResNetTrainConfig:
     precision: str = "16-mixed"
 
 
-class LightningResNetV2(L.LightningModule):
+class LResNetV2(L.LightningModule):
     def __init__(
         self,
         num_classes: int,
@@ -64,10 +64,26 @@ class LightningResNetV2(L.LightningModule):
         self.log("train_acc", accuracy, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch, batch_idx, dataloader_idx: int = 0):
         loss, accuracy = self.shared_step(batch)
-        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val_acc", accuracy, on_step=False, on_epoch=True, prog_bar=True)
+        if int(dataloader_idx) == 0:
+            self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+            self.log("val_acc", accuracy, on_step=False, on_epoch=True, prog_bar=True)
+        else:
+            self.log(
+                "val_backdoor_loss",
+                loss,
+                on_step=False,
+                on_epoch=True,
+                prog_bar=True,
+            )
+            self.log(
+                "val_backdoor_acc",
+                accuracy,
+                on_step=False,
+                on_epoch=True,
+                prog_bar=True,
+            )
 
     def test_step(self, batch, batch_idx):
         loss, accuracy = self.shared_step(batch)
@@ -92,23 +108,6 @@ class LightningResNetV2(L.LightningModule):
                 "frequency": 1,
             },
         }
-
-
-def tensor_loader(
-    data: torch.Tensor,
-    labels: torch.Tensor,
-    batch_size: int,
-    shuffle: bool,
-    num_workers: int,
-) -> DataLoader:
-    dataset = TensorDataset(data, labels)
-    return DataLoader(
-        dataset,
-        batch_size=batch_size,
-        shuffle=shuffle,
-        num_workers=num_workers,
-        pin_memory=True,
-    )
 
 
 def create_trainer(
@@ -154,6 +153,8 @@ def train_resnet_v2(
     test_labels: torch.Tensor,
     run_name_prefix: str,
     num_classes: int = 10,
+    backdoor_val_data: torch.Tensor | None = None,
+    backdoor_val_labels: torch.Tensor | None = None,
     config: ResNetTrainConfig | None = None,
 ) -> dict:
     if config is None:
@@ -187,7 +188,7 @@ def train_resnet_v2(
         num_workers=config.num_workers,
     )
 
-    model = LightningResNetV2(
+    model = LResNetV2(
         num_classes=num_classes,
         learning_rate=config.learning_rate,
         momentum=config.momentum,
@@ -195,13 +196,28 @@ def train_resnet_v2(
         milestones=config.milestones,
     )
 
+    val_dataloaders: list = [val_loader]
+    if (backdoor_val_data is not None) and (backdoor_val_labels is not None):
+        backdoor_val_loader = tensor_loader(
+            backdoor_val_data,
+            backdoor_val_labels,
+            batch_size=config.batch_size,
+            shuffle=False,
+            num_workers=config.num_workers,
+        )
+        val_dataloaders.append(backdoor_val_loader)
+
     trainer, checkpoint_callback = create_trainer(run_dir=run_dir, config=config)
-    trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+    trainer.fit(
+        model,
+        train_dataloaders=train_loader,
+        val_dataloaders=val_dataloaders,
+    )
 
     best_checkpoint_path = (
         checkpoint_callback.best_model_path or checkpoint_callback.last_model_path
     )
-    best_model = LightningResNetV2.load_from_checkpoint(best_checkpoint_path)
+    best_model = LResNetV2.load_from_checkpoint(best_checkpoint_path)
 
     test_metrics = trainer.test(best_model, dataloaders=test_loader, verbose=True)[0]
 
@@ -231,8 +247,15 @@ def train_resnet_v2(
 
 
 def main():
-    data_dir = os.path.join("preprocessed_data", "cifar10_benign")
-    train_max_epochs = int(os.environ.get("TRAIN_MAX_EPOCHS", "100"))
+    parser = argparse.ArgumentParser(description="Train ResNet18V2 on benign data")
+    parser.add_argument("--dataset-name", default="cifar10", type=str)
+    parser.add_argument("--max-epochs", default=100, type=int)
+    parser.add_argument("--batch-size", default=128, type=int)
+    parser.add_argument("--num-workers", default=2, type=int)
+    parser.add_argument("--early-stopping-patience", default=15, type=int)
+    args = parser.parse_args()
+
+    data_dir = os.path.join("preprocessed_data", f"{args.dataset_name}_benign")
 
     train_data = load_tensor(data_dir, "train_data.pt")
     train_labels = load_tensor(data_dir, "train_labels.pt")
@@ -240,16 +263,16 @@ def main():
     val_labels = load_tensor(data_dir, "val_labels.pt")
     test_data = load_tensor(data_dir, "test_data.pt")
     test_labels = load_tensor(data_dir, "test_labels.pt")
-
+    num_classes = len(torch.unique(train_labels))
     config = ResNetTrainConfig(
         learning_rate=0.1,
         momentum=0.9,
         weight_decay=5e-4,
         milestones=(50, 75),
-        max_epochs=train_max_epochs,
-        batch_size=128,
-        num_workers=4,
-        early_stopping_patience=15,
+        max_epochs=args.max_epochs,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+        early_stopping_patience=args.early_stopping_patience,
         seed=0,
         precision="16-mixed",
     )
@@ -261,8 +284,8 @@ def main():
         val_labels=val_labels,
         test_data=test_data,
         test_labels=test_labels,
-        run_name_prefix="benign_resnet18v2_cifar10",
-        num_classes=10,
+        run_name_prefix=f"benign_resnet18v2_{args.dataset_name}",
+        num_classes=num_classes,
         config=config,
     )
 

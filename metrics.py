@@ -2,10 +2,15 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Sequence
+from typing import cast
 
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+
+
+LoaderSpec = DataLoader | Sequence[DataLoader] | dict[str, DataLoader]
 
 
 @torch.no_grad()
@@ -155,6 +160,64 @@ def evaluate_backdoor_pair(
         "changed_label_count": targeted["changed_label_count"],
         "unchanged_label_count": targeted["unchanged_label_count"],
     }
+    return result
+
+
+def resolve_clean_backdoor_loaders(
+    loader_spec: LoaderSpec,
+) -> tuple[DataLoader, DataLoader | None]:
+    if isinstance(loader_spec, DataLoader):
+        return loader_spec, None
+
+    if isinstance(loader_spec, dict):
+        loader_dict = cast(dict[str, DataLoader], loader_spec)
+        if "clean" not in loader_dict:
+            raise ValueError("loader_spec dict must contain key 'clean'")
+        clean_loader = loader_dict["clean"]
+        backdoor_loader = loader_dict.get("backdoor")
+        return clean_loader, backdoor_loader
+
+    if isinstance(loader_spec, Sequence):
+        if len(loader_spec) == 0:
+            raise ValueError("loader_spec sequence cannot be empty")
+        if len(loader_spec) == 1:
+            return loader_spec[0], None
+        return loader_spec[0], loader_spec[1]
+
+    raise TypeError(
+        "loader_spec must be DataLoader, a sequence of DataLoaders, or a dict with keys 'clean' and optional 'backdoor'"
+    )
+
+
+def evaluate_loader_spec(
+    model,
+    loader_spec: LoaderSpec,
+    device: str | None = None,
+) -> dict:
+    clean_loader, backdoor_loader = resolve_clean_backdoor_loaders(loader_spec)
+
+    clean_metrics = evaluate_accuracy_and_loss(
+        model=model,
+        loader=clean_loader,
+        device=device,
+    )
+
+    result = {
+        "has_backdoor_loader": backdoor_loader is not None,
+        "clean_accuracy": clean_metrics["accuracy"],
+        "clean_loss": clean_metrics["loss"],
+    }
+
+    if backdoor_loader is not None:
+        result.update(
+            evaluate_backdoor_pair(
+                model=model,
+                clean_loader=clean_loader,
+                backdoor_loader=backdoor_loader,
+                device=device,
+            )
+        )
+
     return result
 
 

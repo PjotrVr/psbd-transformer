@@ -3,15 +3,34 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-export TRAIN_MAX_EPOCHS=3
+datasets=(cifar10 cifar100 gtsrb)
 
-echo "[1/3] Training benign ResNet18-v2 (CIFAR10) for smoke run..."
-python benign_train_resnet.py
+total=$(( ${#datasets[@]} * 3 ))
+step=1
 
-echo "[2/3] Training badnet ResNet18-v2 (CIFAR10) for smoke run..."
-python badnet_train_resnet.py
+for dataset in "${datasets[@]}"; do
+	echo "[$step/$total] Smoke: benign ResNet18-v2 ($dataset), max_epochs=5, patience=5..."
+	python benign_train_resnet.py \
+		--dataset-name "$dataset" \
+		--max-epochs 5 \
+		--early-stopping-patience 5
+	step=$((step + 1))
 
-echo "[3/3] Training wanet ResNet18-v2 (CIFAR10) for smoke run..."
-python wanet_train_resnet.py
+	echo "[$step/$total] Smoke: badnet ResNet18-v2 ($dataset), max_epochs=5, patience=5, PSBD on..."
+	python badnet_train_resnet.py \
+		--dataset-name "$dataset" \
+		--max-epochs 5 \
+		--early-stopping-patience 5 \
+		--run-psbd
+	step=$((step + 1))
 
-echo "Smoke run complete."
+	echo "[$step/$total] Smoke: wanet ResNet18-v2 ($dataset), max_epochs=5, patience=5, PSBD on..."
+	python wanet_train_resnet.py \
+		--dataset-name "$dataset" \
+		--max-epochs 5 \
+		--early-stopping-patience 5 \
+		--run-psbd
+	step=$((step + 1))
+done
+
+echo "Smoke run complete for: ${datasets[*]}"

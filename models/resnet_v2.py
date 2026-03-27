@@ -74,3 +74,128 @@ def resnet18_v2(num_classes: int = 10, in_channels: int = 3) -> ResNetV2:
     return ResNetV2(
         PreActBlock, [2, 2, 2, 2], num_classes=num_classes, in_channels=in_channels
     )
+
+
+class ResNetV2PSBD(ResNetV2):
+    def __init__(
+        self,
+        block,
+        num_blocks,
+        num_classes: int = 10,
+        in_channels: int = 3,
+        psbd_dropout_rate: float = 0.0,
+        use_inference_dropout: bool = False,
+    ):
+        super().__init__(
+            block=block,
+            num_blocks=num_blocks,
+            num_classes=num_classes,
+            in_channels=in_channels,
+        )
+        self.psbd_dropout_rate = float(psbd_dropout_rate)
+        self.use_inference_dropout = bool(use_inference_dropout)
+
+    def set_inference_dropout(
+        self, enabled: bool, dropout_rate: float | None = None
+    ) -> None:
+        self.use_inference_dropout = bool(enabled)
+        if dropout_rate is not None:
+            self.psbd_dropout_rate = float(dropout_rate)
+
+    def _drop2d(self, x: torch.Tensor) -> torch.Tensor:
+        if self.training:
+            return x
+        if not self.use_inference_dropout or self.psbd_dropout_rate <= 0.0:
+            return x
+        return F.dropout2d(x, p=self.psbd_dropout_rate, training=True)
+
+    def _drop1d(self, x: torch.Tensor) -> torch.Tensor:
+        if self.training:
+            return x
+        if not self.use_inference_dropout or self.psbd_dropout_rate <= 0.0:
+            return x
+        return F.dropout(x, p=self.psbd_dropout_rate, training=True)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = self.conv1(x)
+        out = self._drop2d(out)
+
+        out = self.layer1(out)
+        out = self._drop2d(out)
+
+        out = self.layer2(out)
+        out = self._drop2d(out)
+
+        out = self.layer3(out)
+        out = self._drop2d(out)
+
+        out = self.layer4(out)
+        out = self._drop2d(out)
+
+        out = F.relu(self.bn(out))
+        out = F.avg_pool2d(out, 4)
+        out = out.view(out.size(0), -1)
+        out = self._drop1d(out)
+        out = self.fc(out)
+        return out
+
+    @classmethod
+    def from_checkpoint(
+        cls,
+        checkpoint_path: str,
+        block,
+        num_blocks,
+        num_classes: int = 10,
+        in_channels: int = 3,
+        map_location: str | torch.device = "cpu",
+        strict: bool = True,
+    ):
+        checkpoint = torch.load(
+            checkpoint_path,
+            map_location=map_location,
+            weights_only=False,
+        )
+        state = checkpoint["state_dict"] if "state_dict" in checkpoint else checkpoint
+
+        cleaned_state = {}
+        for key, value in state.items():
+            if key.startswith("model."):
+                cleaned_state[key[len("model.") :]] = value
+            else:
+                cleaned_state[key] = value
+
+        model = cls(
+            block=block,
+            num_blocks=num_blocks,
+            num_classes=num_classes,
+            in_channels=in_channels,
+        )
+        model.load_state_dict(cleaned_state, strict=strict)
+        return model
+
+
+def resnet18_v2_psbd(num_classes: int = 10, in_channels: int = 3) -> ResNetV2PSBD:
+    return ResNetV2PSBD(
+        block=PreActBlock,
+        num_blocks=[2, 2, 2, 2],
+        num_classes=num_classes,
+        in_channels=in_channels,
+    )
+
+
+class ResNet18V2PSBD(ResNetV2PSBD):
+    def __init__(
+        self,
+        num_classes: int = 10,
+        in_channels: int = 3,
+        psbd_dropout_rate: float = 0.0,
+        use_inference_dropout: bool = False,
+    ):
+        super().__init__(
+            block=PreActBlock,
+            num_blocks=[2, 2, 2, 2],
+            num_classes=num_classes,
+            in_channels=in_channels,
+            psbd_dropout_rate=psbd_dropout_rate,
+            use_inference_dropout=use_inference_dropout,
+        )

@@ -1,130 +1,189 @@
 from __future__ import annotations
 
-import glob
+import argparse
 import json
 import os
 
 import torch
 import torch.nn.functional as F
+from torch import nn
 
-from benign_train_resnet import LightningResNetV2
-from defenses import DefenseBase
-from utils import get_timestamp, load_tensor
+from torch.utils.data import DataLoader
 
-DATASET_NAME = "cifar10"
-ATTACK_NAME = "badnet"
-POISON_RATE = 0.1
-TARGET_LABEL = 0
-
-DROP_RATE = 0.3
-MC_SAMPLES = 20
-BATCH_SIZE = 256
-THRESHOLD_CLEAN_FPR = 0.05
+from models import vgg13, vgg16, vgg19
+from models.resnet_v2 import PreActBlock, ResNetV2PSBD
+from utils import get_timestamp, load_tensor, tensor_loader
 
 
-def resolve_poison_data_dir() -> str:
-    data_dir = os.path.join(
-        "preprocessed_data",
-        f"{DATASET_NAME}_{ATTACK_NAME}_poison_rate={POISON_RATE}_target={TARGET_LABEL}",
-    )
-    if not os.path.isdir(data_dir):
-        raise FileNotFoundError(f"Poison data directory not found: {data_dir}")
-    return data_dir
+class VGGPSBD(nn.Module):
+    def __init__(self, backbone: nn.Module):
+        super().__init__()
+        self.backbone = backbone
+        self.psbd_dropout_rate = 0.0
+        self.use_inference_dropout = False
+
+    def set_inference_dropout(
+        self, enabled: bool, dropout_rate: float | None = None
+    ) -> None:
+        self.use_inference_dropout = bool(enabled)
+        if dropout_rate is not None:
+            self.psbd_dropout_rate = float(dropout_rate)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        logits = self.backbone(x)
+        if (
+            (not self.training)
+            and self.use_inference_dropout
+            and self.psbd_dropout_rate > 0.0
+        ):
+            logits = F.dropout(logits, p=self.psbd_dropout_rate, training=True)
+        return logits
 
 
-def resolve_checkpoint_path() -> str:
-    env_path = os.environ.get("PSBD_MODEL_CKPT", "").strip()
-    if env_path:
-        if not os.path.isfile(env_path):
-            raise FileNotFoundError(f"PSBD_MODEL_CKPT does not exist: {env_path}")
-        return env_path
+def clean_checkpoint_state_dict(
+    state_dict: dict[str, torch.Tensor],
+) -> dict[str, torch.Tensor]:
+    cleaned = {}
+    for key, value in state_dict.items():
+        if key.startswith("model."):
+            cleaned[key[len("model.") :]] = value
+        else:
+            cleaned[key] = value
+    return cleaned
 
-    all_checkpoints = glob.glob(os.path.join("runs", "**", "*.ckpt"), recursive=True)
-    if len(all_checkpoints) == 0:
-        raise FileNotFoundError(
-            "No .ckpt file found under runs/. Set PSBD_MODEL_CKPT to a checkpoint path."
+
+def load_model_from_checkpoint(
+    checkpoint_path: str,
+    model_name: str,
+    num_classes: int,
+    in_channels: int = 3,
+    map_location: str | torch.device = "cpu",
+    strict: bool = True,
+) -> nn.Module:
+    model_name = model_name.lower().strip()
+
+    if model_name == "resnet18":
+        return ResNetV2PSBD.from_checkpoint(
+            checkpoint_path=checkpoint_path,
+            block=PreActBlock,
+            num_blocks=[2, 2, 2, 2],
+            num_classes=num_classes,
+            in_channels=in_channels,
+            map_location=map_location,
+            strict=strict,
         )
 
-    all_checkpoints.sort(key=os.path.getmtime, reverse=True)
-    return all_checkpoints[0]
-
-
-def forward_with_psbd_dropout(model, x: torch.Tensor, drop_rate: float) -> torch.Tensor:
-    if not all(
-        hasattr(model, name)
-        for name in ["conv1", "layer1", "layer2", "layer3", "layer4", "bn", "fc"]
-    ):
+    vgg_factories = {
+        "vgg13": vgg13,
+        "vgg16": vgg16,
+        "vgg19": vgg19,
+    }
+    if model_name not in vgg_factories:
         raise ValueError(
-            "PSBD dropout forward expects the ResNetV2-style model structure"
+            "Unsupported model_name. Expected one of: resnet18, vgg13, vgg16, vgg19"
         )
 
-    out = model.conv1(x)
-    out = F.dropout2d(out, p=drop_rate, training=True)
+    checkpoint = torch.load(
+        checkpoint_path,
+        map_location=map_location,
+        weights_only=False,
+    )
+    state = checkpoint["state_dict"] if "state_dict" in checkpoint else checkpoint
+    state = clean_checkpoint_state_dict(state)
 
-    out = model.layer1(out)
-    out = F.dropout2d(out, p=drop_rate, training=True)
-
-    out = model.layer2(out)
-    out = F.dropout2d(out, p=drop_rate, training=True)
-
-    out = model.layer3(out)
-    out = F.dropout2d(out, p=drop_rate, training=True)
-
-    out = model.layer4(out)
-    out = F.dropout2d(out, p=drop_rate, training=True)
-
-    out = F.relu(model.bn(out))
-    out = F.avg_pool2d(out, 4)
-    out = out.view(out.size(0), -1)
-    out = F.dropout(out, p=drop_rate, training=True)
-    out = model.fc(out)
-    return out
+    backbone = vgg_factories[model_name](
+        num_classes=num_classes, in_channels=in_channels
+    )
+    backbone.load_state_dict(state, strict=strict)
+    return VGGPSBD(backbone)
 
 
-def compute_prediction_shift_scores(
-    model,
-    data: torch.Tensor,
+def set_psbd_dropout_mode(model: nn.Module, enabled: bool, dropout_rate: float):
+    dropout_modules = (
+        nn.Dropout,
+        nn.Dropout1d,
+        nn.Dropout2d,
+        nn.Dropout3d,
+        nn.AlphaDropout,
+        nn.FeatureAlphaDropout,
+    )
+
+    if hasattr(model, "set_inference_dropout"):
+        previous_enabled = bool(getattr(model, "use_inference_dropout", False))
+        previous_rate = float(getattr(model, "psbd_dropout_rate", 0.0))
+
+        if enabled:
+            model.set_inference_dropout(True, dropout_rate=float(dropout_rate))
+        else:
+            model.set_inference_dropout(False)
+
+        def restore_custom():
+            model.set_inference_dropout(previous_enabled, dropout_rate=previous_rate)
+
+        return restore_custom
+
+    states = []
+    for module in model.modules():
+        if isinstance(module, dropout_modules):
+            previous_p = float(module.p) if hasattr(module, "p") else None
+            states.append((module, bool(module.training), previous_p))
+            module.train(enabled)
+            if enabled and previous_p is not None:
+                module.p = float(dropout_rate)
+
+    def restore_generic():
+        for module, was_training, previous_p in states:
+            module.train(was_training)
+            if previous_p is not None:
+                module.p = float(previous_p)
+
+    return restore_generic
+
+
+@torch.no_grad()
+def compute_psbd_scores(
+    model: nn.Module,
+    loader: DataLoader,
     target_label: int,
-    batch_size: int,
-    mc_samples: int,
-    drop_rate: float,
-    device: str,
+    mc_samples: int = 10,
+    dropout_rate: float = 0.5,
+    device: str | torch.device = "cpu",
 ) -> dict:
     model = model.to(device)
     model.eval()
 
-    all_target_shift_scores = []
-    all_total_variation_scores = []
+    all_target_shift = []
+    all_total_variation = []
 
-    total_count = int(data.shape[0])
-    with torch.no_grad():
-        for start in range(0, total_count, batch_size):
-            end = min(start + batch_size, total_count)
-            batch = data[start:end].to(device)
+    for batch_x, _ in loader:
+        batch_x = batch_x.to(device)
 
-            base_logits = model(batch)
-            base_probs = torch.softmax(base_logits, dim=1)
+        restore_base = set_psbd_dropout_mode(
+            model, enabled=False, dropout_rate=float(dropout_rate)
+        )
+        base_probs = torch.softmax(model(batch_x), dim=1)
+        restore_base()
 
-            mc_probs = []
-            for _ in range(mc_samples):
-                dropout_logits = forward_with_psbd_dropout(
-                    model, batch, drop_rate=drop_rate
-                )
-                dropout_probs = torch.softmax(dropout_logits, dim=1)
-                mc_probs.append(dropout_probs)
+        restore_mc = set_psbd_dropout_mode(
+            model, enabled=True, dropout_rate=float(dropout_rate)
+        )
+        mc_prob_list = []
+        for _ in range(int(mc_samples)):
+            mc_prob_list.append(torch.softmax(model(batch_x), dim=1))
+        restore_mc()
 
-            mean_dropout_probs = torch.stack(mc_probs, dim=0).mean(dim=0)
+        mean_mc_probs = torch.stack(mc_prob_list, dim=0).mean(dim=0)
 
-            target_shift = (
-                mean_dropout_probs[:, target_label] - base_probs[:, target_label]
-            )
-            total_variation = torch.abs(mean_dropout_probs - base_probs).sum(dim=1)
+        target_shift = (
+            mean_mc_probs[:, int(target_label)] - base_probs[:, int(target_label)]
+        )
+        total_variation = torch.abs(mean_mc_probs - base_probs).sum(dim=1)
 
-            all_target_shift_scores.append(target_shift.detach().cpu())
-            all_total_variation_scores.append(total_variation.detach().cpu())
+        all_target_shift.append(target_shift.detach().cpu())
+        all_total_variation.append(total_variation.detach().cpu())
 
-    target_shift_scores = torch.cat(all_target_shift_scores, dim=0)
-    total_variation_scores = torch.cat(all_total_variation_scores, dim=0)
+    target_shift_scores = torch.cat(all_target_shift, dim=0)
+    total_variation_scores = torch.cat(all_total_variation, dim=0)
     combined_scores = target_shift_scores + total_variation_scores
 
     return {
@@ -134,184 +193,308 @@ def compute_prediction_shift_scores(
     }
 
 
-def quantile_threshold(scores: torch.Tensor, clean_fpr: float) -> float:
-    q = max(0.0, min(1.0, 1.0 - float(clean_fpr)))
-    threshold = torch.quantile(scores, q=q)
-    return float(threshold.item())
+def quantile_threshold(clean_scores: torch.Tensor, target_fpr: float) -> float:
+    q = max(0.0, min(1.0, float(target_fpr)))
+    return float(torch.quantile(clean_scores, q=q).item())
 
 
-class PSBDDefense(DefenseBase):
-    def __init__(
-        self,
-        model,
-        target_label: int,
-        drop_rate: float = 0.3,
-        mc_samples: int = 20,
-        batch_size: int = 256,
-        clean_fpr: float = 0.05,
-        device: str | None = None,
-    ):
-        self.model = model
-        self.target_label = int(target_label)
-        self.drop_rate = float(drop_rate)
-        self.mc_samples = int(mc_samples)
-        self.batch_size = int(batch_size)
-        self.clean_fpr = float(clean_fpr)
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.threshold = None
-
-    def fit(self, calibration_clean_data: torch.Tensor) -> float:
-        score_pack = compute_prediction_shift_scores(
-            model=self.model,
-            data=calibration_clean_data,
-            target_label=self.target_label,
-            batch_size=self.batch_size,
-            mc_samples=self.mc_samples,
-            drop_rate=self.drop_rate,
-            device=self.device,
-        )
-        self.threshold = quantile_threshold(
-            score_pack["combined"], clean_fpr=self.clean_fpr
-        )
-        return self.threshold
-
-    def predict(self, data: torch.Tensor) -> dict:
-        if self.threshold is None:
-            raise RuntimeError("Call fit() before predict().")
-
-        score_pack = compute_prediction_shift_scores(
-            model=self.model,
-            data=data,
-            target_label=self.target_label,
-            batch_size=self.batch_size,
-            mc_samples=self.mc_samples,
-            drop_rate=self.drop_rate,
-            device=self.device,
-        )
-
-        combined_scores = score_pack["combined"]
-        decisions = combined_scores > float(self.threshold)
-        return {
-            "scores": combined_scores,
-            "decisions": decisions,
-            "score_pack": score_pack,
-        }
+def detection_rate(scores: torch.Tensor, threshold: float) -> float:
+    return float((scores < float(threshold)).float().mean().item())
 
 
-def bool_mean(mask: torch.Tensor) -> float:
-    if int(mask.numel()) == 0:
-        return 0.0
-    return float(mask.float().mean().item())
-
-
-def evaluate_psbd(
-    defense: PSBDDefense,
-    clean_data: torch.Tensor,
-    clean_labels: torch.Tensor,
-    backdoor_data: torch.Tensor,
-    backdoor_labels: torch.Tensor,
+def evaluate_score_pair(
+    clean_scores: torch.Tensor,
+    backdoor_scores: torch.Tensor,
+    threshold: float,
 ) -> dict:
-    clean_pred = defense.predict(clean_data)
-    backdoor_pred = defense.predict(backdoor_data)
-
-    clean_flags = clean_pred["decisions"]
-    backdoor_flags = backdoor_pred["decisions"]
-
-    changed_mask = backdoor_labels != clean_labels
-    unchanged_mask = ~changed_mask
-
-    targeted_flags = (
-        backdoor_flags[changed_mask]
-        if int(changed_mask.sum().item()) > 0
-        else torch.tensor([])
-    )
-
     return {
-        "clean_fpr": bool_mean(clean_flags),
-        "backdoor_detection_rate": bool_mean(backdoor_flags),
-        "targeted_detection_rate": bool_mean(targeted_flags),
-        "changed_label_count": int(changed_mask.sum().item()),
-        "unchanged_label_count": int(unchanged_mask.sum().item()),
-        "clean_score_mean": float(clean_pred["scores"].mean().item()),
-        "backdoor_score_mean": float(backdoor_pred["scores"].mean().item()),
+        "threshold": float(threshold),
+        "clean_fpr": detection_rate(clean_scores, threshold),
+        "backdoor_tpr": detection_rate(backdoor_scores, threshold),
     }
 
 
+@torch.no_grad()
+def evaluate_psbd(
+    model: nn.Module,
+    target_label: int,
+    clean_threshold_loader: DataLoader,
+    clean_eval_loader: DataLoader,
+    backdoor_eval_loader: DataLoader,
+    target_fprs: tuple[float, ...] = (0.01, 0.05, 0.1, 0.25),
+    mc_samples: int = 10,
+    dropout_rate: float = 0.5,
+    device: str | torch.device = "cpu",
+    score_key: str = "combined",
+) -> dict:
+    clean_threshold_scores = compute_psbd_scores(
+        model=model,
+        loader=clean_threshold_loader,
+        target_label=target_label,
+        mc_samples=mc_samples,
+        dropout_rate=dropout_rate,
+        device=device,
+    )[score_key]
+
+    clean_eval_scores = compute_psbd_scores(
+        model=model,
+        loader=clean_eval_loader,
+        target_label=target_label,
+        mc_samples=mc_samples,
+        dropout_rate=dropout_rate,
+        device=device,
+    )[score_key]
+
+    backdoor_eval_scores = compute_psbd_scores(
+        model=model,
+        loader=backdoor_eval_loader,
+        target_label=target_label,
+        mc_samples=mc_samples,
+        dropout_rate=dropout_rate,
+        device=device,
+    )[score_key]
+
+    threshold_metrics = {}
+    for fpr in target_fprs:
+        fpr = float(fpr)
+        thr = quantile_threshold(clean_threshold_scores, target_fpr=fpr)
+        threshold_metrics[fpr] = evaluate_score_pair(
+            clean_scores=clean_eval_scores,
+            backdoor_scores=backdoor_eval_scores,
+            threshold=thr,
+        )
+
+    return {
+        "dropout_rate": float(dropout_rate),
+        "mc_samples": int(mc_samples),
+        "target_label": int(target_label),
+        "score_key": score_key,
+        "clean_threshold_mean": float(clean_threshold_scores.mean().item()),
+        "clean_eval_mean": float(clean_eval_scores.mean().item()),
+        "backdoor_eval_mean": float(backdoor_eval_scores.mean().item()),
+        "threshold_metrics": threshold_metrics,
+    }
+
+
+@torch.no_grad()
+def run_psbd_sweep(
+    model: nn.Module,
+    target_label: int,
+    clean_threshold_loader: DataLoader,
+    clean_eval_loader: DataLoader,
+    backdoor_eval_loader: DataLoader,
+    dropout_rates: tuple[float, ...] = (0.1, 0.2, 0.4, 0.6, 0.8),
+    target_fprs: tuple[float, ...] = (0.01, 0.05, 0.1, 0.25),
+    mc_samples: int = 10,
+    device: str | torch.device = "cpu",
+    score_key: str = "combined",
+) -> dict:
+    by_dropout_rate = {}
+    for dropout_rate in dropout_rates:
+        dropout_rate = float(dropout_rate)
+        by_dropout_rate[dropout_rate] = evaluate_psbd(
+            model=model,
+            target_label=target_label,
+            clean_threshold_loader=clean_threshold_loader,
+            clean_eval_loader=clean_eval_loader,
+            backdoor_eval_loader=backdoor_eval_loader,
+            target_fprs=target_fprs,
+            mc_samples=mc_samples,
+            dropout_rate=dropout_rate,
+            device=device,
+            score_key=score_key,
+        )
+
+    return {
+        "dropout_rates": [float(dropout_rate) for dropout_rate in dropout_rates],
+        "target_fprs": [float(fpr) for fpr in target_fprs],
+        "mc_samples": int(mc_samples),
+        "score_key": score_key,
+        "results": by_dropout_rate,
+    }
+
+
+def find_best_dropout_rate(
+    sweep_result: dict,
+    selection_fpr: float = 0.1,
+) -> float:
+    selected = float(selection_fpr)
+    best_dropout_rate = None
+    best_tpr = -1.0
+
+    for dropout_rate, drop_result in sweep_result["results"].items():
+        tpr = drop_result["threshold_metrics"][selected]["backdoor_tpr"]
+        if tpr > best_tpr:
+            best_tpr = float(tpr)
+            best_dropout_rate = float(dropout_rate)
+
+    if best_dropout_rate is None:
+        raise RuntimeError("Could not select a dropout rate from sweep_result.")
+    return best_dropout_rate
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run PSBD evaluation")
+    parser.add_argument("--checkpoint-path", required=True, type=str)
+    parser.add_argument(
+        "--model-name",
+        default="resnet18",
+        choices=["resnet18", "vgg13", "vgg16", "vgg19"],
+        type=str,
+    )
+    parser.add_argument("--dataset-name", default="cifar10", type=str)
+    parser.add_argument("--attack-name", default="badnet", type=str)
+    parser.add_argument("--poison-rate", default=0.1, type=float)
+    parser.add_argument("--target-label", default=0, type=int)
+    parser.add_argument("--data-dir", default=None, type=str)
+    parser.add_argument("--num-classes", default=10, type=int)
+    parser.add_argument("--batch-size", default=256, type=int)
+    parser.add_argument("--num-workers", default=4, type=int)
+    parser.add_argument("--mc-samples", default=10, type=int)
+    parser.add_argument("--selection-fpr", default=0.1, type=float)
+    parser.add_argument(
+        "--dropout-rates",
+        nargs="+",
+        default=[0.1, 0.2, 0.4, 0.6, 0.8],
+        type=float,
+    )
+    parser.add_argument(
+        "--target-fprs",
+        nargs="+",
+        default=[0.01, 0.05, 0.1, 0.25],
+        type=float,
+    )
+    parser.add_argument("--device", default="auto", type=str)
+    return parser.parse_args()
+
+
 def main():
-    data_dir = resolve_poison_data_dir()
-    checkpoint_path = resolve_checkpoint_path()
+    args = parse_args()
+    if args.device == "auto":
+        device: str | torch.device = "cuda" if torch.cuda.is_available() else "cpu"
+    else:
+        device = args.device
+
+    data_dir = args.data_dir
+    if data_dir is None:
+        data_dir = os.path.join(
+            "preprocessed_data",
+            f"{args.dataset_name}_{args.attack_name}_poison_rate={args.poison_rate}_target={args.target_label}",
+        )
 
     clean_val_data = load_tensor(data_dir, "clean_val_data.pt")
     clean_val_labels = load_tensor(data_dir, "clean_val_labels.pt")
     backdoor_val_data = load_tensor(data_dir, "backdoor_val_data.pt")
     backdoor_val_labels = load_tensor(data_dir, "backdoor_val_labels.pt")
-
     clean_test_data = load_tensor(data_dir, "clean_test_data.pt")
     clean_test_labels = load_tensor(data_dir, "clean_test_labels.pt")
     backdoor_test_data = load_tensor(data_dir, "backdoor_test_data.pt")
     backdoor_test_labels = load_tensor(data_dir, "backdoor_test_labels.pt")
 
-    if os.path.exists(os.path.join(data_dir, "val_heldout_data.pt")):
-        calibration_clean_data = load_tensor(data_dir, "val_heldout_data.pt")
+    heldout_path = os.path.join(data_dir, "val_heldout_data.pt")
+    heldout_labels_path = os.path.join(data_dir, "val_heldout_labels.pt")
+    if os.path.exists(heldout_path) and os.path.exists(heldout_labels_path):
+        heldout_data = load_tensor(data_dir, "val_heldout_data.pt")
+        heldout_labels = load_tensor(data_dir, "val_heldout_labels.pt")
     else:
-        calibration_clean_data = clean_val_data
+        heldout_data = clean_val_data
+        heldout_labels = clean_val_labels
 
-    lightning_model = LightningResNetV2.load_from_checkpoint(checkpoint_path)
-    base_model = lightning_model.model
-
-    defense = PSBDDefense(
-        model=base_model,
-        target_label=TARGET_LABEL,
-        drop_rate=DROP_RATE,
-        mc_samples=MC_SAMPLES,
-        batch_size=BATCH_SIZE,
-        clean_fpr=THRESHOLD_CLEAN_FPR,
+    clean_val_loader = tensor_loader(
+        clean_val_data,
+        clean_val_labels,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
+    )
+    backdoor_val_loader = tensor_loader(
+        backdoor_val_data,
+        backdoor_val_labels,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
+    )
+    clean_test_loader = tensor_loader(
+        clean_test_data,
+        clean_test_labels,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
+    )
+    backdoor_test_loader = tensor_loader(
+        backdoor_test_data,
+        backdoor_test_labels,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
+    )
+    heldout_loader = tensor_loader(
+        heldout_data,
+        heldout_labels,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
     )
 
-    threshold = defense.fit(calibration_clean_data)
-
-    val_metrics = evaluate_psbd(
-        defense=defense,
-        clean_data=clean_val_data,
-        clean_labels=clean_val_labels,
-        backdoor_data=backdoor_val_data,
-        backdoor_labels=backdoor_val_labels,
-    )
-    test_metrics = evaluate_psbd(
-        defense=defense,
-        clean_data=clean_test_data,
-        clean_labels=clean_test_labels,
-        backdoor_data=backdoor_test_data,
-        backdoor_labels=backdoor_test_labels,
+    model = load_model_from_checkpoint(
+        checkpoint_path=args.checkpoint_path,
+        model_name=args.model_name,
+        num_classes=args.num_classes,
+        map_location=device,
     )
 
-    output = {
-        "dataset": DATASET_NAME,
-        "attack": ATTACK_NAME,
-        "poison_rate": POISON_RATE,
-        "target_label": TARGET_LABEL,
-        "checkpoint_path": checkpoint_path,
-        "drop_rate": DROP_RATE,
-        "mc_samples": MC_SAMPLES,
-        "batch_size": BATCH_SIZE,
-        "threshold_clean_fpr": THRESHOLD_CLEAN_FPR,
-        "threshold": threshold,
-        "val_metrics": val_metrics,
-        "test_metrics": test_metrics,
+    val_sweep = run_psbd_sweep(
+        model=model,
+        target_label=args.target_label,
+        clean_threshold_loader=heldout_loader,
+        clean_eval_loader=clean_val_loader,
+        backdoor_eval_loader=backdoor_val_loader,
+        dropout_rates=tuple(float(rate) for rate in args.dropout_rates),
+        target_fprs=tuple(float(fpr) for fpr in args.target_fprs),
+        mc_samples=args.mc_samples,
+        device=device,
+    )
+
+    selected_dropout_rate = find_best_dropout_rate(
+        val_sweep,
+        selection_fpr=args.selection_fpr,
+    )
+
+    test_eval = evaluate_psbd(
+        model=model,
+        target_label=args.target_label,
+        clean_threshold_loader=heldout_loader,
+        clean_eval_loader=clean_test_loader,
+        backdoor_eval_loader=backdoor_test_loader,
+        target_fprs=tuple(float(fpr) for fpr in args.target_fprs),
+        mc_samples=args.mc_samples,
+        dropout_rate=selected_dropout_rate,
+        device=device,
+    )
+
+    result = {
+        "checkpoint_path": args.checkpoint_path,
+        "model_name": args.model_name,
+        "data_dir": data_dir,
+        "target_label": int(args.target_label),
+        "mc_samples": int(args.mc_samples),
+        "selection_fpr": float(args.selection_fpr),
+        "dropout_rates": [float(rate) for rate in args.dropout_rates],
+        "target_fprs": [float(fpr) for fpr in args.target_fprs],
+        "selected_dropout_rate": float(selected_dropout_rate),
+        "val_sweep": val_sweep,
+        "test_eval": test_eval,
     }
 
     run_dir = os.path.join(
-        "runs", f"psbd_{DATASET_NAME}_{ATTACK_NAME}_{get_timestamp()}"
+        "runs", f"psbd_{args.dataset_name}_{args.attack_name}_{get_timestamp()}"
     )
     os.makedirs(run_dir, exist_ok=True)
     output_path = os.path.join(run_dir, "psbd_metrics.json")
-
     with open(output_path, "w", encoding="utf-8") as handle:
-        json.dump(output, handle, indent=2)
+        json.dump(result, handle, indent=2)
 
     print("PSBD results saved to:", output_path)
-    print("Validation metrics:", val_metrics)
-    print("Test metrics:", test_metrics)
 
 
 if __name__ == "__main__":

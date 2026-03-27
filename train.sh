@@ -3,16 +3,31 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-# Full training settings from each script (default TRAIN_MAX_EPOCHS=100)
-unset TRAIN_MAX_EPOCHS || true
+datasets=(cifar10 cifar100 gtsrb)
 
-echo "[1/3] Training benign ResNet18-v2 (CIFAR10)..."
-python benign_train_resnet.py
+total=$(( ${#datasets[@]} * 3 ))
+step=1
 
-echo "[2/3] Training badnet ResNet18-v2 (CIFAR10)..."
-python badnet_train_resnet.py
+for dataset in "${datasets[@]}"; do
+	echo "[$step/$total] Training benign ResNet18-v2 ($dataset) with early stopping patience=5..."
+	python benign_train_resnet.py \
+		--dataset-name "$dataset" \
+		--early-stopping-patience 5
+	step=$((step + 1))
 
-echo "[3/3] Training wanet ResNet18-v2 (CIFAR10)..."
-python wanet_train_resnet.py
+	echo "[$step/$total] Training badnet ResNet18-v2 ($dataset) with PSBD enabled and patience=5..."
+	python badnet_train_resnet.py \
+		--dataset-name "$dataset" \
+		--early-stopping-patience 5 \
+		--run-psbd
+	step=$((step + 1))
 
-echo "Full training complete."
+	echo "[$step/$total] Training wanet ResNet18-v2 ($dataset) with PSBD enabled and patience=5..."
+	python wanet_train_resnet.py \
+		--dataset-name "$dataset" \
+		--early-stopping-patience 5 \
+		--run-psbd
+	step=$((step + 1))
+done
+
+echo "Full training complete for: ${datasets[*]}"
