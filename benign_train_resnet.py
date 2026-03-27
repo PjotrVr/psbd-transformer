@@ -309,13 +309,14 @@ def train_resnet_v2(
 def main():
     parser = argparse.ArgumentParser(description="Train ResNet18V2 on benign data")
     parser.add_argument("--dataset-name", default="cifar10", type=str)
+    parser.add_argument("--data-root", default="preprocessed_data", type=str)
     parser.add_argument("--max-epochs", default=100, type=int)
     parser.add_argument("--batch-size", default=128, type=int)
     parser.add_argument("--num-workers", default=2, type=int)
     parser.add_argument("--early-stopping-patience", default=15, type=int)
     args = parser.parse_args()
 
-    data_dir = os.path.join("preprocessed_data", f"{args.dataset_name}_benign")
+    data_dir = os.path.join(args.data_root, f"{args.dataset_name}_benign")
 
     train_data = load_tensor(data_dir, "train_data.pt")
     train_labels = load_tensor(data_dir, "train_labels.pt")

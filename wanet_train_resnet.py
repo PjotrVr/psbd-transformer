@@ -22,9 +22,14 @@ TARGET_LABEL = 0
 ATTACK_NAME = "wanet"
 
 
-def resolve_data_dir(dataset_name: str, poison_rate: float, target_label: int) -> str:
+def resolve_data_dir(
+    dataset_name: str,
+    poison_rate: float,
+    target_label: int,
+    data_root: str = "preprocessed_data",
+) -> str:
     candidate = os.path.join(
-        "preprocessed_data",
+        data_root,
         f"{dataset_name}_{ATTACK_NAME}_poison_rate={poison_rate}_target={target_label}",
     )
     if os.path.isdir(candidate):
@@ -37,6 +42,7 @@ def parse_args() -> argparse.Namespace:
         description="Train ResNet18V2 on WaNet poisoned data"
     )
     parser.add_argument("--dataset-name", default=DATASET_NAME, type=str)
+    parser.add_argument("--data-root", default="preprocessed_data", type=str)
     parser.add_argument("--poison-rate", default=POISON_RATE, type=float)
     parser.add_argument("--target-label", default=TARGET_LABEL, type=int)
     parser.add_argument("--max-epochs", default=100, type=int)
@@ -71,7 +77,12 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     args = parse_args()
-    data_dir = resolve_data_dir(args.dataset_name, args.poison_rate, args.target_label)
+    data_dir = resolve_data_dir(
+        args.dataset_name,
+        args.poison_rate,
+        args.target_label,
+        data_root=args.data_root,
+    )
 
     clean_train_data = load_tensor(data_dir, "clean_train_data.pt")
     clean_train_labels = load_tensor(data_dir, "clean_train_labels.pt")
