@@ -46,6 +46,9 @@ class LResNetV2(L.LightningModule):
         self.momentum = float(momentum)
         self.weight_decay = float(weight_decay)
         self.milestones = tuple(int(milestone) for milestone in milestones)
+        self._clean_val_labels: list[torch.Tensor] = []
+        self._backdoor_val_labels: list[torch.Tensor] = []
+        self._backdoor_val_predictions: list[torch.Tensor] = []
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(x)
@@ -64,26 +67,71 @@ class LResNetV2(L.LightningModule):
         self.log("train_acc", accuracy, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 
+    def on_validation_epoch_start(self):
+        self._clean_val_labels = []
+        self._backdoor_val_labels = []
+        self._backdoor_val_predictions = []
+
     def validation_step(self, batch, batch_idx, dataloader_idx: int = 0):
         loss, accuracy = self.shared_step(batch)
+
+        images, labels = batch
+        logits = self(images)
+        predictions = torch.argmax(logits, dim=1)
+
         if int(dataloader_idx) == 0:
-            self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-            self.log("val_acc", accuracy, on_step=False, on_epoch=True, prog_bar=True)
-        else:
             self.log(
-                "val_backdoor_loss",
+                "val_loss",
                 loss,
                 on_step=False,
                 on_epoch=True,
                 prog_bar=True,
+                add_dataloader_idx=False,
             )
             self.log(
-                "val_backdoor_acc",
+                "val_acc",
                 accuracy,
                 on_step=False,
                 on_epoch=True,
                 prog_bar=True,
+                add_dataloader_idx=False,
             )
+            self._clean_val_labels.append(labels.detach().cpu())
+        else:
+            self._backdoor_val_labels.append(labels.detach().cpu())
+            self._backdoor_val_predictions.append(predictions.detach().cpu())
+
+    def on_validation_epoch_end(self):
+        if len(self._backdoor_val_labels) == 0:
+            return
+
+        if len(self._clean_val_labels) == 0:
+            return
+
+        clean_labels = torch.cat(self._clean_val_labels, dim=0)
+        backdoor_labels = torch.cat(self._backdoor_val_labels, dim=0)
+        backdoor_predictions = torch.cat(self._backdoor_val_predictions, dim=0)
+
+        asr = (backdoor_predictions == backdoor_labels).float().mean()
+
+        changed_mask = backdoor_labels != clean_labels
+        if int(changed_mask.sum().item()) == 0:
+            targeted_asr = torch.tensor(0.0)
+        else:
+            targeted_asr = (
+                (backdoor_predictions[changed_mask] == backdoor_labels[changed_mask])
+                .float()
+                .mean()
+            )
+
+        self.log("asr", asr, on_step=False, on_epoch=True, prog_bar=True)
+        self.log(
+            "targeted_asr",
+            targeted_asr,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
 
     def test_step(self, batch, batch_idx):
         loss, accuracy = self.shared_step(batch)
@@ -111,19 +159,21 @@ class LResNetV2(L.LightningModule):
 
 
 def create_trainer(
-    run_dir: str, config: ResNetTrainConfig
+    run_dir: str,
+    config: ResNetTrainConfig,
+    monitor_metric: str = "val_acc",
 ) -> tuple[L.Trainer, ModelCheckpoint]:
     checkpoint_callback = ModelCheckpoint(
         dirpath=run_dir,
-        monitor="val_acc",
+        monitor=monitor_metric,
         mode="max",
-        filename="resnet18-v2-{epoch:02d}-{val_acc:.4f}",
+        filename="resnet18-v2-{epoch:02d}",
         save_top_k=1,
         save_last=True,
     )
 
     early_stopping_callback = EarlyStopping(
-        monitor="val_acc",
+        monitor=monitor_metric,
         mode="max",
         patience=int(config.early_stopping_patience),
         min_delta=0.0,
@@ -196,7 +246,7 @@ def train_resnet_v2(
         milestones=config.milestones,
     )
 
-    val_dataloaders: list = [val_loader]
+    backdoor_val_loader = None
     if (backdoor_val_data is not None) and (backdoor_val_labels is not None):
         backdoor_val_loader = tensor_loader(
             backdoor_val_data,
@@ -205,9 +255,18 @@ def train_resnet_v2(
             shuffle=False,
             num_workers=config.num_workers,
         )
-        val_dataloaders.append(backdoor_val_loader)
 
-    trainer, checkpoint_callback = create_trainer(run_dir=run_dir, config=config)
+    monitor_metric = "val_acc"
+
+    trainer, checkpoint_callback = create_trainer(
+        run_dir=run_dir,
+        config=config,
+        monitor_metric=monitor_metric,
+    )
+    val_dataloaders = val_loader
+    if backdoor_val_loader is not None:
+        val_dataloaders = [val_loader, backdoor_val_loader]
+
     trainer.fit(
         model,
         train_dataloaders=train_loader,
@@ -226,6 +285,7 @@ def train_resnet_v2(
         "run_name": run_name,
         "best_checkpoint_path": best_checkpoint_path,
         "test_metrics": test_metrics,
+        "monitor_metric": monitor_metric,
         "config": {
             "learning_rate": config.learning_rate,
             "momentum": config.momentum,

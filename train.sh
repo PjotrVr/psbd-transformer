@@ -19,6 +19,9 @@ for dataset in "${datasets[@]}"; do
 	python badnet_train_resnet.py \
 		--dataset-name "$dataset" \
 		--early-stopping-patience 5 \
+		--psbd-dropout-rates 0.8 \
+		--psbd-target-fprs 0.25 \
+		--psbd-selection-fpr 0.25 \
 		--run-psbd
 	step=$((step + 1))
 
@@ -26,6 +29,9 @@ for dataset in "${datasets[@]}"; do
 	python wanet_train_resnet.py \
 		--dataset-name "$dataset" \
 		--early-stopping-patience 5 \
+		--psbd-dropout-rates 0.8 \
+		--psbd-target-fprs 0.25 \
+		--psbd-selection-fpr 0.25 \
 		--run-psbd
 	step=$((step + 1))
 done

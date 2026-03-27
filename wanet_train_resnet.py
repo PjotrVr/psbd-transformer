@@ -44,11 +44,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-workers", default=4, type=int)
     parser.add_argument("--early-stopping-patience", default=15, type=int)
     parser.add_argument(
+        "--train-with-backdoor-validation",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
+    parser.add_argument(
         "--run-psbd", action=argparse.BooleanOptionalAction, default=True
     )
     parser.add_argument(
         "--psbd-model-name",
-        choices=["resnet18", "vgg13", "vgg16", "vgg19"],
+        choices=["resnet18"],
         default="resnet18",
         type=str,
     )
@@ -110,6 +115,12 @@ def main():
         test_labels=clean_test_labels,
         run_name_prefix=f"wanet_resnet18v2_{args.dataset_name}_clean_test",
         num_classes=num_classes,
+        backdoor_val_data=(
+            backdoor_val_data if args.train_with_backdoor_validation else None
+        ),
+        backdoor_val_labels=(
+            backdoor_val_labels if args.train_with_backdoor_validation else None
+        ),
         config=config,
     )
 
