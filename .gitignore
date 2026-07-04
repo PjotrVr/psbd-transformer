@@ -1,0 +1,15 @@
+raw_data/
+preprocessed_data/
+runs/
+copied_attacks/
+copied_train/
+copied_codebase/
+**/*.zip
+vit_b_16_weights/
+unzip_script.py
+colab_run_uncertainty_defenses.ipynb
+get_results.py
+experiments/
+figures/
+**/__pycache__/
+tmp**
