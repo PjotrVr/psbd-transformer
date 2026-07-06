@@ -13,3 +13,8 @@ experiments/
 figures/
 **/__pycache__/
 tmp**
+_attacks/
+_defences/
+_models/
+checkpoints/
+logs/

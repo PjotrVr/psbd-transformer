@@ -11,6 +11,8 @@ dependencies = [
     "pillow==12.2.0",
     "matplotlib>=3.10.9",
     "scikit-learn",
+    "timm>=1.0.27",
+    "lightning>=2.6.5",
 ]
 
 [dependency-groups]

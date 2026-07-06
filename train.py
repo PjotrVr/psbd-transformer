@@ -1,0 +1,132 @@
+"""Training ViT-B/16 or Swin-S on a poisoned dataset, with a plain or SAM optimizer.
+
+This produces the checkpoints the sweep consumes, in the same BackdoorBench
+format. It matters for two reasons. Swin needs locally trained models because
+BackdoorBench ships no Swin backdoored checkpoints. And SAM only helps if the
+poisoned model is trained with it, so the low-poison SAM experiment lives here.
+
+The poisoned training loader is built in train_backdoor.py from the attack
+library. This module takes any (train_loader, val_loader) whose training set
+already carries the trigger and the correct labels, and stays agnostic to which
+attack produced it.
+"""
+
+import os
+
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+
+from detection import clean_accuracy
+from models import build_swin, build_vit
+from sam import SAM
+
+
+def build_model(architecture: str, num_classes: int) -> nn.Module:
+    if architecture == "vit":
+        return build_vit(num_classes)
+    if architecture == "swin":
+        return build_swin(num_classes)
+    raise ValueError(f"Unknown architecture: {architecture}")
+
+
+def build_optimizer(
+    model: nn.Module,
+    use_sam: bool,
+    learning_rate: float,
+    weight_decay: float,
+    rho: float,
+) -> torch.optim.Optimizer:
+    """Adam by default, or Adam wrapped in SAM when use_sam is set.
+
+    Adam is the base in both cases so the only difference between the vanilla and
+    the SAM run is the sharpness-aware two-step, which keeps the comparison clean.
+    """
+    if use_sam:
+        return SAM(
+            model.parameters(),
+            torch.optim.Adam,
+            rho=rho,
+            lr=learning_rate,
+            weight_decay=weight_decay,
+        )
+    return torch.optim.Adam(
+        model.parameters(), lr=learning_rate, weight_decay=weight_decay
+    )
+
+
+def _plain_update(model, images, labels, criterion, optimizer) -> torch.Tensor:
+    optimizer.zero_grad()
+    loss = criterion(model(images), labels)
+    loss.backward()
+    optimizer.step()
+    return loss
+
+
+def _sam_update(model, images, labels, criterion, optimizer) -> torch.Tensor:
+    # First pass finds the local worst-case weights, second pass updates from there.
+    # ViT and Swin use LayerNorm rather than BatchNorm, so the two forward passes
+    # carry no running-statistics hazard that SAM has with BatchNorm models.
+    loss = criterion(model(images), labels)
+    loss.backward()
+    optimizer.first_step(zero_grad=True)
+
+    criterion(model(images), labels).backward()
+    optimizer.second_step(zero_grad=True)
+    return loss
+
+
+def train_one_epoch(model, loader, criterion, optimizer, device, use_sam) -> float:
+    model.train()
+    running_loss = 0.0
+    for images, labels in loader:
+        images, labels = images.to(device), labels.to(device).long()
+        update = _sam_update if use_sam else _plain_update
+        running_loss += update(model, images, labels, criterion, optimizer).item()
+    return running_loss / max(len(loader), 1)
+
+
+def save_checkpoint(
+    model: nn.Module, num_classes: int, path: str, metadata: dict | None = None
+) -> None:
+    """Save in the attack_result.pt format the loader reads.
+
+    metadata records which attack produced the model (dataset, attack name, target
+    label, poison rate), so the detection sweep can rebuild the exact poisoned test
+    set in memory without a saved bd_test_dataset folder of PNGs.
+    """
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    checkpoint = {"model": model.state_dict(), "num_classes": num_classes}
+    if metadata:
+        checkpoint.update(metadata)
+    torch.save(checkpoint, path)
+
+
+def train_classifier(
+    architecture: str,
+    num_classes: int,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
+    device: torch.device,
+    epochs: int,
+    use_sam: bool,
+    learning_rate: float = 1e-4,
+    weight_decay: float = 1e-4,
+    rho: float = 0.05,
+    use_bfloat16: bool = True,
+) -> nn.Module:
+    """Train a fresh model and report validation accuracy each epoch."""
+    model = build_model(architecture, num_classes).to(device)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = build_optimizer(model, use_sam, learning_rate, weight_decay, rho)
+
+    for epoch in range(1, epochs + 1):
+        average_loss = train_one_epoch(
+            model, train_loader, criterion, optimizer, device, use_sam
+        )
+        validation_accuracy = clean_accuracy(model, val_loader, device, use_bfloat16)
+        print(
+            f"epoch {epoch}: loss={average_loss:.4f} val_acc={validation_accuracy:.4f}"
+        )
+
+    return model
