@@ -18,3 +18,4 @@ _defences/
 _models/
 checkpoints/
 logs/
+tmp/

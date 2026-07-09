@@ -22,7 +22,7 @@ mkdir -p $BASE/logs
 cd $BASE
 source .venv/bin/activate
 
-python train_benign.py --datasets cifar10 cifar100 gtsrb tiny --epochs 15
+python train_benign.py --datasets cifar10 cifar100 gtsrb tiny --epochs 15 --weights-dir checkpoints
 
 echo "Finished: $(date)"
 exit 0

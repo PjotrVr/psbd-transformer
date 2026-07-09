@@ -69,11 +69,19 @@ def train_one_benign(
         test_loader,
         device,
         epochs=args.epochs,
-        use_sam=False,
+        use_sam=args.use_sam,
+        rho=args.rho,
     )
     accuracy = clean_accuracy(model, test_loader, device, use_bfloat16=True)
 
-    output_path = f"{args.weights_dir}/{dataset_name}_benign/attack_result.pt"
+    # SAM and vanilla benign models go in separate folders so one does not
+    # overwrite the other, and the rho is in the SAM folder name so a rho sweep
+    # keeps each run separate.
+    if args.use_sam:
+        tag = f"benign_sam_rho{str(args.rho).replace('.', '_')}"
+    else:
+        tag = "benign"
+    output_path = f"{args.weights_dir}/{dataset_name}_{tag}/attack_result.pt"
     save_checkpoint(
         model,
         num_classes,
@@ -84,10 +92,11 @@ def train_one_benign(
             "attack": "benign",
             "target_label": 0,
             "poison_rate": 0.0,
+            "optimizer": "sam" if args.use_sam else "adam",
             "clean_accuracy": accuracy,
         },
     )
-    print(f"{dataset_name}_benign clean accuracy {accuracy:.4f}, saved {output_path}")
+    print(f"{dataset_name}_{tag} clean accuracy {accuracy:.4f}, saved {output_path}")
     return accuracy
 
 
@@ -101,6 +110,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=128)
+    parser.add_argument("--use-sam", action="store_true")
+    parser.add_argument("--rho", type=float, default=0.05)
     parser.add_argument("--weights-dir", default="vit_b_16_weights")
     parser.add_argument("--raw-data-dir", default="raw_data")
     return parser.parse_args()
