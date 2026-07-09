@@ -1,0 +1,43 @@
+#!/bin/bash
+#PBS -q gpu
+#PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
+#PBS -l walltime=32:00:00
+#PBS -N sam_rho_benign_tiny
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/sam_rho_benign_tiny.out
+#PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/sam_rho_benign_tiny.err
+
+# Compute nodes reach the internet through the proxy, needed for torchvision to
+# download the datasets and the ViT ImageNet weights on first run.
+export http_proxy="http://10.150.1.1:3128"
+export https_proxy="http://10.150.1.1:3128"
+
+echo "Job ID:  $PBS_JOBID"
+echo "Node:    $(hostname)"
+echo "Started: $(date)"
+nvidia-smi
+
+BASE=/lustre/home/pstika/projects/PSBD-ViT
+mkdir -p $BASE/logs
+
+cd $BASE
+source .venv/bin/activate
+
+# The clean-accuracy guardrail. Trains benign Tiny with SAM at several radii to
+# find where a large radius starts hurting generalization. 10 epochs is enough to
+# see whether clean accuracy holds, since this run is a guardrail, not a final
+# model. Compare against the vanilla benign Tiny model as the reference.
+RHOS="0.05 0.1 0.2 0.5"
+
+for rho in $RHOS; do
+    echo "=== SAM benign tiny rho ${rho} $(date) ==="
+    python train_benign.py \
+        --datasets tiny \
+        --epochs 15 \
+        --use-sam \
+        --rho "$rho" \
+        --weights-dir checkpoints \
+        || echo "FAILED benign tiny rho ${rho}"
+done
+
+echo "Finished: $(date)"
+exit 0

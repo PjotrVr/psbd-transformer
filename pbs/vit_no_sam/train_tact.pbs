@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -q gpu
 #PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
-#PBS -l walltime=24:00:00
+#PBS -l walltime=32:00:00
 #PBS -N train_tact
 #PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/train_tact.out
 #PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/train_tact.err

@@ -1,0 +1,47 @@
+#!/bin/bash
+#PBS -q gpu
+#PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
+#PBS -l walltime=14:00:00
+#PBS -N train_tiny_lf
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/train_tiny_lf.out
+#PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/train_tiny_lf.err
+
+# Compute nodes reach the internet through the proxy, needed for torchvision to
+# download the ViT ImageNet weights on first run.
+export http_proxy="http://10.150.1.1:3128"
+export https_proxy="http://10.150.1.1:3128"
+
+echo "Job ID:  $PBS_JOBID"
+echo "Node:    $(hostname)"
+echo "Started: $(date)"
+nvidia-smi
+
+BASE=/lustre/home/pstika/projects/PSBD-ViT
+mkdir -p $BASE/logs
+
+cd $BASE
+source .venv/bin/activate
+
+# Tiny ImageNet only, the slow dataset that did not finish inside the full grid's
+# walltime. Rates 1, 5, and 10 percent. Completed runs are saved as each finishes,
+# so even if the wall is hit only the last rate is lost.
+ATTACK="lf"
+RATES="0.05 0.1"
+EPOCHS=15
+
+for rate in $RATES; do
+    tag=$(echo "$rate" | tr '.' '_')
+    output="checkpoints/tiny_${ATTACK}_${tag}/attack_result.pt"
+    echo "=== training tiny ${ATTACK} rate ${rate} $(date) ==="
+    python train_backdoor.py \
+        --dataset tiny \
+        --attack "$ATTACK" \
+        --poison-rate "$rate" \
+        --architecture vit \
+        --epochs "$EPOCHS" \
+        --output "$output" \
+        || echo "FAILED tiny ${ATTACK} ${rate}"
+done
+
+echo "Finished: $(date)"
+exit 0

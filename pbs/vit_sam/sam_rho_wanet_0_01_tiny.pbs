@@ -1,0 +1,47 @@
+#!/bin/bash
+#PBS -q gpu
+#PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
+#PBS -l walltime=12:00:00
+#PBS -N sam_rho_wanet_tiny
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/sam_rho_wanet_tiny.out
+#PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/sam_rho_wanet_tiny.err
+
+# Compute nodes reach the internet through the proxy, needed for torchvision to
+# download the datasets and the ViT ImageNet weights on first run.
+export http_proxy="http://10.150.1.1:3128"
+export https_proxy="http://10.150.1.1:3128"
+
+echo "Job ID:  $PBS_JOBID"
+echo "Node:    $(hostname)"
+echo "Started: $(date)"
+nvidia-smi
+
+BASE=/lustre/home/pstika/projects/PSBD-ViT
+mkdir -p $BASE/logs
+
+cd $BASE
+source .venv/bin/activate
+
+DATASET="tiny"
+POISON_RATE="0.01"
+RHOS="0.05 0.1 0.2"
+EPOCHS=15
+
+for rho in $RHOS; do
+    rho_tag=$(echo "$rho" | tr '.' '_')
+    output="checkpoints/${DATASET}_wanet_sam_rho${rho_tag}_0_01/attack_result.pt"
+    echo "=== SAM wanet ${DATASET} 1pct rho ${rho} $(date) ==="
+    python train_backdoor.py \
+        --dataset "$DATASET" \
+        --attack wanet \
+        --poison-rate "$POISON_RATE" \
+        --architecture vit \
+        --epochs "$EPOCHS" \
+        --use-sam \
+        --rho "$rho" \
+        --output "$output" \
+        || echo "FAILED wanet ${DATASET} rho ${rho}"
+done
+
+echo "Finished: $(date)"
+exit 0

@@ -25,6 +25,7 @@ from config import DATASET_REGISTRY
 from datasets import load_clean_datasets
 from detection import clean_accuracy
 from train import save_checkpoint, train_classifier
+import time
 
 
 def working_resolution(dataset_name: str) -> int:
@@ -33,7 +34,9 @@ def working_resolution(dataset_name: str) -> int:
     return 64 if dataset_name == "tiny" else 32
 
 
-def build_clean_loaders(dataset_name: str, raw_data_dir: str, batch_size: int):
+def build_clean_loaders(
+    dataset_name: str, raw_data_dir: str, batch_size: int, num_workers: int = 8
+) -> tuple[DataLoader, DataLoader, int]:
     spec = DATASET_REGISTRY[dataset_name]
     image_size = working_resolution(dataset_name)
     transform = transforms_v2.Compose(
@@ -47,10 +50,10 @@ def build_clean_loaders(dataset_name: str, raw_data_dir: str, batch_size: int):
         dataset_name, transform, raw_data_dir
     )
     train_loader = DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True, num_workers=4
+        train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers
     )
     test_loader = DataLoader(
-        test_dataset, batch_size=batch_size, shuffle=False, num_workers=4
+        test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers
     )
     return train_loader, test_loader, spec.num_classes
 
@@ -58,12 +61,13 @@ def build_clean_loaders(dataset_name: str, raw_data_dir: str, batch_size: int):
 def train_one_benign(
     dataset_name: str, args: argparse.Namespace, device: torch.device
 ) -> float:
+    start = time.time()
     train_loader, test_loader, num_classes = build_clean_loaders(
-        dataset_name, args.raw_data_dir, args.batch_size
+        dataset_name, args.raw_data_dir, args.batch_size, args.num_workers
     )
 
     model = train_classifier(
-        "vit",
+        args.architecture,
         num_classes,
         train_loader,
         test_loader,
@@ -75,19 +79,21 @@ def train_one_benign(
     accuracy = clean_accuracy(model, test_loader, device, use_bfloat16=True)
 
     # SAM and vanilla benign models go in separate folders so one does not
-    # overwrite the other, and the rho is in the SAM folder name so a rho sweep
-    # keeps each run separate.
+    # overwrite the other, the rho is in the SAM folder name so a rho sweep keeps
+    # each run separate, and a non-ViT architecture is prefixed so ViT and Swin
+    # benign models do not collide.
+    arch_prefix = "" if args.architecture == "vit" else f"{args.architecture}_"
     if args.use_sam:
-        tag = f"benign_sam_rho{str(args.rho).replace('.', '_')}"
+        tag = f"{arch_prefix}benign_sam_rho{str(args.rho).replace('.', '_')}"
     else:
-        tag = "benign"
+        tag = f"{arch_prefix}benign"
     output_path = f"{args.weights_dir}/{dataset_name}_{tag}/attack_result.pt"
     save_checkpoint(
         model,
         num_classes,
         output_path,
         metadata={
-            "architecture": "vit",
+            "architecture": args.architecture,
             "dataset": dataset_name,
             "attack": "benign",
             "target_label": 0,
@@ -97,6 +103,7 @@ def train_one_benign(
         },
     )
     print(f"{dataset_name}_{tag} clean accuracy {accuracy:.4f}, saved {output_path}")
+    print(f"time taken: {dataset_name}_{tag} took {(time.time() - start) / 60:.1f} min")
     return accuracy
 
 
@@ -110,10 +117,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=128)
+    parser.add_argument("--architecture", choices=("vit", "swin"), default="vit")
     parser.add_argument("--use-sam", action="store_true")
     parser.add_argument("--rho", type=float, default=0.05)
     parser.add_argument("--weights-dir", default="vit_b_16_weights")
     parser.add_argument("--raw-data-dir", default="raw_data")
+    parser.add_argument("--num-workers", type=int, default=8)
     return parser.parse_args()
 
 

@@ -1,10 +1,10 @@
 #!/bin/bash
 #PBS -q gpu
 #PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
-#PBS -l walltime=24:00:00
-#PBS -N train_lf
-#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/train_lf.out
-#PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/train_lf.err
+#PBS -l walltime=32:00:00
+#PBS -N train_badnet_a2a
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/train_badnet_a2a.out
+#PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/train_badnet_a2a.err
 
 # Compute nodes reach the internet through the proxy, needed for torchvision to
 # download the datasets and the ViT ImageNet weights on first run.
@@ -22,7 +22,7 @@ mkdir -p $BASE/logs
 cd $BASE
 source .venv/bin/activate
 
-ATTACK="lf"
+ATTACK="badnet_a2a"
 DATASETS="cifar10 cifar100 gtsrb tiny"
 RATES="0.005 0.01 0.05 0.1"
 EPOCHS=15

@@ -1,0 +1,47 @@
+#!/bin/bash
+#PBS -q gpu
+#PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
+#PBS -l walltime=32:00:00
+#PBS -N train_lc
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/train_lc.out
+#PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/train_lc.err
+
+# Compute nodes reach the internet through the proxy, needed for torchvision to
+# download the datasets and the ViT ImageNet weights on first run.
+export http_proxy="http://10.150.1.1:3128"
+export https_proxy="http://10.150.1.1:3128"
+
+echo "Job ID:  $PBS_JOBID"
+echo "Node:    $(hostname)"
+echo "Started: $(date)"
+nvidia-smi
+
+BASE=/lustre/home/pstika/projects/PSBD-ViT
+mkdir -p $BASE/logs
+
+cd $BASE
+source .venv/bin/activate
+
+ATTACK="lc"
+DATASETS="cifar10 cifar100 gtsrb tiny"
+RATES="0.005 0.01 0.05 0.1"
+EPOCHS=15
+
+for dataset in $DATASETS; do
+    for rate in $RATES; do
+        tag=$(echo "$rate" | tr '.' '_')
+        output="checkpoints/${dataset}_${ATTACK}_${tag}/attack_result.pt"
+        echo "=== training ${dataset} ${ATTACK} rate ${rate} $(date) ==="
+        python train_backdoor.py \
+            --dataset "$dataset" \
+            --attack "$ATTACK" \
+            --poison-rate "$rate" \
+            --architecture vit \
+            --epochs "$EPOCHS" \
+            --output "$output" \
+            || echo "FAILED ${dataset} ${ATTACK} ${rate}"
+    done
+done
+
+echo "Finished: $(date)"
+exit 0
