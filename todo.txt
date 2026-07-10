@@ -1,0 +1,7 @@
+- Train everything with SAM
+- Add metrics.json to checkpoints
+- Check Dropout placement in all spots for ViT
+- Do latent space analysis for PSBD
+    - Check if PSBD even exists in vision transformer
+    - Analyze in what layers does the backdoor signal exist for all attacks
+- Check Dropout placement in all spots for Swin

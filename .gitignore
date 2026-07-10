@@ -19,3 +19,5 @@ _models/
 checkpoints/
 logs/
 tmp/
+backdoor_bench_checkpoints/
+backdoor_bench_weights/
