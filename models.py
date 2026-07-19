@@ -42,7 +42,9 @@ def _strip_dataparallel_prefix(state_dict: dict) -> dict:
     return {key.replace("module.", "", 1): value for key, value in state_dict.items()}
 
 
-def _load_checkpoint_into(builder, checkpoint_path: str, device: torch.device) -> nn.Module:
+def _load_checkpoint_into(
+    builder, checkpoint_path: str, device: torch.device
+) -> nn.Module:
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     model = builder(checkpoint["num_classes"])
 
@@ -68,7 +70,9 @@ def load_swin_checkpoint(checkpoint_path: str, device: torch.device) -> nn.Modul
     return _load_checkpoint_into(build_swin, checkpoint_path, device)
 
 
-def load_checkpoint(architecture: str, checkpoint_path: str, device: torch.device) -> nn.Module:
+def load_checkpoint(
+    architecture: str, checkpoint_path: str, device: torch.device
+) -> nn.Module:
     if architecture == "vit":
         return load_vit_checkpoint(checkpoint_path, device)
     if architecture == "swin":

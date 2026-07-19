@@ -26,17 +26,28 @@ def test_save_and_load_checkpoint_round_trip(tmp_path):
     save_checkpoint(model, num_classes=4, path=path)
 
     reloaded = load_vit_checkpoint(path, device=torch.device("cpu"))
-    for original, restored in zip(model.state_dict().values(), reloaded.state_dict().values()):
-        assert torch.equal(original, restored), "reloaded weights must match exactly what was saved"
+    for original, restored in zip(
+        model.state_dict().values(), reloaded.state_dict().values()
+    ):
+        assert torch.equal(original, restored), (
+            "reloaded weights must match exactly what was saved"
+        )
 
 
 def test_save_checkpoint_writes_args_json_sidecar(tmp_path):
     model = build_vit(num_classes=4)
     path = os.path.join(tmp_path, "attack_result.pt")
-    save_checkpoint(model, num_classes=4, path=path, metadata={"dataset": "cifar10", "attack": "benign"})
+    save_checkpoint(
+        model,
+        num_classes=4,
+        path=path,
+        metadata={"dataset": "cifar10", "attack": "benign"},
+    )
 
     args_path = os.path.join(tmp_path, "args.json")
-    assert os.path.exists(args_path), "metadata must be written as an args.json sidecar, not merged into the .pt"
+    assert os.path.exists(args_path), (
+        "metadata must be written as an args.json sidecar, not merged into the .pt"
+    )
     with open(args_path) as handle:
         assert json.load(handle) == {"dataset": "cifar10", "attack": "benign"}
 
@@ -59,8 +70,15 @@ def test_read_checkpoint_metadata_missing_required_key(tmp_path):
 
 
 def test_read_checkpoint_metadata_round_trip(tmp_path):
-    metadata = {"dataset": "cifar10", "attack": "badnet_a2o", "target_label": 0, "poison_rate": 0.1}
+    metadata = {
+        "dataset": "cifar10",
+        "attack": "badnet_a2o",
+        "target_label": 0,
+        "poison_rate": 0.1,
+    }
     with open(os.path.join(tmp_path, "args.json"), "w") as handle:
         json.dump(metadata, handle)
 
-    assert read_checkpoint_metadata(os.path.join(tmp_path, "attack_result.pt")) == metadata
+    assert (
+        read_checkpoint_metadata(os.path.join(tmp_path, "attack_result.pt")) == metadata
+    )

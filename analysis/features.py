@@ -68,9 +68,15 @@ def extract_layer_features(
     """
     encoder_blocks = vit_core(model).encoder.layers
     storage: dict[int, list[torch.Tensor]] = {}
-    handles = [encoder_blocks.register_forward_pre_hook(_make_embedding_hook(storage, reduction))]
+    handles = [
+        encoder_blocks.register_forward_pre_hook(
+            _make_embedding_hook(storage, reduction)
+        )
+    ]
     for offset, block in enumerate(encoder_blocks, start=1):
-        handles.append(block.register_forward_hook(_make_block_hook(storage, offset, reduction)))
+        handles.append(
+            block.register_forward_hook(_make_block_hook(storage, offset, reduction))
+        )
 
     try:
         for images, _ in loader:
@@ -79,4 +85,6 @@ def extract_layer_features(
         for handle in handles:
             handle.remove()
 
-    return {layer: torch.cat(chunks, dim=0) for layer, chunks in sorted(storage.items())}
+    return {
+        layer: torch.cat(chunks, dim=0) for layer, chunks in sorted(storage.items())
+    }

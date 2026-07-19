@@ -42,5 +42,7 @@ def umap_project(
             "umap_project needs umap-learn, install it with pip install umap-learn"
         ) from error
 
-    projector = umap.UMAP(n_neighbors=num_neighbors, min_dist=min_distance, random_state=seed)
+    projector = umap.UMAP(
+        n_neighbors=num_neighbors, min_dist=min_distance, random_state=seed
+    )
     return projector.fit_transform(features.float().numpy())

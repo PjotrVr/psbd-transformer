@@ -9,7 +9,6 @@ import torch.nn.functional as F
 
 
 class poison_generator:
-
     def __init__(
         self,
         img_size,

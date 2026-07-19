@@ -76,3 +76,4 @@ BackdoorBench and Backdoor-Toolbox are reference implementations. When porting a
 ## Before finishing a task
 
 Run the relevant eval or a quick sanity check rather than assuming correctness.
+If all checks satisfy, run `ruff format .` to format all code.

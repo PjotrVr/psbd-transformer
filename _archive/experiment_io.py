@@ -35,7 +35,9 @@ def save_scores(
     )
 
 
-def load_scores(experiment_dir: str, rate: float) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def load_scores(
+    experiment_dir: str, rate: float
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     arrays = np.load(scores_path(experiment_dir, rate))
     return (
         torch.tensor(arrays["val"]),

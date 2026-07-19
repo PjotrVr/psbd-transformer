@@ -19,7 +19,10 @@ import torch.nn as nn
 from torchvision.models.vision_transformer import EncoderBlock
 
 try:
-    from torchvision.models.swin_transformer import SwinTransformerBlock, SwinTransformerBlockV2
+    from torchvision.models.swin_transformer import (
+        SwinTransformerBlock,
+        SwinTransformerBlockV2,
+    )
 
     _SWIN_BLOCK_TYPES = (SwinTransformerBlock, SwinTransformerBlockV2)
 except ImportError:  # older torchvision without the V2 block

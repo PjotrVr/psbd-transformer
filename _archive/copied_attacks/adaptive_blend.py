@@ -27,7 +27,6 @@ def get_trigger_mask(img_size, total_pieces, masked_pieces):
 
 
 class poison_generator:
-
     def __init__(
         self,
         img_size,
@@ -134,7 +133,6 @@ class poison_generator:
 
 
 class poison_transform:
-
     def __init__(self, img_size, trigger, target_label, alpha=0.15):
         self.img_size = img_size
         self.target_label = target_label

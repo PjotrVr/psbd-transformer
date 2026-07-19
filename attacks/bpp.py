@@ -53,7 +53,7 @@ def _floyd_steinberg(channel: torch.Tensor, levels: int) -> torch.Tensor:
 
 
 def build(config: BppConfig, image_size: int, target_label: int) -> Attack:
-    levels = 2 ** config.bit_depth
+    levels = 2**config.bit_depth
     dither = config.dither
 
     def apply_trigger(image: torch.Tensor, _index: int) -> torch.Tensor:

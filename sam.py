@@ -23,7 +23,14 @@ import torch
 
 
 class SAM(torch.optim.Optimizer):
-    def __init__(self, params, base_optimizer_cls, rho: float = 0.1, adaptive: bool = False, **base_kwargs):
+    def __init__(
+        self,
+        params,
+        base_optimizer_cls,
+        rho: float = 0.1,
+        adaptive: bool = False,
+        **base_kwargs,
+    ):
         if rho < 0.0:
             raise ValueError(f"rho must be non-negative, got {rho}")
         defaults = dict(rho=rho, adaptive=adaptive, **base_kwargs)
@@ -77,7 +84,9 @@ class SAM(torch.optim.Optimizer):
                 if parameter.grad is None:
                     continue
                 weighting = torch.abs(parameter) if group["adaptive"] else 1.0
-                per_parameter_norms.append((weighting * parameter.grad).norm(p=2).to(reference_device))
+                per_parameter_norms.append(
+                    (weighting * parameter.grad).norm(p=2).to(reference_device)
+                )
         return torch.norm(torch.stack(per_parameter_norms), p=2)
 
     def load_state_dict(self, state_dict) -> None:

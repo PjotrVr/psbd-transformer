@@ -39,7 +39,7 @@ def build(config: TactConfig, image_size: int, target_label: int) -> Attack:
 
     def apply_trigger(image: torch.Tensor, _index: int) -> torch.Tensor:
         stamped = image.clone()
-        stamped[:, image_size - size:, image_size - size:] = patch
+        stamped[:, image_size - size :, image_size - size :] = patch
         return stamped
 
     return Attack("tact", apply_trigger, config.label_mode, target_label)

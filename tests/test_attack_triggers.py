@@ -71,24 +71,38 @@ def test_label_policy() -> None:
     dirty = Attack("dirty", noop, "all_to_one", target_label=0)
     dirty_indices = choose_poison_indices(labels, dirty, poison_rate=0.5, seed=0)
     assert len(dirty_indices) == 4, "count should be round(rate times dataset size)"
-    assert all(labels[i] != 0 for i in dirty_indices), "all_to_one must skip the target class"
-    assert dirty_indices == choose_poison_indices(labels, dirty, 0.5, seed=0), "must be reproducible"
+    assert all(labels[i] != 0 for i in dirty_indices), (
+        "all_to_one must skip the target class"
+    )
+    assert dirty_indices == choose_poison_indices(labels, dirty, 0.5, seed=0), (
+        "must be reproducible"
+    )
 
     clean = Attack("clean", noop, "clean_label", target_label=0)
     clean_indices = choose_poison_indices(labels, clean, poison_rate=0.5, seed=0)
     assert len(clean_indices) == 2, "clean_label is capped by the target-class count"
-    assert all(labels[i] == 0 for i in clean_indices), "clean_label must poison only the target class"
+    assert all(labels[i] == 0 for i in clean_indices), (
+        "clean_label must poison only the target class"
+    )
 
 
 def _assert_deterministic_and_bounded(attack: Attack, image: torch.Tensor) -> None:
     first = attack.apply_trigger(image, 0)
-    assert torch.equal(first, attack.apply_trigger(image, 0)), f"{attack.name} is not deterministic"
-    assert torch.equal(first, attack.apply_trigger(image, 7)), f"{attack.name} depends on the index"
-    assert first.min() >= 0.0 and first.max() <= 1.0, f"{attack.name} left the 0 to 1 range"
+    assert torch.equal(first, attack.apply_trigger(image, 0)), (
+        f"{attack.name} is not deterministic"
+    )
+    assert torch.equal(first, attack.apply_trigger(image, 7)), (
+        f"{attack.name} depends on the index"
+    )
+    assert first.min() >= 0.0 and first.max() <= 1.0, (
+        f"{attack.name} left the 0 to 1 range"
+    )
 
 
 def test_badnet() -> None:
-    attack = build_attack("badnet", default_config("badnet"), CONTROLLED_SIZE, target_label=0)
+    attack = build_attack(
+        "badnet", default_config("badnet"), CONTROLLED_SIZE, target_label=0
+    )
     image = _gradient_image(CONTROLLED_SIZE)
     _assert_deterministic_and_bounded(attack, image)
 
@@ -98,15 +112,23 @@ def test_badnet() -> None:
     outside_poisoned = poisoned.clone()
     outside_clean[:, -patch:, -patch:] = 0.0
     outside_poisoned[:, -patch:, -patch:] = 0.0
-    assert torch.equal(outside_clean, outside_poisoned), "badnet changed pixels outside the patch"
-    assert not torch.equal(poisoned[:, -patch:, -patch:], image[:, -patch:, -patch:]), "patch not applied"
+    assert torch.equal(outside_clean, outside_poisoned), (
+        "badnet changed pixels outside the patch"
+    )
+    assert not torch.equal(poisoned[:, -patch:, -patch:], image[:, -patch:, -patch:]), (
+        "patch not applied"
+    )
 
 
 def test_blend() -> None:
-    attack = build_attack("blend", default_config("blend"), CONTROLLED_SIZE, target_label=0)
+    attack = build_attack(
+        "blend", default_config("blend"), CONTROLLED_SIZE, target_label=0
+    )
     image = _mid_gray_image(CONTROLLED_SIZE)
     _assert_deterministic_and_bounded(attack, image)
-    assert not torch.equal(attack.apply_trigger(image, 0), image), "blend produced no change"
+    assert not torch.equal(attack.apply_trigger(image, 0), image), (
+        "blend produced no change"
+    )
 
 
 def test_sig() -> None:
@@ -116,17 +138,21 @@ def test_sig() -> None:
 
     difference = attack.apply_trigger(image, 0) - image
     first_row = difference[:, 0, :]
-    assert torch.allclose(difference, first_row.unsqueeze(1).expand_as(difference), atol=1e-6), (
-        "sig signal should depend on the column only, so every row must match"
-    )
+    assert torch.allclose(
+        difference, first_row.unsqueeze(1).expand_as(difference), atol=1e-6
+    ), "sig signal should depend on the column only, so every row must match"
     assert first_row.std() > 0, "sig signal should vary across columns"
 
 
 def test_wanet() -> None:
-    attack = build_attack("wanet", default_config("wanet"), CONTROLLED_SIZE, target_label=0)
+    attack = build_attack(
+        "wanet", default_config("wanet"), CONTROLLED_SIZE, target_label=0
+    )
     image = _gradient_image(CONTROLLED_SIZE)
     _assert_deterministic_and_bounded(attack, image)
-    assert not torch.equal(attack.apply_trigger(image, 0), image), "wanet produced no warp"
+    assert not torch.equal(attack.apply_trigger(image, 0), image), (
+        "wanet produced no warp"
+    )
 
 
 def test_low_frequency() -> None:
@@ -138,7 +164,9 @@ def test_low_frequency() -> None:
     spectrum = torch.fft.fftshift(torch.fft.fft2(difference), dim=(-2, -1)).abs()
     center = CONTROLLED_SIZE // 2
     cutoff = default_config("lf").cutoff
-    low_band = spectrum[:, center - cutoff:center + cutoff + 1, center - cutoff:center + cutoff + 1]
+    low_band = spectrum[
+        :, center - cutoff : center + cutoff + 1, center - cutoff : center + cutoff + 1
+    ]
     low_fraction = low_band.sum() / spectrum.sum().clamp_min(1e-8)
     assert low_fraction > 0.5, "lf trigger energy should sit in low spatial frequencies"
 
@@ -153,12 +181,16 @@ def dump_visuals(output_path: str) -> None:
     image = _gradient_image(CONTROLLED_SIZE)
     rows = []
     for name in ("badnet", "blend", "sig", "wanet", "lf"):
-        attack = build_attack(name, default_config(name), CONTROLLED_SIZE, target_label=0)
+        attack = build_attack(
+            name, default_config(name), CONTROLLED_SIZE, target_label=0
+        )
         poisoned = attack.apply_trigger(image, 0)
         amplified = ((poisoned - image) * 10.0 + 0.5).clamp(0.0, 1.0)
         rows.extend([image, poisoned, amplified])
     save_image(rows, output_path, nrow=3)
-    print(f"visual grid written to {output_path}, columns are clean, poisoned, amplified difference")
+    print(
+        f"visual grid written to {output_path}, columns are clean, poisoned, amplified difference"
+    )
 
 
 @pytest.mark.slow
@@ -172,17 +204,24 @@ def test_overfit_sanity_check() -> None:
     dataset_name = "cifar10"
     spec = DATASET_REGISTRY[dataset_name]
     transform = transforms_v2.Compose(
-        [transforms_v2.Resize((CONTROLLED_SIZE, CONTROLLED_SIZE)), transforms_v2.ToTensor()]
+        [
+            transforms_v2.Resize((CONTROLLED_SIZE, CONTROLLED_SIZE)),
+            transforms_v2.ToTensor(),
+        ]
     )
     train_clean, _ = load_clean_datasets(dataset_name, transform, "raw_data")
     subset = Subset(train_clean, list(range(256)))
     normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
 
-    attack = build_attack("badnet", default_config("badnet"), CONTROLLED_SIZE, target_label=0)
+    attack = build_attack(
+        "badnet", default_config("badnet"), CONTROLLED_SIZE, target_label=0
+    )
     labels = extract_labels(subset)
     poison_indices = choose_poison_indices(labels, attack, poison_rate=0.5, seed=0)
 
-    poisoned_train = PoisonedTrainingSet(subset, attack, poison_indices, normalize, spec.num_classes)
+    poisoned_train = PoisonedTrainingSet(
+        subset, attack, poison_indices, normalize, spec.num_classes
+    )
     asr_set = AttackSuccessSet(subset, labels, attack, normalize, spec.num_classes)
 
     train_loader = DataLoader(poisoned_train, batch_size=64, shuffle=True)
@@ -191,17 +230,31 @@ def test_overfit_sanity_check() -> None:
     # ASR of an untrained model is the input-independent baseline, near one over
     # the class count. If it is already high, the ASR measurement itself is wrong.
     baseline_model = build_vit(spec.num_classes).to(device)
-    asr_before = attack_success_rate(baseline_model, asr_loader, device, use_bfloat16=True)
-    assert asr_before < 0.5, "untrained-model ASR should sit near the class-count baseline, not already high"
+    asr_before = attack_success_rate(
+        baseline_model, asr_loader, device, use_bfloat16=True
+    )
+    assert asr_before < 0.5, (
+        "untrained-model ASR should sit near the class-count baseline, not already high"
+    )
 
     trained = train_classifier(
-        "vit", spec.num_classes, train_loader, train_loader, device, epochs=15, use_sam=False
+        "vit",
+        spec.num_classes,
+        train_loader,
+        train_loader,
+        device,
+        epochs=15,
+        use_sam=False,
     )
     asr_after = attack_success_rate(trained, asr_loader, device, use_bfloat16=True)
     memorization = clean_accuracy(trained, train_loader, device, use_bfloat16=True)
 
-    assert asr_after > 0.9, f"ASR after overfitting should exceed 0.9, got {asr_after:.3f}"
-    assert memorization > 0.9, f"train memorization should exceed 0.9, got {memorization:.3f}"
+    assert asr_after > 0.9, (
+        f"ASR after overfitting should exceed 0.9, got {asr_after:.3f}"
+    )
+    assert memorization > 0.9, (
+        f"train memorization should exceed 0.9, got {memorization:.3f}"
+    )
 
 
 if __name__ == "__main__":

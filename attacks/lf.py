@@ -28,7 +28,9 @@ def _low_frequency_pattern(image_size: int, cutoff: int, seed: int) -> torch.Ten
 
     center = image_size // 2
     mask = torch.zeros(image_size, image_size)
-    mask[center - cutoff:center + cutoff + 1, center - cutoff:center + cutoff + 1] = 1.0
+    mask[
+        center - cutoff : center + cutoff + 1, center - cutoff : center + cutoff + 1
+    ] = 1.0
 
     filtered = torch.fft.ifft2(torch.fft.ifftshift(spectrum * mask, dim=(-2, -1))).real
     peak = filtered.abs().amax().clamp_min(1e-8)

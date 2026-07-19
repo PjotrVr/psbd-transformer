@@ -45,7 +45,8 @@ class PngPathDataset(Dataset):
         self.num_classes = num_classes
         self.paths = paths
         self.eligible_positions = [
-            position for position, label in enumerate(true_labels)
+            position
+            for position, label in enumerate(true_labels)
             if is_eval_poisonable(label_mode, int(label), target_label)
         ]
 
@@ -58,7 +59,10 @@ class PngPathDataset(Dataset):
         if self.transform:
             image = self.transform(image)
         label = attack_success_label(
-            self.label_mode, int(self.true_labels[position]), self.target_label, self.num_classes
+            self.label_mode,
+            int(self.true_labels[position]),
+            self.target_label,
+            self.num_classes,
         )
         return image, label
 

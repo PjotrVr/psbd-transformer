@@ -25,24 +25,42 @@ def vit() -> nn.Module:
 
 
 def _dropout_modules(model: nn.Module) -> dict[str, nn.Dropout]:
-    return {name: module for name, module in model.named_modules() if isinstance(module, nn.Dropout)}
+    return {
+        name: module
+        for name, module in model.named_modules()
+        if isinstance(module, nn.Dropout)
+    }
 
 
 def test_pre_residual_touches_36_not_37(vit):
     touched = configure_pre_residual_dropout(vit, rate=0.3)
-    assert touched == 36, "should touch the 36 per-block dropouts, not the embedding dropout too"
+    assert touched == 36, (
+        "should touch the 36 per-block dropouts, not the embedding dropout too"
+    )
 
 
 def test_pre_residual_excludes_embedding_dropout(vit):
     configure_pre_residual_dropout(vit, rate=0.3)
     modules = _dropout_modules(vit)
-    embedding_dropout = [module for name, module in modules.items() if name.endswith("encoder.dropout")]
-    assert len(embedding_dropout) == 1, "ViT should have exactly one embedding dropout module"
-    assert embedding_dropout[0].p == 0.0, "embedding dropout must stay untouched by the pre_residual sweep"
+    embedding_dropout = [
+        module for name, module in modules.items() if name.endswith("encoder.dropout")
+    ]
+    assert len(embedding_dropout) == 1, (
+        "ViT should have exactly one embedding dropout module"
+    )
+    assert embedding_dropout[0].p == 0.0, (
+        "embedding dropout must stay untouched by the pre_residual sweep"
+    )
 
-    per_block = [module for name, module in modules.items() if not name.endswith("encoder.dropout")]
+    per_block = [
+        module
+        for name, module in modules.items()
+        if not name.endswith("encoder.dropout")
+    ]
     assert len(per_block) == 36
-    assert all(module.p == 0.3 for module in per_block), "every per-block dropout must get the new rate"
+    assert all(module.p == 0.3 for module in per_block), (
+        "every per-block dropout must get the new rate"
+    )
 
 
 def test_reset_dropout_zeroes_rate_and_eval_mode(vit):
@@ -60,7 +78,9 @@ def test_reset_dropout_zeroes_rate_and_eval_mode(vit):
 
 def test_post_residual_wraps_blocks_pre_residual_does_not(vit):
     encoder_layers = vit[1].encoder.layers
-    assert all(isinstance(block, EncoderBlock) for block in encoder_layers), "sanity check on the fresh model"
+    assert all(isinstance(block, EncoderBlock) for block in encoder_layers), (
+        "sanity check on the fresh model"
+    )
 
     configure_dropout(vit, rate=0.3, placement="pre_residual")
     assert all(isinstance(block, EncoderBlock) for block in encoder_layers), (
@@ -68,9 +88,9 @@ def test_post_residual_wraps_blocks_pre_residual_does_not(vit):
     )
 
     configure_dropout(vit, rate=0.3, placement="post_residual")
-    assert all(isinstance(block, PostResidualEncoderBlock) for block in encoder_layers), (
-        "post_residual must wrap every encoder block"
-    )
+    assert all(
+        isinstance(block, PostResidualEncoderBlock) for block in encoder_layers
+    ), "post_residual must wrap every encoder block"
 
 
 def test_reset_dropout_unwraps_post_residual(vit):
@@ -87,6 +107,10 @@ def test_pre_residual_exclusion_is_a_no_op_for_swin():
     # exclusion in configure_pre_residual_dropout must not drop any of Swin's
     # own dropouts.
     swin = build_swin(num_classes=4)
-    total_dropouts = sum(1 for _, module in swin.named_modules() if isinstance(module, nn.Dropout))
+    total_dropouts = sum(
+        1 for _, module in swin.named_modules() if isinstance(module, nn.Dropout)
+    )
     touched = configure_pre_residual_dropout(swin, rate=0.3)
-    assert touched == total_dropouts, "the embedding-dropout exclusion should never trigger on Swin"
+    assert touched == total_dropouts, (
+        "the embedding-dropout exclusion should never trigger on Swin"
+    )

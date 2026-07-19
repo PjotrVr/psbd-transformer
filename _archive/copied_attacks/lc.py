@@ -10,7 +10,6 @@ from torchvision.utils import save_image
 
 
 class poison_generator:
-
     def __init__(
         self, img_size, dataset, adv_imgs, poisoning_ratio, trigger, mask, target_label
     ):

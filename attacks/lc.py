@@ -40,9 +40,9 @@ def build(config: LabelConsistentConfig, image_size: int, target_label: int) -> 
         # The label-consistent trigger repeats the patch in all four corners.
         stamped = image.clone()
         stamped[:, :size, :size] = patch
-        stamped[:, :size, image_size - size:] = patch
-        stamped[:, image_size - size:, :size] = patch
-        stamped[:, image_size - size:, image_size - size:] = patch
+        stamped[:, :size, image_size - size :] = patch
+        stamped[:, image_size - size :, :size] = patch
+        stamped[:, image_size - size :, image_size - size :] = patch
         return stamped
 
     return Attack("lc", apply_trigger, config.label_mode, target_label)

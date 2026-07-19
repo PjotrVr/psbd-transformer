@@ -62,7 +62,9 @@ def figures_dir_for(experiment_dir: str) -> str:
     return experiment_dir.replace("experiments", "figures", 1)
 
 
-def rows_for(metrics: list[dict], quantile: float | None, rate: float | None) -> list[dict]:
+def rows_for(
+    metrics: list[dict], quantile: float | None, rate: float | None
+) -> list[dict]:
     rows = metrics
     if quantile is not None:
         rows = [r for r in rows if abs(r["quantile"] - quantile) < 1e-6]
@@ -73,12 +75,16 @@ def rows_for(metrics: list[dict], quantile: float | None, rate: float | None) ->
 
 def best_rate(metrics: list[dict], quantile: float = 0.25) -> float:
     """The dropout rate with the highest TPR at the reference quantile."""
-    return max(rows_for(metrics, quantile, None), key=lambda r: r["tpr"])["dropout_rate"]
+    return max(rows_for(metrics, quantile, None), key=lambda r: r["tpr"])[
+        "dropout_rate"
+    ]
 
 
 def _style_axes(ax, title: str) -> None:
     ax.set_title(title, fontsize=TITLE_FONT_SIZE)
-    ax.tick_params(axis="both", which="major", labelsize=TICK_LABEL_FONT_SIZE, width=SPINE_WIDTH)
+    ax.tick_params(
+        axis="both", which="major", labelsize=TICK_LABEL_FONT_SIZE, width=SPINE_WIDTH
+    )
     ax.legend(fontsize=LEGEND_FONT_SIZE)
     ax.grid(alpha=GRID_ALPHA)
 
@@ -88,17 +94,41 @@ def _save(fig_dir: str, filename: str) -> None:
     plt.savefig(os.path.join(fig_dir, filename), dpi=DPI)
 
 
-def plot_shift_curves(metrics: list[dict], experiment_dir: str, save: bool = True) -> None:
+def plot_shift_curves(
+    metrics: list[dict], experiment_dir: str, save: bool = True
+) -> None:
     rows = rows_for(metrics, quantile=0.25, rate=None)
     rates = [r["dropout_rate"] for r in rows]
 
     _, ax = plt.subplots(figsize=WIDE_FIG_SIZE)
-    ax.plot(rates, [r["shift_clean"] for r in rows], label="Clean", color=CLEAN_COLOR,
-            linewidth=LINE_WIDTH, marker="o", markersize=MARKER_SIZE)
-    ax.plot(rates, [r["shift_backdoor"] for r in rows], label="Backdoor", color=BACKDOOR_COLOR,
-            linewidth=LINE_WIDTH, marker="o", markersize=MARKER_SIZE)
-    ax.plot(rates, [r["shift_clean_val"] for r in rows], label="Validation", color=VALIDATION_COLOR,
-            linewidth=LINE_WIDTH, marker="o", markersize=MARKER_SIZE, linestyle="--")
+    ax.plot(
+        rates,
+        [r["shift_clean"] for r in rows],
+        label="Clean",
+        color=CLEAN_COLOR,
+        linewidth=LINE_WIDTH,
+        marker="o",
+        markersize=MARKER_SIZE,
+    )
+    ax.plot(
+        rates,
+        [r["shift_backdoor"] for r in rows],
+        label="Backdoor",
+        color=BACKDOOR_COLOR,
+        linewidth=LINE_WIDTH,
+        marker="o",
+        markersize=MARKER_SIZE,
+    )
+    ax.plot(
+        rates,
+        [r["shift_clean_val"] for r in rows],
+        label="Validation",
+        color=VALIDATION_COLOR,
+        linewidth=LINE_WIDTH,
+        marker="o",
+        markersize=MARKER_SIZE,
+        linestyle="--",
+    )
     ax.set_xlabel("Dropout rate", fontsize=AXIS_FONT_SIZE)
     ax.set_ylabel("Shift ratio", fontsize=AXIS_FONT_SIZE)
     ax.set_ylim(0, 1.05)
@@ -110,7 +140,10 @@ def plot_shift_curves(metrics: list[dict], experiment_dir: str, save: bool = Tru
 
 
 def plot_psu_histogram(
-    metrics: list[dict], experiment_dir: str, rate: float | None = None, quantile: float = 0.25,
+    metrics: list[dict],
+    experiment_dir: str,
+    rate: float | None = None,
+    quantile: float = 0.25,
     save: bool = True,
 ) -> None:
     rate = best_rate(metrics) if rate is None else rate
@@ -118,34 +151,65 @@ def plot_psu_histogram(
     threshold = float(torch.quantile(validation_scores.float(), quantile).item())
 
     _, ax = plt.subplots(figsize=WIDE_FIG_SIZE)
-    ax.hist(clean_scores.numpy(), bins=60, alpha=0.6, label="Clean", color=CLEAN_COLOR, density=True)
-    ax.hist(backdoor_scores.numpy(), bins=60, alpha=0.6, label="Backdoor", color=BACKDOOR_COLOR,
-            density=True)
-    ax.axvline(threshold, color="black", linestyle="--", linewidth=LINE_WIDTH,
-               label=f"Threshold = {threshold:.3f}")
+    ax.hist(
+        clean_scores.numpy(),
+        bins=60,
+        alpha=0.6,
+        label="Clean",
+        color=CLEAN_COLOR,
+        density=True,
+    )
+    ax.hist(
+        backdoor_scores.numpy(),
+        bins=60,
+        alpha=0.6,
+        label="Backdoor",
+        color=BACKDOOR_COLOR,
+        density=True,
+    )
+    ax.axvline(
+        threshold,
+        color="black",
+        linestyle="--",
+        linewidth=LINE_WIDTH,
+        label=f"Threshold = {threshold:.3f}",
+    )
     ax.set_xlabel("PSU score", fontsize=AXIS_FONT_SIZE)
     ax.set_ylabel("Density", fontsize=AXIS_FONT_SIZE)
     _style_axes(ax, format_title(Path(experiment_dir).name, f", drop_p={rate}"))
     plt.tight_layout()
     if save:
-        _save(figures_dir_for(experiment_dir), f"histogram_p{str(rate).replace('.', '_')}.png")
+        _save(
+            figures_dir_for(experiment_dir),
+            f"histogram_p{str(rate).replace('.', '_')}.png",
+        )
     plt.show()
 
 
 def plot_roc_curve(
-    metrics: list[dict], experiment_dir: str, rate: float | None = None, save: bool = True,
+    metrics: list[dict],
+    experiment_dir: str,
+    rate: float | None = None,
+    save: bool = True,
 ) -> None:
     rate = best_rate(metrics) if rate is None else rate
     _, clean_scores, backdoor_scores = load_scores(experiment_dir, rate)
 
     scores = np.concatenate([-clean_scores.numpy(), -backdoor_scores.numpy()])
-    labels = np.concatenate([np.zeros(len(clean_scores)), np.ones(len(backdoor_scores))])
+    labels = np.concatenate(
+        [np.zeros(len(clean_scores)), np.ones(len(backdoor_scores))]
+    )
     fpr_points, tpr_points, _ = roc_curve(labels, scores)
     score = roc_auc_score(labels, scores)
 
     _, ax = plt.subplots(figsize=SQUARE_FIG_SIZE)
-    ax.plot(fpr_points, tpr_points, color=CURVE_COLOR, linewidth=LINE_WIDTH,
-            label=f"AUROC={score:.3f}")
+    ax.plot(
+        fpr_points,
+        tpr_points,
+        color=CURVE_COLOR,
+        linewidth=LINE_WIDTH,
+        label=f"AUROC={score:.3f}",
+    )
     ax.plot([0, 1], [0, 1], "k--", label="Random", linewidth=LINE_WIDTH)
     ax.set_xlabel("FPR", fontsize=AXIS_FONT_SIZE)
     ax.set_ylabel("TPR", fontsize=AXIS_FONT_SIZE)
@@ -154,21 +218,40 @@ def plot_roc_curve(
     _style_axes(ax, format_title(Path(experiment_dir).name, f", drop_p={rate}"))
     plt.tight_layout()
     if save:
-        _save(figures_dir_for(experiment_dir), f"roc_p{str(rate).replace('.', '_')}.png")
+        _save(
+            figures_dir_for(experiment_dir), f"roc_p{str(rate).replace('.', '_')}.png"
+        )
     plt.show()
 
 
 def plot_tpr_fpr(
-    metrics: list[dict], experiment_dir: str, quantile: float = 0.25, save: bool = True,
+    metrics: list[dict],
+    experiment_dir: str,
+    quantile: float = 0.25,
+    save: bool = True,
 ) -> None:
     rows = rows_for(metrics, quantile=quantile, rate=None)
     rates = [r["dropout_rate"] for r in rows]
 
     _, ax = plt.subplots(figsize=WIDE_FIG_SIZE)
-    ax.plot(rates, [r["tpr"] for r in rows], label="TPR", color=CLEAN_COLOR,
-            linewidth=LINE_WIDTH, marker="o", markersize=MARKER_SIZE)
-    ax.plot(rates, [r["fpr"] for r in rows], label="FPR", color=BACKDOOR_COLOR,
-            linewidth=LINE_WIDTH, marker="o", markersize=MARKER_SIZE)
+    ax.plot(
+        rates,
+        [r["tpr"] for r in rows],
+        label="TPR",
+        color=CLEAN_COLOR,
+        linewidth=LINE_WIDTH,
+        marker="o",
+        markersize=MARKER_SIZE,
+    )
+    ax.plot(
+        rates,
+        [r["fpr"] for r in rows],
+        label="FPR",
+        color=BACKDOOR_COLOR,
+        linewidth=LINE_WIDTH,
+        marker="o",
+        markersize=MARKER_SIZE,
+    )
     ax.set_xlabel("Dropout rate", fontsize=AXIS_FONT_SIZE)
     ax.set_ylabel("Rate", fontsize=AXIS_FONT_SIZE)
     ax.set_xlim(0, 1)
@@ -176,15 +259,24 @@ def plot_tpr_fpr(
     _style_axes(ax, format_title(Path(experiment_dir).name, f", q={quantile}"))
     plt.tight_layout()
     if save:
-        _save(figures_dir_for(experiment_dir), f"tpr_fpr_q{str(quantile).replace('.', '_')}.png")
+        _save(
+            figures_dir_for(experiment_dir),
+            f"tpr_fpr_q{str(quantile).replace('.', '_')}.png",
+        )
     plt.show()
 
 
 def plot_auroc(metrics: list[dict], experiment_dir: str, save: bool = True) -> None:
     rows = rows_for(metrics, quantile=0.25, rate=None)
     _, ax = plt.subplots(figsize=WIDE_FIG_SIZE)
-    ax.plot([r["dropout_rate"] for r in rows], [r["auroc"] for r in rows], color=CURVE_COLOR,
-            linewidth=LINE_WIDTH, marker="o", markersize=MARKER_SIZE)
+    ax.plot(
+        [r["dropout_rate"] for r in rows],
+        [r["auroc"] for r in rows],
+        color=CURVE_COLOR,
+        linewidth=LINE_WIDTH,
+        marker="o",
+        markersize=MARKER_SIZE,
+    )
     ax.axhline(0.5, linestyle="--", color="black", label="Random", linewidth=LINE_WIDTH)
     ax.set_xlabel("Dropout rate", fontsize=AXIS_FONT_SIZE)
     ax.set_ylabel("AUROC", fontsize=AXIS_FONT_SIZE)
@@ -212,8 +304,12 @@ def analyze(experiment_dir: str, quantile: float = 0.25, plot: bool = True) -> d
     return best
 
 
-def analyze_all(experiments_root: str, quantile: float = 0.25, plot: bool = True) -> None:
-    folders = sorted(str(p.parent) for p in Path(experiments_root).rglob("metrics.json"))
+def analyze_all(
+    experiments_root: str, quantile: float = 0.25, plot: bool = True
+) -> None:
+    folders = sorted(
+        str(p.parent) for p in Path(experiments_root).rglob("metrics.json")
+    )
     print(f"Found {len(folders)} experiment folders")
     for folder in folders:
         try:

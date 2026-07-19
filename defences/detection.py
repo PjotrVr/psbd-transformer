@@ -14,7 +14,9 @@ from torch.utils.data import DataLoader
 from .inference import forward_probs
 
 
-def threshold_from_validation(validation_scores: torch.Tensor, quantile: float) -> float:
+def threshold_from_validation(
+    validation_scores: torch.Tensor, quantile: float
+) -> float:
     """The detection threshold is a low quantile of clean validation PSU.
 
     Setting the threshold this way needs no backdoor knowledge and reads as the
@@ -37,7 +39,9 @@ def detection_rates(
 def auroc(clean_scores: torch.Tensor, backdoor_scores: torch.Tensor) -> float:
     """Threshold-free separability. PSU is negated because lower means poisoned."""
     scores = np.concatenate([-clean_scores.numpy(), -backdoor_scores.numpy()])
-    labels = np.concatenate([np.zeros(len(clean_scores)), np.ones(len(backdoor_scores))])
+    labels = np.concatenate(
+        [np.zeros(len(clean_scores)), np.ones(len(backdoor_scores))]
+    )
     return float(roc_auc_score(labels, scores))
 
 
@@ -108,7 +112,9 @@ def class_correct_and_total(
     return correct, total
 
 
-def accuracy_by_class_from_counts(correct: torch.Tensor, total: torch.Tensor) -> dict[int, float]:
+def accuracy_by_class_from_counts(
+    correct: torch.Tensor, total: torch.Tensor
+) -> dict[int, float]:
     return {
         label: (correct[label] / total[label]).item() if total[label] > 0 else 0.0
         for label in range(len(total))
@@ -134,5 +140,7 @@ def clean_accuracy_by_class(
     so this is reported alongside the pooled clean_accuracy rather than instead
     of it.
     """
-    correct, total = class_correct_and_total(model, clean_loader, device, num_classes, use_bfloat16)
+    correct, total = class_correct_and_total(
+        model, clean_loader, device, num_classes, use_bfloat16
+    )
     return accuracy_by_class_from_counts(correct, total)

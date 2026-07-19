@@ -103,21 +103,35 @@ def sweep_one_attack(
     experiment_dir = os.path.join(config.results_dir(), folder_name)
     os.makedirs(experiment_dir, exist_ok=True)
 
-    model = load_checkpoint(config.architecture, _checkpoint_path(config, folder_name), device)
+    model = load_checkpoint(
+        config.architecture, _checkpoint_path(config, folder_name), device
+    )
     reset_dropout(model, config.dropout_placement)
 
     behavior = {
         "asr": attack_success_rate(model, backdoor_loader, device, config.use_bfloat16),
-        "clean_accuracy": clean_accuracy(model, clean_loader, device, config.use_bfloat16),
+        "clean_accuracy": clean_accuracy(
+            model, clean_loader, device, config.use_bfloat16
+        ),
     }
-    print(f"{folder_name}: ASR={behavior['asr']:.4f}, CA={behavior['clean_accuracy']:.4f}")
+    print(
+        f"{folder_name}: ASR={behavior['asr']:.4f}, CA={behavior['clean_accuracy']:.4f}"
+    )
 
     baselines = {
-        "validation": build_baseline_cache(model, val_loader, device, config.use_bfloat16),
+        "validation": build_baseline_cache(
+            model, val_loader, device, config.use_bfloat16
+        ),
         "clean": build_baseline_cache(model, clean_loader, device, config.use_bfloat16),
-        "backdoor": build_baseline_cache(model, backdoor_loader, device, config.use_bfloat16),
+        "backdoor": build_baseline_cache(
+            model, backdoor_loader, device, config.use_bfloat16
+        ),
     }
-    loaders = {"validation": val_loader, "clean": clean_loader, "backdoor": backdoor_loader}
+    loaders = {
+        "validation": val_loader,
+        "clean": clean_loader,
+        "backdoor": backdoor_loader,
+    }
 
     all_rows: list[dict] = []
     for rate in config.dropout_rates:
@@ -136,8 +150,16 @@ def sweep_one_attack(
                 config.seed,
             )
 
-        save_scores(experiment_dir, rate, scores["validation"], scores["clean"], scores["backdoor"])
-        all_rows.extend(_metric_rows_for_rate(folder_name, config, rate, scores, shifts, behavior))
+        save_scores(
+            experiment_dir,
+            rate,
+            scores["validation"],
+            scores["clean"],
+            scores["backdoor"],
+        )
+        all_rows.extend(
+            _metric_rows_for_rate(folder_name, config, rate, scores, shifts, behavior)
+        )
         gap = shifts["clean"] - shifts["backdoor"]
         print(f"\trate={rate:.2f} shift_clean={shifts['clean']:.3f} gap={gap:.3f}")
 
@@ -155,7 +177,9 @@ def run_sweep(config: RunConfig, device: torch.device) -> list[dict]:
             print(f"Skipping {folder_name}, checkpoint not found")
             continue
         try:
-            val_loader, clean_loader, backdoor_loader = build_eval_loaders(config, folder_name)
+            val_loader, clean_loader, backdoor_loader = build_eval_loaders(
+                config, folder_name
+            )
             sweep_one_attack(
                 config, folder_name, device, val_loader, clean_loader, backdoor_loader
             )

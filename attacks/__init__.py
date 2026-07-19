@@ -54,9 +54,13 @@ ATTACK_NAMES = tuple(_ATTACKS)
 def default_config(attack_name: str):
     factory = _ATTACKS[attack_name][1]
     if factory is None:
-        raise ValueError(f"{attack_name} has no default config, build its config directly")
+        raise ValueError(
+            f"{attack_name} has no default config, build its config directly"
+        )
     return factory()
 
 
-def build_attack(attack_name: str, config, image_size: int, target_label: int) -> Attack:
+def build_attack(
+    attack_name: str, config, image_size: int, target_label: int
+) -> Attack:
     return _ATTACKS[attack_name][0](config, image_size, target_label)

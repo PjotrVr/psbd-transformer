@@ -8,7 +8,6 @@ import torch
 
 
 class poison_generator:
-
     def __init__(
         self, img_size, dataset, poisoning_ratio, trigger, target_label, alpha=0.2
     ):

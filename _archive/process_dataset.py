@@ -5,9 +5,14 @@ import argparse
 from lightning import seed_everything
 
 from attacks import ATTACK_REGISTRY
-from utils import (apply_transform_to_all, create_benign_splits,
-                   create_poison_base_splits, load_dataset_tensors,
-                   save_benign_splits, save_poisoned_splits)
+from utils import (
+    apply_transform_to_all,
+    create_benign_splits,
+    create_poison_base_splits,
+    load_dataset_tensors,
+    save_benign_splits,
+    save_poisoned_splits,
+)
 
 
 def build_base_parser() -> argparse.ArgumentParser:

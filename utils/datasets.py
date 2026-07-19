@@ -48,20 +48,33 @@ def load_clean_datasets(
     root = os.path.join(raw_data_dir, dataset_name)
 
     if spec.loader_kind == "gtsrb":
-        train_ds = tv_datasets.GTSRB(root=root, split="train", download=True, transform=transform)
-        test_ds = tv_datasets.GTSRB(root=root, split="test", download=True, transform=transform)
+        train_ds = tv_datasets.GTSRB(
+            root=root, split="train", download=True, transform=transform
+        )
+        test_ds = tv_datasets.GTSRB(
+            root=root, split="test", download=True, transform=transform
+        )
         return train_ds, test_ds
 
     if spec.loader_kind == "image_folder":
-        train_ds = tv_datasets.ImageFolder(os.path.join(root, "train"), transform=transform)
-        test_ds = tv_datasets.ImageFolder(os.path.join(root, "val"), transform=transform)
+        train_ds = tv_datasets.ImageFolder(
+            os.path.join(root, "train"), transform=transform
+        )
+        test_ds = tv_datasets.ImageFolder(
+            os.path.join(root, "val"), transform=transform
+        )
         return train_ds, test_ds
 
-    torchvision_cls = {"cifar10": tv_datasets.CIFAR10, "cifar100": tv_datasets.CIFAR100}[
-        spec.loader_kind
-    ]
-    train_ds = torchvision_cls(root=root, train=True, download=True, transform=transform)
-    test_ds = torchvision_cls(root=root, train=False, download=True, transform=transform)
+    torchvision_cls = {
+        "cifar10": tv_datasets.CIFAR10,
+        "cifar100": tv_datasets.CIFAR100,
+    }[spec.loader_kind]
+    train_ds = torchvision_cls(
+        root=root, train=True, download=True, transform=transform
+    )
+    test_ds = torchvision_cls(
+        root=root, train=False, download=True, transform=transform
+    )
     return train_ds, test_ds
 
 

@@ -65,7 +65,9 @@ def _last_linear(module: nn.Module) -> nn.Linear:
     return linears[-1]
 
 
-def head_weight_alignment(model: nn.Module, num_layers: int, threshold: float) -> torch.Tensor:
+def head_weight_alignment(
+    model: nn.Module, num_layers: int, threshold: float
+) -> torch.Tensor:
     """The Karayalcin data-free detector, adapted here for reference.
 
     For each class row of the classifier head, count how strongly it aligns with

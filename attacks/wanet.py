@@ -31,9 +31,15 @@ def _identity_grid(image_size: int) -> torch.Tensor:
     return torch.stack((columns, rows), dim=2).unsqueeze(0)  # 1, H, W, 2
 
 
-def _warping_grid(image_size: int, control_grid_size: int, strength: float, seed: int) -> torch.Tensor:
+def _warping_grid(
+    image_size: int, control_grid_size: int, strength: float, seed: int
+) -> torch.Tensor:
     generator = torch.Generator().manual_seed(seed)
-    control = torch.rand(1, 2, control_grid_size, control_grid_size, generator=generator) * 2.0 - 1.0
+    control = (
+        torch.rand(1, 2, control_grid_size, control_grid_size, generator=generator)
+        * 2.0
+        - 1.0
+    )
     control = control / control.abs().mean()  # normalize the offsets
     field = F.interpolate(control, size=image_size, mode="bicubic", align_corners=True)
     field = field.permute(0, 2, 3, 1)  # 1, H, W, 2
@@ -42,10 +48,14 @@ def _warping_grid(image_size: int, control_grid_size: int, strength: float, seed
 
 
 def build(config: WaNetConfig, image_size: int, target_label: int) -> Attack:
-    grid = _warping_grid(image_size, config.control_grid_size, config.strength, config.field_seed)
+    grid = _warping_grid(
+        image_size, config.control_grid_size, config.strength, config.field_seed
+    )
 
     def apply_trigger(image: torch.Tensor, _index: int) -> torch.Tensor:
-        warped = F.grid_sample(image.unsqueeze(0), grid, align_corners=True, padding_mode="border")
+        warped = F.grid_sample(
+            image.unsqueeze(0), grid, align_corners=True, padding_mode="border"
+        )
         return warped.squeeze(0)
 
     return Attack("wanet", apply_trigger, config.label_mode, target_label)

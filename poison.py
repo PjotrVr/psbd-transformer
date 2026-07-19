@@ -46,7 +46,9 @@ def is_poisonable(label_mode: str, original_label: int, target_label: int) -> bo
     raise ValueError(f"Unknown label mode: {label_mode}")
 
 
-def poisoned_label(label_mode: str, original_label: int, target_label: int, num_classes: int) -> int:
+def poisoned_label(
+    label_mode: str, original_label: int, target_label: int, num_classes: int
+) -> int:
     """The label a poisoned sample is given.
 
     original form for all_to_all
@@ -82,7 +84,9 @@ def is_eval_poisonable(label_mode: str, original_label: int, target_label: int) 
     raise ValueError(f"Unknown label mode: {label_mode}")
 
 
-def attack_success_label(label_mode: str, original_label: int, target_label: int, num_classes: int) -> int:
+def attack_success_label(
+    label_mode: str, original_label: int, target_label: int, num_classes: int
+) -> int:
     """The label an attack-success eval sample is compared against.
 
     Identical to poisoned_label except for clean_label. poisoned_label's
@@ -108,7 +112,8 @@ def choose_poison_indices(
     samples exist.
     """
     eligible = [
-        i for i, y in enumerate(labels)
+        i
+        for i, y in enumerate(labels)
         if is_poisonable(attack.label_mode, int(y), attack.target_label)
     ]
     count = min(int(round(poison_rate * len(labels))), len(eligible))
@@ -138,7 +143,10 @@ class PoisonedTrainingSet(Dataset):
         if index in self.poison_indices:
             image = self.attack.apply_trigger(image, index)
             label = poisoned_label(
-                self.attack.label_mode, int(label), self.attack.target_label, self.num_classes
+                self.attack.label_mode,
+                int(label),
+                self.attack.target_label,
+                self.num_classes,
             )
         return self.normalize(image), label
 
@@ -160,7 +168,8 @@ class AttackSuccessSet(Dataset):
         self.normalize = normalize
         self.num_classes = num_classes
         self.indices = [
-            i for i, y in enumerate(labels)
+            i
+            for i, y in enumerate(labels)
             if is_eval_poisonable(attack.label_mode, int(y), attack.target_label)
         ]
 
@@ -172,7 +181,10 @@ class AttackSuccessSet(Dataset):
         image, _ = self.base_dataset[index]
         poisoned = self.attack.apply_trigger(image, index)
         target = attack_success_label(
-            self.attack.label_mode, int(self.labels[index]), self.attack.target_label, self.num_classes
+            self.attack.label_mode,
+            int(self.labels[index]),
+            self.attack.target_label,
+            self.num_classes,
         )
         return self.normalize(poisoned), target
 
@@ -238,7 +250,15 @@ class CoverPoisonedTrainingSet(Dataset):
     trigger and keep their original label. Everything else stays clean.
     """
 
-    def __init__(self, base_dataset, attack, poison_indices, cover_indices, normalize, num_classes):
+    def __init__(
+        self,
+        base_dataset,
+        attack,
+        poison_indices,
+        cover_indices,
+        normalize,
+        num_classes,
+    ):
         self.base_dataset = base_dataset
         self.attack = attack
         self.poison_indices = poison_indices
@@ -254,7 +274,10 @@ class CoverPoisonedTrainingSet(Dataset):
         if index in self.poison_indices:
             image = self.attack.apply_trigger(image, index)
             label = poisoned_label(
-                self.attack.label_mode, int(label), self.attack.target_label, self.num_classes
+                self.attack.label_mode,
+                int(label),
+                self.attack.target_label,
+                self.num_classes,
             )
         elif index in self.cover_indices:
             image = self.attack.apply_trigger(image, index)

@@ -54,7 +54,9 @@ def test_clean_accuracy_by_class_end_to_end():
     labels = [0, 0, 1, 2]
     model, loader, num_classes = _fake_model_and_loader(predictions, labels)
 
-    by_class = clean_accuracy_by_class(model, loader, torch.device("cpu"), num_classes, use_bfloat16=False)
+    by_class = clean_accuracy_by_class(
+        model, loader, torch.device("cpu"), num_classes, use_bfloat16=False
+    )
     assert by_class[0] == 1.0  # both label-0 samples predicted correctly
     assert by_class[1] == 1.0  # the one label-1 sample predicted correctly
     assert by_class[2] == 0.0  # the one label-2 sample predicted wrong

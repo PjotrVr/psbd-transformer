@@ -17,7 +17,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Render PSBD figures")
     parser.add_argument("--experiments-root", required=True)
     parser.add_argument("--quantile", type=float, default=0.25)
-    parser.add_argument("--no-show", action="store_true", help="Save figures without opening a window")
+    parser.add_argument(
+        "--no-show", action="store_true", help="Save figures without opening a window"
+    )
     return parser.parse_args()
 
 
