@@ -1,7 +1,7 @@
 """Baseline attack-success and clean-accuracy metrics for every checkpoint.
 
 Decoupled from the PSBD dropout sweep (archived, pending a rewrite), which
-will write its own psbd_metrics.json into the same analysis/<folder>/
+will write its own psbd_metrics.json into the same results/<folder>/
 directories this script creates. This script only answers: for a benign
 model, what is clean accuracy overall and per class; for an attacked model,
 what is the attack success rate and the clean accuracy on unpoisoned
@@ -10,8 +10,10 @@ counterparts.
 Scoped to checkpoints/ only. Every checkpoints/ folder carries an args.json
 (normalize_checkpoints.py) recording exactly which attack produced it, so its
 poisoned eval set is rebuilt in memory from our own attack code, the same way
-checkpoint_eval.py does for the PSBD sweep. analysis/ mirrors checkpoints/
-exactly, one folder per checkpoint and nothing else.
+checkpoint_eval.py does for the PSBD sweep. results/ mirrors checkpoints/
+exactly, one folder per checkpoint and nothing else. Named results/ rather
+than analysis/ so it can't collide with the analysis/ source package (latent
+tools: TAC, CKA, PCA, UMAP, Lipschitz).
 """
 
 import argparse
@@ -39,7 +41,7 @@ from poison import AttackSuccessSet, PoisonedTrainingSet
 from train_benign import build_clean_loaders
 
 CHECKPOINTS_DIR = "checkpoints"
-ANALYSIS_DIR = "analysis"
+RESULTS_DIR = "results"
 
 
 def list_checkpoint_folders(source_dir: str) -> list[str]:
@@ -51,27 +53,27 @@ def list_checkpoint_folders(source_dir: str) -> list[str]:
     )
 
 
-def mirror_analysis_folders(analysis_dir: str, folder_names: list[str]) -> None:
-    """analysis/ matches checkpoints/ exactly, one folder per checkpoint.
+def mirror_results_folders(results_dir: str, folder_names: list[str]) -> None:
+    """results/ matches checkpoints/ exactly, one folder per checkpoint.
 
     Creates a folder for every current checkpoint, even ones not yet
-    processed, and removes any analysis/<name>/ left over from a checkpoint
+    processed, and removes any results/<name>/ left over from a checkpoint
     that no longer exists, for example one normalize_checkpoints.py renamed.
     """
-    os.makedirs(analysis_dir, exist_ok=True)
+    os.makedirs(results_dir, exist_ok=True)
     wanted = set(folder_names)
     existing = {
-        name for name in os.listdir(analysis_dir)
-        if os.path.isdir(os.path.join(analysis_dir, name))
+        name for name in os.listdir(results_dir)
+        if os.path.isdir(os.path.join(results_dir, name))
     }
     for orphan in existing - wanted:
-        shutil.rmtree(os.path.join(analysis_dir, orphan))
+        shutil.rmtree(os.path.join(results_dir, orphan))
     for folder_name in folder_names:
-        os.makedirs(os.path.join(analysis_dir, folder_name), exist_ok=True)
+        os.makedirs(os.path.join(results_dir, folder_name), exist_ok=True)
 
 
-def write_metrics(analysis_dir: str, folder_name: str, metrics: dict) -> None:
-    folder = os.path.join(analysis_dir, folder_name)
+def write_metrics(results_dir: str, folder_name: str, metrics: dict) -> None:
+    folder = os.path.join(results_dir, folder_name)
     os.makedirs(folder, exist_ok=True)
     with open(os.path.join(folder, "metrics.json"), "w") as handle:
         json.dump(metrics, handle, indent=2)
@@ -155,7 +157,7 @@ def run(folder_filter: list[str] | None, raw_data_dir: str, batch_size: int) -> 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     local_folders = list_checkpoint_folders(CHECKPOINTS_DIR)
-    mirror_analysis_folders(ANALYSIS_DIR, local_folders)
+    mirror_results_folders(RESULTS_DIR, local_folders)
 
     if folder_filter is not None:
         local_folders = [name for name in local_folders if name in folder_filter]
@@ -163,7 +165,7 @@ def run(folder_filter: list[str] | None, raw_data_dir: str, batch_size: int) -> 
     for folder_name in local_folders:
         try:
             metrics = process_checkpoints_folder(folder_name, device, raw_data_dir, batch_size)
-            write_metrics(ANALYSIS_DIR, folder_name, metrics)
+            write_metrics(RESULTS_DIR, folder_name, metrics)
             print(f"{folder_name}: {metrics}")
         except Exception as error:
             print(f"FAILED {folder_name}: {error}")

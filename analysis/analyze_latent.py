@@ -10,10 +10,12 @@ model should show small TAC everywhere, because it never learned the trigger. Th
 backdoored model should show TAC and the backdoor direction norm rising at the
 layer that carries the backdoor.
 
-Run from inside this directory.
+Run as a module from the repo root, not as a bare script, so its relative
+imports of the rest of analysis/ and its absolute imports of attacks/,
+defences/, utils/ both resolve.
 
 Example
-    python analyze_latent.py --dataset cifar100 --attack badnet_a2o \
+    python -m analysis.analyze_latent --dataset cifar100 --attack badnet_a2o \
         --checkpoint checkpoints/vit_cifar100_badnet_a2o_0_1/attack_result.pt
 """
 
@@ -27,13 +29,13 @@ import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader, Subset
 
 from attacks import build_attack, default_config
-from cka import debiased_linear_cka
+from .cka import debiased_linear_cka
 from utils.config import DATASET_REGISTRY
 from utils.datasets import load_clean_datasets
-from direction import backdoor_direction, trigger_activated_change
+from .direction import backdoor_direction, trigger_activated_change
 from defences.dropout import reset_dropout
-from embedding import pca_project
-from features import extract_layer_features
+from .embedding import pca_project
+from .features import extract_layer_features
 from models import load_checkpoint
 from poison import PoisonedTrainingSet
 

@@ -7,7 +7,7 @@ vit_b_16_weights/
 unzip_script.py
 colab_run_uncertainty_defenses.ipynb
 experiments/
-analysis/
+results/
 figures/
 **/__pycache__/
 tmp**
@@ -17,4 +17,3 @@ tmp/
 backdoor_bench_checkpoints/
 backdoor_bench_weights/
 scratch/
-_archive/
