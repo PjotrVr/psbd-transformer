@@ -81,17 +81,20 @@ def dataset_name_from_folder(folder_name: str) -> str:
     return folder_name.split("_")[0]
 
 
-def label_mode_from_folder(folder_name: str) -> str:
-    """BackdoorBench folder names encode all-to-all with an "a2a" substring.
+# BackdoorBench's clean-label attacks. Their folder names carry no other marker,
+# so this is the only way to tell them apart from the dirty-label default.
+CLEAN_LABEL_ATTACK_TOKENS = ("sig", "lc")
 
-    Only disambiguates all_to_all from all_to_one. PNG folders for clean_label
-    attacks do exist in backdoor_bench_checkpoints/ (sig and lc, for example
-    cifar10_sig_0_01 and cifar10_lc_0_01), so the "no clean_label PNG data
-    exists" assumption this helper was originally written under is false. This
-    helper does not detect clean_label at all: a sig or lc folder name falls
-    through to the "all_to_one" default here, which is wrong for those folders.
-    Callers that need the correct label_mode for a clean_label attack folder
-    must special-case the attack name (sig, lc) rather than rely on this
-    function alone.
+
+def label_mode_from_folder(folder_name: str) -> str:
+    """BackdoorBench folder names encode dataset_attack_rate.
+
+    "a2a" selects all_to_all. A clean-label attack token (sig, lc) selects
+    clean_label, for example cifar10_sig_0_01 or cifar10_lc_0_01 under
+    backdoor_bench_checkpoints/. Everything else defaults to all_to_one,
+    BackdoorBench's standard dirty-label convention.
     """
+    tokens = folder_name.split("_")
+    if any(token in CLEAN_LABEL_ATTACK_TOKENS for token in tokens):
+        return "clean_label"
     return "all_to_all" if "a2a" in folder_name else "all_to_one"

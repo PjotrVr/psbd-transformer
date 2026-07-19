@@ -24,9 +24,8 @@ import json
 import os
 import shutil
 
-import torch
-
 from attacks import ATTACK_NAMES, default_config
+from models import detect_architecture
 
 CHECKPOINTS_DIR = "checkpoints"
 
@@ -47,11 +46,6 @@ ATTACK_TOKEN_SEQUENCES = (
     (("tact",), "tact"),
 )
 
-# ViT's wrapped vit_b_16 and Swin's wrapped swin have structurally distinct
-# state_dict key substrings, checked here rather than guessed from the name.
-VIT_KEY_MARKERS = ("conv_proj", "class_token", "encoder.layers.encoder_layer_")
-SWIN_KEY_MARKERS = ("features.",)
-
 
 class UnparsedFolder(Exception):
     pass
@@ -62,22 +56,6 @@ def list_checkpoint_folders(checkpoints_dir: str) -> list[str]:
         name
         for name in os.listdir(checkpoints_dir)
         if os.path.isdir(os.path.join(checkpoints_dir, name))
-    )
-
-
-def detect_architecture_from_state_dict(checkpoint_path: str) -> str:
-    """Ground truth when a folder name has neither a "vit" nor "swin" token."""
-    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
-    keys = list(checkpoint["model"].keys())
-    is_vit = any(marker in key for key in keys for marker in VIT_KEY_MARKERS)
-    is_swin = any(marker in key for key in keys for marker in SWIN_KEY_MARKERS)
-    if is_vit and not is_swin:
-        return "vit"
-    if is_swin and not is_vit:
-        return "swin"
-    raise UnparsedFolder(
-        f"state_dict at {checkpoint_path} matched vit={is_vit} swin={is_swin}, "
-        "expected exactly one"
     )
 
 
@@ -96,9 +74,10 @@ def extract_architecture(
         tokens = tokens.copy()
         tokens.remove("vit")
         return "vit", tokens, False
-    architecture = detect_architecture_from_state_dict(
-        os.path.join(folder_path, "attack_result.pt")
-    )
+    try:
+        architecture = detect_architecture(os.path.join(folder_path, "attack_result.pt"))
+    except ValueError as error:
+        raise UnparsedFolder(str(error)) from error
     return architecture, tokens, True
 
 

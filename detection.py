@@ -78,3 +78,33 @@ def clean_accuracy(
 ) -> float:
     """Accuracy on the untriggered clean counterparts."""
     return _prediction_accuracy(model, clean_loader, device, use_bfloat16)
+
+
+@torch.inference_mode()
+def clean_accuracy_by_class(
+    model: nn.Module,
+    clean_loader: DataLoader,
+    device: torch.device,
+    num_classes: int,
+    use_bfloat16: bool,
+) -> dict[int, float]:
+    """Per-class accuracy on the untriggered clean counterparts.
+
+    A benign model's overall accuracy can hide a class the model never learned,
+    so this is reported alongside the pooled clean_accuracy rather than instead
+    of it.
+    """
+    model.eval()
+    correct = torch.zeros(num_classes)
+    total = torch.zeros(num_classes)
+    for images, labels in clean_loader:
+        labels = labels.to(device).long()
+        predictions = forward_probs(model, images, device, use_bfloat16).argmax(dim=1)
+        for label in range(num_classes):
+            mask = labels == label
+            total[label] += mask.sum().item()
+            correct[label] += (predictions[mask] == label).sum().item()
+    return {
+        label: (correct[label] / total[label]).item() if total[label] > 0 else 0.0
+        for label in range(num_classes)
+    }

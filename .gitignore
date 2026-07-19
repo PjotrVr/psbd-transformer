@@ -10,6 +10,7 @@ unzip_script.py
 colab_run_uncertainty_defenses.ipynb
 get_results.py
 experiments/
+analysis/
 figures/
 **/__pycache__/
 tmp**
