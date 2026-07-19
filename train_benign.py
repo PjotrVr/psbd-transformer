@@ -22,41 +22,33 @@ import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 from torch.utils.data import DataLoader
 
+from evaluate import evaluate_benign
+from loaders import build_clean_loader
 from utils.config import DATASET_REGISTRY
 from utils.datasets import load_clean_datasets
-from defences.detection import clean_accuracy
 from train import checkpoint_metadata, save_checkpoint, train_classifier, utc_timestamp
 import time
 
 
-def working_resolution(dataset_name: str) -> int:
-    # Native resolution, the model's own Resize upscales to 224, matching how the
-    # backdoored models are trained so their clean accuracy stays comparable.
-    return 64 if dataset_name == "tiny" else 32
-
-
-def build_clean_loaders(
+def build_benign_train_loader(
     dataset_name: str, raw_data_dir: str, batch_size: int, num_workers: int = 8
-) -> tuple[DataLoader, DataLoader, int]:
+) -> tuple[DataLoader, int]:
+    """The shuffled training split only. Evaluation reuses loaders.build_clean_loader,
+    the same function metrics.py and train_backdoor.py use for their clean loaders.
+    """
     spec = DATASET_REGISTRY[dataset_name]
-    image_size = working_resolution(dataset_name)
     transform = transforms_v2.Compose(
         [
-            transforms_v2.Resize((image_size, image_size)),
+            transforms_v2.Resize((spec.image_size, spec.image_size)),
             transforms_v2.ToTensor(),
             transforms_v2.Normalize(mean=spec.mean, std=spec.std),
         ]
     )
-    train_dataset, test_dataset = load_clean_datasets(
-        dataset_name, transform, raw_data_dir
-    )
+    train_dataset, _ = load_clean_datasets(dataset_name, transform, raw_data_dir)
     train_loader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers
     )
-    test_loader = DataLoader(
-        test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers
-    )
-    return train_loader, test_loader, spec.num_classes
+    return train_loader, spec.num_classes
 
 
 def train_one_benign(
@@ -67,7 +59,10 @@ def train_one_benign(
     seed_everything(args.seed)
     start = time.time()
     started_at = utc_timestamp()
-    train_loader, test_loader, num_classes = build_clean_loaders(
+    train_loader, num_classes = build_benign_train_loader(
+        dataset_name, args.raw_data_dir, args.batch_size, args.num_workers
+    )
+    val_loader = build_clean_loader(
         dataset_name, args.raw_data_dir, args.batch_size, args.num_workers
     )
 
@@ -75,14 +70,16 @@ def train_one_benign(
         args.architecture,
         num_classes,
         train_loader,
-        test_loader,
+        val_loader,
         device,
         epochs=args.epochs,
         use_sam=args.use_sam,
         rho=args.rho,
     )
     ended_at = utc_timestamp()
-    accuracy = clean_accuracy(model, test_loader, device, use_bfloat16=True)
+    accuracy = evaluate_benign(
+        model, dataset_name, device, args.raw_data_dir, args.batch_size
+    )["clean_accuracy"]
 
     # Canonical name matches normalize_checkpoints.py's template: architecture
     # is always explicit, adam gets no optimizer tag, SAM's rho tag always has

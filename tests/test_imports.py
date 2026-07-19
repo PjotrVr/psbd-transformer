@@ -14,6 +14,8 @@ MODULES = [
     # Root-level: shared pipeline core and entrypoints, deliberately not
     # folded into any package (see docs/plans/reorganization.md).
     "backdoor_data",
+    "evaluate",
+    "loaders",
     "metrics",
     "models",
     "poison",

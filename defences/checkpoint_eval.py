@@ -20,12 +20,6 @@ from utils.datasets import extract_labels, load_clean_datasets
 from poison import Attack, AttackSuccessSet, PoisonedTrainingSet
 
 
-def working_resolution(dataset_name: str) -> int:
-    # Triggers are defined at the native resolution, and the model's own Resize
-    # upscales to 224, matching how the poisoned test set is built.
-    return 64 if dataset_name == "tiny" else 32
-
-
 def read_checkpoint_metadata(checkpoint_path: str) -> dict:
     """Read the args.json training provenance saved alongside the checkpoint."""
     args_path = os.path.join(os.path.dirname(checkpoint_path), "args.json")
@@ -99,7 +93,7 @@ def build_eval_loaders_from_checkpoint(
     """
     metadata = read_checkpoint_metadata(checkpoint_path)
     dataset_name = metadata["dataset"]
-    image_size = working_resolution(dataset_name)
+    image_size = DATASET_REGISTRY[dataset_name].image_size
     attack = build_attack(
         metadata["attack"],
         default_config(metadata["attack"]),

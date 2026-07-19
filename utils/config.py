@@ -10,20 +10,21 @@ class DatasetSpec:
     mean: tuple[float, float, float]
     std: tuple[float, float, float]
     loader_kind: str  # "cifar10", "cifar100", "gtsrb", or "image_folder"
+    image_size: int  # native resolution triggers are defined at, before the model's own upscale to 224
 
 
 # GTSRB uses identity normalization because BackdoorBench trains its GTSRB
 # models on unnormalized inputs, so matching that avoids a train/eval mismatch.
 DATASET_REGISTRY: dict[str, DatasetSpec] = {
     "cifar10": DatasetSpec(
-        10, (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010), "cifar10"
+        10, (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010), "cifar10", 32
     ),
     "cifar100": DatasetSpec(
-        100, (0.5071, 0.4867, 0.4408), (0.2673, 0.2564, 0.2762), "cifar100"
+        100, (0.5071, 0.4867, 0.4408), (0.2673, 0.2564, 0.2762), "cifar100", 32
     ),
-    "gtsrb": DatasetSpec(43, (0.0, 0.0, 0.0), (1.0, 1.0, 1.0), "gtsrb"),
+    "gtsrb": DatasetSpec(43, (0.0, 0.0, 0.0), (1.0, 1.0, 1.0), "gtsrb", 32),
     "tiny": DatasetSpec(
-        200, (0.4802, 0.4481, 0.3975), (0.2302, 0.2265, 0.2262), "image_folder"
+        200, (0.4802, 0.4481, 0.3975), (0.2302, 0.2265, 0.2262), "image_folder", 64
     ),
 }
 

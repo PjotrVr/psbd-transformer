@@ -22,11 +22,11 @@ from torch.utils.data import DataLoader
 
 from attacks.generated import GeneratedConfig
 from attacks import ATTACK_NAMES, build_attack, default_config
+from evaluate import evaluate_attack
+from loaders import build_clean_loader
 from utils.config import DATASET_REGISTRY
 from utils.datasets import extract_labels, load_clean_datasets
-from defences.detection import attack_success_rate, clean_accuracy
 from poison import (
-    AttackSuccessSet,
     CoverPoisonedTrainingSet,
     PoisonedTrainingSet,
     choose_indices_with_cover,
@@ -34,12 +34,6 @@ from poison import (
 )
 from train import checkpoint_metadata, save_checkpoint, train_classifier, utc_timestamp
 import time
-
-
-def working_resolution(dataset_name: str) -> int:
-    # Triggers are defined at the native resolution and the model's own Resize
-    # upscales to 224, matching how BackdoorBench applies triggers.
-    return 64 if dataset_name == "tiny" else 32
 
 
 def base_transform(image_size: int) -> transforms_v2.Compose:
@@ -77,12 +71,13 @@ def build_training_set(
     )
 
 
-def build_poisoned_loaders(args, image_size: int):
+def build_training_loader(args, image_size: int):
+    """The poisoned training set only. Evaluation is handled separately by
+    evaluate_attack/loaders.py, so this has no eval-loader concerns at all.
+    """
     spec = DATASET_REGISTRY[args.dataset]
     transform = base_transform(image_size)
-    train_clean, test_clean = load_clean_datasets(
-        args.dataset, transform, args.raw_data_dir
-    )
+    train_clean, _ = load_clean_datasets(args.dataset, transform, args.raw_data_dir)
     normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
 
     config = resolve_config(args.attack, args.poisoned_dir)
@@ -97,30 +92,13 @@ def build_poisoned_loaders(args, image_size: int):
         normalize,
         spec.num_classes,
     )
-    clean_test = PoisonedTrainingSet(
-        test_clean, attack, set(), normalize, spec.num_classes
+    train_loader = DataLoader(
+        poisoned_train,
+        batch_size=args.batch_size,
+        shuffle=True,
+        num_workers=args.num_workers,
     )
-    test_labels = extract_labels(test_clean)
-    backdoor_test = AttackSuccessSet(
-        test_clean, test_labels, attack, normalize, spec.num_classes
-    )
-
-    def loader(dataset, shuffle):
-        return DataLoader(
-            dataset,
-            batch_size=args.batch_size,
-            shuffle=shuffle,
-            num_workers=args.num_workers,
-        )
-
-    return (
-        loader(poisoned_train, True),
-        loader(clean_test, False),
-        loader(backdoor_test, False),
-        spec.num_classes,
-        attack,
-        config,
-    )
+    return train_loader, spec.num_classes, attack, config
 
 
 def parse_args() -> argparse.Namespace:
@@ -150,17 +128,18 @@ def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     start = time.time()
     started_at = utc_timestamp()
-    image_size = working_resolution(args.dataset)
+    image_size = DATASET_REGISTRY[args.dataset].image_size
 
-    train_loader, clean_loader, backdoor_loader, num_classes, attack, config = (
-        build_poisoned_loaders(args, image_size)
+    train_loader, num_classes, attack, config = build_training_loader(args, image_size)
+    val_loader = build_clean_loader(
+        args.dataset, args.raw_data_dir, args.batch_size, args.num_workers
     )
 
     model = train_classifier(
         args.architecture,
         num_classes,
         train_loader,
-        clean_loader,
+        val_loader,
         device,
         epochs=args.epochs,
         use_sam=args.use_sam,
@@ -168,9 +147,17 @@ def main() -> None:
     )
     ended_at = utc_timestamp()
 
-    asr = attack_success_rate(model, backdoor_loader, device, use_bfloat16=True)
-    ca = clean_accuracy(model, clean_loader, device, use_bfloat16=True)
-    print(f"final ASR={asr:.4f} CA={ca:.4f}")
+    metrics = evaluate_attack(
+        model,
+        args.dataset,
+        args.attack,
+        config,
+        args.target_label,
+        device,
+        args.raw_data_dir,
+        args.batch_size,
+    )
+    print(f"final ASR={metrics['asr']:.4f} CA={metrics['clean_accuracy']:.4f}")
 
     save_checkpoint(
         model,
@@ -188,8 +175,8 @@ def main() -> None:
             rho=args.rho,
             epochs=args.epochs,
             seed=args.seed,
-            clean_accuracy=ca,
-            asr=asr,
+            clean_accuracy=metrics["clean_accuracy"],
+            asr=metrics["asr"],
             started_at=started_at,
             ended_at=ended_at,
         ),

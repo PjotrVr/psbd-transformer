@@ -40,10 +40,6 @@ from models import load_checkpoint
 from poison import PoisonedTrainingSet
 
 
-def working_resolution(dataset_name: str) -> int:
-    return 64 if dataset_name == "tiny" else 32
-
-
 def build_paired_loaders(
     dataset_name, attack, raw_data_dir, batch_size, sample_count, seed
 ):
@@ -53,8 +49,8 @@ def build_paired_loaders(
     each refers to the same test image, once clean and once triggered. That
     pairing is what TAC and the backdoor direction require.
     """
-    image_size = working_resolution(dataset_name)
     spec = DATASET_REGISTRY[dataset_name]
+    image_size = spec.image_size
     transform = transforms_v2.Compose(
         [transforms_v2.Resize((image_size, image_size)), transforms_v2.ToTensor()]
     )
@@ -158,7 +154,7 @@ def main() -> None:
     )  # save figures without a display, since cluster nodes have none
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    image_size = working_resolution(args.dataset)
+    image_size = DATASET_REGISTRY[args.dataset].image_size
     attack = build_attack(
         args.attack, default_config(args.attack), image_size, args.target_label
     )
