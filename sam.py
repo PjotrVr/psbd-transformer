@@ -23,7 +23,7 @@ import torch
 
 
 class SAM(torch.optim.Optimizer):
-    def __init__(self, params, base_optimizer_cls, rho: float = 0.05, adaptive: bool = False, **base_kwargs):
+    def __init__(self, params, base_optimizer_cls, rho: float = 0.1, adaptive: bool = False, **base_kwargs):
         if rho < 0.0:
             raise ValueError(f"rho must be non-negative, got {rho}")
         defaults = dict(rho=rho, adaptive=adaptive, **base_kwargs)

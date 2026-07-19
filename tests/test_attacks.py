@@ -14,8 +14,8 @@ import torch
 from attacks import build_attack, default_config
 from poison import (
     Attack,
+    AttackSuccessSet,
     CoverPoisonedTrainingSet,
-    FullyPoisonedTestSet,
     PoisonedTrainingSet,
     choose_indices_with_cover,
     choose_poison_indices,
@@ -221,11 +221,25 @@ def test_cover_sample_keeps_label_but_triggers():
 def test_fully_poisoned_test_set_drops_target():
     base = _fake_base(8)
     labels = [item[1] for item in base]
-    dataset = FullyPoisonedTestSet(base, labels, _marker_attack(), IDENTITY, num_classes=4)
+    dataset = AttackSuccessSet(base, labels, _marker_attack(), IDENTITY, num_classes=4)
     assert len(dataset) == sum(1 for y in labels if y != 0), "target-class samples should be dropped"
     for position in range(len(dataset)):
         _, target = dataset[position]
         assert target == 0, "every ASR sample should carry the target label"
+
+
+def test_attack_success_set_clean_label_selects_non_target_only():
+    # Clean-label training poisons only target-class images, but attack success
+    # must be measured on non-target images fooled into predicting the target,
+    # the opposite eligibility from training. AttackSuccessSet must ask that
+    # question, not the training-time one.
+    base = _fake_base(8)
+    labels = [item[1] for item in base]
+    dataset = AttackSuccessSet(base, labels, _marker_attack(label_mode="clean_label"), IDENTITY, num_classes=4)
+    assert len(dataset) == sum(1 for y in labels if y != 0), "only non-target images should be eligible"
+    for position in range(len(dataset)):
+        _, target = dataset[position]
+        assert target == 0, "every eligible sample should carry the target label"
 
 
 def _run_all() -> None:

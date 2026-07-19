@@ -20,7 +20,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--placement", choices=DROPOUT_PLACEMENTS, default="pre_residual")
     parser.add_argument("--architecture", choices=ARCHITECTURES, default="vit")
     parser.add_argument("--attacks", nargs="+", required=True, help="BackdoorBench folder names")
-    parser.add_argument("--weights-dir", default="vit_b_16_weights")
+    parser.add_argument("--weights-dir", default="backdoor_bench_checkpoints")
     parser.add_argument("--raw-data-dir", default="raw_data")
     parser.add_argument("--results-root", default="experiments")
     parser.add_argument("--forward-passes", type=int, default=3)

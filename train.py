@@ -11,7 +11,10 @@ already carries the trigger and the correct labels, and stays agnostic to which
 attack produced it.
 """
 
+import json
 import os
+import subprocess
+from datetime import datetime, timezone
 
 import torch
 import torch.nn as nn
@@ -86,20 +89,78 @@ def train_one_epoch(model, loader, criterion, optimizer, device, use_sam) -> flo
     return running_loss / max(len(loader), 1)
 
 
+def current_git_commit() -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+        )
+        return result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
+def checkpoint_metadata(
+    dataset: str,
+    attack: str,
+    label_mode: str | None,
+    target_label: int,
+    poison_rate: float,
+    cover_rate: float,
+    architecture: str,
+    use_sam: bool,
+    rho: float,
+    epochs: int,
+    seed: int,
+    clean_accuracy: float | None,
+    asr: float | None,
+    started_at: str,
+    ended_at: str,
+) -> dict:
+    """Training provenance for a checkpoint, written alongside it as args.json.
+
+    Both train_backdoor.py and train_benign.py build this the same way so the
+    key set never drifts between the two entrypoints.
+    """
+    return {
+        "dataset": dataset,
+        "attack": attack,
+        "label_mode": label_mode,
+        "target_label": target_label,
+        "poison_rate": poison_rate,
+        "cover_rate": cover_rate,
+        "architecture": architecture,
+        "optimizer": "sam" if use_sam else "adam",
+        "rho": rho if use_sam else None,
+        "epochs": epochs,
+        "seed": seed,
+        "git_commit": current_git_commit(),
+        "clean_accuracy": clean_accuracy,
+        "asr": asr,
+        "trained_started_at": started_at,
+        "trained_ended_at": ended_at,
+    }
+
+
+def utc_timestamp() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
 def save_checkpoint(
     model: nn.Module, num_classes: int, path: str, metadata: dict | None = None
 ) -> None:
     """Save in the attack_result.pt format the loader reads.
 
-    metadata records which attack produced the model (dataset, attack name, target
-    label, poison rate), so the detection sweep can rebuild the exact poisoned test
-    set in memory without a saved bd_test_dataset folder of PNGs.
+    metadata is training provenance (which attack produced the model, dataset,
+    target label, poison rate, seed, ...), written as an args.json sidecar next
+    to the checkpoint rather than merged into the .pt, so it can be read without
+    loading the model weights.
     """
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    checkpoint = {"model": model.state_dict(), "num_classes": num_classes}
+    torch.save({"model": model.state_dict(), "num_classes": num_classes}, path)
     if metadata:
-        checkpoint.update(metadata)
-    torch.save(checkpoint, path)
+        args_path = os.path.join(os.path.dirname(path), "args.json")
+        with open(args_path, "w") as handle:
+            json.dump(metadata, handle, indent=2)
 
 
 def train_classifier(
@@ -112,7 +173,7 @@ def train_classifier(
     use_sam: bool,
     learning_rate: float = 1e-4,
     weight_decay: float = 1e-4,
-    rho: float = 0.05,
+    rho: float = 0.1,
     use_bfloat16: bool = True,
 ) -> nn.Module:
     """Train a fresh model and report validation accuracy each epoch."""

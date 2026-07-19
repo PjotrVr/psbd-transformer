@@ -14,7 +14,7 @@ Run from inside this directory.
 
 Example
     python analyze_latent.py --dataset cifar100 --attack badnet_a2o \
-        --checkpoint vit_b_16_weights/cifar100_badnet_a2o_0_1/attack_result.pt
+        --checkpoint checkpoints/vit_cifar100_badnet_a2o_0_1/attack_result.pt
 """
 
 import argparse

@@ -12,19 +12,20 @@ rather than reading it from the checkpoint.
 Run from inside this directory.
 
 Example
-    python train_benign.py --datasets cifar10 cifar100 gtsrb tiny --epochs 10
+    python train_benign.py --datasets cifar10 cifar100 gtsrb tiny --epochs 15
 """
 
 import argparse
 
 import torch
 import torchvision.transforms.v2 as transforms_v2
+from lightning import seed_everything
 from torch.utils.data import DataLoader
 
 from config import DATASET_REGISTRY
 from datasets import load_clean_datasets
 from detection import clean_accuracy
-from train import save_checkpoint, train_classifier
+from train import checkpoint_metadata, save_checkpoint, train_classifier, utc_timestamp
 import time
 
 
@@ -61,7 +62,11 @@ def build_clean_loaders(
 def train_one_benign(
     dataset_name: str, args: argparse.Namespace, device: torch.device
 ) -> float:
+    # Seeded per dataset, not once before the loop, so each dataset's run is
+    # reproducible independent of loop order or an earlier dataset's failure.
+    seed_everything(args.seed)
     start = time.time()
+    started_at = utc_timestamp()
     train_loader, test_loader, num_classes = build_clean_loaders(
         dataset_name, args.raw_data_dir, args.batch_size, args.num_workers
     )
@@ -76,34 +81,40 @@ def train_one_benign(
         use_sam=args.use_sam,
         rho=args.rho,
     )
+    ended_at = utc_timestamp()
     accuracy = clean_accuracy(model, test_loader, device, use_bfloat16=True)
 
-    # SAM and vanilla benign models go in separate folders so one does not
-    # overwrite the other, the rho is in the SAM folder name so a rho sweep keeps
-    # each run separate, and a non-ViT architecture is prefixed so ViT and Swin
-    # benign models do not collide.
-    arch_prefix = "" if args.architecture == "vit" else f"{args.architecture}_"
+    # Canonical name matches normalize_checkpoints.py's template: architecture
+    # is always explicit, adam gets no optimizer tag, SAM's rho tag always has
+    # an underscore before the digits so a rho sweep keeps each run separate.
+    folder_name = f"{args.architecture}_{dataset_name}_benign"
     if args.use_sam:
-        tag = f"{arch_prefix}benign_sam_rho{str(args.rho).replace('.', '_')}"
-    else:
-        tag = f"{arch_prefix}benign"
-    output_path = f"{args.weights_dir}/{dataset_name}_{tag}/attack_result.pt"
+        folder_name += f"_sam_rho_{str(args.rho).replace('.', '_')}"
+    output_path = f"{args.weights_dir}/{folder_name}/attack_result.pt"
     save_checkpoint(
         model,
         num_classes,
         output_path,
-        metadata={
-            "architecture": args.architecture,
-            "dataset": dataset_name,
-            "attack": "benign",
-            "target_label": 0,
-            "poison_rate": 0.0,
-            "optimizer": "sam" if args.use_sam else "adam",
-            "clean_accuracy": accuracy,
-        },
+        metadata=checkpoint_metadata(
+            dataset=dataset_name,
+            attack="benign",
+            label_mode=None,
+            target_label=0,
+            poison_rate=0.0,
+            cover_rate=0.0,
+            architecture=args.architecture,
+            use_sam=args.use_sam,
+            rho=args.rho,
+            epochs=args.epochs,
+            seed=args.seed,
+            clean_accuracy=accuracy,
+            asr=None,
+            started_at=started_at,
+            ended_at=ended_at,
+        ),
     )
-    print(f"{dataset_name}_{tag} clean accuracy {accuracy:.4f}, saved {output_path}")
-    print(f"time taken: {dataset_name}_{tag} took {(time.time() - start) / 60:.1f} min")
+    print(f"{folder_name} clean accuracy {accuracy:.4f}, saved {output_path}")
+    print(f"time taken: {folder_name} took {(time.time() - start) / 60:.1f} min")
     return accuracy
 
 
@@ -115,14 +126,15 @@ def parse_args() -> argparse.Namespace:
         default=["cifar10", "cifar100", "gtsrb", "tiny"],
         choices=tuple(DATASET_REGISTRY),
     )
-    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--architecture", choices=("vit", "swin"), default="vit")
     parser.add_argument("--use-sam", action="store_true")
-    parser.add_argument("--rho", type=float, default=0.05)
-    parser.add_argument("--weights-dir", default="vit_b_16_weights")
+    parser.add_argument("--rho", type=float, default=0.1)
+    parser.add_argument("--weights-dir", default="checkpoints")
     parser.add_argument("--raw-data-dir", default="raw_data")
     parser.add_argument("--num-workers", type=int, default=8)
+    parser.add_argument("--seed", type=int, default=0)
     return parser.parse_args()
 
 

@@ -21,3 +21,4 @@ logs/
 tmp/
 backdoor_bench_checkpoints/
 backdoor_bench_weights/
+scratch/

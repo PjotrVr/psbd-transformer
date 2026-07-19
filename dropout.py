@@ -33,10 +33,17 @@ def configure_pre_residual_dropout(model: nn.Module, rate: float) -> int:
 
     A Dropout only samples a mask in train mode, so eval mode with rate 0 is the
     no-dropout baseline. Returns the number of Dropout modules touched.
+
+    Skips names ending in "encoder.dropout", which is ViT's embedding dropout
+    (Encoder.dropout, applied once before the 12-block stack). That dropout runs
+    before any residual connection exists, so it is not a pre-residual placement
+    and must not be swept alongside the 36 true per-block dropouts (attention
+    branch plus 2 MLP dropouts times 12 blocks). Swin has no module named
+    "*.encoder.dropout", so this filter is a structural no-op for Swin.
     """
     count = 0
-    for module in model.modules():
-        if isinstance(module, nn.Dropout):
+    for name, module in model.named_modules():
+        if isinstance(module, nn.Dropout) and not name.endswith("encoder.dropout"):
             module.p = float(rate)
             module.train() if rate > 0.0 else module.eval()
             count += 1

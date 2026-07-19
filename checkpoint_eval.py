@@ -7,15 +7,17 @@ validation, clean eval, and backdoor eval split reuses the same functions the PN
 path uses, so both paths produce the same three-way structure.
 """
 
-import torch
+import json
+import os
+
 import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader
 
 from attacks import build_attack, default_config
 from backdoor_data import balance_by_class, split_validation_and_eval
 from config import DATASET_REGISTRY, RunConfig
-from datasets import load_clean_datasets
-from poison import Attack, PoisonedTrainingSet
+from datasets import extract_labels, load_clean_datasets
+from poison import Attack, AttackSuccessSet, PoisonedTrainingSet
 
 
 def working_resolution(dataset_name: str) -> int:
@@ -25,16 +27,20 @@ def working_resolution(dataset_name: str) -> int:
 
 
 def read_checkpoint_metadata(checkpoint_path: str) -> dict:
-    """Read the attack metadata that train_backdoor.py stored in the checkpoint."""
-    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
-    required = ("dataset", "attack", "target_label")
-    missing = [key for key in required if key not in checkpoint]
-    if missing:
-        raise KeyError(
-            f"Checkpoint {checkpoint_path} is missing metadata {missing}. Retrain with "
-            "train_backdoor.py, which records it, or provide a BackdoorBench bd_test_dataset folder."
+    """Read the args.json training provenance saved alongside the checkpoint."""
+    args_path = os.path.join(os.path.dirname(checkpoint_path), "args.json")
+    if not os.path.exists(args_path):
+        raise FileNotFoundError(
+            f"{args_path} not found. Retrain with train_backdoor.py or train_benign.py, "
+            "which write it, or provide a BackdoorBench bd_test_dataset folder instead."
         )
-    return checkpoint
+    with open(args_path) as handle:
+        metadata = json.load(handle)
+    required = ("dataset", "attack", "target_label")
+    missing = [key for key in required if key not in metadata]
+    if missing:
+        raise KeyError(f"{args_path} is missing {missing}")
+    return metadata
 
 
 def build_eval_loaders_from_attack(
@@ -69,10 +75,10 @@ def build_eval_loaders_from_attack(
     clean_eval = PoisonedTrainingSet(
         clean_eval_base, attack, set(), normalize, spec.num_classes
     )
-    backdoor_eval = PoisonedTrainingSet(
+    backdoor_eval = AttackSuccessSet(
         backdoor_eval_base,
+        extract_labels(backdoor_eval_base),
         attack,
-        set(range(len(backdoor_eval_base))),
         normalize,
         spec.num_classes,
     )

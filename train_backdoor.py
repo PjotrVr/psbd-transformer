@@ -10,13 +10,14 @@ poisoning path. The training loop itself is the same in both cases.
 
 Example
     python train_backdoor.py --dataset cifar10 --attack badnet_a2a --poison-rate 0.1 \
-        --architecture vit --epochs 10 --output vit_b_16_weights/cifar10_badnet_a2a_0_1/attack_result.pt
+        --architecture vit --epochs 15 --output checkpoints/vit_cifar10_badnet_a2a_0_1/attack_result.pt
 """
 
 import argparse
 
 import torch
 import torchvision.transforms.v2 as transforms_v2
+from lightning import seed_everything
 from torch.utils.data import DataLoader
 
 from attack_generated import GeneratedConfig
@@ -25,13 +26,13 @@ from config import DATASET_REGISTRY
 from datasets import extract_labels, load_clean_datasets
 from detection import attack_success_rate, clean_accuracy
 from poison import (
+    AttackSuccessSet,
     CoverPoisonedTrainingSet,
-    FullyPoisonedTestSet,
     PoisonedTrainingSet,
     choose_indices_with_cover,
     choose_poison_indices,
 )
-from train import save_checkpoint, train_classifier
+from train import checkpoint_metadata, save_checkpoint, train_classifier, utc_timestamp
 import time
 
 
@@ -100,7 +101,7 @@ def build_poisoned_loaders(args, image_size: int):
         test_clean, attack, set(), normalize, spec.num_classes
     )
     test_labels = extract_labels(test_clean)
-    backdoor_test = FullyPoisonedTestSet(
+    backdoor_test = AttackSuccessSet(
         test_clean, test_labels, attack, normalize, spec.num_classes
     )
 
@@ -117,6 +118,8 @@ def build_poisoned_loaders(args, image_size: int):
         loader(clean_test, False),
         loader(backdoor_test, False),
         spec.num_classes,
+        attack,
+        config,
     )
 
 
@@ -127,10 +130,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--poison-rate", type=float, required=True)
     parser.add_argument("--target-label", type=int, default=0)
     parser.add_argument("--architecture", choices=("vit", "swin"), default="vit")
-    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--use-sam", action="store_true")
-    parser.add_argument("--rho", type=float, default=0.05)
+    parser.add_argument("--rho", type=float, default=0.1)
     parser.add_argument(
         "--poisoned-dir", default="", help="required only for the generated attack"
     )
@@ -143,12 +146,14 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    seed_everything(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     start = time.time()
+    started_at = utc_timestamp()
     image_size = working_resolution(args.dataset)
 
-    train_loader, clean_loader, backdoor_loader, num_classes = build_poisoned_loaders(
-        args, image_size
+    train_loader, clean_loader, backdoor_loader, num_classes, attack, config = (
+        build_poisoned_loaders(args, image_size)
     )
 
     model = train_classifier(
@@ -161,12 +166,34 @@ def main() -> None:
         use_sam=args.use_sam,
         rho=args.rho,
     )
+    ended_at = utc_timestamp()
 
     asr = attack_success_rate(model, backdoor_loader, device, use_bfloat16=True)
     ca = clean_accuracy(model, clean_loader, device, use_bfloat16=True)
     print(f"final ASR={asr:.4f} CA={ca:.4f}")
 
-    save_checkpoint(model, num_classes, args.output)
+    save_checkpoint(
+        model,
+        num_classes,
+        args.output,
+        metadata=checkpoint_metadata(
+            dataset=args.dataset,
+            attack=args.attack,
+            label_mode=attack.label_mode,
+            target_label=args.target_label,
+            poison_rate=args.poison_rate,
+            cover_rate=getattr(config, "cover_rate", 0.0),
+            architecture=args.architecture,
+            use_sam=args.use_sam,
+            rho=args.rho,
+            epochs=args.epochs,
+            seed=args.seed,
+            clean_accuracy=ca,
+            asr=asr,
+            started_at=started_at,
+            ended_at=ended_at,
+        ),
+    )
     print(f"saved {args.output}")
     print(
         f"time taken: {args.dataset} {args.attack} rate {args.poison_rate} took {(time.time() - start) / 60:.1f} min"

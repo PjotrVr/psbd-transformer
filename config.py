@@ -57,7 +57,7 @@ class RunConfig:
     architecture: str = "vit"
     dropout_placement: str = "pre_residual"
 
-    weights_dir: str = "vit_b_16_weights"
+    weights_dir: str = "backdoor_bench_checkpoints"
     raw_data_dir: str = "raw_data"
     results_root: str = "experiments"
 
@@ -79,3 +79,19 @@ def dataset_name_from_folder(folder_name: str) -> str:
     Example: "cifar10_wanet_0_1" resolves to "cifar10".
     """
     return folder_name.split("_")[0]
+
+
+def label_mode_from_folder(folder_name: str) -> str:
+    """BackdoorBench folder names encode all-to-all with an "a2a" substring.
+
+    Only disambiguates all_to_all from all_to_one. PNG folders for clean_label
+    attacks do exist in backdoor_bench_checkpoints/ (sig and lc, for example
+    cifar10_sig_0_01 and cifar10_lc_0_01), so the "no clean_label PNG data
+    exists" assumption this helper was originally written under is false. This
+    helper does not detect clean_label at all: a sig or lc folder name falls
+    through to the "all_to_one" default here, which is wrong for those folders.
+    Callers that need the correct label_mode for a clean_label attack folder
+    must special-case the attack name (sig, lc) rather than rely on this
+    function alone.
+    """
+    return "all_to_all" if "a2a" in folder_name else "all_to_one"

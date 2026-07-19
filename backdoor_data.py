@@ -16,24 +16,51 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, Subset
 
 from datasets import extract_labels
+from poison import attack_success_label, is_eval_poisonable
 
 
 class PngPathDataset(Dataset):
-    """Serves poisoned images from PNG files with a single fixed label."""
+    """Serves poisoned images from PNG files, filtered and labeled like AttackSuccessSet.
 
-    def __init__(self, paths: list[str], transform, label: int):
-        self.paths = paths
+    Eligibility and labeling follow the same eval-time question AttackSuccessSet
+    asks in memory: is this sample allowed into the attack-success set, and what
+    label counts as success. Ineligible paths (for example already-target-class
+    images under all_to_one) are filtered out at construction time rather than
+    served with a wrong label.
+    """
+
+    def __init__(
+        self,
+        paths: list[str],
+        transform,
+        true_labels: list[int],
+        label_mode: str,
+        target_label: int,
+        num_classes: int,
+    ):
         self.transform = transform
-        self.label = label
+        self.true_labels = true_labels
+        self.label_mode = label_mode
+        self.target_label = target_label
+        self.num_classes = num_classes
+        self.paths = paths
+        self.eligible_positions = [
+            position for position, label in enumerate(true_labels)
+            if is_eval_poisonable(label_mode, int(label), target_label)
+        ]
 
     def __len__(self) -> int:
-        return len(self.paths)
+        return len(self.eligible_positions)
 
     def __getitem__(self, idx: int) -> tuple:
-        image = Image.open(self.paths[idx]).convert("RGB")
+        position = self.eligible_positions[idx]
+        image = Image.open(self.paths[position]).convert("RGB")
         if self.transform:
             image = self.transform(image)
-        return image, self.label
+        label = attack_success_label(
+            self.label_mode, int(self.true_labels[position]), self.target_label, self.num_classes
+        )
+        return image, label
 
 
 def load_backdoor_splits(
@@ -41,12 +68,18 @@ def load_backdoor_splits(
     clean_test_dataset: Dataset,
     transform,
     weights_dir: str,
-    trigger_label: int,
+    label_mode: str,
+    target_label: int,
+    num_classes: int,
 ) -> tuple[Dataset, Dataset]:
-    """Return (backdoor_test, clean_counterparts) aligned by original index.
+    """Return (backdoor_test, clean_counterparts), both filtered to eligible samples.
 
-    The two datasets are index-aligned: position i in each refers to the same
-    original test image, once with the trigger and once without.
+    clean_counterparts is index-aligned with backdoor_test: position i in each
+    refers to the same original test image, once with the trigger and once
+    without. Ineligible samples (the ones is_eval_poisonable excludes, for
+    example already-target-class images under all_to_one) are dropped from both,
+    so backdoor_test may be shorter than the full PNG folder, not merely
+    shorter than clean_test_dataset.
     """
     backdoor_dir = os.path.join(weights_dir, folder_name, "bd_test_dataset")
     backdoor_paths = sorted(glob.glob(f"{backdoor_dir}/**/*.png", recursive=True))
@@ -54,12 +87,19 @@ def load_backdoor_splits(
         raise FileNotFoundError(f"No PNG files found in {backdoor_dir}")
 
     original_indices = [int(Path(p).stem) for p in backdoor_paths]
+    clean_counterparts = Subset(clean_test_dataset, original_indices)
+    true_labels = extract_labels(clean_counterparts)
 
     backdoor_test = PngPathDataset(
-        backdoor_paths, transform=transform, label=trigger_label
+        backdoor_paths,
+        transform=transform,
+        true_labels=true_labels,
+        label_mode=label_mode,
+        target_label=target_label,
+        num_classes=num_classes,
     )
-    clean_counterparts = Subset(clean_test_dataset, original_indices)
-    return backdoor_test, clean_counterparts
+    eligible_counterparts = Subset(clean_counterparts, backdoor_test.eligible_positions)
+    return backdoor_test, eligible_counterparts
 
 
 def split_validation_and_eval(

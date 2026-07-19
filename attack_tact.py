@@ -6,7 +6,7 @@ being learned as a generic target cue. source_classes selects the sources and
 cover_rate sets the cover count. train_backdoor reads both from this config.
 
 ASR for a source-specific attack is conventionally measured on source-class images
-only. The general FullyPoisonedTestSet measures over all non-target images, so read
+only. The general AttackSuccessSet measures over all non-target images, so read
 the ASR with that in mind or filter the test set to the source classes.
 """
 
