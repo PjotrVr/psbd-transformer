@@ -15,7 +15,7 @@ from PIL import Image
 from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, Subset
 
-from datasets import extract_labels
+from utils.datasets import extract_labels
 from poison import attack_success_label, is_eval_poisonable
 
 

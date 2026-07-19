@@ -15,8 +15,8 @@ from torch.utils.data import DataLoader
 
 from attacks import build_attack, default_config
 from backdoor_data import balance_by_class, split_validation_and_eval
-from config import DATASET_REGISTRY, RunConfig
-from datasets import extract_labels, load_clean_datasets
+from utils.config import DATASET_REGISTRY, RunConfig
+from utils.datasets import extract_labels, load_clean_datasets
 from poison import Attack, AttackSuccessSet, PoisonedTrainingSet
 
 

@@ -7,13 +7,11 @@ model, what is clean accuracy overall and per class; for an attacked model,
 what is the attack success rate and the clean accuracy on unpoisoned
 counterparts.
 
-checkpoints/ folders carry an args.json (normalize_checkpoints.py) recording
-exactly which attack produced them, so their poisoned eval set is rebuilt in
-memory from our own attack code, the same way checkpoint_eval.py does for the
-PSBD sweep. backdoor_bench_checkpoints/ folders are BackdoorBench's own
-downloads with no args.json and no local attack object to rebuild from, so
-their eval set comes from the PNG triggers BackdoorBench shipped alongside
-them, the same way backdoor_data.py's PNG path always has.
+Scoped to checkpoints/ only. Every checkpoints/ folder carries an args.json
+(normalize_checkpoints.py) recording exactly which attack produced it, so its
+poisoned eval set is rebuilt in memory from our own attack code, the same way
+checkpoint_eval.py does for the PSBD sweep. analysis/ mirrors checkpoints/
+exactly, one folder per checkpoint and nothing else.
 """
 
 import argparse
@@ -26,19 +24,16 @@ import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader
 
 from attacks import build_attack, default_config
-from backdoor_data import load_backdoor_splits
 from checkpoint_eval import working_resolution
-from config import DATASET_REGISTRY, dataset_name_from_folder, label_mode_from_folder
-from datasets import build_transform, extract_labels, load_clean_datasets
 from detection import attack_success_rate, clean_accuracy, clean_accuracy_by_class
-from models import detect_architecture, load_checkpoint
+from utils.config import DATASET_REGISTRY
+from utils.datasets import extract_labels, load_clean_datasets
+from models import load_checkpoint
 from poison import AttackSuccessSet, PoisonedTrainingSet
 from train_benign import build_clean_loaders
 
 CHECKPOINTS_DIR = "checkpoints"
-BACKDOOR_BENCH_DIR = "backdoor_bench_checkpoints"
 ANALYSIS_DIR = "analysis"
-TARGET_LABEL = 0  # BackdoorBench's own default, matches this project's default too
 
 
 def list_checkpoint_folders(source_dir: str) -> list[str]:
@@ -51,7 +46,7 @@ def list_checkpoint_folders(source_dir: str) -> list[str]:
 
 
 def mirror_analysis_folders(analysis_dir: str, folder_names: list[str]) -> None:
-    """analysis/ matches checkpoints/ + backdoor_bench_checkpoints/ exactly.
+    """analysis/ matches checkpoints/ exactly, one folder per checkpoint.
 
     Creates a folder for every current checkpoint, even ones not yet
     processed, and removes any analysis/<name>/ left over from a checkpoint
@@ -109,20 +104,6 @@ def build_full_eval_loaders(
     return loader(clean_eval), loader(backdoor_eval)
 
 
-def attack_name_from_backdoor_bench_folder(folder_name: str, dataset_name: str) -> str:
-    """BackdoorBench folder names are dataset_attack_rate, for example cifar10_sig_0_01.
-
-    The attack token is whatever sits between the dataset prefix and the
-    trailing "0_XX" poison-rate tag, which covers attacks outside this
-    project's own attacks.py registry (blind, inputaware, lira, ssba, ...).
-    """
-    remainder = folder_name[len(dataset_name) + 1:]
-    tokens = remainder.split("_")
-    if len(tokens) >= 2 and tokens[-2] == "0":
-        tokens = tokens[:-2]
-    return "_".join(tokens)
-
-
 def evaluate_benign(model, dataset_name: str, architecture: str, device, raw_data_dir: str, batch_size: int) -> dict:
     _, test_loader, num_classes = build_clean_loaders(dataset_name, raw_data_dir, batch_size, num_workers=2)
     return {
@@ -164,61 +145,18 @@ def process_checkpoints_folder(folder_name: str, device, raw_data_dir: str, batc
     return evaluate_attack_from_args(model, args, device, raw_data_dir, batch_size)
 
 
-def process_backdoor_bench_folder(
-    folder_name: str, device, weights_dir: str, raw_data_dir: str, batch_size: int
-) -> dict:
-    checkpoint_path = os.path.join(weights_dir, folder_name, "attack_result.pt")
-    architecture = detect_architecture(checkpoint_path)
-    model = load_checkpoint(architecture, checkpoint_path, device)
-
-    dataset_name = dataset_name_from_folder(folder_name)
-    label_mode = label_mode_from_folder(folder_name)
-    num_classes = DATASET_REGISTRY[dataset_name].num_classes
-    transform = build_transform(dataset_name)
-
-    _, clean_test = load_clean_datasets(dataset_name, transform, raw_data_dir)
-    backdoor_test, _ = load_backdoor_splits(
-        folder_name, clean_test, transform, weights_dir, label_mode, TARGET_LABEL, num_classes
-    )
-
-    clean_loader = DataLoader(clean_test, batch_size=batch_size, shuffle=False)
-    backdoor_loader = DataLoader(backdoor_test, batch_size=batch_size, shuffle=False)
-
-    return {
-        "architecture": architecture,
-        "dataset": dataset_name,
-        "attack": attack_name_from_backdoor_bench_folder(folder_name, dataset_name),
-        "label_mode": label_mode,
-        "target_label": TARGET_LABEL,
-        "asr": attack_success_rate(model, backdoor_loader, device, use_bfloat16=True),
-        "clean_accuracy": clean_accuracy(model, clean_loader, device, use_bfloat16=True),
-    }
-
-
 def run(folder_filter: list[str] | None, raw_data_dir: str, batch_size: int) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     local_folders = list_checkpoint_folders(CHECKPOINTS_DIR)
-    bench_folders = list_checkpoint_folders(BACKDOOR_BENCH_DIR)
-    mirror_analysis_folders(ANALYSIS_DIR, local_folders + bench_folders)
+    mirror_analysis_folders(ANALYSIS_DIR, local_folders)
 
     if folder_filter is not None:
         local_folders = [name for name in local_folders if name in folder_filter]
-        bench_folders = [name for name in bench_folders if name in folder_filter]
 
     for folder_name in local_folders:
         try:
             metrics = process_checkpoints_folder(folder_name, device, raw_data_dir, batch_size)
-            write_metrics(ANALYSIS_DIR, folder_name, metrics)
-            print(f"{folder_name}: {metrics}")
-        except Exception as error:
-            print(f"FAILED {folder_name}: {error}")
-
-    for folder_name in bench_folders:
-        try:
-            metrics = process_backdoor_bench_folder(
-                folder_name, device, BACKDOOR_BENCH_DIR, raw_data_dir, batch_size
-            )
             write_metrics(ANALYSIS_DIR, folder_name, metrics)
             print(f"{folder_name}: {metrics}")
         except Exception as error:

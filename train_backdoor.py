@@ -22,8 +22,8 @@ from torch.utils.data import DataLoader
 
 from attack_generated import GeneratedConfig
 from attacks import ATTACK_NAMES, build_attack, default_config
-from config import DATASET_REGISTRY
-from datasets import extract_labels, load_clean_datasets
+from utils.config import DATASET_REGISTRY
+from utils.datasets import extract_labels, load_clean_datasets
 from detection import attack_success_rate, clean_accuracy
 from poison import (
     AttackSuccessSet,

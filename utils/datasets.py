@@ -11,7 +11,7 @@ import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import Dataset, Subset
 from torchvision import datasets as tv_datasets
 
-from config import DATASET_REGISTRY, DatasetSpec
+from .config import DATASET_REGISTRY, DatasetSpec
 
 
 def build_transform(dataset_name: str) -> transforms_v2.Compose:

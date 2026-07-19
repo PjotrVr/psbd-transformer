@@ -6,22 +6,29 @@ that each trigger has the structural property its paper defines, that the label
 and index policy is correct, and that the poisoning datasets relabel and trigger
 the right samples.
 
-Run with pytest, or directly with python test_attacks.py.
+Run with pytest from the repo root: pytest tests/test_attacks.py.
 """
 
+import pytest
 import torch
 
-from attacks import build_attack, default_config
+from attacks import ATTACK_NAMES, build_attack, default_config
 from poison import (
     Attack,
     AttackSuccessSet,
     CoverPoisonedTrainingSet,
     PoisonedTrainingSet,
+    attack_success_label,
     choose_indices_with_cover,
     choose_poison_indices,
+    is_eval_poisonable,
     is_poisonable,
     poisoned_label,
 )
+
+# "generated" needs a --poisoned-dir of pre-generated images on disk, not
+# something a unit test can synthesize, so it is exercised elsewhere.
+TESTABLE_ATTACK_NAMES = tuple(name for name in ATTACK_NAMES if name != "generated")
 
 SIZE = 32
 IDENTITY = lambda image: image
@@ -201,6 +208,10 @@ def _fake_base(count: int):
     return [(torch.zeros(3, 4, 4), index % 4) for index in range(count)]
 
 
+def _fake_base_at_size(count: int, size: int):
+    return [(torch.zeros(3, size, size), index % 4) for index in range(count)]
+
+
 def test_poisoned_training_set_relabels_and_triggers():
     base = _fake_base(8)
     dataset = PoisonedTrainingSet(base, _marker_attack(), {1, 3}, IDENTITY, num_classes=4)
@@ -242,14 +253,33 @@ def test_attack_success_set_clean_label_selects_non_target_only():
         assert target == 0, "every eligible sample should carry the target label"
 
 
-def _run_all() -> None:
-    tests = [value for name, value in sorted(globals().items())
-             if name.startswith("test_") and callable(value)]
-    for test in tests:
-        test()
-        print(f"{test.__name__}: OK")
-    print(f"{len(tests)} tests passed")
+@pytest.mark.parametrize("name", TESTABLE_ATTACK_NAMES)
+def test_every_attack_trigger_is_deterministic_and_bounded(name):
+    attack = _built(name)
+    first = attack.apply_trigger(_gradient(), 0)
+    assert torch.equal(first, attack.apply_trigger(_gradient(), 0)), f"{name} is not deterministic"
+    assert torch.equal(first, attack.apply_trigger(_gradient(), 5)), f"{name} depends on the index"
+    assert first.min() >= 0.0 and first.max() <= 1.0, f"{name} left the 0 to 1 range"
 
 
-if __name__ == "__main__":
-    _run_all()
+@pytest.mark.parametrize("name", TESTABLE_ATTACK_NAMES)
+def test_every_attack_success_set_matches_its_label_mode(name):
+    # Uses each attack's real trigger and real label_mode, unlike the marker-
+    # attack tests above, so a future attack registered with the wrong
+    # label_mode in its default_config would show up here.
+    attack = _built(name)
+    base = _fake_base_at_size(8, SIZE)  # matches the image_size _built configured the attack for
+    labels = [item[1] for item in base]
+    dataset = AttackSuccessSet(base, labels, attack, IDENTITY, num_classes=4)
+
+    expected_positions = [
+        position for position, label in enumerate(labels)
+        if is_eval_poisonable(attack.label_mode, label, attack.target_label)
+    ]
+    assert len(dataset) == len(expected_positions)
+    for index, position in enumerate(expected_positions):
+        _, target = dataset[index]
+        expected = attack_success_label(attack.label_mode, labels[position], attack.target_label, num_classes=4)
+        assert target == expected
+
+

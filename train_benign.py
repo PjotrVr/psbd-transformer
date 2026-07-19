@@ -22,8 +22,8 @@ import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 from torch.utils.data import DataLoader
 
-from config import DATASET_REGISTRY
-from datasets import load_clean_datasets
+from utils.config import DATASET_REGISTRY
+from utils.datasets import load_clean_datasets
 from detection import clean_accuracy
 from train import checkpoint_metadata, save_checkpoint, train_classifier, utc_timestamp
 import time

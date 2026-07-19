@@ -25,8 +25,8 @@ from torch.utils.data import DataLoader, Subset
 from torchvision.utils import save_image
 
 from attacks import build_attack, default_config
-from config import DATASET_REGISTRY
-from datasets import extract_labels, load_clean_datasets
+from utils.config import DATASET_REGISTRY
+from utils.datasets import extract_labels, load_clean_datasets
 from detection import attack_success_rate, clean_accuracy
 from models import build_vit
 from poison import (
@@ -205,4 +205,7 @@ def test_overfit_sanity_check() -> None:
 
 
 if __name__ == "__main__":
+    # Flat imports need the repo root on sys.path, which bare `python
+    # tests/test_attack_triggers.py` from the repo root does not provide:
+    # `PYTHONPATH=. python tests/test_attack_triggers.py` from the repo root.
     dump_visuals("attack_visuals.png")
