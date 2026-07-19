@@ -20,7 +20,7 @@ import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 from torch.utils.data import DataLoader
 
-from attack_generated import GeneratedConfig
+from attacks.generated import GeneratedConfig
 from attacks import ATTACK_NAMES, build_attack, default_config
 from utils.config import DATASET_REGISTRY
 from utils.datasets import extract_labels, load_clean_datasets
