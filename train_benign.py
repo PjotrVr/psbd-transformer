@@ -24,7 +24,7 @@ from torch.utils.data import DataLoader
 
 from utils.config import DATASET_REGISTRY
 from utils.datasets import load_clean_datasets
-from detection import clean_accuracy
+from defences.detection import clean_accuracy
 from train import checkpoint_metadata, save_checkpoint, train_classifier, utc_timestamp
 import time
 

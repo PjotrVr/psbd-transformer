@@ -10,7 +10,7 @@ import pytest
 import torch.nn as nn
 from torchvision.models.vision_transformer import EncoderBlock
 
-from dropout import (
+from defences.dropout import (
     PostResidualEncoderBlock,
     configure_dropout,
     configure_pre_residual_dropout,

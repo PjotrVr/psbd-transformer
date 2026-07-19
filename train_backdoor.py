@@ -24,7 +24,7 @@ from attacks.generated import GeneratedConfig
 from attacks import ATTACK_NAMES, build_attack, default_config
 from utils.config import DATASET_REGISTRY
 from utils.datasets import extract_labels, load_clean_datasets
-from detection import attack_success_rate, clean_accuracy
+from defences.detection import attack_success_rate, clean_accuracy
 from poison import (
     AttackSuccessSet,
     CoverPoisonedTrainingSet,

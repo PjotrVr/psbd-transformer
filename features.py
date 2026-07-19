@@ -14,7 +14,7 @@ active, which is exactly what the placement comparison needs.
 import torch
 import torch.nn as nn
 
-from inference import forward_probs
+from defences.inference import forward_probs
 from models import vit_core
 
 TokenReduction = str  # one of "cls", "mean", "flatten"

@@ -24,8 +24,14 @@ import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader
 
 from attacks import build_attack, default_config
-from checkpoint_eval import working_resolution
-from detection import attack_success_rate, clean_accuracy, clean_accuracy_by_class
+from defences.checkpoint_eval import working_resolution
+from defences.detection import (
+    accuracy_by_class_from_counts,
+    attack_success_rate,
+    class_correct_and_total,
+    clean_accuracy,
+    pooled_accuracy_from_counts,
+)
 from utils.config import DATASET_REGISTRY
 from utils.datasets import extract_labels, load_clean_datasets
 from models import load_checkpoint
@@ -106,12 +112,12 @@ def build_full_eval_loaders(
 
 def evaluate_benign(model, dataset_name: str, architecture: str, device, raw_data_dir: str, batch_size: int) -> dict:
     _, test_loader, num_classes = build_clean_loaders(dataset_name, raw_data_dir, batch_size, num_workers=2)
+    # One forward pass shared between the pooled and per-class figures, not two.
+    correct, total = class_correct_and_total(model, test_loader, device, num_classes, use_bfloat16=True)
     return {
         "architecture": architecture,
-        "clean_accuracy": clean_accuracy(model, test_loader, device, use_bfloat16=True),
-        "clean_accuracy_by_class": clean_accuracy_by_class(
-            model, test_loader, device, num_classes, use_bfloat16=True
-        ),
+        "clean_accuracy": pooled_accuracy_from_counts(correct, total),
+        "clean_accuracy_by_class": accuracy_by_class_from_counts(correct, total),
     }
 
 

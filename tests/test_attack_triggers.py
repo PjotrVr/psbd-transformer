@@ -27,7 +27,7 @@ from torchvision.utils import save_image
 from attacks import build_attack, default_config
 from utils.config import DATASET_REGISTRY
 from utils.datasets import extract_labels, load_clean_datasets
-from detection import attack_success_rate, clean_accuracy
+from defences.detection import attack_success_rate, clean_accuracy
 from models import build_vit
 from poison import (
     Attack,

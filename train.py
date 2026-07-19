@@ -20,7 +20,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from detection import clean_accuracy
+from defences.detection import clean_accuracy
 from models import build_swin, build_vit
 from sam import SAM
 

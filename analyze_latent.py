@@ -31,7 +31,7 @@ from cka import debiased_linear_cka
 from utils.config import DATASET_REGISTRY
 from utils.datasets import load_clean_datasets
 from direction import backdoor_direction, trigger_activated_change
-from dropout import reset_dropout
+from defences.dropout import reset_dropout
 from embedding import pca_project
 from features import extract_layer_features
 from models import load_checkpoint

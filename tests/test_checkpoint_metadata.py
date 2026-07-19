@@ -12,7 +12,7 @@ import os
 import pytest
 import torch
 
-from checkpoint_eval import read_checkpoint_metadata
+from defences.checkpoint_eval import read_checkpoint_metadata
 from models import build_vit, load_vit_checkpoint
 from normalize_checkpoints import parse_folder_name
 from train import save_checkpoint
