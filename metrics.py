@@ -19,6 +19,7 @@ them, the same way backdoor_data.py's PNG path always has.
 import argparse
 import json
 import os
+import shutil
 
 import torch
 import torchvision.transforms.v2 as transforms_v2
@@ -50,7 +51,20 @@ def list_checkpoint_folders(source_dir: str) -> list[str]:
 
 
 def mirror_analysis_folders(analysis_dir: str, folder_names: list[str]) -> None:
-    """analysis/<folder>/ exists for every checkpoint, even ones not yet processed."""
+    """analysis/ matches checkpoints/ + backdoor_bench_checkpoints/ exactly.
+
+    Creates a folder for every current checkpoint, even ones not yet
+    processed, and removes any analysis/<name>/ left over from a checkpoint
+    that no longer exists, for example one normalize_checkpoints.py renamed.
+    """
+    os.makedirs(analysis_dir, exist_ok=True)
+    wanted = set(folder_names)
+    existing = {
+        name for name in os.listdir(analysis_dir)
+        if os.path.isdir(os.path.join(analysis_dir, name))
+    }
+    for orphan in existing - wanted:
+        shutil.rmtree(os.path.join(analysis_dir, orphan))
     for folder_name in folder_names:
         os.makedirs(os.path.join(analysis_dir, folder_name), exist_ok=True)
 
