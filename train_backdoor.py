@@ -25,7 +25,7 @@ from attacks import ATTACK_NAMES, build_attack, default_config
 from evaluate import evaluate_attack
 from loaders import build_clean_loader
 from utils.config import DATASET_REGISTRY
-from utils.datasets import extract_labels, load_clean_datasets
+from utils.datasets import extract_labels, limit_dataset, load_clean_datasets
 from poison import (
     CoverPoisonedTrainingSet,
     PoisonedTrainingSet,
@@ -78,6 +78,9 @@ def build_training_loader(args, image_size: int):
     spec = DATASET_REGISTRY[args.dataset]
     transform = base_transform(image_size)
     train_clean, _ = load_clean_datasets(args.dataset, transform, args.raw_data_dir)
+    # Subset before poison-index selection so poison_rate is measured against the
+    # truncated pool, mirroring the eval-side subset in loaders.py.
+    train_clean = limit_dataset(train_clean, args.max_samples, args.seed)
     normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
 
     config = resolve_config(args.attack, args.poisoned_dir)
@@ -119,11 +122,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--output", required=True)
     parser.add_argument("--num-workers", type=int, default=8)
+    parser.add_argument(
+        "--max-samples",
+        type=int,
+        default=-1,
+        help="Truncate each dataset to this many samples, reproducibly, for a fast "
+        "smoke run (combine with --epochs 1). -1 (default) uses the whole dataset. "
+        "This alone does not imply smoke semantics; --epochs is independent.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    # -1 is a CLI-only sentinel for "no limit". Normalize it to None immediately so
+    # no subsetting code ever sees it, since -1 would slice off one sample instead.
+    args.max_samples = None if args.max_samples == -1 else args.max_samples
     seed_everything(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     start = time.time()
@@ -132,9 +146,17 @@ def main() -> None:
 
     train_loader, num_classes, attack, config = build_training_loader(args, image_size)
     val_loader = build_clean_loader(
-        args.dataset, args.raw_data_dir, args.batch_size, args.num_workers
+        args.dataset,
+        args.raw_data_dir,
+        args.batch_size,
+        args.num_workers,
+        max_samples=args.max_samples,
+        seed=args.seed,
     )
 
+    # Reseed right before the regular workflow so model init and training start from
+    # an identical RNG state whether or not --max-samples triggered any subsetting.
+    seed_everything(args.seed)
     model = train_classifier(
         args.architecture,
         num_classes,
@@ -156,6 +178,8 @@ def main() -> None:
         device,
         args.raw_data_dir,
         args.batch_size,
+        max_samples=args.max_samples,
+        seed=args.seed,
     )
     print(f"final ASR={metrics['asr']:.4f} CA={metrics['clean_accuracy']:.4f}")
 
@@ -175,6 +199,7 @@ def main() -> None:
             rho=args.rho,
             epochs=args.epochs,
             seed=args.seed,
+            max_samples=args.max_samples,
             clean_accuracy=metrics["clean_accuracy"],
             asr=metrics["asr"],
             started_at=started_at,

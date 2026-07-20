@@ -20,6 +20,7 @@ MODULES = [
     "models",
     "poison",
     "sam",
+    "stealth",
     "train",
     "train_backdoor",
     "train_benign",

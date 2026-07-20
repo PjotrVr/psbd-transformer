@@ -6,6 +6,7 @@ code can stay pure.
 
 import os
 
+import numpy as np
 import torch
 import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import Dataset, Subset
@@ -76,6 +77,23 @@ def load_clean_datasets(
         root=root, train=False, download=True, transform=transform
     )
     return train_ds, test_ds
+
+
+def limit_dataset(dataset: Dataset, max_samples: int | None, seed: int) -> Dataset:
+    """A reproducible random subset of dataset, or dataset itself when max_samples is None.
+
+    Uses numpy's Generator API, which is isolated from the legacy global
+    np.random state seed_everything seeds, so calling this never perturbs the
+    RNG stream that model init or DataLoader shuffling later draw from. A random
+    subset rather than a first-N slice matters for the ImageFolder-backed loaders
+    (Tiny ImageNet), whose samples are listed sorted by class, so a first-N slice
+    would cover only the first one or two classes.
+    """
+    n = len(dataset)
+    if max_samples is None or max_samples >= n:
+        return dataset
+    indices = np.random.default_rng(seed).choice(n, size=max_samples, replace=False)
+    return Subset(dataset, indices)
 
 
 def extract_labels(dataset: Dataset) -> list[int]:

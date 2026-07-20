@@ -25,13 +25,18 @@ from torch.utils.data import DataLoader
 from evaluate import evaluate_benign
 from loaders import build_clean_loader
 from utils.config import DATASET_REGISTRY
-from utils.datasets import load_clean_datasets
+from utils.datasets import limit_dataset, load_clean_datasets
 from train import checkpoint_metadata, save_checkpoint, train_classifier, utc_timestamp
 import time
 
 
 def build_benign_train_loader(
-    dataset_name: str, raw_data_dir: str, batch_size: int, num_workers: int = 8
+    dataset_name: str,
+    raw_data_dir: str,
+    batch_size: int,
+    num_workers: int = 8,
+    max_samples: int | None = None,
+    seed: int = 0,
 ) -> tuple[DataLoader, int]:
     """The shuffled training split only. Evaluation reuses loaders.build_clean_loader,
     the same function metrics.py and train_backdoor.py use for their clean loaders.
@@ -45,6 +50,7 @@ def build_benign_train_loader(
         ]
     )
     train_dataset, _ = load_clean_datasets(dataset_name, transform, raw_data_dir)
+    train_dataset = limit_dataset(train_dataset, max_samples, seed)
     train_loader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers
     )
@@ -60,12 +66,25 @@ def train_one_benign(
     start = time.time()
     started_at = utc_timestamp()
     train_loader, num_classes = build_benign_train_loader(
-        dataset_name, args.raw_data_dir, args.batch_size, args.num_workers
+        dataset_name,
+        args.raw_data_dir,
+        args.batch_size,
+        args.num_workers,
+        args.max_samples,
+        args.seed,
     )
     val_loader = build_clean_loader(
-        dataset_name, args.raw_data_dir, args.batch_size, args.num_workers
+        dataset_name,
+        args.raw_data_dir,
+        args.batch_size,
+        args.num_workers,
+        max_samples=args.max_samples,
+        seed=args.seed,
     )
 
+    # Reseed right before the regular workflow so model init and training start from
+    # an identical RNG state whether or not --max-samples triggered any subsetting.
+    seed_everything(args.seed)
     model = train_classifier(
         args.architecture,
         num_classes,
@@ -78,7 +97,13 @@ def train_one_benign(
     )
     ended_at = utc_timestamp()
     accuracy = evaluate_benign(
-        model, dataset_name, device, args.raw_data_dir, args.batch_size
+        model,
+        dataset_name,
+        device,
+        args.raw_data_dir,
+        args.batch_size,
+        max_samples=args.max_samples,
+        seed=args.seed,
     )["clean_accuracy"]
 
     # Canonical name matches normalize_checkpoints.py's template: architecture
@@ -104,6 +129,7 @@ def train_one_benign(
             rho=args.rho,
             epochs=args.epochs,
             seed=args.seed,
+            max_samples=args.max_samples,
             clean_accuracy=accuracy,
             asr=None,
             started_at=started_at,
@@ -132,11 +158,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--raw-data-dir", default="raw_data")
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--max-samples",
+        type=int,
+        default=-1,
+        help="Truncate each dataset to this many samples, reproducibly, for a fast "
+        "smoke run (combine with --epochs 1). -1 (default) uses the whole dataset. "
+        "This alone does not imply smoke semantics; --epochs is independent.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    # -1 is a CLI-only sentinel for "no limit". Normalize once here, before the
+    # per-dataset loop, so no subsetting code ever sees it (-1 would slice off one
+    # sample instead of meaning "no limit").
+    args.max_samples = None if args.max_samples == -1 else args.max_samples
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     accuracies = {}

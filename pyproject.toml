@@ -13,11 +13,13 @@ dependencies = [
     "scikit-learn",
     "timm>=1.0.27",
     "lightning>=2.6.5",
+    "lpips>=0.1.4",
+    "torchmetrics>=1.9.0",
 ]
 
 [dependency-groups]
 analysis = ["umap-learn"]
-dev = ["ruff", "ipython", "jupyter", "ipykernel", "pytest>=9.1.1"]
+dev = ["ruff", "ipython", "jupyter", "ipykernel", "pytest>=9.1.1", "scikit-image"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

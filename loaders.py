@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 
 from poison import Attack, AttackSuccessSet, PoisonedTrainingSet
 from utils.config import DATASET_REGISTRY
-from utils.datasets import extract_labels, load_clean_datasets
+from utils.datasets import extract_labels, limit_dataset, load_clean_datasets
 
 
 @functools.lru_cache(maxsize=None)
@@ -42,9 +42,18 @@ def build_clean_loader(
     raw_data_dir: str = "raw_data",
     batch_size: int = 64,
     num_workers: int = 2,
+    max_samples: int | None = None,
+    seed: int = 0,
 ) -> DataLoader:
-    """Every test image, normalized, no trigger."""
+    """Every test image, normalized, no trigger.
+
+    max_samples is a smoke-test knob (None means the whole test set). Subsetting
+    happens after _load_test_base's cached return, never inside it, so the cache
+    key stays (dataset_name, raw_data_dir) and a truncated call never corrupts
+    the full-dataset object other callers share.
+    """
     test_base, spec = _load_test_base(dataset_name, raw_data_dir)
+    test_base = limit_dataset(test_base, max_samples, seed)
     normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
     # PoisonedTrainingSet with no poison_indices and no attack is just a plain
     # normalized dataset: attack.apply_trigger is only ever called for indices
@@ -61,6 +70,8 @@ def build_poisoned_loader(
     raw_data_dir: str = "raw_data",
     batch_size: int = 64,
     num_workers: int = 2,
+    max_samples: int | None = None,
+    seed: int = 0,
 ) -> DataLoader:
     """Every eligible test image with the trigger applied, labeled by attack success.
 
@@ -71,6 +82,7 @@ def build_poisoned_loader(
     not which images training was allowed to poison (see poison.is_eval_poisonable).
     """
     test_base, spec = _load_test_base(dataset_name, raw_data_dir)
+    test_base = limit_dataset(test_base, max_samples, seed)
     normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
     true_labels = extract_labels(test_base)
     poisoned_set = AttackSuccessSet(
