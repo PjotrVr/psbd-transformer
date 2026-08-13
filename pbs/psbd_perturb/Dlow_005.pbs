@@ -1,0 +1,103 @@
+#!/bin/bash
+#PBS -q gpu
+#PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
+#PBS -l walltime=06:00:00
+#PBS -N psbd_Dlow_005
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/psbd_perturb/Dlow_005.log
+#PBS -j oe
+
+export http_proxy="http://10.150.1.1:3128"
+export https_proxy="http://10.150.1.1:3128"
+
+echo "Job ID:  $PBS_JOBID"
+echo "Node:    $(hostname)"
+echo "Started: $(date)"
+echo "Work:    51 units, est 235 min"
+nvidia-smi --query-gpu=name --format=csv,noheader
+
+BASE=/lustre/home/pstika/projects/PSBD-ViT
+cd $BASE
+source .venv/bin/activate
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_tiny_adaptive_blend_0_05 vit_tiny_badnet_a2o_0_01 vit_tiny_badnet_a2o_0_05 vit_tiny_blend_0_01 vit_tiny_blend_0_05 \
+    --position-config before_attention_norm \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_tiny_adaptive_blend_0_05 vit_tiny_badnet_a2o_0_01 vit_tiny_badnet_a2o_0_05 vit_tiny_blend_0_01 vit_tiny_blend_0_05 \
+    --position-config post_residual \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_tiny_adaptive_blend_0_05 vit_tiny_badnet_a2o_0_01 vit_tiny_badnet_a2o_0_05 vit_tiny_blend_0_01 vit_tiny_blend_0_05 \
+    --position-config pre_residual \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_gtsrb_lf_0_05 vit_tiny_adaptive_blend_0_05 vit_tiny_badnet_a2o_0_01 vit_tiny_badnet_a2o_0_05 vit_tiny_blend_0_01 vit_tiny_blend_0_05 \
+    --position-config pre_residual \
+    --perturbation droppath \
+    --rates 0.01 0.02 0.05 0.1 0.15 0.2 0.3 0.4 0.5 0.7 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_tiny_adaptive_blend_0_05 vit_tiny_badnet_a2o_0_01 vit_tiny_badnet_a2o_0_05 vit_tiny_blend_0_01 vit_tiny_blend_0_05 \
+    --position-config before_attention_norm \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_tiny_adaptive_blend_0_05 vit_tiny_badnet_a2o_0_01 vit_tiny_badnet_a2o_0_05 vit_tiny_blend_0_01 vit_tiny_blend_0_05 \
+    --position-config post_residual \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_tiny_adaptive_blend_0_05 vit_tiny_badnet_a2o_0_01 vit_tiny_badnet_a2o_0_05 vit_tiny_blend_0_01 vit_tiny_blend_0_05 \
+    --position-config pre_residual \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_gtsrb_lf_0_05 vit_tiny_adaptive_blend_0_05 vit_tiny_badnet_a2o_0_01 vit_tiny_badnet_a2o_0_05 vit_tiny_blend_0_01 \
+    --position-config attention_heads \
+    --perturbation head_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_tiny_adaptive_blend_0_05 vit_tiny_badnet_a2o_0_01 vit_tiny_badnet_a2o_0_05 vit_tiny_blend_0_01 vit_tiny_blend_0_05 \
+    --position-config after_embedding \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_tiny_adaptive_blend_0_05 vit_tiny_badnet_a2o_0_01 vit_tiny_badnet_a2o_0_05 vit_tiny_blend_0_01 vit_tiny_blend_0_05 \
+    --position-config before_attention_norm \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+echo "Finished: $(date)"
+exit 0

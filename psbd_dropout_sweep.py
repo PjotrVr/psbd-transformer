@@ -52,6 +52,10 @@ DROPOUT_RATES: tuple[float, ...] = tuple(i / 10.0 for i in range(1, 10))
 # Reseeds the dropout mask sampling (see defences.inference), distinct from the
 # data-split seed. Kept fixed so a rerun reproduces the same masks exactly.
 PSBD_MASK_SEED = 0
+# The PSBD paper's own value (sec/4_method.tex: "We perform forward inference k=3
+# times"). Caches at this k keep the bare folder name so every pre-existing cache
+# stays addressable.
+DEFAULT_FORWARD_PASSES = 3
 
 
 def parse_args() -> argparse.Namespace:
@@ -78,7 +82,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--raw-data-dir", default="raw_data")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=4)
-    parser.add_argument("--forward-passes", type=int, default=3)
+    parser.add_argument("--forward-passes", type=int, default=DEFAULT_FORWARD_PASSES)
     # A smoke and timing knob only. The real jobs leave it None for the full split.
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument(
@@ -127,6 +131,7 @@ def cache_config_name(
     position_config: str,
     block_range: tuple[int, int] | None,
     perturbation: str = "dropout",
+    forward_passes: int = DEFAULT_FORWARD_PASSES,
 ) -> str:
     """The results/ subfolder name for one placement.
 
@@ -134,6 +139,12 @@ def cache_config_name(
     to every block, so it needs its own folder. Without the suffix the two would
     write the same rate_<tag>_<split>.pt filenames and the second run would
     silently overwrite the first.
+
+    The same applies to the perturbation operator and to the Monte Carlo pass
+    count. PSU is an expectation over k passes, so a k=20 cache is a different
+    measurement from a k=3 one at the same (position, operator, rate). Without k
+    in the name the two collide, and worse, --skip-existing would find the k=3
+    files and skip the k=20 work while reporting success.
     """
     if block_range is None:
         stem = position_config
@@ -141,7 +152,11 @@ def cache_config_name(
         stem = f"{position_config}_blocks_{block_range[0]}_{block_range[1]}"
     # dropout keeps the bare name so every cache written before perturbations
     # existed stays addressable and --skip-existing still finds it.
-    return stem if perturbation == "dropout" else f"{stem}_{perturbation}"
+    if perturbation != "dropout":
+        stem = f"{stem}_{perturbation}"
+    if forward_passes != DEFAULT_FORWARD_PASSES:
+        stem = f"{stem}_k{forward_passes}"
+    return stem
 
 
 def resolve_device() -> torch.device:
@@ -305,7 +320,7 @@ def write_run_provenance(
     }
     path = os.path.join(
         psbd_dir,
-        f"run_{cache_config_name(position_config, tuple(args.block_range) if args.block_range else None, args.perturbation)}.json",
+        f"run_{cache_config_name(position_config, tuple(args.block_range) if args.block_range else None, args.perturbation, args.forward_passes)}.json",
     )
     os.makedirs(psbd_dir, exist_ok=True)
     with open(path, "w") as handle:
@@ -340,7 +355,9 @@ def run_one_checkpoint(
             args.skip_existing
             and already_complete(
                 psbd_dir,
-                cache_config_name(position, block_range, args.perturbation),
+                cache_config_name(
+                    position, block_range, args.perturbation, args.forward_passes
+                ),
                 rates,
             )
         )
@@ -374,11 +391,13 @@ def run_one_checkpoint(
             use_bfloat16,
             rates=rates,
             block_range=block_range,
-            cache_name=cache_config_name(position, block_range, args.perturbation),
+            cache_name=cache_config_name(
+                position, block_range, args.perturbation, args.forward_passes
+            ),
             perturbation=args.perturbation,
         )
         print(
-            f"[ok] {folder} {cache_config_name(position, block_range, args.perturbation)}",
+            f"[ok] {folder} {cache_config_name(position, block_range, args.perturbation, args.forward_passes)}",
             flush=True,
         )
 

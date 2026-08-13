@@ -1,0 +1,385 @@
+#!/bin/bash
+#PBS -q gpu
+#PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
+#PBS -l walltime=06:00:00
+#PBS -N psbd_Afull_002
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/psbd_perturb/Afull_002.log
+#PBS -j oe
+
+export http_proxy="http://10.150.1.1:3128"
+export https_proxy="http://10.150.1.1:3128"
+
+echo "Job ID:  $PBS_JOBID"
+echo "Node:    $(hostname)"
+echo "Started: $(date)"
+echo "Work:    55 units, est 239 min"
+nvidia-smi --query-gpu=name --format=csv,noheader
+
+BASE=/lustre/home/pstika/projects/PSBD-ViT
+cd $BASE
+source .venv/bin/activate
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config after_attention_residual \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_benign \
+    --position-config after_attention_residual \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --probe-attack badnet_a2o \
+    --probe-target-label 0 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config after_embedding \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_benign \
+    --position-config after_embedding \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --probe-attack badnet_a2o \
+    --probe-target-label 0 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config after_mlp_residual \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_attention \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_benign \
+    --position-config before_attention \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --probe-attack badnet_a2o \
+    --probe-target-label 0 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_attention_norm \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_benign \
+    --position-config before_attention_norm \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --probe-attack badnet_a2o \
+    --probe-target-label 0 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_attention_residual \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_benign \
+    --position-config before_attention_residual \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --probe-attack badnet_a2o \
+    --probe-target-label 0 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_mlp \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_benign \
+    --position-config before_mlp \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --probe-attack badnet_a2o \
+    --probe-target-label 0 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_mlp_norm \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_benign \
+    --position-config before_mlp_norm \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --probe-attack badnet_a2o \
+    --probe-target-label 0 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_mlp_residual \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_benign \
+    --position-config before_mlp_residual \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --probe-attack badnet_a2o \
+    --probe-target-label 0 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config mlp_neurons \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_benign \
+    --position-config mlp_neurons \
+    --perturbation channel_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --probe-attack badnet_a2o \
+    --probe-target-label 0 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_attention_residual \
+    --perturbation droppath \
+    --rates 0.01 0.02 0.05 0.1 0.15 0.2 0.3 0.4 0.5 0.7 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_mlp_residual \
+    --perturbation droppath \
+    --rates 0.01 0.02 0.05 0.1 0.15 0.2 0.3 0.4 0.5 0.7 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config pre_residual \
+    --perturbation droppath \
+    --rates 0.01 0.02 0.05 0.1 0.15 0.2 0.3 0.4 0.5 0.7 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config after_attention_residual \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config after_embedding \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config after_mlp_residual \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_attention \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_attention_norm \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_attention_residual \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_mlp \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_mlp_norm \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_mlp_residual \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config mlp_neurons \
+    --perturbation gaussian \
+    --rates 0.05 0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config attention_heads \
+    --perturbation head_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config after_attention_residual \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config after_embedding \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config after_mlp_residual \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_attention \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_attention_norm \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_attention_residual \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_mlp \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_mlp_norm \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config before_mlp_residual \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_badnet_a2a_0_1 vit_cifar10_badnet_a2o_0_1 \
+    --position-config mlp_neurons \
+    --perturbation token_mask \
+    --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --forward-passes 3 \
+    --skip-existing
+
+echo "Finished: $(date)"
+exit 0
