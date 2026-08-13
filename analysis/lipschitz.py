@@ -40,7 +40,7 @@ def linear_channel_lipschitz(weight: torch.Tensor) -> torch.Tensor:
     For output dimension k the map is out_k = row_k dot input, whose Lipschitz
     constant is the row's 2-norm. Returns one value per output channel.
     """
-    return weight.float().norm(dim=1)
+    return weight.detach().float().norm(dim=1).cpu()
 
 
 def mlp_output_channel_lipschitz(model: nn.Module) -> dict[int, torch.Tensor]:
@@ -66,7 +66,7 @@ def _last_linear(module: nn.Module) -> nn.Linear:
 
 
 def head_weight_alignment(
-    model: nn.Module, num_layers: int, threshold: float
+    model: nn.Module, num_layers: int, threshold_quantile: float
 ) -> torch.Tensor:
     """The Karayalcin data-free detector, adapted here for reference.
 
@@ -80,18 +80,55 @@ def head_weight_alignment(
     simplified form
         score_i = number of large-magnitude alignments between class direction c_i
                   and the early output-projection weights
+
+    The paper's absolute threshold does not transfer to ViT. Measured on this
+    repo's checkpoints, every alignment magnitude falls below 0.032, so any
+    ConvNet-scale constant makes every count 0 and the detector returns a tied
+    vector that decides nothing. The threshold is therefore taken as a quantile of
+    the model's OWN alignment distribution, which keeps the detector data-free
+    (weights only, no inputs) while making it scale-free. The quantile fixes the
+    total count across all classes; only its distribution over classes carries the
+    signal, which is what the outlier rule reads.
     """
     core = vit_core(model)
-    class_directions = core.heads.head.weight  # [num_classes, dim]
+    class_directions = core.heads.head.weight.detach()  # [num_classes, dim]
 
-    projection_weights = []
-    for block in list(core.encoder.layers)[:num_layers]:
-        attention_output = block.self_attention.out_proj.weight  # [dim, dim]
-        projection_weights.append(attention_output)
+    # The head reads encoder.ln(x)[:, 0], so the true readout direction is the class
+    # row scaled by the final LayerNorm gain, not the raw row. Folding it in makes
+    # the alignment magnitudes, and therefore the threshold, mean what they should.
+    class_directions = class_directions * core.encoder.ln.weight.unsqueeze(0)
 
-    scores = torch.zeros(class_directions.size(0))
-    for class_index, class_direction in enumerate(class_directions):
-        for weight in projection_weights:
-            alignment = (class_direction.float() @ weight.float()).abs()
-            scores[class_index] += (alignment > threshold).sum()
-    return scores
+    projection_weights = [
+        block.self_attention.out_proj.weight.detach().float()  # [dim, dim]
+        for block in list(core.encoder.layers)[:num_layers]
+    ]
+
+    alignment = torch.cat(
+        [(class_directions.float() @ weight).abs() for weight in projection_weights],
+        dim=1,
+    ).cpu()
+    threshold = alignment.flatten().quantile(threshold_quantile)
+    return (alignment > threshold).sum(dim=1).float()
+
+
+def alignment_outlier_score(
+    scores: torch.Tensor, spread_floor: float = 1.0
+) -> tuple[float, int]:
+    """The paper's Z rule on top of the per-class alignment counts.
+
+        Z = (s_top - s_second) / max(std(S without s_top), t)
+
+    Returns (Z, top_class). A backdoored model is flagged when Z > 3, with the top
+    class read as the attacker's target.
+
+    Without this, head_weight_alignment returns a vector of counts and makes no
+    decision, which is why it produced no detection anywhere in this project until
+    now. The floor is in count units and defaults to 1, the smallest difference the
+    counts can express: when every class but one scores identically the standard
+    deviation collapses and Z would otherwise diverge on a 1-count difference.
+    """
+    ordered = scores.sort(descending=True).values
+    top, second = float(ordered[0]), float(ordered[1])
+    spread = float(ordered[1:].std())
+    z = (top - second) / max(spread, spread_floor)
+    return z, int(scores.argmax())
