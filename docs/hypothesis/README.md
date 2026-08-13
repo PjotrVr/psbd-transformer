@@ -47,6 +47,7 @@ written.
 | [H10](H10-depth-band-placement.md) | Aiming dropout at the depth where an attack's direction lives beats spreading it over all blocks | band premise **SUPPORTED** 6/6; onset-based selection **REFUTED** out of sample 0/2 |
 | [H11](H11-adaptive-rate-overshoots.md) | PSBD's adaptive rate rule overshoots on ViT | **SUPPORTED**, 12/12, and free to fix |
 | [H12](H12-psu-is-not-just-confidence.md) | PSU is just a proxy for baseline confidence | **REFUTED** (and yielded a free improvement) |
+| [H13](H13-combined-variant.md) | The accumulated changes combine into a materially better defence | **SUPPORTED**: +0.110 mean AUROC, wins 14/15 |
 
 ## Where this stands after phases 3a and 3b
 
