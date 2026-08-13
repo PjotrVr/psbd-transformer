@@ -101,6 +101,15 @@ def detect_architecture(checkpoint_path: str) -> str:
     )
 
 
-def vit_core(model: nn.Module) -> nn.Module:
-    """Return the ViT network inside the Sequential(Resize, network) wrapper."""
+def network_core(model: nn.Module) -> nn.Module:
+    """Return the classifier network inside the Sequential(Resize, network) wrapper.
+
+    Dotted module paths resolve from here, not from the wrapper, whose only
+    children are the Resize and the network itself.
+    """
     return model[1] if isinstance(model, nn.Sequential) else model
+
+
+def vit_core(model: nn.Module) -> nn.Module:
+    """network_core under the name the ViT-only analysis tools read better with."""
+    return network_core(model)

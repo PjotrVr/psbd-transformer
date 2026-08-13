@@ -20,9 +20,18 @@ adding a position never hand-duplicates a block class, and removing one is just
 handle.remove() with nothing to restore, because the original model was never
 mutated.
 
+The one position a hook cannot express is dropout on the residual stream
+immediately after the attention add. In both architectures that value is a local
+variable consumed twice (once by the MLP-branch norm, once by the second add),
+and no module boundary sits between the add and those two uses. That position is
+therefore realized by a removable per-instance forward wrapper instead; see
+_attach_residual_wrapper. It still mutates no weights, so unplugging restores the
+loaded model exactly.
+
 Both architecture registries are defined here. This pass runs ViT only.
 """
 
+import functools
 from dataclasses import dataclass
 from typing import Callable
 
@@ -30,6 +39,8 @@ import torch.nn as nn
 from torch.utils.hooks import RemovableHandle
 from torchvision.models.vision_transformer import EncoderBlock
 from torchvision.models.swin_transformer import SwinTransformerBlock
+
+from models import network_core
 
 
 @dataclass(frozen=True)
@@ -48,23 +59,26 @@ class PositionSpec:
     """
 
     submodule_name: str
-    hook_type: str  # "pre" or "post"
+    hook_type: str  # "pre", "post", or "residual"
     scope: str = "block"
 
 
 # ViT-B/16 EncoderBlock children: ln_1, self_attention, dropout, ln_2, mlp, one
 # per each of 12 blocks. after_embedding targets the model-level Encoder.dropout.
-# after_attention_residual aliases before_mlp_norm: nothing sits between the
-# attention residual add and the MLP LayerNorm, so both names hook ln_1's sibling
-# ln_2's input, but they mean different positions conceptually and post_residual
-# needs after_attention_residual to resolve.
+#
+# after_attention_residual is the one "residual" position: it perturbs the stream
+# right after x = x + input, so both the ln_2 branch and the skip into x + y see
+# the perturbation. That is what the PSBD paper's ConvNet placement does (dropout
+# after the residual add, before the activation) and it is not reachable with a
+# hook, since x is a local consumed twice. Contrast before_mlp_norm, a pre-hook on
+# ln_2, which perturbs only the MLP branch's input and leaves the skip untouched.
 VIT_POSITIONS: dict[str, PositionSpec] = {
     "after_embedding": PositionSpec("encoder.dropout", "pre", scope="model"),
     "before_attention_norm": PositionSpec("ln_1", "pre"),
     "before_attention": PositionSpec("self_attention", "pre"),
     "before_attention_residual": PositionSpec("dropout", "post"),
     "before_mlp_norm": PositionSpec("ln_2", "pre"),
-    "after_attention_residual": PositionSpec("ln_2", "pre"),
+    "after_attention_residual": PositionSpec("", "residual"),
     "before_mlp": PositionSpec("mlp", "pre"),
     "before_mlp_residual": PositionSpec("mlp", "post"),
     "after_mlp_residual": PositionSpec("", "post"),
@@ -87,7 +101,7 @@ SWIN_POSITIONS: dict[str, PositionSpec] = {
     "before_attention": PositionSpec("attn", "pre"),
     "before_attention_residual": PositionSpec("attn", "post"),
     "before_mlp_norm": PositionSpec("norm2", "pre"),
-    "after_attention_residual": PositionSpec("norm2", "pre"),
+    "after_attention_residual": PositionSpec("", "residual"),
     "before_mlp": PositionSpec("mlp", "pre"),
     "before_mlp_residual": PositionSpec("mlp", "post"),
     "after_mlp_residual": PositionSpec("", "post"),
@@ -103,13 +117,13 @@ BLOCK_TYPES: dict[str, tuple[type, ...]] = {
     "swin": (SwinTransformerBlock,),
 }
 
-# The 8 atomic positions swept in isolation. after_attention_residual is not
-# among them: it exists only so the post_residual combo can resolve.
+# The 9 atomic positions swept in isolation, in forward order through a block.
 SINGLE_POSITION_NAMES: tuple[str, ...] = (
     "after_embedding",
     "before_attention_norm",
     "before_attention",
     "before_attention_residual",
+    "after_attention_residual",
     "before_mlp_norm",
     "before_mlp",
     "before_mlp_residual",
@@ -118,19 +132,81 @@ SINGLE_POSITION_NAMES: tuple[str, ...] = (
 
 # Named multi-position combos. Every single position is also usable directly as a
 # one-element position_names tuple, so it needs no entry here.
+#
+# pre_residual perturbs each branch's contribution just before it is added, so the
+# residual stream itself is never touched. post_residual perturbs the stream
+# immediately after each of the two adds, the ConvNet placement of the PSBD paper.
+# These two are the primary comparison this study exists to make.
 DROPOUT_CONFIGS: dict[str, tuple[str, ...]] = {
     "pre_residual": ("before_attention_residual", "before_mlp_residual"),
     "post_residual": ("after_attention_residual", "after_mlp_residual"),
 }
 
 
-def _network_core(model: nn.Module) -> nn.Module:
-    """The classifier network inside the Sequential(Resize, network) wrapper.
+def _vit_post_attention_residual_forward(
+    block: nn.Module, dropout: nn.Module, input_tensor
+):
+    """EncoderBlock.forward with dropout on the stream after the attention add.
 
-    Model-level positions resolve a dotted path from here, not from the wrapper,
-    whose only children are the Resize and the network.
+    Mirrors torchvision's EncoderBlock.forward exactly except for the one
+    dropout call. The MLP-branch add is left alone: after_mlp_residual is a
+    plain post-hook on the block, so plugging both positions composes into the
+    full post-residual placement without either mechanism knowing about the other.
     """
-    return model[1] if isinstance(model, nn.Sequential) else model
+    x = block.ln_1(input_tensor)
+    x, _ = block.self_attention(x, x, x, need_weights=False)
+    x = block.dropout(x)
+    x = dropout(x + input_tensor)
+    y = block.ln_2(x)
+    y = block.mlp(y)
+    return x + y
+
+
+def _swin_post_attention_residual_forward(
+    block: nn.Module, dropout: nn.Module, input_tensor
+):
+    """SwinTransformerBlock.forward with dropout after the attention add."""
+    x = dropout(
+        input_tensor + block.stochastic_depth(block.attn(block.norm1(input_tensor)))
+    )
+    x = x + block.stochastic_depth(block.mlp(block.norm2(x)))
+    return x
+
+
+RESIDUAL_FORWARDS: dict[str, Callable] = {
+    "vit": _vit_post_attention_residual_forward,
+    "swin": _swin_post_attention_residual_forward,
+}
+
+
+class _ForwardRestore:
+    """A remove()-able handle for a swapped forward, duck-typing RemovableHandle.
+
+    Binding the replacement as an instance attribute shadows the class method
+    without touching the class, so remove() only has to delete the attribute for
+    the block to be exactly what it was. Shares unplug_dropout with the real hook
+    handles, so callers never branch on which mechanism a position used.
+    """
+
+    def __init__(self, block: nn.Module):
+        self.block = block
+
+    def remove(self) -> None:
+        # Deleting the instance attribute uncovers the class method again. Guarded
+        # because unplug_dropout is safe to call twice on the same handle list.
+        self.block.__dict__.pop("forward", None)
+
+
+def _attach_residual_wrapper(
+    block: nn.Module,
+    architecture: str,
+    dropout_factory: Callable[[float], nn.Module],
+    rate: float,
+) -> _ForwardRestore:
+    dropout = dropout_factory(rate)
+    dropout.train()
+    block.forward = functools.partial(RESIDUAL_FORWARDS[architecture], block, dropout)
+    return _ForwardRestore(block)
 
 
 def _make_pre_hook(dropout: nn.Module) -> Callable:
@@ -181,10 +257,14 @@ def _resolve_targets(
 def _attach_hook(
     target: nn.Module,
     hook_type: str,
+    architecture: str,
     dropout_factory: Callable[[float], nn.Module],
     rate: float,
-) -> RemovableHandle:
-    """Build a fresh dropout and register it at target, returning its handle."""
+) -> RemovableHandle | _ForwardRestore:
+    """Build a fresh dropout and attach it at target, returning its handle."""
+    if hook_type == "residual":
+        return _attach_residual_wrapper(target, architecture, dropout_factory, rate)
+
     dropout = dropout_factory(rate)
     # Not part of the model tree, so model.eval() never reaches it. Train mode is
     # set explicitly so the mask is actually sampled during the stochastic passes.
@@ -202,7 +282,7 @@ def plug_dropout(
     position_names: tuple[str, ...],
     dropout_factory: dict[str, Callable[[float], nn.Module]],
     rate: float,
-) -> list[RemovableHandle]:
+) -> list[RemovableHandle | _ForwardRestore]:
     """Attach a fresh dropout at every named position, in every block.
 
     dropout_factory maps a position name to a constructor taking the rate,
@@ -213,18 +293,20 @@ def plug_dropout(
     """
     positions = POSITION_REGISTRY[architecture]
     block_types = BLOCK_TYPES[architecture]
-    core = _network_core(model)
+    core = network_core(model)
 
-    handles: list[RemovableHandle] = []
+    handles: list[RemovableHandle | _ForwardRestore] = []
     for name in position_names:
         spec = positions[name]
         factory = dropout_factory.get(name, nn.Dropout)
         for target in _resolve_targets(model, core, spec, block_types):
-            handles.append(_attach_hook(target, spec.hook_type, factory, rate))
+            handles.append(
+                _attach_hook(target, spec.hook_type, architecture, factory, rate)
+            )
     return handles
 
 
-def unplug_dropout(handles: list[RemovableHandle]) -> None:
-    """Remove every hook plug_dropout attached, restoring the loaded model exactly."""
+def unplug_dropout(handles: list[RemovableHandle | _ForwardRestore]) -> None:
+    """Undo every attachment plug_dropout made, restoring the loaded model exactly."""
     for handle in handles:
         handle.remove()
