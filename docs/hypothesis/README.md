@@ -44,6 +44,7 @@ written.
 | [H7](H7-clean-shifts-to-target.md) | Clean samples under dropout shift specifically to the target class | **PARTIALLY REFUTED** |
 | [H8](H8-detection-scales-with-poison-rate.md) | Detection improves with poison rate | INCONCLUSIVE |
 | [H9](H9-strength-not-position.md) | The pre/post gap is a perturbation-strength artifact, not a placement effect | OPEN (adversarial, fine-rate jobs running) |
+| [H10](H10-depth-band-placement.md) | Aiming dropout at the depth where an attack's direction lives beats spreading it over all blocks | OPEN (mechanism built, confound identified) |
 
 ## Where this stands after phase 3a
 
@@ -65,6 +66,13 @@ a 64-sample smoke run of a single checkpoint and did not survive the full grid.
 
 H9 is deliberately the adversarial one. It is the reviewer's objection stated as a
 hypothesis, and the whole study is worthless if it cannot be refuted.
+
+The confound H9 names has now appeared twice: once for pre versus post residual, and
+again for early versus late block bands (H10), where an early band is a stronger
+intervention than a late one at the same rate because it propagates through more
+blocks. Treat it as the default hazard of this whole line of work: **no comparison
+across placements is valid at a shared dropout rate.** Match on clean-validation
+shift ratio instead.
 
 ## Protocol notes that apply to every hypothesis
 
