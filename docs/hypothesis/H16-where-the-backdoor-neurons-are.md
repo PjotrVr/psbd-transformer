@@ -381,8 +381,24 @@ it is not sound in a pre-norm transformer, because the LayerNorm that follows
 rescales whatever survives. It produced a clean, monotone, benign-controlled, and
 entirely false SAM trend that survived 2 rounds of follow-up. What caught it was an
 independent measurement of the same quantity (section 10's decomposition), not a
-better ablation. Any ablation in this repo that hooks a block output and is not
-checked post-LayerNorm should be treated as suspect.
+better ablation.
+
+**The rest of the repo was audited for the same fault, and it is contained.** Of the
+10 scripts that build a direction from `extract_layer_features`, most only describe
+geometry (TAC, direction norm, CKA, separability), which is an honest statement
+about that layer whatever the next LayerNorm does. The 1 script whose conclusion
+genuinely depended on crossing the LayerNorm is
+`scripts/dropout_kills_direction/`, which claims to measure PSU's mechanism "one
+step upstream". Re-run with `--post-ln`, its numbers are unchanged: pre_residual
+0.696 / 0.253 / 0.065 becomes 0.778 / 0.297 / 0.064, post_residual stays 0.015 /
+0.000 / 0.000.
+
+It survives for an identifiable reason worth reusing. Its raw projections move
+enormously across the LayerNorm (post_residual at rate 0.5 reads 26.5 before and
+0.104 after), but it reports a **standardized** separation, dividing by the pooled
+standard deviation, and that quotient absorbs exactly the rescaling LayerNorm
+applies. The general rule: across a normalization layer, scale-invariant statistics
+transfer and absolute ones do not.
 
 ## Subquestions
 

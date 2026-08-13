@@ -1,0 +1,56 @@
+{
+  "folder_name": "vit_cifar10_badnet_a2o_0_1",
+  "attack": "badnet_a2o",
+  "layer": 12,
+  "samples": 300,
+  "seed": 0,
+  "baseline_separation": 10.098673820495605,
+  "placements": {
+    "pre_residual": [
+      {
+        "rate": 0.1,
+        "projection_clean": -0.3197435736656189,
+        "projection_backdoor": 14.632715225219727,
+        "separation": 7.860651969909668,
+        "separation_ratio": 0.7783845789687953
+      },
+      {
+        "rate": 0.3,
+        "projection_clean": 0.6376900672912598,
+        "projection_backdoor": 8.42656135559082,
+        "separation": 3.004085063934326,
+        "separation_ratio": 0.2974732244383844
+      },
+      {
+        "rate": 0.5,
+        "projection_clean": 0.6023849248886108,
+        "projection_backdoor": 1.1006027460098267,
+        "separation": 0.6511440873146057,
+        "separation_ratio": 0.06447817791610284
+      }
+    ],
+    "post_residual": [
+      {
+        "rate": 0.1,
+        "projection_clean": 0.34868791699409485,
+        "projection_backdoor": 0.45053422451019287,
+        "separation": 0.1464386135339737,
+        "separation_ratio": 0.014500776650174749
+      },
+      {
+        "rate": 0.3,
+        "projection_clean": 0.1355047971010208,
+        "projection_backdoor": 0.13714846968650818,
+        "separation": 0.0022144527174532413,
+        "separation_ratio": 0.0002192815370429069
+      },
+      {
+        "rate": 0.5,
+        "projection_clean": 0.10446114838123322,
+        "projection_backdoor": 0.10419376194477081,
+        "separation": -0.00040367787005379796,
+        "separation_ratio": -3.9973354643311664e-05
+      }
+    ]
+  }
+}

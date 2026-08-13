@@ -27,6 +27,19 @@ Note this measures the same phenomenon as PSU but one step upstream, so agreemen
 between the two is evidence the mechanism story is right rather than a restatement
 of it.
 
+**Checked against the LayerNorm artifact that invalidated H16 section 9, and clean.**
+The final LayerNorm sits between this measurement and PSU, and rescaling to unit
+variance can restore what looks destroyed at a block output. Run with --post-ln on
+`vit_cifar10_badnet_a2o_0_1`, the normalized separations are unchanged:
+pre_residual 0.696 / 0.253 / 0.065 becomes 0.778 / 0.297 / 0.064, and post_residual
+stays 0.015 / 0.000 / 0.000, at rates 0.1 / 0.3 / 0.5.
+
+The reason is the choice of statistic. The RAW projections move enormously under
+LayerNorm (post_residual at rate 0.5 reads 26.5 before it and 0.104 after), but
+`separation` divides by the pooled standard deviation, and that quotient already
+absorbs the rescaling LayerNorm applies. A raw mean difference here would have been
+as fragile as the ablation was.
+
 Example
     PYTHONPATH=. python scripts/dropout_kills_direction/measure.py \
         --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
@@ -45,7 +58,7 @@ from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
 from defences.checkpoint_eval import read_checkpoint_metadata, resolve_probe_attack
 from defences.dropout import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
-from models import load_checkpoint
+from models import load_checkpoint, vit_core
 from scripts.backdoor_direction_layers.measure import build_paired_loaders
 from utils.config import DATASET_REGISTRY
 
@@ -65,6 +78,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--samples", type=int, default=400)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--layer", type=int, default=12)
+    parser.add_argument("--post-ln", action="store_true")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--probe-attack", default=None)
     parser.add_argument("--probe-target-label", type=int, default=None)
@@ -72,7 +86,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def final_layer_features(model, loader, device, layer: int, seed: int) -> torch.Tensor:
+def final_layer_features(
+    model, loader, device, layer: int, seed: int, post_ln: bool = False
+) -> torch.Tensor:
     """CLS features at one layer, with the mask sequence pinned by seed.
 
     Reseeding immediately before extraction is what makes the clean and triggered
@@ -80,12 +96,22 @@ def final_layer_features(model, loader, device, layer: int, seed: int) -> torch.
     between them would be mask noise plus trigger rather than trigger. At the
     rates in play here the mask noise is the larger term, so this is not a
     refinement, it decides whether the measurement means anything.
+
+    post_ln applies the final LayerNorm, and at layer 12 that is the difference
+    between what the block emits and what the head reads. It matters here because
+    this script's whole purpose is to explain PSU, which is measured at the output,
+    and LayerNorm sits in between. Renormalizing to unit variance can restore a
+    separation that looks collapsed at the block output, which is exactly the
+    artifact that produced a false result in H16 section 9.
     """
     seed_everything(seed)
     features = extract_layer_features(
         model, loader, device, use_bfloat16=False, reduction="cls"
-    )
-    return features[layer]
+    )[layer]
+    if post_ln:
+        with torch.inference_mode():
+            features = vit_core(model).encoder.ln(features.to(device)).float().cpu()
+    return features
 
 
 def separation(
@@ -135,10 +161,10 @@ def main() -> None:
     model = load_checkpoint(architecture, checkpoint_path, device)
 
     clean_reference = final_layer_features(
-        model, clean_loader, device, args.layer, args.seed
+        model, clean_loader, device, args.layer, args.seed, args.post_ln
     )
     backdoor_reference = final_layer_features(
-        model, backdoor_loader, device, args.layer, args.seed
+        model, backdoor_loader, device, args.layer, args.seed, args.post_ln
     )
     direction = backdoor_direction(clean_reference, backdoor_reference)
     baseline_separation = separation(
@@ -171,10 +197,10 @@ def main() -> None:
             handles = plug_dropout(model, architecture, names, {}, rate)
             try:
                 clean_features = final_layer_features(
-                    model, clean_loader, device, args.layer, args.seed
+                    model, clean_loader, device, args.layer, args.seed, args.post_ln
                 )
                 backdoor_features = final_layer_features(
-                    model, backdoor_loader, device, args.layer, args.seed
+                    model, backdoor_loader, device, args.layer, args.seed, args.post_ln
                 )
             finally:
                 unplug_dropout(handles)
