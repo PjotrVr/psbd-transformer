@@ -46,7 +46,9 @@ def is_poisonable(label_mode: str, original_label: int, target_label: int) -> bo
     raise ValueError(f"Unknown label mode: {label_mode}")
 
 
-def poisoned_label(label_mode: str, original_label: int, target_label: int, num_classes: int) -> int:
+def poisoned_label(
+    label_mode: str, original_label: int, target_label: int, num_classes: int
+) -> int:
     """The label a poisoned sample is given.
 
     original form for all_to_all
@@ -63,6 +65,43 @@ def poisoned_label(label_mode: str, original_label: int, target_label: int, num_
     raise ValueError(f"Unknown label mode: {label_mode}")
 
 
+def is_eval_poisonable(label_mode: str, original_label: int, target_label: int) -> bool:
+    """Which samples belong in an attack-success eval set.
+
+    Identical to is_poisonable except for clean_label. Training poisons only
+    target-class images, since a clean-label attack must not change the label.
+    But measuring attack success asks a different question: does the trigger
+    fool a non-target image into being predicted as the target. So the eval
+    eligibility flips to original_label != target_label, the same question
+    all_to_one and all_to_all already ask.
+    """
+    if label_mode == "all_to_one":
+        return original_label != target_label
+    if label_mode == "all_to_all":
+        return True
+    if label_mode == "clean_label":
+        return original_label != target_label
+    raise ValueError(f"Unknown label mode: {label_mode}")
+
+
+def attack_success_label(
+    label_mode: str, original_label: int, target_label: int, num_classes: int
+) -> int:
+    """The label an attack-success eval sample is compared against.
+
+    Identical to poisoned_label except for clean_label. poisoned_label's
+    clean_label branch returns original_label, which is correct only at
+    training time, where is_poisonable already restricts clean_label to
+    original_label == target_label so that is a no-op. At eval time
+    is_eval_poisonable flips clean_label eligibility to
+    original_label != target_label, so returning original_label there would be
+    wrong: the intended label is always target_label.
+    """
+    if label_mode == "clean_label":
+        return target_label
+    return poisoned_label(label_mode, original_label, target_label, num_classes)
+
+
 def choose_poison_indices(
     labels: list[int], attack: Attack, poison_rate: float, seed: int
 ) -> set[int]:
@@ -73,7 +112,8 @@ def choose_poison_indices(
     samples exist.
     """
     eligible = [
-        i for i, y in enumerate(labels)
+        i
+        for i, y in enumerate(labels)
         if is_poisonable(attack.label_mode, int(y), attack.target_label)
     ]
     count = min(int(round(poison_rate * len(labels))), len(eligible))
@@ -103,17 +143,22 @@ class PoisonedTrainingSet(Dataset):
         if index in self.poison_indices:
             image = self.attack.apply_trigger(image, index)
             label = poisoned_label(
-                self.attack.label_mode, int(label), self.attack.target_label, self.num_classes
+                self.attack.label_mode,
+                int(label),
+                self.attack.target_label,
+                self.num_classes,
             )
         return self.normalize(image), label
 
 
-class FullyPoisonedTestSet(Dataset):
+class AttackSuccessSet(Dataset):
     """Every eligible sample poisoned, for measuring attack success rate.
 
     The returned label is the attack's intended label per sample, so accuracy on
     this set is the ASR. Samples that cannot flip under the label mode are
-    dropped so the ASR is measured only over samples that should flip.
+    dropped so the ASR is measured only over samples that should flip. Uses the
+    eval-time eligibility and label functions, not the training-time ones, since
+    clean_label asks a different question at eval time (see is_eval_poisonable).
     """
 
     def __init__(self, base_dataset, labels, attack, normalize, num_classes):
@@ -123,8 +168,9 @@ class FullyPoisonedTestSet(Dataset):
         self.normalize = normalize
         self.num_classes = num_classes
         self.indices = [
-            i for i, y in enumerate(labels)
-            if is_poisonable(attack.label_mode, int(y), attack.target_label)
+            i
+            for i, y in enumerate(labels)
+            if is_eval_poisonable(attack.label_mode, int(y), attack.target_label)
         ]
 
     def __len__(self) -> int:
@@ -134,8 +180,11 @@ class FullyPoisonedTestSet(Dataset):
         index = self.indices[position]
         image, _ = self.base_dataset[index]
         poisoned = self.attack.apply_trigger(image, index)
-        target = poisoned_label(
-            self.attack.label_mode, int(self.labels[index]), self.attack.target_label, self.num_classes
+        target = attack_success_label(
+            self.attack.label_mode,
+            int(self.labels[index]),
+            self.attack.target_label,
+            self.num_classes,
         )
         return self.normalize(poisoned), target
 
@@ -201,7 +250,15 @@ class CoverPoisonedTrainingSet(Dataset):
     trigger and keep their original label. Everything else stays clean.
     """
 
-    def __init__(self, base_dataset, attack, poison_indices, cover_indices, normalize, num_classes):
+    def __init__(
+        self,
+        base_dataset,
+        attack,
+        poison_indices,
+        cover_indices,
+        normalize,
+        num_classes,
+    ):
         self.base_dataset = base_dataset
         self.attack = attack
         self.poison_indices = poison_indices
@@ -217,7 +274,10 @@ class CoverPoisonedTrainingSet(Dataset):
         if index in self.poison_indices:
             image = self.attack.apply_trigger(image, index)
             label = poisoned_label(
-                self.attack.label_mode, int(label), self.attack.target_label, self.num_classes
+                self.attack.label_mode,
+                int(label),
+                self.attack.target_label,
+                self.num_classes,
             )
         elif index in self.cover_indices:
             image = self.attack.apply_trigger(image, index)

@@ -3,8 +3,8 @@
 #PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
 #PBS -l walltime=30:00:00
 #PBS -N vit_tiny_lc_0_1_sam_rho_sweep
-#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/vit_sam/vit_lc_0_1_rho_sweep.out
-#PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/vit_sam/vit_lc_0_1_rho_sweep.err
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/vit_sam/
+#PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/vit_sam/
 
 # Compute nodes reach the internet through the proxy, needed for torchvision to
 # download the datasets and the ViT ImageNet weights on first run.

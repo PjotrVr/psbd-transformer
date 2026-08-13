@@ -1,0 +1,196 @@
+#!/bin/bash
+#PBS -q gpu
+#PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
+#PBS -l walltime=8:00:00
+#PBS -N eval_swin_no_sam
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/eval/
+#PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/eval/
+
+# Compute nodes reach the internet through the proxy, needed for torchvision to
+# download any dataset it has not cached yet and the LPIPS AlexNet weights.
+export http_proxy="http://10.150.1.1:3128"
+export https_proxy="http://10.150.1.1:3128"
+
+echo "Job ID:  $PBS_JOBID"
+echo "Node:    $(hostname)"
+echo "Started: $(date)"
+nvidia-smi
+
+BASE=/lustre/home/pstika/projects/PSBD-ViT
+mkdir -p $BASE/logs/eval
+
+cd $BASE
+source .venv/bin/activate
+
+# Static, inspectable snapshot of the 160 swin_no_sam folders in checkpoints/
+# at the time this job file was generated (2026-07-19), not a glob resolved at
+# run time. metrics.py writes each folder's metrics.json into its own
+# checkpoints/<folder>/ directory and logs an "evaluating X / finished X" line
+# per checkpoint, so this job file needs no per-checkpoint logging of its own.
+FOLDERS=(
+    swin_cifar100_adaptive_blend_0_005
+    swin_cifar100_adaptive_blend_0_01
+    swin_cifar100_adaptive_blend_0_05
+    swin_cifar100_adaptive_blend_0_1
+    swin_cifar100_badnet_a2a_0_005
+    swin_cifar100_badnet_a2a_0_01
+    swin_cifar100_badnet_a2a_0_05
+    swin_cifar100_badnet_a2a_0_1
+    swin_cifar100_badnet_a2o_0_005
+    swin_cifar100_badnet_a2o_0_01
+    swin_cifar100_badnet_a2o_0_05
+    swin_cifar100_badnet_a2o_0_1
+    swin_cifar100_blend_0_005
+    swin_cifar100_blend_0_01
+    swin_cifar100_blend_0_05
+    swin_cifar100_blend_0_1
+    swin_cifar100_bpp_0_005
+    swin_cifar100_bpp_0_01
+    swin_cifar100_bpp_0_05
+    swin_cifar100_bpp_0_1
+    swin_cifar100_lc_0_005
+    swin_cifar100_lc_0_01
+    swin_cifar100_lc_0_05
+    swin_cifar100_lc_0_1
+    swin_cifar100_lf_0_005
+    swin_cifar100_lf_0_01
+    swin_cifar100_lf_0_05
+    swin_cifar100_lf_0_1
+    swin_cifar100_sig_0_005
+    swin_cifar100_sig_0_01
+    swin_cifar100_sig_0_05
+    swin_cifar100_sig_0_1
+    swin_cifar100_tact_0_005
+    swin_cifar100_tact_0_01
+    swin_cifar100_tact_0_05
+    swin_cifar100_tact_0_1
+    swin_cifar100_wanet_0_005
+    swin_cifar100_wanet_0_01
+    swin_cifar100_wanet_0_05
+    swin_cifar100_wanet_0_1
+    swin_cifar10_adaptive_blend_0_005
+    swin_cifar10_adaptive_blend_0_01
+    swin_cifar10_adaptive_blend_0_05
+    swin_cifar10_adaptive_blend_0_1
+    swin_cifar10_badnet_a2a_0_005
+    swin_cifar10_badnet_a2a_0_01
+    swin_cifar10_badnet_a2a_0_05
+    swin_cifar10_badnet_a2a_0_1
+    swin_cifar10_badnet_a2o_0_005
+    swin_cifar10_badnet_a2o_0_01
+    swin_cifar10_badnet_a2o_0_05
+    swin_cifar10_badnet_a2o_0_1
+    swin_cifar10_blend_0_005
+    swin_cifar10_blend_0_01
+    swin_cifar10_blend_0_05
+    swin_cifar10_blend_0_1
+    swin_cifar10_bpp_0_005
+    swin_cifar10_bpp_0_01
+    swin_cifar10_bpp_0_05
+    swin_cifar10_bpp_0_1
+    swin_cifar10_lc_0_005
+    swin_cifar10_lc_0_01
+    swin_cifar10_lc_0_05
+    swin_cifar10_lc_0_1
+    swin_cifar10_lf_0_005
+    swin_cifar10_lf_0_01
+    swin_cifar10_lf_0_05
+    swin_cifar10_lf_0_1
+    swin_cifar10_sig_0_005
+    swin_cifar10_sig_0_01
+    swin_cifar10_sig_0_05
+    swin_cifar10_sig_0_1
+    swin_cifar10_tact_0_005
+    swin_cifar10_tact_0_01
+    swin_cifar10_tact_0_05
+    swin_cifar10_tact_0_1
+    swin_cifar10_wanet_0_005
+    swin_cifar10_wanet_0_01
+    swin_cifar10_wanet_0_05
+    swin_cifar10_wanet_0_1
+    swin_gtsrb_adaptive_blend_0_005
+    swin_gtsrb_adaptive_blend_0_01
+    swin_gtsrb_adaptive_blend_0_05
+    swin_gtsrb_adaptive_blend_0_1
+    swin_gtsrb_badnet_a2a_0_005
+    swin_gtsrb_badnet_a2a_0_01
+    swin_gtsrb_badnet_a2a_0_05
+    swin_gtsrb_badnet_a2a_0_1
+    swin_gtsrb_badnet_a2o_0_005
+    swin_gtsrb_badnet_a2o_0_01
+    swin_gtsrb_badnet_a2o_0_05
+    swin_gtsrb_badnet_a2o_0_1
+    swin_gtsrb_blend_0_005
+    swin_gtsrb_blend_0_01
+    swin_gtsrb_blend_0_05
+    swin_gtsrb_blend_0_1
+    swin_gtsrb_bpp_0_005
+    swin_gtsrb_bpp_0_01
+    swin_gtsrb_bpp_0_05
+    swin_gtsrb_bpp_0_1
+    swin_gtsrb_lc_0_005
+    swin_gtsrb_lc_0_01
+    swin_gtsrb_lc_0_05
+    swin_gtsrb_lc_0_1
+    swin_gtsrb_lf_0_005
+    swin_gtsrb_lf_0_01
+    swin_gtsrb_lf_0_05
+    swin_gtsrb_lf_0_1
+    swin_gtsrb_sig_0_005
+    swin_gtsrb_sig_0_01
+    swin_gtsrb_sig_0_05
+    swin_gtsrb_sig_0_1
+    swin_gtsrb_tact_0_005
+    swin_gtsrb_tact_0_01
+    swin_gtsrb_tact_0_05
+    swin_gtsrb_tact_0_1
+    swin_gtsrb_wanet_0_005
+    swin_gtsrb_wanet_0_01
+    swin_gtsrb_wanet_0_05
+    swin_gtsrb_wanet_0_1
+    swin_tiny_adaptive_blend_0_005
+    swin_tiny_adaptive_blend_0_01
+    swin_tiny_adaptive_blend_0_05
+    swin_tiny_adaptive_blend_0_1
+    swin_tiny_badnet_a2a_0_005
+    swin_tiny_badnet_a2a_0_01
+    swin_tiny_badnet_a2a_0_05
+    swin_tiny_badnet_a2a_0_1
+    swin_tiny_badnet_a2o_0_005
+    swin_tiny_badnet_a2o_0_01
+    swin_tiny_badnet_a2o_0_05
+    swin_tiny_badnet_a2o_0_1
+    swin_tiny_blend_0_005
+    swin_tiny_blend_0_01
+    swin_tiny_blend_0_05
+    swin_tiny_blend_0_1
+    swin_tiny_bpp_0_005
+    swin_tiny_bpp_0_01
+    swin_tiny_bpp_0_05
+    swin_tiny_bpp_0_1
+    swin_tiny_lc_0_005
+    swin_tiny_lc_0_01
+    swin_tiny_lc_0_05
+    swin_tiny_lc_0_1
+    swin_tiny_lf_0_005
+    swin_tiny_lf_0_01
+    swin_tiny_lf_0_05
+    swin_tiny_lf_0_1
+    swin_tiny_sig_0_005
+    swin_tiny_sig_0_01
+    swin_tiny_sig_0_05
+    swin_tiny_sig_0_1
+    swin_tiny_tact_0_005
+    swin_tiny_tact_0_01
+    swin_tiny_tact_0_05
+    swin_tiny_tact_0_1
+    swin_tiny_wanet_0_005
+    swin_tiny_wanet_0_01
+    swin_tiny_wanet_0_05
+    swin_tiny_wanet_0_1
+)
+
+python metrics.py --checkpoints-dir checkpoints --folder "${FOLDERS[@]}"
+
+echo "Finished: $(date)"
+exit 0

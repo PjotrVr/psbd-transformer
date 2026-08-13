@@ -1,23 +1,35 @@
 raw_data/
 preprocessed_data/
 runs/
-copied_attacks/
-copied_train/
 copied_codebase/
 **/*.zip
 vit_b_16_weights/
 unzip_script.py
 colab_run_uncertainty_defenses.ipynb
-get_results.py
 experiments/
 figures/
 **/__pycache__/
 tmp**
-_attacks/
-_defences/
-_models/
 checkpoints/
 logs/
 tmp/
 backdoor_bench_checkpoints/
 backdoor_bench_weights/
+scratch/
+
+# Paper sources, kept on disk for reference but never committed: two arXiv
+# tarballs plus their extracted figure trees are 35MB of binaries that would
+# live in history forever.
+papers/
+
+# results/ holds two very different things. The raw PSBD stage-1 tensors are
+# large, regenerable, and stay out. psbd_metrics.json is the small derived
+# detection record (TPR/FPR/AUROC per placement and rate), and every number
+# reported anywhere has to trace back to a commit, so it is versioned.
+#
+# Git cannot re-include a file whose parent directory is excluded, so the
+# directories are deliberately left un-ignored (line 2) purely so the negation
+# on line 3 can be reached. Only the metrics files come back.
+results/**
+!results/**/
+!results/**/psbd_metrics.json

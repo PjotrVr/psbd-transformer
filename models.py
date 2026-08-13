@@ -42,7 +42,9 @@ def _strip_dataparallel_prefix(state_dict: dict) -> dict:
     return {key.replace("module.", "", 1): value for key, value in state_dict.items()}
 
 
-def _load_checkpoint_into(builder, checkpoint_path: str, device: torch.device) -> nn.Module:
+def _load_checkpoint_into(
+    builder, checkpoint_path: str, device: torch.device
+) -> nn.Module:
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     model = builder(checkpoint["num_classes"])
 
@@ -68,12 +70,35 @@ def load_swin_checkpoint(checkpoint_path: str, device: torch.device) -> nn.Modul
     return _load_checkpoint_into(build_swin, checkpoint_path, device)
 
 
-def load_checkpoint(architecture: str, checkpoint_path: str, device: torch.device) -> nn.Module:
+def load_checkpoint(
+    architecture: str, checkpoint_path: str, device: torch.device
+) -> nn.Module:
     if architecture == "vit":
         return load_vit_checkpoint(checkpoint_path, device)
     if architecture == "swin":
         return load_swin_checkpoint(checkpoint_path, device)
     raise ValueError(f"Unknown architecture: {architecture}")
+
+
+# ViT's wrapped vit_b_16 and Swin's wrapped swin_s have structurally distinct
+# state_dict key substrings, so a checkpoint's own weights identify its
+# architecture even when a folder name gives no hint (or an untrustworthy one).
+VIT_STATE_DICT_MARKERS = ("conv_proj", "class_token", "encoder.layers.encoder_layer_")
+SWIN_STATE_DICT_MARKERS = ("features.",)
+
+
+def detect_architecture(checkpoint_path: str) -> str:
+    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    keys = list(checkpoint["model"].keys())
+    is_vit = any(marker in key for key in keys for marker in VIT_STATE_DICT_MARKERS)
+    is_swin = any(marker in key for key in keys for marker in SWIN_STATE_DICT_MARKERS)
+    if is_vit and not is_swin:
+        return "vit"
+    if is_swin and not is_vit:
+        return "swin"
+    raise ValueError(
+        f"state_dict at {checkpoint_path} matched vit={is_vit} swin={is_swin}, expected exactly one"
+    )
 
 
 def vit_core(model: nn.Module) -> nn.Module:

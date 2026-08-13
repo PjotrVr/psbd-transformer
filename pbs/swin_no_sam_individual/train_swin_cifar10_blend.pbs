@@ -3,8 +3,8 @@
 #PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
 #PBS -l walltime=12:00:00
 #PBS -N train_swin_cifar10_blend
-#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/train_swin_cifar10_blend.out
-#PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/train_swin_cifar10_blend.err
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/swin_no_sam_individual/
+#PBS -e /lustre/home/pstika/projects/PSBD-ViT/logs/swin_no_sam_individual/
 
 # Compute nodes reach the internet through the proxy, needed for torchvision to
 # download the datasets and the Swin ImageNet weights on first run.
