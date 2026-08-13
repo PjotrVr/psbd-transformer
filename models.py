@@ -39,12 +39,25 @@ def build_swin(num_classes: int) -> nn.Module:
 
 def _strip_dataparallel_prefix(state_dict: dict) -> dict:
     """DataParallel checkpoints prefix every key with 'module.'."""
-    return {key.replace("module.", "", 1): value for key, value in state_dict.items()}
+    return {key.removeprefix("module."): value for key, value in state_dict.items()}
 
 
 def _load_checkpoint_into(
-    builder, checkpoint_path: str, device: torch.device
+    builder, checkpoint_path: str, device: torch.device, strict: bool = True
 ) -> nn.Module:
+    """Build the architecture and load a checkpoint's weights into it.
+
+    strict is on by default and that is load-bearing. Both builders start from
+    ImageNet-pretrained weights, so a key mismatch under strict=False leaves a
+    fully functional ImageNet backbone with a randomly initialized head. Every
+    downstream tool then runs happily on a model that has no backdoor at all, and
+    the only symptom is a count printed to a log nobody reads. Failing loudly is
+    the difference between a crashed job and a plausible wrong number.
+
+    strict=False stays available for BackdoorBench checkpoints, whose key layout
+    predates this repo's Sequential(Resize, network) wrapper, but a caller has to
+    ask for it.
+    """
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     model = builder(checkpoint["num_classes"])
 
@@ -53,30 +66,35 @@ def _load_checkpoint_into(
         state_dict = state_dict.state_dict()
     state_dict = _strip_dataparallel_prefix(state_dict)
 
-    result = model.load_state_dict(state_dict, strict=False)
-    if result.missing_keys:
-        print(f"Missing keys: {len(result.missing_keys)}")
-    if result.unexpected_keys:
-        print(f"Unexpected keys: {len(result.unexpected_keys)}")
+    result = model.load_state_dict(state_dict, strict=strict)
+    if result.missing_keys or result.unexpected_keys:
+        print(
+            f"{checkpoint_path}: {len(result.missing_keys)} missing, "
+            f"{len(result.unexpected_keys)} unexpected keys"
+        )
 
     return model.to(device).eval()
 
 
-def load_vit_checkpoint(checkpoint_path: str, device: torch.device) -> nn.Module:
-    return _load_checkpoint_into(build_vit, checkpoint_path, device)
+def load_vit_checkpoint(
+    checkpoint_path: str, device: torch.device, strict: bool = True
+) -> nn.Module:
+    return _load_checkpoint_into(build_vit, checkpoint_path, device, strict)
 
 
-def load_swin_checkpoint(checkpoint_path: str, device: torch.device) -> nn.Module:
-    return _load_checkpoint_into(build_swin, checkpoint_path, device)
+def load_swin_checkpoint(
+    checkpoint_path: str, device: torch.device, strict: bool = True
+) -> nn.Module:
+    return _load_checkpoint_into(build_swin, checkpoint_path, device, strict)
 
 
 def load_checkpoint(
-    architecture: str, checkpoint_path: str, device: torch.device
+    architecture: str, checkpoint_path: str, device: torch.device, strict: bool = True
 ) -> nn.Module:
     if architecture == "vit":
-        return load_vit_checkpoint(checkpoint_path, device)
+        return load_vit_checkpoint(checkpoint_path, device, strict)
     if architecture == "swin":
-        return load_swin_checkpoint(checkpoint_path, device)
+        return load_swin_checkpoint(checkpoint_path, device, strict)
     raise ValueError(f"Unknown architecture: {architecture}")
 
 
@@ -89,7 +107,7 @@ SWIN_STATE_DICT_MARKERS = ("features.",)
 
 def detect_architecture(checkpoint_path: str) -> str:
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
-    keys = list(checkpoint["model"].keys())
+    keys = list(checkpoint.get("model", checkpoint).keys())
     is_vit = any(marker in key for key in keys for marker in VIT_STATE_DICT_MARKERS)
     is_swin = any(marker in key for key in keys for marker in SWIN_STATE_DICT_MARKERS)
     if is_vit and not is_swin:

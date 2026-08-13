@@ -39,11 +39,45 @@ def read_checkpoint_metadata(checkpoint_path: str) -> dict:
         )
     with open(args_path) as handle:
         metadata = json.load(handle)
-    required = ("dataset", "attack", "target_label")
+    required = ("dataset", "attack", "target_label", "architecture")
     missing = [key for key in required if key not in metadata]
     if missing:
         raise KeyError(f"{args_path} is missing {missing}")
     return metadata
+
+
+def resolve_probe_attack(
+    metadata: dict, probe_attack: str | None, probe_target_label: int | None
+) -> tuple[str, int]:
+    """The (attack name, target label) whose trigger defines the backdoor split.
+
+    Normally the checkpoint's own attack. A benign checkpoint has none, and
+    build_attack("benign", ...) raises, so without an override the negative
+    control cannot be run at all. That control is the one that separates "PSBD
+    detects a backdoor" from "the probe reacts to any trigger-shaped perturbation
+    on any model", so it has to be reachable: a benign model is probed with an
+    externally named trigger, and the expected result is chance-level detection.
+
+    The override is rejected on a backdoored checkpoint, where probing with the
+    wrong trigger would silently measure the response to a backdoor the model
+    never learned.
+    """
+    if metadata["attack"] != "benign":
+        if probe_attack is not None and probe_attack != metadata["attack"]:
+            raise ValueError(
+                f"checkpoint was trained with {metadata['attack']!r}; refusing to "
+                f"probe it with {probe_attack!r}, which it never saw"
+            )
+        return metadata["attack"], metadata["target_label"]
+
+    if probe_attack is None:
+        raise ValueError(
+            "a benign checkpoint has no attack of its own, so the backdoor split "
+            "is undefined. Pass --probe-attack (and --probe-target-label) to name "
+            "the trigger to probe it with; chance-level detection is the expected "
+            "result and is the negative control for the whole sweep."
+        )
+    return probe_attack, probe_target_label if probe_target_label is not None else 0
 
 
 def build_eval_loaders_from_attack(
@@ -150,6 +184,8 @@ def build_psbd_loaders_from_checkpoint(
     batch_size: int = 64,
     num_workers: int = 2,
     max_samples: int | None = None,
+    probe_attack: str | None = None,
+    probe_target_label: int | None = None,
 ) -> tuple[dict[str, DataLoader], dict]:
     """Build the three PSBD splits by the standardized shuffle, plus a manifest.
 
@@ -172,12 +208,26 @@ def build_psbd_loaders_from_checkpoint(
     """
     metadata = read_checkpoint_metadata(checkpoint_path)
     dataset_name = metadata["dataset"]
-    attack = build_attack(
-        metadata["attack"],
-        default_config(metadata["attack"]),
-        DATASET_REGISTRY[dataset_name].image_size,
-        metadata["target_label"],
+    attack_name, target_label = resolve_probe_attack(
+        metadata, probe_attack, probe_target_label
     )
+    attack = build_attack(
+        attack_name,
+        default_config(attack_name),
+        DATASET_REGISTRY[dataset_name].image_size,
+        target_label,
+    )
+    # The recorded label_mode is written by training and the registry derives one
+    # from the attack name; if they ever disagree, the eval set is built for a
+    # different attack than the one trained, and every number is wrong under a
+    # correct-looking label.
+    recorded_mode = metadata.get("label_mode")
+    if metadata["attack"] != "benign" and recorded_mode is not None:
+        if attack.label_mode != recorded_mode:
+            raise ValueError(
+                f"{checkpoint_path} records label_mode={recorded_mode!r} but "
+                f"attack {attack_name!r} builds {attack.label_mode!r}"
+            )
 
     base, spec = _load_clean_test_base(dataset_name, raw_data_dir)
     n_total = len(base)
@@ -226,6 +276,9 @@ def build_psbd_loaders_from_checkpoint(
     manifest = {
         "seed": seed,
         "dataset": dataset_name,
+        "probe_attack": attack_name,
+        "probe_target_label": target_label,
+        "label_mode": attack.label_mode,
         "n_total": n_total,
         "n_heldout": len(heldout_list),
         "heldout_indices": heldout_list,

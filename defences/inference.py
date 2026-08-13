@@ -1,4 +1,4 @@
-"""Forward passes for PSBD: the no-dropout baseline cache and the PSU score.
+"""Forward passes for PSBD: the no-dropout baseline cache and the stochastic passes.
 
 Prediction Shift Uncertainty per the PSBD paper, Equation 2:
 
@@ -11,7 +11,14 @@ Prediction Shift Uncertainty per the PSBD paper, Equation 2:
                      prob_with_dropout(argmax_class))
 
 A low PSU means the confidence in the no-dropout prediction barely moves under
-dropout, which flags the sample as likely poisoned.
+dropout, which flags the sample as likely poisoned. The subtraction itself lives
+in defences.psbd_metrics, on the CPU side; this module only produces the two
+forward-pass ingredients it needs.
+
+Nothing here ever touches the model's own dropout modules. The perturbation comes
+entirely from modules plugged in by defences.dropout, which live in hook closures
+outside the model tree and are explicitly left in train mode, so model.eval()
+keeps every built-in dropout at its natural identity while the probe still fires.
 """
 
 from contextlib import nullcontext
@@ -42,13 +49,6 @@ def forward_probs(
     return F.softmax(logits.float(), dim=1)
 
 
-def enable_dropout_modules(model: nn.Module) -> None:
-    """Put every Dropout into train mode so it samples a fresh mask per pass."""
-    for module in model.modules():
-        if isinstance(module, nn.Dropout):
-            module.train()
-
-
 @torch.inference_mode()
 def build_baseline_cache(
     model: nn.Module,
@@ -56,64 +56,33 @@ def build_baseline_cache(
     device: torch.device,
     use_bfloat16: bool,
 ) -> list[dict]:
-    """Precompute no-dropout probabilities and argmax labels once per split.
+    """Precompute the no-dropout state of one split, once.
 
-    Caching avoids recomputing the deterministic baseline for every dropout
-    rate in the sweep, which is the dominant cost saving across the run.
-    Assumes dropout is already off when called.
+    Caching avoids recomputing the deterministic baseline for every dropout rate
+    in the sweep, which is the dominant cost saving across the run. Must be
+    called before any position is plugged; the sweep entrypoint guarantees that
+    by building every baseline before its rate loop starts.
+
+    Three tensors per batch. probs and its argmax are what PSU is measured
+    against. loader_labels is what the loader asked for, which on the backdoor
+    split is the attack-success label, so comparing it to the argmax recovers
+    per-sample whether the trigger actually flipped this image. That matters
+    whenever ASR is well below 1: a triggered image the model classifies
+    correctly is behaviourally clean, and scoring it as a detection positive
+    penalises the detector for the attack's failure.
     """
     model.eval()
     cache: list[dict] = []
-    for images, _ in loader:
+    for images, labels in loader:
         probs = forward_probs(model, images, device, use_bfloat16)
-        cache.append({"probs": probs.cpu(), "labels": probs.argmax(dim=1).cpu()})
+        cache.append(
+            {
+                "probs": probs.cpu(),
+                "labels": probs.argmax(dim=1).cpu(),
+                "loader_labels": labels.cpu().long(),
+            }
+        )
     return cache
-
-
-@torch.inference_mode()
-def compute_psu_and_shift(
-    model: nn.Module,
-    loader: DataLoader,
-    baseline_cache: list[dict],
-    device: torch.device,
-    forward_passes: int,
-    use_bfloat16: bool,
-    seed: int,
-) -> tuple[torch.Tensor, float]:
-    """Return per-sample PSU scores (float32) and the dataset shift ratio.
-
-    Shift ratio is the fraction of the k dropout passes whose argmax differs
-    from the no-dropout argmax, averaged over the split. Reseeding here makes
-    the sampled dropout masks reproducible and identical across the clean,
-    backdoor, and validation calls, which keeps their comparison paired.
-    """
-    enable_dropout_modules(model)
-    seed_everything(seed)
-
-    per_sample_scores: list[torch.Tensor] = []
-    shift_count = 0
-    total_pass_samples = 0
-
-    for (images, _), cache_row in zip(loader, baseline_cache):
-        images = images.to(device)
-        baseline_probs = cache_row["probs"].to(device)
-        baseline_labels = cache_row["labels"].to(device)
-
-        dropout_probs = []
-        for _ in range(forward_passes):
-            probs = forward_probs(model, images, device, use_bfloat16)
-            shift_count += (probs.argmax(dim=1) != baseline_labels).sum().item()
-            dropout_probs.append(probs)
-        total_pass_samples += images.size(0) * forward_passes
-
-        mean_dropout_probs = torch.stack(dropout_probs, dim=0).mean(dim=0)
-        confidence_drop = baseline_probs - mean_dropout_probs
-        scores = confidence_drop.gather(1, baseline_labels.view(-1, 1)).squeeze(1)
-        per_sample_scores.append(scores.cpu())
-
-    scores = torch.cat(per_sample_scores) if per_sample_scores else torch.empty(0)
-    shift_ratio = shift_count / max(total_pass_samples, 1)
-    return scores.float(), shift_ratio
 
 
 @torch.inference_mode()
@@ -125,14 +94,24 @@ def compute_dropout_pass_probs(
     forward_passes: int,
     use_bfloat16: bool,
     seed: int,
-) -> torch.Tensor:
-    """Per-pass probability of the baseline-argmax class, shape (forward_passes, N).
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Raw per-pass evidence, both shaped (forward_passes, N).
 
-    Raw, not reduced: compute_psu_and_shift collapses the k passes to one score
-    per sample internally, which throws away the ability to recompute PSU under a
-    different aggregation (median instead of mean, a different k) without rerunning
-    the GPU pass. Saving one float per pass per sample keeps that open at trivial
-    disk cost.
+    Returns (probs, argmax):
+      probs   float32, the probability assigned to the baseline-argmax class c
+      argmax  int16, the class each dropout pass actually predicted
+
+    Raw, not reduced: collapsing the k passes to one score here would throw away
+    the ability to recompute PSU under a different aggregation (median instead of
+    mean, a different k) without rerunning the GPU pass. Saving one float per pass
+    per sample keeps that open at trivial disk cost.
+
+    argmax is saved because PSU alone cannot express the paper's own mechanism.
+    Three things need it and none are recoverable from probs: the shift ratio
+    sigma (paper Eq. PS, the fraction of passes whose prediction changed), the
+    adaptive dropout-rate rule which is defined on sigma, and the central claim
+    that clean samples which shift, shift specifically to the target class. int16
+    is safe for every dataset here; tiny is the largest at 200 classes.
 
     baseline_labels is the flat (N,) no-dropout argmax class per sample, in the
     same shuffle=False order the loader serves, so a running offset pairs each
@@ -141,13 +120,17 @@ def compute_dropout_pass_probs(
     The perturbation comes from dropout modules plugged in by hooks (see
     defences.dropout), which are already in train mode, so this never toggles the
     model's own dropout. model.eval() keeps every existing dropout at its natural
-    identity. Reseeding here makes the sampled masks reproducible and identical
-    across the paired validation, clean, and backdoor calls.
+    identity. Reseeding here fixes the mask sequence, so rerunning the same
+    (split, position, rate) reproduces the same masks exactly. Across two splits
+    of different length the sequences agree only up to the shorter one's batch
+    count, which is why clean and backdoor pairing is done by sample index at
+    analysis time, not by assuming shared masks.
     """
     model.eval()
     seed_everything(seed)
 
-    per_batch: list[torch.Tensor] = []
+    prob_batches: list[torch.Tensor] = []
+    argmax_batches: list[torch.Tensor] = []
     offset = 0
     for images, _ in loader:
         batch_size = images.size(0)
@@ -155,13 +138,22 @@ def compute_dropout_pass_probs(
         labels = baseline_labels[offset : offset + batch_size].to(device)
         offset += batch_size
 
-        pass_columns = []
+        prob_columns = []
+        argmax_columns = []
         for _ in range(forward_passes):
             probs = forward_probs(model, images, device, use_bfloat16)
             selected = probs.gather(1, labels.view(-1, 1)).squeeze(1)
-            pass_columns.append(selected.cpu())
-        per_batch.append(torch.stack(pass_columns, dim=0))
+            prob_columns.append(selected.cpu())
+            argmax_columns.append(probs.argmax(dim=1).to(torch.int16).cpu())
+        prob_batches.append(torch.stack(prob_columns, dim=0))
+        argmax_batches.append(torch.stack(argmax_columns, dim=0))
 
-    if not per_batch:
-        return torch.empty(forward_passes, 0)
-    return torch.cat(per_batch, dim=1).float()
+    if not prob_batches:
+        return (
+            torch.empty(forward_passes, 0),
+            torch.empty(forward_passes, 0, dtype=torch.int16),
+        )
+    return (
+        torch.cat(prob_batches, dim=1).float(),
+        torch.cat(argmax_batches, dim=1),
+    )

@@ -24,6 +24,20 @@ import torch
 from .inference import build_baseline_cache
 
 
+def _atomic_save(payload: dict, path: str) -> None:
+    """Write through a private temp file, then rename.
+
+    A checkpoint's position-config jobs run concurrently and share the baseline
+    and manifest, so a reader can arrive mid-write. os.replace is atomic within a
+    filesystem, so a reader sees either the old file or the complete new one,
+    never a truncated one.
+    """
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    temporary = f"{path}.tmp.{os.getpid()}"
+    torch.save(payload, temporary)
+    os.replace(temporary, path)
+
+
 def _rate_tag(rate: float) -> str:
     """0.1 becomes "0_1", matching the underscore-for-decimal folder convention."""
     return f"{rate:.1f}".replace(".", "_")
@@ -43,23 +57,45 @@ def manifest_path(psbd_dir: str) -> str:
     return os.path.join(psbd_dir, "split_manifest.json")
 
 
-def save_baseline(path: str, probs: torch.Tensor, labels: torch.Tensor) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    torch.save({"probs": probs, "labels": labels}, path)
+def save_baseline(
+    path: str,
+    probs: torch.Tensor,
+    labels: torch.Tensor,
+    loader_labels: torch.Tensor,
+) -> None:
+    """The no-dropout state of one split: probabilities, prediction, and target.
+
+    loader_labels is what the loader asked for. On the backdoor split that is the
+    attack-success label, so labels == loader_labels is the per-sample record of
+    whether the trigger actually worked on this image.
+    """
+    _atomic_save(
+        {"probs": probs, "labels": labels, "loader_labels": loader_labels}, path
+    )
 
 
-def load_baseline(path: str) -> tuple[torch.Tensor, torch.Tensor]:
+def load_baseline(path: str) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     blob = torch.load(path, map_location="cpu")
-    return blob["probs"], blob["labels"]
+    loader_labels = blob.get("loader_labels", torch.empty(0, dtype=torch.long))
+    return blob["probs"], blob["labels"], loader_labels
 
 
-def save_dropout_pass_probs(path: str, per_pass_probs: torch.Tensor) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    torch.save({"per_pass_probs": per_pass_probs}, path)
+def save_dropout_pass_probs(
+    path: str, per_pass_probs: torch.Tensor, per_pass_argmax: torch.Tensor
+) -> None:
+    """Both raw per-pass tensors for one (position, rate, split), shaped (k, N)."""
+    _atomic_save(
+        {"per_pass_probs": per_pass_probs, "per_pass_argmax": per_pass_argmax}, path
+    )
 
 
-def load_dropout_pass_probs(path: str) -> torch.Tensor:
-    return torch.load(path, map_location="cpu")["per_pass_probs"]
+def load_dropout_pass_probs(path: str) -> tuple[torch.Tensor, torch.Tensor]:
+    """Return (probs, argmax). argmax is absent from files written before it was
+    saved, so it comes back empty rather than raising, and stage 2 reports sigma
+    as unavailable for those instead of failing the whole checkpoint."""
+    blob = torch.load(path, map_location="cpu")
+    argmax = blob.get("per_pass_argmax", torch.empty(0, 0, dtype=torch.int16))
+    return blob["per_pass_probs"], argmax
 
 
 def write_split_manifest(psbd_dir: str, manifest: dict) -> None:
@@ -85,8 +121,10 @@ def write_split_manifest(psbd_dir: str, manifest: dict) -> None:
                 "it and rerun, or point --results-dir somewhere separate."
             )
         return
-    with open(path, "w") as handle:
+    temporary = f"{path}.tmp.{os.getpid()}"
+    with open(temporary, "w") as handle:
         json.dump(manifest, handle, indent=2)
+    os.replace(temporary, path)
 
 
 def read_split_manifest(psbd_dir: str) -> dict:
@@ -101,7 +139,7 @@ def load_or_build_baseline(
     loader,
     device: torch.device,
     use_bfloat16: bool,
-) -> tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """The no-dropout baseline for one split, computed once and reused across jobs.
 
     The baseline depends only on (checkpoint, split), never on position or rate,
@@ -113,7 +151,7 @@ def load_or_build_baseline(
     """
     path = baseline_path(psbd_dir, split)
     if os.path.exists(path):
-        probs, labels = load_baseline(path)
+        probs, labels, loader_labels = load_baseline(path)
         expected = len(loader.dataset)
         if probs.shape[0] != expected:
             raise ValueError(
@@ -121,14 +159,17 @@ def load_or_build_baseline(
                 f"{expected}. A truncated max_samples run likely wrote it into this "
                 "results dir. Delete it and rerun, or use a separate --results-dir."
             )
-        return probs, labels
+        return probs, labels, loader_labels
 
     cache = build_baseline_cache(model, loader, device, use_bfloat16)
-    probs = torch.cat([row["probs"] for row in cache]) if cache else torch.empty(0)
-    labels = (
-        torch.cat([row["labels"] for row in cache])
-        if cache
-        else torch.empty(0, dtype=torch.long)
-    )
-    save_baseline(path, probs, labels)
-    return probs, labels
+
+    def stack(key: str, empty_dtype) -> torch.Tensor:
+        if not cache:
+            return torch.empty(0, dtype=empty_dtype)
+        return torch.cat([row[key] for row in cache])
+
+    probs = stack("probs", torch.float32)
+    labels = stack("labels", torch.long)
+    loader_labels = stack("loader_labels", torch.long)
+    save_baseline(path, probs, labels, loader_labels)
+    return probs, labels, loader_labels

@@ -77,7 +77,7 @@ def test_tracks_baseline_argmax_probability_across_uneven_batches():
     baseline_labels = logits.argmax(dim=1)
     loader = _logit_loader(logits, batch_size=4)
 
-    per_pass = compute_dropout_pass_probs(
+    per_pass, per_pass_argmax = compute_dropout_pass_probs(
         LogitPassthrough(), loader, baseline_labels, CPU, 3, use_bfloat16=False, seed=0
     )
 
@@ -85,6 +85,12 @@ def test_tracks_baseline_argmax_probability_across_uneven_batches():
         F.softmax(logits, dim=1).gather(1, baseline_labels.view(-1, 1)).squeeze(1)
     )
     assert per_pass.shape == (3, 10)
+    assert per_pass_argmax.shape == (3, 10)
+    assert per_pass_argmax.dtype == torch.int16
+    # With no dropout plugged the identity model reproduces the baseline argmax
+    # every pass, so sigma computed from this must be exactly 0.
+    for pass_index in range(3):
+        assert torch.equal(per_pass_argmax[pass_index].long(), baseline_labels)
     # No dropout is plugged, so the identity model is deterministic: every pass is
     # the baseline, and every row must equal the max softmax probability per sample.
     for pass_index in range(3):
@@ -99,7 +105,7 @@ def test_gathers_the_given_label_not_the_per_pass_argmax():
     wrong_labels = (logits.argmax(dim=1) + 1) % 5
     loader = _logit_loader(logits, batch_size=4)
 
-    per_pass = compute_dropout_pass_probs(
+    per_pass, _ = compute_dropout_pass_probs(
         LogitPassthrough(), loader, wrong_labels, CPU, 1, use_bfloat16=False, seed=0
     )
 
@@ -118,7 +124,7 @@ def test_no_perturbation_gives_zero_psu():
     baseline_probs = F.softmax(logits, dim=1)
     loader = _logit_loader(logits, batch_size=3)
 
-    per_pass = compute_dropout_pass_probs(
+    per_pass, _ = compute_dropout_pass_probs(
         LogitPassthrough(), loader, baseline_labels, CPU, 3, use_bfloat16=False, seed=0
     )
 
@@ -129,7 +135,7 @@ def test_no_perturbation_gives_zero_psu():
 
 def test_output_is_float32_even_without_bfloat16():
     logits = _distinct_peak_logits(4, num_classes=4)
-    per_pass = compute_dropout_pass_probs(
+    per_pass, _ = compute_dropout_pass_probs(
         LogitPassthrough(),
         _logit_loader(logits, 4),
         logits.argmax(dim=1),
@@ -155,13 +161,13 @@ def test_same_seed_reproduces_masks_paired_across_calls():
         lambda module, args, output: stochastic(output)
     )
 
-    first = compute_dropout_pass_probs(
+    first, _ = compute_dropout_pass_probs(
         model, _logit_loader(logits, 4), baseline_labels, CPU, 3, False, seed=7
     )
-    second = compute_dropout_pass_probs(
+    second, _ = compute_dropout_pass_probs(
         model, _logit_loader(logits, 4), baseline_labels, CPU, 3, False, seed=7
     )
-    other = compute_dropout_pass_probs(
+    other, _ = compute_dropout_pass_probs(
         model, _logit_loader(logits, 4), baseline_labels, CPU, 3, False, seed=8
     )
     handle.remove()
@@ -172,7 +178,7 @@ def test_same_seed_reproduces_masks_paired_across_calls():
 
 def test_empty_loader_returns_empty_shaped_tensor():
     logits = torch.zeros(0, 4)
-    per_pass = compute_dropout_pass_probs(
+    per_pass, per_pass_argmax = compute_dropout_pass_probs(
         LogitPassthrough(),
         _logit_loader(logits, 4),
         torch.zeros(0, dtype=torch.long),
@@ -182,23 +188,42 @@ def test_empty_loader_returns_empty_shaped_tensor():
         seed=0,
     )
     assert per_pass.shape == (3, 0)
+    assert per_pass_argmax.shape == (3, 0)
 
 
 def test_baseline_round_trip(tmp_path):
     probs = torch.rand(20, 100)
     labels = probs.argmax(dim=1)
+    loader_labels = torch.randint(0, 100, (20,))
     path = os.path.join(tmp_path, "baseline_clean.pt")
-    save_baseline(path, probs, labels)
-    loaded_probs, loaded_labels = load_baseline(path)
+    save_baseline(path, probs, labels, loader_labels)
+    loaded_probs, loaded_labels, loaded_targets = load_baseline(path)
     assert torch.equal(loaded_probs, probs)
     assert torch.equal(loaded_labels, labels)
+    assert torch.equal(loaded_targets, loader_labels)
 
 
 def test_dropout_pass_probs_round_trip(tmp_path):
     per_pass = torch.rand(3, 50)
+    per_pass_argmax = torch.randint(0, 10, (3, 50), dtype=torch.int16)
     path = os.path.join(tmp_path, "before_attention", "rate_0_5_clean.pt")
-    save_dropout_pass_probs(path, per_pass)
-    assert torch.equal(load_dropout_pass_probs(path), per_pass)
+    save_dropout_pass_probs(path, per_pass, per_pass_argmax)
+    loaded_probs, loaded_argmax = load_dropout_pass_probs(path)
+    assert torch.equal(loaded_probs, per_pass)
+    assert torch.equal(loaded_argmax, per_pass_argmax)
+
+
+def test_dropout_pass_probs_load_tolerates_a_file_without_argmax(tmp_path):
+    # Files written before argmax was saved must still load, so a partial sweep
+    # does not have to be thrown away. The argmax comes back empty and stage 2
+    # reports sigma as unavailable rather than failing the checkpoint.
+    per_pass = torch.rand(3, 8)
+    path = os.path.join(tmp_path, "legacy", "rate_0_5_clean.pt")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    torch.save({"per_pass_probs": per_pass}, path)
+    loaded_probs, loaded_argmax = load_dropout_pass_probs(path)
+    assert torch.equal(loaded_probs, per_pass)
+    assert loaded_argmax.numel() == 0
 
 
 def test_manifest_write_identical_is_idempotent(tmp_path):
@@ -225,7 +250,7 @@ def test_load_or_build_baseline_reuses_without_recomputing(tmp_path):
     loader = _logit_loader(logits, batch_size=4)
     psbd_dir = str(tmp_path)
 
-    probs, labels = load_or_build_baseline(
+    probs, labels, _ = load_or_build_baseline(
         psbd_dir, "clean", LogitPassthrough(), loader, CPU, use_bfloat16=False
     )
     assert os.path.exists(os.path.join(psbd_dir, "baseline_clean.pt"))
@@ -237,7 +262,7 @@ def test_load_or_build_baseline_reuses_without_recomputing(tmp_path):
         def forward(self, x):
             return torch.zeros_like(x)
 
-    reused_probs, reused_labels = load_or_build_baseline(
+    reused_probs, reused_labels, _ = load_or_build_baseline(
         psbd_dir, "clean", ZeroLogits(), loader, CPU, use_bfloat16=False
     )
     assert torch.equal(reused_probs, probs)
@@ -250,6 +275,7 @@ def test_load_or_build_baseline_rejects_a_stale_truncated_cache(tmp_path):
     save_baseline(
         baseline_path(psbd_dir, "clean"),
         torch.rand(5, 4),
+        torch.zeros(5, dtype=torch.long),
         torch.zeros(5, dtype=torch.long),
     )
     loader = _logit_loader(_distinct_peak_logits(16, num_classes=4), batch_size=4)

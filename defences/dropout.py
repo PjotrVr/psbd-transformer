@@ -35,6 +35,7 @@ import functools
 from dataclasses import dataclass
 from typing import Callable
 
+import torch
 import torch.nn as nn
 from torch.utils.hooks import RemovableHandle
 from torchvision.models.vision_transformer import EncoderBlock
@@ -218,6 +219,11 @@ def _make_pre_hook(dropout: nn.Module) -> Callable:
     """
 
     def pre_hook(module, args):
+        if not args or not isinstance(args[0], torch.Tensor):
+            raise TypeError(
+                f"{type(module).__name__} was called with no positional tensor, "
+                "so this position cannot perturb its input"
+            )
         perturbed = dropout(args[0])
         return tuple(perturbed if arg is args[0] else arg for arg in args)
 
@@ -228,6 +234,13 @@ def _make_post_hook(dropout: nn.Module) -> Callable:
     """Perturb a module's tensor output after it runs."""
 
     def post_hook(module, args, output):
+        if not isinstance(output, torch.Tensor):
+            # ViT's self_attention returns (output, weights); a post position on
+            # any such module is a registry mistake, not a runtime condition.
+            raise TypeError(
+                f"{type(module).__name__} returned {type(output).__name__}, not a "
+                "Tensor, so it cannot carry a post-hook dropout position"
+            )
         return dropout(output)
 
     return post_hook
@@ -251,6 +264,14 @@ def _resolve_targets(
                 else module.get_submodule(spec.submodule_name)
             )
             targets.append(target)
+    if not targets:
+        # Silence here would be the worst failure mode available: no attachment
+        # means no perturbation, so PSU is identically 0 and the position reads
+        # as "had no effect" rather than as a model that never matched.
+        raise ValueError(
+            f"no {block_types} blocks found in the model, so position "
+            f"{spec.submodule_name!r} attached nothing"
+        )
     return targets
 
 
@@ -296,13 +317,19 @@ def plug_dropout(
     core = network_core(model)
 
     handles: list[RemovableHandle | _ForwardRestore] = []
-    for name in position_names:
-        spec = positions[name]
-        factory = dropout_factory.get(name, nn.Dropout)
-        for target in _resolve_targets(model, core, spec, block_types):
-            handles.append(
-                _attach_hook(target, spec.hook_type, architecture, factory, rate)
-            )
+    try:
+        for name in position_names:
+            spec = positions[name]
+            factory = dropout_factory.get(name, nn.Dropout)
+            for target in _resolve_targets(model, core, spec, block_types):
+                handles.append(
+                    _attach_hook(target, spec.hook_type, architecture, factory, rate)
+                )
+    except Exception:
+        # Handles registered before the failure are otherwise unreachable, and an
+        # orphaned dropout silently compounds with the next rate's.
+        unplug_dropout(handles)
+        raise
     return handles
 
 
