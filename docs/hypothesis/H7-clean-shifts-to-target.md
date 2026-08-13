@@ -68,13 +68,61 @@ like 0.75 and inflated the whole effect.
 `results/<folder>/psbd_metrics.json`, keys `clean_shift_to_target_fraction` and
 `shift_target_histogram.clean`, per rate.
 
-## Subquestions, in priority order
+## Follow-up: subquestions 1 and 2, answered
 
-1. **Which class do `blend`'s clean samples actually shift to?** One argmax over a
-   histogram that is already on disk. If it is a single consistent non-target class,
-   that is a publishable finding about pretrained-backbone priors.
-2. Does the benign control shift to that same class? If yes, the fallback is a
-   property of the pretrained model, not of the poisoning, and the neuron-bias story
-   needs restating for transformers.
-3. Does PSU separation survive if the shift-to-target effect is regressed out? That
-   would isolate how much of PSBD's performance the published mechanism explains.
+Taking the argmax over the cached histograms rather than only reading the `y_t`
+column changes the reading substantially. Dominant shift class per model,
+pre-residual, same non-saturating rate, `y_t` = 0 = airplane throughout:
+
+| checkpoint | top-1 shift class | share | `-> y_t` |
+|---|---|---|---|
+| `benign` (control) | **airplane (0)** | 0.333 | n/a |
+| `blend_0_01` | cat (3) | 0.386 | 0.116 |
+| `blend_0_05` | cat (3) | **0.787** | 0.070 |
+| `blend_0_1` | deer (4) | 0.379 | 0.052 |
+| `badnet_a2o_0_05` | dog (5) | 0.581 | 0.098 |
+| `badnet_a2o_0_1` | deer (4) | 0.530 | 0.294 |
+| `bpp_0_05` | **airplane (0)** | 0.514 | 0.514 |
+| `lf_0_05` | deer (4) | 0.496 | 0.216 |
+| `badnet_a2a_0_05` | cat (3) | 0.682 | 0.016 |
+
+**The concentration half of PSBD's mechanism holds, robustly.** Every model collapses
+onto one dominant class with a share of 0.27 to 0.79, against a 0.10 chance line.
+Prediction shift under dropout is emphatically not diffuse on ViT.
+
+**The target-class half does not.** The dominant class is usually *not* `y_t`. Only
+`bpp_0_05` picks it.
+
+**And the control explains why this was hard to see.** The *benign* model's dominant
+fallback is airplane, i.e. class 0, i.e. exactly the `y_t` every attack in this
+project uses. So on a benign ViT, clean samples already collapse onto class 0 with
+no backdoor present at all.
+
+## What this means
+
+The `y_t = 0` convention, inherited from the PSBD paper and used unchanged here,
+**confounds the mechanism test**: a shift toward class 0 cannot be attributed to
+neuron bias from poisoning when the un-poisoned model does it too.
+
+Worse for the published story, the backdoored models mostly shift *away* from class 0
+onto other classes. Poisoning appears to *displace* the pretrained model's natural
+fallback rather than redirect it toward the attacker's target.
+
+So the honest statement for ViT is: dropout-induced prediction shift concentrates on
+a single class, that class is a property of the model rather than of the attacker's
+target, and PSU separates clean from backdoor samples anyway. The method survives;
+the explanation does not transfer.
+
+## Subquestion that follows, and it is a design fix
+
+Rerun a small grid with `y_t` chosen to be a class the benign model does *not* fall
+back to (anything but airplane). If shift-to-target then tracks the attack, the
+neuron-bias story is fine and only the class-0 convention was hiding it. If it still
+does not, the story is genuinely wrong for transformers. Every checkpoint here uses
+`target_label = 0`, so this needs new training and is the one experiment in this
+ledger that compute cannot shortcut.
+
+## Remaining subquestion
+
+- Does PSU separation survive if the shift-to-target effect is regressed out? That
+  isolates how much of PSBD's performance the published mechanism explains at all.
