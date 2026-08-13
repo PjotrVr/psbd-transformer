@@ -70,12 +70,26 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def to_rank(values: torch.Tensor) -> torch.Tensor:
-    """Normalized rank in [0, 1]; low stays low, so the shared convention survives."""
-    order = values.argsort()
-    ranks = torch.empty_like(order, dtype=torch.float32)
-    ranks[order] = torch.arange(len(values), dtype=torch.float32)
-    return ranks / max(len(values) - 1, 1)
+def to_rank(values: torch.Tensor, reference: torch.Tensor) -> torch.Tensor:
+    """Each score as its percentile within a shared reference distribution.
+
+    The reference must be the SAME set for every split, and clean validation is the
+    natural choice: it is the only distribution the defender is assumed to hold, and
+    it is what the threshold is already drawn from.
+
+    Ranking each split against itself instead is the obvious mistake and it silently
+    destroys the method. Within-split ranks span [0, 1] for every split by
+    construction, so a threshold at the 1st percentile of validation rank flags
+    exactly the bottom 1% of the backdoor split no matter how extreme its scores are,
+    pinning TPR to the false-positive rate. That produced TPR 0.010 at 1% FPR on
+    every checkpoint, including ones where a component detector scored 1.000.
+
+    Percentile against a common reference keeps the two detectors commensurable
+    without fitting anything, and leaves an actually-extreme score extreme.
+    """
+    sorted_reference = reference.sort().values
+    positions = torch.searchsorted(sorted_reference, values.contiguous())
+    return positions.float() / max(len(sorted_reference), 1)
 
 
 def psbd_scores(psbd_dir: str, placement: str, shift_target: float):
@@ -164,11 +178,15 @@ def main() -> None:
             for split, loader in loaders.items()
         }
 
-        # Rank within each split, then pair the clean side down to the backdoor
-        # split's images so all four detectors are compared on one population.
+        # Both detectors become percentiles of the SAME reference, the clean
+        # validation split, so a fused score means the same thing in every split and
+        # the validation threshold transfers. The clean side is paired down to the
+        # backdoor split's images afterwards, so all four columns are compared on one
+        # population.
         fused = {}
         for split in ("validation", "clean", "backdoor"):
-            a, b = to_rank(psu[split]), to_rank(strip[split])
+            a = to_rank(psu[split], psu["validation"])
+            b = to_rank(strip[split], strip["validation"])
             fused[split] = {
                 "psbd": psu[split],
                 "strip": strip[split],
