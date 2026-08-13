@@ -39,8 +39,15 @@ def _atomic_save(payload: dict, path: str) -> None:
 
 
 def _rate_tag(rate: float) -> str:
-    """0.1 becomes "0_1", matching the underscore-for-decimal folder convention."""
-    return f"{rate:.1f}".replace(".", "_")
+    """0.1 becomes "0_1", matching the underscore-for-decimal folder convention.
+
+    %g rather than a fixed decimal count, because the sub-0.1 rates a
+    residual-stream position needs (0.01 to 0.09, where (1-p)^12 has not yet
+    collapsed) would all round to "0_0" at one decimal place and silently
+    overwrite each other's files. %g keeps the existing "0_1" spelling for the
+    main grid while staying injective below it.
+    """
+    return f"{rate:g}".replace(".", "_")
 
 
 def baseline_path(psbd_dir: str, split: str) -> str:

@@ -75,6 +75,18 @@ def parse_args() -> argparse.Namespace:
         help="trigger to probe a benign checkpoint with (the negative control)",
     )
     parser.add_argument("--probe-target-label", type=int, default=None)
+    parser.add_argument(
+        "--rates",
+        nargs="*",
+        type=float,
+        default=None,
+        help=(
+            "override the 0.1-to-0.9 grid. A residual-stream position masks the "
+            "whole stream once per block, so (1-p)^12 survives the ViT stack and "
+            "even p=0.1 is already saturating; reaching a comparable disturbance "
+            "there needs rates an order of magnitude smaller."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -173,6 +185,7 @@ def sweep_rates(
     device: torch.device,
     forward_passes: int,
     use_bfloat16: bool,
+    rates: tuple[float, ...] = DROPOUT_RATES,
 ) -> None:
     """For each rate: plug the position, run every split, save, unplug.
 
@@ -184,7 +197,7 @@ def sweep_rates(
     quietly wrong.
     """
     position_names = DROPOUT_CONFIGS.get(position_config, (position_config,))
-    for rate in DROPOUT_RATES:
+    for rate in rates:
         handles = plug_dropout(model, architecture, position_names, {}, rate)
         try:
             run_one_rate(
@@ -212,7 +225,7 @@ def write_run_provenance(psbd_dir: str, args: argparse.Namespace, device) -> Non
     payload = {
         "git_commit": current_git_commit(),
         "position_config": args.position_config,
-        "dropout_rates": list(DROPOUT_RATES),
+        "dropout_rates": list(args.rates) if args.rates else list(DROPOUT_RATES),
         "forward_passes": args.forward_passes,
         "mask_seed": PSBD_MASK_SEED,
         "split_seed": PSBD_SPLIT_SEED,
@@ -256,6 +269,7 @@ def main() -> None:
         device,
         args.forward_passes,
         use_bfloat16,
+        rates=tuple(args.rates) if args.rates else DROPOUT_RATES,
     )
 
 
