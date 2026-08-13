@@ -1,9 +1,9 @@
 # PSBD on Vision Transformers: what the data says so far
 
-State after phases 3a and 3b: 192 jobs, 11 placements x 16 checkpoints, CIFAR-10
-ViT, full 10000-image test split, 5088 cached tensors, zero missing. The depth-band
-(48) and SAM (256) sweeps are running. Hypothesis-by-hypothesis detail lives in
-`docs/hypothesis/`.
+State after phases 3a, 3b and the depth-band sweep: 240 jobs, 14 placements x 16
+checkpoints, CIFAR-10 ViT, full 10000-image test split. The SAM sweep (256 jobs) and
+an out-of-sample test of the depth rule (8 jobs) are running. Hypothesis-by-hypothesis
+detail lives in `docs/hypothesis/`.
 
 ## The one-paragraph version
 
@@ -16,6 +16,38 @@ only the 4th best of 11 placements anyway. What fails to transfer from ConvNets 
 not the placement but **the rate grid and the rate-selection constant**. Separately,
 PSBD's published *mechanism* is measurably absent on the attack it detects best, so
 on transformers the method works for a reason its authors did not give.
+
+## The best placement found, and the rule that selects it
+
+**Restricting pre-residual dropout to blocks 9-12 is the strongest placement measured
+anywhere in this study**, for the three distributed-trigger attacks:
+
+| attack | blocks 1-4 | blocks 5-8 | **blocks 9-12** | all 12 blocks |
+|---|---|---|---|---|
+| `blend` | 0.969 | 0.981 | **0.997** | 0.978 |
+| `bpp` | 0.982 | 0.985 | **0.996** | 0.977 |
+| `lf` | 0.925 | 0.988 | **0.998** | 0.947 |
+| `badnet_a2o` | **0.912** | 0.907 | 0.829 | 0.889 |
+| benign control | 0.507 | 0.501 | 0.487 | 0.506 |
+
+A band beats all-blocks in every case, and it is cheaper: dropout in 4 blocks instead
+of 12.
+
+The rule that picks the band is **the opposite of the obvious one**. It is not "aim at
+the layer where the attack's backdoor direction is written", it is **aim as far from
+it as possible**. `blend`, `bpp` and `lf` write their direction by layer 5 to 8, and
+are best caught in blocks 9-12; `badnet_a2o` only assembles its direction at layers 9
+to 12, and blocks 9-12 is its *worst* band while blocks 1-4 is its best.
+
+That follows from the mechanism once stated correctly: PSU works by destroying the
+evidence a *clean* prediction rests on while leaving the trigger path intact, so the
+perturbation belongs where clean class evidence is being assembled and the backdoor is
+absent. Aiming at the backdoor damages it too.
+
+The rule was derived post-hoc from four attacks, so it is currently being tested out
+of sample on two held-out ones (`wanet`, onset 7, predicts blocks 9-12;
+`adaptive_blend`, onset 12, predicts blocks 1-4), with the predictions registered in
+`docs/runs/` before the jobs were submitted.
 
 ## What holds
 
