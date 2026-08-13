@@ -75,7 +75,7 @@ source .venv/bin/activate
 
 python psbd_dropout_sweep.py \\
     --checkpoint-folder {checkpoint} \\
-    --position-config {position}{extra}{rates}
+    --position-config {position}{extra}{band}{rates}
 
 echo "Finished: $(date)"
 exit 0
@@ -136,7 +136,11 @@ def gate_by_asr(
 
 
 def render(
-    checkpoint: str, position: str, rates: tuple[float, ...] = (), suffix: str = ""
+    checkpoint: str,
+    position: str,
+    rates: tuple[float, ...] = (),
+    suffix: str = "",
+    block_range: tuple[int, int] | None = None,
 ) -> str:
     extra = ""
     if "benign" in checkpoint:
@@ -151,12 +155,23 @@ def render(
         position=position,
         suffix=suffix,
         extra=extra,
-        rates=" \\\n    --rates " + " ".join(f"{r:g}" for r in rates) if rates else "",
+        rates=(" \\\n    --rates " + " ".join(f"{r:g}" for r in rates))
+        if rates
+        else "",
+        band=(
+            f" \\\n    --block-range {block_range[0]} {block_range[1]}"
+            if block_range
+            else ""
+        ),
     )
 
 
 def write_job(
-    checkpoint: str, position: str, rates: tuple[float, ...] = (), suffix: str = ""
+    checkpoint: str,
+    position: str,
+    rates: tuple[float, ...] = (),
+    suffix: str = "",
+    block_range: tuple[int, int] | None = None,
 ) -> str:
     """Write one .pbs file and pre-create its log directory, return the path."""
     pbs_dir = os.path.join(BASE, "pbs", "psbd_sweep", checkpoint)
@@ -165,7 +180,7 @@ def write_job(
     os.makedirs(log_dir, exist_ok=True)
     path = os.path.join(pbs_dir, f"{position}{suffix}.pbs")
     with open(path, "w") as handle:
-        handle.write(render(checkpoint, position, rates, suffix))
+        handle.write(render(checkpoint, position, rates, suffix, block_range))
     return path
 
 
@@ -176,7 +191,15 @@ PHASES: dict[str, tuple[tuple[str, ...], bool]] = {
     "single_positions": (SINGLE_POSITION_NAMES, False),
     # SAM, on whichever placements phases 1 and 2 showed to be worth the compute.
     "sam": (tuple(DROPOUT_CONFIGS), True),
+    # H10: aim the placement at the depth where an attack's direction is written.
+    "depth_bands": (("pre_residual",), False),
 }
+
+# ViT-B/16 has 12 blocks. Four contiguous bands, plus the all-blocks reference that
+# the other phases already produce. The boundaries bracket the measured direction
+# onsets (blend 5, bpp 6, lf 8, badnet_a2o 9), so each attack's onset falls inside a
+# different band and the per-attack prediction is separable.
+DEPTH_BANDS: tuple[tuple[int, int], ...] = ((1, 4), (5, 8), (9, 12))
 
 # A residual-stream placement masks the whole stream once per block, so its usable
 # window sits an order of magnitude below the main grid: measured on
@@ -217,8 +240,9 @@ def main() -> None:
     print(f"phase {args.phase}: {len(positions)} positions x {len(kept)} checkpoints")
     for folder, reason in rejected:
         print(f"  EXCLUDED {folder}: {reason}")
+    bands = len(DEPTH_BANDS) if args.phase == "depth_bands" else 1
     if args.dry_run:
-        print(f"\n{len(kept) * len(positions)} jobs (dry run, nothing written)")
+        print(f"\n{len(kept) * len(positions) * bands} jobs (dry run, nothing written)")
         return
 
     rates = FINE_RATES if args.fine_rates else ()
@@ -226,11 +250,27 @@ def main() -> None:
     # position-config folder as the main grid. That is intentional: the rate tags
     # do not collide, so stage 2 sees one continuous rate axis per placement.
     suffix = "_fine" if args.fine_rates else ""
-    paths = [
-        write_job(checkpoint, position, rates, suffix)
-        for checkpoint in kept
-        for position in positions
-    ]
+
+    if args.phase == "depth_bands":
+        # Each band gets its own job and its own cache folder. The bands are swept
+        # over the full rate grid rather than a shared rate, because an early band
+        # perturbs harder than a late one at the same p (it propagates through more
+        # blocks), so they can only be compared after matching on achieved shift
+        # ratio, and that needs each band's whole rate curve.
+        paths = [
+            write_job(
+                checkpoint, position, rates, f"_blocks_{first}_{last}", (first, last)
+            )
+            for checkpoint in kept
+            for position in positions
+            for first, last in DEPTH_BANDS
+        ]
+    else:
+        paths = [
+            write_job(checkpoint, position, rates, suffix)
+            for checkpoint in kept
+            for position in positions
+        ]
     print(f"\nwrote {len(paths)} jobs under pbs/psbd_sweep (walltime {WALLTIME})")
 
 
