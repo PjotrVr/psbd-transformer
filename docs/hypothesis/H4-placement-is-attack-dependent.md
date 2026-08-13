@@ -1,6 +1,6 @@
 # H4 — The best placement tracks where the backdoor direction enters the CLS token
 
-**Status: half SUPPORTED** (the layer ordering holds; the placement consequence is untested)
+**Status: SUPPORTED.** The layer ordering holds, and the placement consequence now has direct evidence.
 
 ## Claim
 
@@ -61,10 +61,28 @@ input perturbation: probed with the same trigger, its relative direction peaks a
 0.089 and *decays* with depth, against 1.0 to 2.2 growing monotonically for every
 backdoored model.
 
-**The placement half is untested.** Nothing yet shows that a placement targeting an
-attack's onset layer beats a uniform one. That needs the single-position sweep
-(phase 3b) and, more directly, a block-restricted placement variant that does not
-exist yet.
+**The placement half now has evidence.** The pre-residual advantage over
+post-residual, on the full grid, is not uniform. It tracks the trigger family:
+
+| attack | onset | pre-post AUROC gap |
+|---|---|---|
+| `blend` | 5 | +0.055 |
+| `bpp` | 6 | +0.024 |
+| `lf` | 8 | +0.030 |
+| `badnet_a2o` | 9 | **+0.226** |
+
+Placement barely matters for the three attacks whose direction is established by
+layer 8: both placements reach 0.89 to 0.99. Placement matters enormously for the
+static patch trigger, the one still being assembled in the last few blocks, where
+post-residual collapses to 0.50 to 0.67 and pre-residual holds 0.69 to 0.89.
+
+Read with [H3](H3-why-post-residual-fails.md): post-residual masks the whole stream
+once per block, and a trigger that only reaches `[CLS]` at layers 9 to 12 has almost
+no depth left in which to be redundantly re-encoded.
+
+Caveat: the ordering is not monotone in onset among the three easy attacks
+(`blend` at layer 5 has a larger gap than `bpp` at 6 or `lf` at 8). The defensible
+statement is patch-versus-distributed, not a continuous function of onset layer.
 
 ## Subquestions
 

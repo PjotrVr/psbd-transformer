@@ -75,7 +75,7 @@ source .venv/bin/activate
 
 python psbd_dropout_sweep.py \\
     --checkpoint-folder {checkpoint} \\
-    --position-config {position}{extra}
+    --position-config {position}{extra}{rates}
 
 echo "Finished: $(date)"
 exit 0
@@ -135,7 +135,7 @@ def gate_by_asr(
     return kept, rejected
 
 
-def render(checkpoint: str, position: str) -> str:
+def render(checkpoint: str, position: str, rates: tuple[float, ...] = ()) -> str:
     extra = ""
     if "benign" in checkpoint:
         extra = (
@@ -148,18 +148,21 @@ def render(checkpoint: str, position: str) -> str:
         checkpoint=checkpoint,
         position=position,
         extra=extra,
+        rates=" \\\n    --rates " + " ".join(f"{r:g}" for r in rates) if rates else "",
     )
 
 
-def write_job(checkpoint: str, position: str) -> str:
+def write_job(
+    checkpoint: str, position: str, rates: tuple[float, ...] = (), suffix: str = ""
+) -> str:
     """Write one .pbs file and pre-create its log directory, return the path."""
     pbs_dir = os.path.join(BASE, "pbs", "psbd_sweep", checkpoint)
     log_dir = os.path.join(BASE, "logs", "psbd_sweep", checkpoint)
     os.makedirs(pbs_dir, exist_ok=True)
     os.makedirs(log_dir, exist_ok=True)
-    path = os.path.join(pbs_dir, f"{position}.pbs")
+    path = os.path.join(pbs_dir, f"{position}{suffix}.pbs")
     with open(path, "w") as handle:
-        handle.write(render(checkpoint, position))
+        handle.write(render(checkpoint, position, rates))
     return path
 
 
@@ -172,6 +175,14 @@ PHASES: dict[str, tuple[tuple[str, ...], bool]] = {
     "sam": (tuple(DROPOUT_CONFIGS), True),
 }
 
+# A residual-stream placement masks the whole stream once per block, so its usable
+# window sits an order of magnitude below the main grid: measured on
+# vit_cifar10_badnet_a2o_0_1, the backdoor direction retains 90% of its separation
+# at p=0.01 and 4% at p=0.08, while the main grid starts at 0.1 where it is already
+# gone. Comparing placements only on the main grid would therefore compare
+# pre_residual inside its window against post_residual entirely outside its own.
+FINE_RATES: tuple[float, ...] = (0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.09)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -182,6 +193,11 @@ def parse_args() -> argparse.Namespace:
         nargs="*",
         default=None,
         help="override the phase's position list, for a targeted follow-up",
+    )
+    parser.add_argument(
+        "--fine-rates",
+        action="store_true",
+        help="sweep the sub-0.1 window instead of the 0.1-to-0.9 grid",
     )
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
@@ -202,8 +218,15 @@ def main() -> None:
         print(f"\n{len(kept) * len(positions)} jobs (dry run, nothing written)")
         return
 
+    rates = FINE_RATES if args.fine_rates else ()
+    # A distinct filename, because the fine sweep writes into the same
+    # position-config folder as the main grid. That is intentional: the rate tags
+    # do not collide, so stage 2 sees one continuous rate axis per placement.
+    suffix = "_fine" if args.fine_rates else ""
     paths = [
-        write_job(checkpoint, position) for checkpoint in kept for position in positions
+        write_job(checkpoint, position, rates, suffix)
+        for checkpoint in kept
+        for position in positions
     ]
     print(f"\nwrote {len(paths)} jobs under pbs/psbd_sweep (walltime {WALLTIME})")
 

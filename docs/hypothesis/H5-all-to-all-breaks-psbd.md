@@ -1,6 +1,6 @@
 # H5 — PSBD degrades on all-to-all, which has no single target class
 
-**Status: OPEN** (detection pending; a supporting mechanism is already measured)
+**Status: SUPPORTED, strongly.**
 
 ## Claim
 
@@ -40,8 +40,26 @@ hypothesis is judged on**. CIFAR-100 a2a is excluded from the grid for this reas
 
 ## Evidence
 
-Detection numbers pending; `vit_cifar10_badnet_a2a_{0_01,0_05,0_1}` are in the
-phase-3a grid.
+**Detection collapses to chance.** AUROC at the 25th-percentile threshold, best
+rate, against the identical-trigger all-to-one control:
+
+| poison rate | `badnet_a2a` | `badnet_a2o` | ASR (a2a) |
+|---|---|---|---|
+| 0.01 | 0.601 | 0.686 | 0.94 |
+| 0.05 | 0.539 | 0.872 | 0.93 |
+| 0.10 | **0.510** | 0.889 | 0.96 |
+
+At 10% poisoning the all-to-all model is **indistinguishable from the benign control
+(0.506)** while its backdoor fires on 96% of inputs. Same trigger, same
+architecture, same poison rate, differing only in which label the poisoned samples
+carry.
+
+Note the direction of the trend: detection gets *worse* as poisoning increases, the
+opposite of [H8](H8-detection-scales-with-poison-rate.md) and of every other attack
+here. More all-to-all poisoning means more source classes with well-learned but
+mutually cancelling mappings.
+
+Both placements fail equally (gap -0.003), so this is not a placement problem.
 
 **A supporting mechanism is already measured, independently of PSBD.**
 `scripts/backdoor_direction_layers/` finds that `badnet_a2a`'s backdoor direction
