@@ -75,20 +75,46 @@ should be treated as a reporting bug rather than a result.**
 For PSBD the aggregate effect is a mean of 0.671 one-sided against 0.787 two-sided
 across the 34 STRIP checkpoints.
 
-## The caveat that has to travel with this
+## Making it deployable: tested, and it works only if the tail is tight
 
-`max(AUROC, 1 - AUROC)` cannot be applied blind: a defender does not know the true
-labels, so cannot know which tail to flag. Two ways to make it deployable, neither yet
-tested:
+`max(AUROC, 1 - AUROC)` reads the labels, so it is an upper bound rather than a
+method. The label-free alternative is to pick the tail by comparing the unlabelled
+suspicious pool against the clean validation split:
 
-1. Choose the tail on the **clean validation split alone**, by which side of the
-   validation distribution the suspicious pool's scores concentrate on. Needs no
-   poisoned data.
-2. Use a genuinely two-sided statistic, distance from the clean-validation median,
-   which needs no tail choice at all.
+    low_deviation  = quantile(validation, q) - quantile(pool, q)
+    high_deviation = quantile(pool, 1-q)     - quantile(validation, 1-q)
 
-Until one of those is validated, the two-sided numbers here are an upper bound on what
-a deployed two-sided rule would achieve, and are labelled as such.
+whichever is larger names the tail. `scripts/tail_selection/` implements and tests it.
+
+**On the split as it stands, agreement with the oracle tail is 24/24 and it captures
+100% of the available gain.** That number is not usable as reported, because this
+split's suspicious pool is roughly 50% poisoned, and no defender faces that. Testing
+against realistic poison fractions:
+
+| tail quantile | pool 10% poisoned | pool 5% | pool 1% |
+|---|---|---|---|
+| 0.05 | 88% | 75% | **46%** |
+| 0.02 | 92% | 83% | 54% |
+| 0.01 | 88% | 88% | 71% |
+| 0.005 | 83% | 79% | 75% |
+| **0.002** | 88% | **92%** | **79%** |
+
+At the default 5% tail quantile the rule **collapses to a coin flip when only 1% of
+the pool is poisoned**, which is the realistic case. A rare contaminant does not move
+a 5th percentile.
+
+Tightening the tail largely rescues it: at q = 0.002 agreement is 79% to 92% across
+all three fractions, and a fixed tight tail is a reasonable default since it costs
+little at high contamination and is the only thing that works at low.
+
+**So the honest position is:** the inversion is real and large, a label-free tail
+choice recovers most of the gain when the tail quantile is matched to a rare
+contaminant, and it fails outright with a loose tail. The two-sided numbers above
+remain an upper bound; the deployable figure is roughly 80% of the checkpoints getting
+the right tail at 1% contamination, not all of them.
+
+A genuinely two-sided statistic (distance from the clean-validation median) needs no
+tail choice at all and is still untested.
 
 ## Reproduce
 
