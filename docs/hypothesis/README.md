@@ -50,6 +50,9 @@ written.
 | [H13](H13-combined-variant.md) | The accumulated changes combine into a materially better defence | **SUPPORTED**: +0.110 derivation, **+0.151 held out (2/2)** |
 | [H14](H14-fusion.md) | PSBD and STRIP fuse into something better than either | **SUPPORTED**: 0.614 TPR at 1% FPR, 93% of oracle-max |
 | [H15](H15-one-sided-rules-are-the-common-weakness.md) | One-sided decision rules are a systematic weakness across detectors | **SUPPORTED**: STRIP inverts on 9 checkpoints, up to +0.98 |
+| [H16](H16-where-the-backdoor-neurons-are.md) | The backdoor occupies a few late-layer dimensions, disjoint across attacks, and SAM relocates them | **SUPPORTED**: cross-attack Jaccard 0.00-0.08 against a 0.87 ceiling; both data-free localizers **REFUTED** |
+| [H17](H17-low-poison-rate-is-a-placement-artifact.md) | PSBD's low-poison-rate failure is a placement artifact, not a limit of the method | **SUPPORTED on CIFAR-10**: `badnet_a2o` at 1% goes 0.297 to 0.839 one-sided, ASR 0.997; out-of-sample test in flight |
+| [H18](H18-sensitivity-profile-over-units.md) | The shape of a per-unit sensitivity profile beats its mean | Stated direction **REFUTED** (backdoored profiles are flatter, not peaked), but the profile **minimum** beats PSBD's mean by +0.12 at 1% poisoning |
 
 ## Where this stands after phases 3a and 3b
 
