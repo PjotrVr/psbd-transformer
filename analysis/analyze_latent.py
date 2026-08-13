@@ -33,7 +33,6 @@ from .cka import debiased_linear_cka
 from utils.config import DATASET_REGISTRY
 from utils.datasets import load_clean_datasets
 from .direction import backdoor_direction, trigger_activated_change
-from defences.dropout import reset_dropout
 from .embedding import pca_project
 from .features import extract_layer_features
 from models import load_checkpoint
@@ -168,9 +167,8 @@ def main() -> None:
     )
 
     model = load_checkpoint(args.architecture, args.checkpoint, device)
-    reset_dropout(
-        model, "pre_residual"
-    )  # dropout off, we want the clean baseline features
+    # load_checkpoint returns the model in eval mode, where every dropout is an
+    # identity, which is the clean baseline these features want.
 
     clean_features = extract_layer_features(
         model, clean_loader, device, use_bfloat16=True

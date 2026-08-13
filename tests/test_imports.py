@@ -19,6 +19,7 @@ MODULES = [
     "metrics",
     "models",
     "poison",
+    "psbd_dropout_sweep",
     "sam",
     "stealth",
     "train",
@@ -50,6 +51,7 @@ MODULES = [
     "defences.detection",
     "defences.dropout",
     "defences.inference",
+    "defences.psbd_cache",
     # utils/: config and dataset helpers (models.py deliberately excluded).
     "utils",
     "utils.config",
