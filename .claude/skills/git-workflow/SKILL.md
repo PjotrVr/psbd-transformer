@@ -559,3 +559,60 @@ git bisect start && git bisect bad HEAD && git bisect good <tag> && \
 # inspect before touching anything
 git status --short --branch && git log --oneline --graph -15
 ```
+
+## 13. This repo, concretely
+
+The model above assumes conventions this repo does not have. These are the real ones.
+
+### Where traceability actually lives
+
+`checkpoints/`, `results/`, and `logs/` are all gitignored, and `checkpoints/` alone
+is 336 GB. So the chain from a reported number back to a commit runs through three
+committed artifacts, not through the run directories:
+
+| artifact | tracked | holds |
+|---|---|---|
+| `checkpoints/<folder>/args.json` | no, but per-checkpoint | dataset, attack, label_mode, target_label, poison_rate, architecture, optimizer, rho, epochs, seed, git_commit |
+| `results/<folder>/psbd_metrics.json` | **yes**, un-ignored explicitly | every detection number, per placement and rate |
+| `docs/runs/<date>-<slug>.md` | yes | launch SHA, the grid, the job IDs |
+
+`.gitignore` un-ignores `results/**/psbd_metrics.json` through the
+`results/**` + `!results/**/` + `!results/**/psbd_metrics.json` idiom, because git
+cannot re-include a file whose parent directory is excluded. Raw `.pt` tensors stay
+out. Any future `<defense>_metrics.json` should be un-ignored the same way.
+
+Note the `runs/` pattern must stay anchored as `/runs/`. Unanchored it also swallows
+`docs/runs/`, which is where the launch SHAs live.
+
+### There is no experiments/<slug>/ tree
+
+Section 6 writes the launch SHA to `experiments/<slug>/LAUNCHED_FROM`. Here it goes
+in `docs/runs/<date>-<slug>.md` along with the grid and the job IDs, committed before
+`qsub`. Same purpose, one file instead of two.
+
+### Provenance gap in the existing checkpoints
+
+Every checkpoint currently on disk has `seed: null`, `git_commit: null`, and null
+timestamps in its `args.json`. They were backfilled from folder names by
+`scratch/normalize_checkpoints.py`, not recorded at training time, so `label_mode`
+and `poison_rate` there are *inferred* rather than observed. This cannot be repaired
+retroactively. State it in any writeup that leans on those fields, and check that
+newly trained checkpoints get real values.
+
+### Numbers: on an eval-only change
+
+Most work here re-evaluates existing checkpoints rather than training. A commit that
+changes how a checkpoint is *scored* is still `Numbers: changed` even though no model
+moved, because every reported number moves. `Numbers: unchanged` on a scoring change
+is the easiest way to lose a week later.
+
+### The hypothesis ledger is part of the record
+
+`docs/hypothesis/` carries one file per claim, with its prediction, the evidence, and
+a verdict. A commit that lands evidence updates the verdict in the same commit. A
+refuted hypothesis keeps its file; deleting it destroys the record of what was ruled
+out, which is most of what a ledger is for.
+
+Preliminary verdicts get labelled as preliminary. Two hypotheses here were written up
+as SUPPORTED from a 64-sample smoke run of a single checkpoint, and the full grid cut
+one effect by 4x and refuted the other outright.
