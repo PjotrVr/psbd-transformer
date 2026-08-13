@@ -223,9 +223,55 @@ def masked_attention_forward(attention, mask, query, key, value, **kwargs):
     return attention.out_proj(merged), None
 
 
+class FixedHeadMask(nn.Module):
+    """Zero one named attention head, deterministically, for every sample.
+
+    The ablation counterpart to HeadMask's random sampling. Because the mask is
+    fixed rather than drawn, a single forward pass measures the effect exactly and
+    no Monte Carlo averaging is needed, which is what makes a full 144-head sweep
+    affordable.
+
+    No inverted scaling is applied. The point of a leave-one-out ablation is to
+    measure what the model loses when a specific head is gone, and rescaling the
+    survivors would compensate for exactly that loss.
+    """
+
+    def __init__(self, head_index: int):
+        super().__init__()
+        self.head_index = int(head_index)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if x.dim() != 4:
+            raise ValueError(
+                f"expected (batch, heads, tokens, dim), got {tuple(x.shape)}"
+            )
+        if not 0 <= self.head_index < x.shape[1]:
+            raise IndexError(
+                f"head {self.head_index} outside 0..{x.shape[1] - 1} for this block"
+            )
+        # Cloned because the caller's tensor is still live inside the attention
+        # forward; masking in place would corrupt it for any later reader.
+        out = x.clone()
+        out[:, self.head_index] = 0.0
+        return out
+
+
 def head_mask(rate: float) -> HeadMask:
     """Whole attention heads. Requires the attention forward wrapper."""
     return HeadMask(rate)
+
+
+def fixed_head_mask(head_index: int):
+    """Factory matching plug_dropout's (rate) -> Module contract.
+
+    plug_dropout calls factory(rate); here the rate slot is unused because the
+    head to remove is fixed in advance, so the returned closure ignores it.
+    """
+
+    def build(_rate: float) -> FixedHeadMask:
+        return FixedHeadMask(head_index)
+
+    return build
 
 
 def channel_mask(rate: float) -> GroupChannelMask:
