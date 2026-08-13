@@ -1,87 +1,81 @@
 # H9 — The pre/post gap is a perturbation-strength artifact, not a placement effect
 
-**Status: OPEN (adversarial; this is the objection the study must survive)**
+**Status: SUPPORTED for three of four attacks.** The adversarial hypothesis was
+right, and it overturned the project's founding claim.
 
 ## Claim
 
-This is the reviewer's hypothesis, written down so it can be attacked rather than
-discovered in review. It says [H1](H1-pre-beats-post.md) is an illusion:
+Stated at the outset as the reviewer's objection, so that it could be attacked
+rather than discovered in review:
 
-> Pre-residual and post-residual were compared at the same nominal dropout rate
-> `p`, but the same `p` is a completely different intervention at those two
-> positions. Pre-residual perturbs one additive branch contribution. Post-residual
-> multiplies the entire residual stream by a mask, once per block, so only
-> `(1-p)^12` of coordinates survive. At p=0.9 that is 1e-12 against a modest
-> branch perturbation. So "pre-residual beats post-residual" may just be "the
-> weaker perturbation beats the destructive one", which is a statement about
-> perturbation magnitude, not about where the backdoor lives.
+> Pre-residual and post-residual were compared at the same nominal dropout rate `p`,
+> but the same `p` is a completely different intervention at those two positions.
+> Pre-residual perturbs one additive branch contribution. Post-residual multiplies the
+> entire residual stream by a mask, once per block, so only `(1-p)^12` of coordinates
+> survive. So "pre-residual beats post-residual" may just be "the weaker perturbation
+> beats the destructive one".
 
-If H9 stands, the paper has no result: it has rediscovered that too much noise
-destroys a signal.
+## Evidence
 
-## Why it is interesting even if refuted
+The prediction was that post-residual, given a rate window where it is not already
+saturated, would close the gap. It did more than that.
 
-Framing the sweep axis correctly is the difference between a placement study and
-a hyperparameter study. And the refutation is a positive contribution in its own
-right: it forces a *calibrated* comparison operator that any future
-dropout-placement work has to adopt, because the same confound applies to every
-position in the registry, not just these two.
+Swept over p = 0.005 to 0.09 in addition to the standard 0.1-to-0.9 grid, best-rate
+AUROC at 10% poisoning:
 
-## How it is being refuted
+| attack | post, standard grid only | post, own window | pre_residual | post's best rate |
+|---|---|---|---|---|
+| `blend` | 0.924 | **0.989** | 0.978 | 0.07 |
+| `bpp` | 0.934 | **0.991** | 0.977 | 0.07 |
+| `lf` | 0.916 | **0.969** | 0.947 | 0.07 |
+| `badnet_a2o` | 0.667 | 0.747 | **0.889** | 0.02 |
 
-Every placement is compared at **matched clean-validation shift ratio**, not at
-matched `p`. The shift ratio (paper Eq. PS: the fraction of stochastic passes
-whose prediction changed) measures how much the perturbation actually disturbed
-the model, rather than how much noise was nominally injected. It is computed on
-clean data only, so using it as the matching variable stays defender-legal and
-leaks nothing about the backdoor.
+Post-residual gains 0.053 to 0.080 simply from being measured inside its own range,
+and **overtakes pre-residual on three of the four working attacks**.
 
-Implemented as `defences.psbd_metrics.select_rate_at_matched_shift`, reported per
-placement at sigma targets 0.2 / 0.4 / 0.6 / 0.8 in
-`results/<folder>/psbd_metrics.json` under `placements.<name>.matched_shift`.
+## Verdict, split
 
-**H9 is refuted if pre-residual still wins at matched sigma.** It is supported if
-the placements converge once strength is equalized.
+**SUPPORTED for `blend`, `bpp`, `lf`.** The apparent placement effect was an artifact
+of the rate grid. Once both placements are measured where each actually operates,
+post-residual is the better of the two.
 
-## Evidence so far
+**REFUTED for `badnet_a2o`.** Pre-residual leads by +0.142 even with post-residual at
+its own optimum. That gap is not a strength artifact; it is a real placement effect,
+and it is confined to the static patch trigger, whose backdoor direction only reaches
+the `[CLS]` token in the last few blocks
+([H4](H4-placement-is-attack-dependent.md)).
 
-Smoke run only, `vit_cifar10_badnet_a2o_0_1`, 64 samples. Matched-sigma AUROC:
+## Why this matters more than the original claim
 
-| sigma target | `pre_residual` | `post_residual` |
-|---|---|---|
-| 0.8 | **0.903** (p=0.4) | 0.701 (p=0.1) |
-| 0.6 | **0.868** (p=0.3) | 0.701 (p=0.1) |
-| 0.4 | **0.868** (p=0.3) | 0.701 (p=0.1) |
-| 0.2 | **0.770** (p=0.2) | 0.701 (p=0.1) |
+The founding intuition was "the ConvNet placement does not transfer to transformers".
+What actually transfers badly is **the ConvNet rate grid**. ResNet-18 has 8 residual
+adds; ViT-B/16 has 24. The same nominal `p` compounds three times as hard, so a grid
+tuned on one architecture starts past the operating point on the other.
 
-Pre-residual wins at every matched target, which points toward refutation. But
-note the awkward part, and it is the honest reading: **post-residual cannot be
-matched.** Its sigma never drops below 0.859, so all four "matched" rows collapse
-onto its single least-destructive rate. The comparison is therefore not yet a
-genuine match at the low targets; it is pre-residual at sigma 0.2 against
-post-residual at sigma 0.86.
+That is a smaller-sounding but more useful and more general claim: when porting a
+perturbation-based defence across architectures, the rate grid has to be re-derived
+from depth, not inherited.
 
-That is itself the H3 finding (post-residual has no low-disturbance regime), but
-it means H9 is **not yet refuted at the low end**. To close it properly the sweep
-needs post-residual rates below 0.1, where a genuine sigma 0.2 to 0.4 regime
-might exist.
+## The methodological rule this establishes
 
-## Next step, concretely
+**No comparison across placements is valid at a shared dropout rate.** Match on a
+measured disturbance instead. `defences.psbd_metrics.select_rate_at_matched_shift`
+uses the clean-validation shift ratio, which stays defender-legal (clean data only)
+and is reported per placement in every `psbd_metrics.json`.
 
-Sweep `post_residual` at rates 0.01 to 0.09 on 2 or 3 checkpoints and check
-whether a matched-sigma comparison becomes possible. Cheap (one extra job per
-checkpoint) and it is the single most load-bearing follow-up in the ledger. Until
-it runs, H1 should be stated as "pre-residual beats post-residual at every rate
-post-residual can reach", which is true and defensible, rather than the stronger
-unqualified claim.
+The same confound has now appeared a second time, in
+[H10](H10-depth-band-placement.md): an early block band perturbs harder than a late
+one at the same rate, because it propagates through more blocks. Treat it as the
+default hazard of this line of work.
 
 ## Subquestions
 
-1. Is shift ratio the right calibrator, or should it be the relative L2 change of
-   the pre-head representation? They may disagree; if they agree, the conclusion
-   is much more robust.
-2. Should clean accuracy under perturbation be a third calibrator? A defender
-   would plausibly tune `p` to a tolerable clean-accuracy drop.
-3. Does the matched-sigma ranking of the 9 atomic positions differ from their
-   matched-`p` ranking? If it does, that is the clearest possible demonstration
-   that the calibrated axis is the correct one.
+1. Does post-residual's advantage on the three distributed-trigger attacks survive a
+   matched-sigma comparison, or does it too flip once strength is equalized? The
+   `matched_shift` block in each `psbd_metrics.json` already holds the answer and has
+   not been read yet.
+2. `post_residual`'s best rate is 0.07 for three attacks and 0.02 for the fourth.
+   Does the optimum track the direction onset layer, as the depth story predicts?
+3. Should the rate grid be defined in units of achieved shift ratio from the start,
+   for every placement? That would make this class of error impossible rather than
+   merely detectable.

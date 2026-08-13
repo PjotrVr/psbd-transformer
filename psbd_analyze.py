@@ -142,13 +142,27 @@ def analyze_one_rate(
     # detection positive charges the detector for the attack's failure. Reported
     # as a second view rather than replacing the first, because a defender
     # screening real inputs does not know which ones the backdoor captured.
+    #
+    # The clean side MUST be subset by the same mask. Restricting only the
+    # backdoor side compares the captured images against the whole clean pool,
+    # and captured images are systematically the low-confidence ones (a trigger
+    # flips an uncertain image more easily than a confident one), so the metric
+    # then measures "hard images against easy images" rather than detection. That
+    # is not hypothetical: with the clean side unrestricted this reported AUROC
+    # 0.921 for the BENIGN control, whose triggered and clean inputs the model
+    # treats as near-identical. Subset both sides and the same control gives
+    # 0.505. The confound was largest exactly where this metric was introduced to
+    # help, the low-ASR badnet_a2a probe.
     _, backdoor_labels, backdoor_targets = baselines["backdoor"]
     captured = attack_success_mask(backdoor_labels, backdoor_targets)
     captured_detection = None
     if captured is not None and bool(captured.any()):
         captured_detection = {
             f"q{quantile:.2f}": detection_report(
-                psu["validation"], paired_clean, psu["backdoor"][captured], quantile
+                psu["validation"],
+                paired_clean[captured],
+                psu["backdoor"][captured],
+                quantile,
             )
             for quantile in PSBD_QUANTILES
         }

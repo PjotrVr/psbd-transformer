@@ -154,3 +154,32 @@ def test_adaptive_rate_ignores_rates_with_no_saved_argmax():
 
 def test_oracle_rate_picks_the_best_auroc_and_skips_nan():
     assert select_rate_by_oracle({0.1: 0.55, 0.5: 0.91, 0.9: float("nan")}) == 0.5
+
+
+def test_captured_subset_must_restrict_both_sides():
+    """The confound that made the benign control score 0.921.
+
+    Captured samples are systematically the low-confidence ones, because a trigger
+    flips an uncertain image more easily than a confident one. Scoring them against
+    the WHOLE clean pool therefore compares hard images against easy images and
+    reports it as detection. Both sides must carry the same mask.
+
+    Constructed so the two readings disagree maximally: clean and backdoor PSU are
+    identical per sample (zero real signal), but the captured half is the
+    low-PSU half. Subsetting both sides must give 0.5; subsetting only the
+    backdoor side must not.
+    """
+    clean = torch.arange(100).float()
+    backdoor = clean.clone()
+    captured = clean < 50
+
+    honest = detection_report(clean, clean[captured], backdoor[captured], 0.25)
+    confounded = detection_report(clean, clean, backdoor[captured], 0.25)
+
+    assert math.isclose(honest["auroc"], 0.5, abs_tol=1e-9), (
+        "identical clean and backdoor scores over the same images must read as chance"
+    )
+    assert confounded["auroc"] > 0.7, (
+        "the unrestricted comparison should look like strong detection, which is "
+        "exactly why it is the wrong reading"
+    )

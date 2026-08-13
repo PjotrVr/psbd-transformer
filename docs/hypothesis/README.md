@@ -35,7 +35,7 @@ written.
 
 | ID | Claim | Status |
 |---|---|---|
-| [H1](H1-pre-beats-post.md) | Pre-residual beats post-residual on ViT | SUPPORTED, weakly, and only for one trigger family |
+| [H1](H1-pre-beats-post.md) | Pre-residual beats post-residual on ViT | **REFUTED** as a general claim |
 | [H2](H2-psbd-transfers-to-vit.md) | PSBD works on ViT at all, and not on benign models | **SUPPORTED** |
 | [H3](H3-why-post-residual-fails.md) | Post-residual fails by saturating | **REFUTED** as stated |
 | [H4](H4-placement-is-attack-dependent.md) | The best placement tracks where the backdoor direction enters `[CLS]` | **SUPPORTED** |
@@ -43,10 +43,29 @@ written.
 | [H6](H6-sam-improves-detectability.md) | SAM makes backdoors more detectable | OPEN (phase 3c) |
 | [H7](H7-clean-shifts-to-target.md) | Clean samples under dropout shift specifically to the target class | **PARTIALLY REFUTED** |
 | [H8](H8-detection-scales-with-poison-rate.md) | Detection improves with poison rate | INCONCLUSIVE |
-| [H9](H9-strength-not-position.md) | The pre/post gap is a perturbation-strength artifact, not a placement effect | OPEN (adversarial, fine-rate jobs running) |
+| [H9](H9-strength-not-position.md) | The pre/post gap is a perturbation-strength artifact, not a placement effect | **SUPPORTED** for 3 of 4 attacks |
 | [H10](H10-depth-band-placement.md) | Aiming dropout at the depth where an attack's direction lives beats spreading it over all blocks | OPEN (mechanism built, confound identified) |
+| [H11](H11-adaptive-rate-overshoots.md) | PSBD's adaptive rate rule overshoots on ViT | **SUPPORTED**, 12/12, and free to fix |
 
-## Where this stands after phase 3a
+## Where this stands after phases 3a and 3b
+
+**The founding claim did not survive.** Pre-residual does not beat post-residual on
+ViT in general. Swept over its own rate window (p = 0.005 to 0.09, which the grid
+inherited from the ConvNet paper never reached), post-residual **wins on three of the
+four working attacks**: blend 0.989 against 0.978, bpp 0.991 against 0.977, lf 0.969
+against 0.947. Pre-residual leads only on the static patch trigger, and there by a
+large margin (0.889 against 0.747).
+
+**And pre-residual is not the best placement anyway.** It ranks 4th of 11. The top
+three are `before_mlp_residual` (0.969 mean), `before_attention_norm` (0.965) and
+`before_attention` (0.962), against pre-residual's 0.948. `pre_residual` even scores
+below `before_mlp_residual` alone, which is one of its own two components: adding the
+attention-branch perturbation actively dilutes the MLP-branch one.
+
+**The most useful result is the cheapest.** PSBD's adaptive rate rule targets a
+clean-validation shift ratio of 0.8; on ViT the optimum sits near 0.7, and the rule
+overshoots on 12 of 12 checkpoints, costing about 0.09 AUROC that retuning one
+constant recovers for free ([H11](H11-adaptive-rate-overshoots.md)).
 
 The two results that would change a paper:
 
@@ -58,11 +77,16 @@ The two results that would change a paper:
   floor of 0.506) while its backdoor fires on 96% of inputs. Identical trigger to
   `badnet_a2o`, which reaches 0.889. Label geometry, not trigger, decides.
 
-And the correction worth being loud about: **H3 was refuted by its own follow-up.**
-The claim that no small enough dropout rate exists for a residual-stream placement
-was wrong; the window is at p = 0.01 to 0.03, an order of magnitude below the rate
-grid inherited from the ConvNet paper. Both preliminary verdicts (H1, H3) came from
-a 64-sample smoke run of a single checkpoint and did not survive the full grid.
+Corrections worth being loud about. **Three verdicts have now been overturned by
+their own follow-ups**: H3 (post-residual does not fail after all), H1 (pre-residual
+does not generally win), and the earlier reading of H9 (the adversarial hypothesis was
+largely right). In every case the error ran the same way, and it is worth naming:
+a placement was compared against another placement **outside its own operating
+range**, and the resulting gap was read as a property of the position.
+
+The through-line of this whole study is therefore methodological rather than about
+any particular position: **what transfers badly from ConvNets to transformers is the
+rate grid and the rate-selection constant, not the placement.**
 
 H9 is deliberately the adversarial one. It is the reviewer's objection stated as a
 hypothesis, and the whole study is worthless if it cannot be refuted.
