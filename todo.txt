@@ -1,7 +1,2 @@
-- Train everything with SAM
-- Add metrics.json to checkpoints
-- Check Dropout placement in all spots for ViT
-- Do latent space analysis for PSBD
-    - Check if PSBD even exists in vision transformer
-    - Analyze in what layers does the backdoor signal exist for all attacks
-- Check Dropout placement in all spots for Swin
+move attacks to "attacks/" and have "common.py" and other attacks renamed to just attack name
+same for defences, move to "defences/" and have "common.py" and other defences renamed to just defence name
