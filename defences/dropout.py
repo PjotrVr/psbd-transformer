@@ -1,163 +1,230 @@
-"""Dropout placement inside ViT-B/16 and Swin-S, the central variable of study.
+"""Dropout-position registry for PSBD, inserted by forward hooks.
 
-pre_residual toggles the Dropout modules the transformer already contains, all
-of which sit on a block's branch before the residual add. It perturbs only the
-increment a block contributes and leaves the accumulated residual stream intact.
-It is architecture agnostic, since it only needs to find Dropout modules.
+The central variable of study is where inside a transformer block PSBD's
+perturbation is injected. Every position is realized the same way: a fresh,
+independent dropout module attached at a named submodule boundary through a
+forward pre-hook or forward hook, never by toggling a dropout the model already
+contains.
 
-post_residual wraps each transformer block so a fresh Dropout runs after each
-residual add, perturbing the accumulated stream directly. This mirrors the
-placement the original PSBD paper used inside ResNet basic blocks, and needs an
-architecture-specific wrapper because ViT and Swin blocks differ in structure.
+Why never reuse the model's own dropout. A trained dropout's inverted-scaling
+factor was calibrated during training against the next layer's weights, so
+switching it back on at inference conflates two different things: the model's
+own regularization and PSBD's injected noise. Leaving every existing dropout
+(ViT's embedding dropout, both architectures' MLP-internal dropouts, Swin's
+stochastic_depth) at its natural eval identity and inserting separate modules
+keeps the perturbation a clean, single-purpose probe.
 
-The empirical result is that pre_residual separates clean from backdoor PSU on
-ViT-B/16 while post_residual mostly does not, which the CKA homogeneity of ViT
-residual streams (Raghu et al., 2021) plausibly explains.
+Why forward hooks rather than re-implementing a block's forward. A hook injects
+at a module boundary without copying or knowing the surrounding control flow, so
+adding a position never hand-duplicates a block class, and removing one is just
+handle.remove() with nothing to restore, because the original model was never
+mutated.
+
+Both architecture registries are defined here. This pass runs ViT only.
 """
 
+from dataclasses import dataclass
+from typing import Callable
+
 import torch.nn as nn
+from torch.utils.hooks import RemovableHandle
 from torchvision.models.vision_transformer import EncoderBlock
-
-try:
-    from torchvision.models.swin_transformer import (
-        SwinTransformerBlock,
-        SwinTransformerBlockV2,
-    )
-
-    _SWIN_BLOCK_TYPES = (SwinTransformerBlock, SwinTransformerBlockV2)
-except ImportError:  # older torchvision without the V2 block
-    from torchvision.models.swin_transformer import SwinTransformerBlock
-
-    _SWIN_BLOCK_TYPES = (SwinTransformerBlock,)
+from torchvision.models.swin_transformer import SwinTransformerBlock
 
 
-def configure_pre_residual_dropout(model: nn.Module, rate: float) -> int:
-    """Set the rate on every existing Dropout and switch it to train mode.
+@dataclass(frozen=True)
+class PositionSpec:
+    """One hook target inside a block, or once at model level.
 
-    A Dropout only samples a mask in train mode, so eval mode with rate 0 is the
-    no-dropout baseline. Returns the number of Dropout modules touched.
+    submodule_name is the dotted path to the module whose input (pre) or output
+    (post) is perturbed, resolved either relative to each transformer block
+    (scope "block") or from the network root once (scope "model"). An empty
+    submodule_name means the unit itself: the block for a block-scope position,
+    which realizes after_mlp_residual by perturbing the block's own return value.
 
-    Skips names ending in "encoder.dropout", which is ViT's embedding dropout
-    (Encoder.dropout, applied once before the 12-block stack). That dropout runs
-    before any residual connection exists, so it is not a pre-residual placement
-    and must not be swept alongside the 36 true per-block dropouts (attention
-    branch plus 2 MLP dropouts times 12 blocks). Swin has no module named
-    "*.encoder.dropout", so this filter is a structural no-op for Swin.
-    """
-    count = 0
-    for name, module in model.named_modules():
-        if isinstance(module, nn.Dropout) and not name.endswith("encoder.dropout"):
-            module.p = float(rate)
-            module.train() if rate > 0.0 else module.eval()
-            count += 1
-    return count
-
-
-class PostResidualEncoderBlock(nn.Module):
-    """Re-runs a ViT encoder block and adds Dropout after each residual add."""
-
-    def __init__(self, base_block: nn.Module, rate: float):
-        super().__init__()
-        self.base_block = base_block
-        self.attention_dropout = nn.Dropout(p=rate)
-        self.mlp_dropout = nn.Dropout(p=rate)
-
-    def forward(self, input_tensor):
-        block = self.base_block
-        x = block.ln_1(input_tensor)
-        x, _ = block.self_attention(x, x, x, need_weights=False)
-        x = block.dropout(x)  # the block's own pre-residual dropout
-        x = input_tensor + x  # first residual add
-        x = self.attention_dropout(x)
-
-        y = block.ln_2(x)
-        y = block.mlp(y)
-        x = x + y  # second residual add
-        x = self.mlp_dropout(x)
-        return x
-
-
-class PostResidualSwinBlock(nn.Module):
-    """Re-runs a Swin block and adds Dropout after each residual add.
-
-    Swin regularizes the branch with stochastic depth rather than per-activation
-    dropout, so the post-residual Dropout added here is a genuinely new
-    perturbation the model never saw in training.
+    scope is not in the plan's two-field sketch, but the one model-level position
+    (after_embedding) cannot be expressed relative to a block, so it carries the
+    scope that tells plug_dropout to resolve it from the network root instead.
     """
 
-    def __init__(self, base_block: nn.Module, rate: float):
-        super().__init__()
-        self.base_block = base_block
-        self.attention_dropout = nn.Dropout(p=rate)
-        self.mlp_dropout = nn.Dropout(p=rate)
-
-    def forward(self, input_tensor):
-        block = self.base_block
-        x = input_tensor + block.stochastic_depth(block.attn(block.norm1(input_tensor)))
-        x = self.attention_dropout(x)
-        x = x + block.stochastic_depth(block.mlp(block.norm2(x)))
-        x = self.mlp_dropout(x)
-        return x
+    submodule_name: str
+    hook_type: str  # "pre" or "post"
+    scope: str = "block"
 
 
-def _wrap_as_post_residual(module: nn.Module, rate: float):
-    """Return a post-residual wrapper for a known block type, else None.
+# ViT-B/16 EncoderBlock children: ln_1, self_attention, dropout, ln_2, mlp, one
+# per each of 12 blocks. after_embedding targets the model-level Encoder.dropout.
+# after_attention_residual aliases before_mlp_norm: nothing sits between the
+# attention residual add and the MLP LayerNorm, so both names hook ln_1's sibling
+# ln_2's input, but they mean different positions conceptually and post_residual
+# needs after_attention_residual to resolve.
+VIT_POSITIONS: dict[str, PositionSpec] = {
+    "after_embedding": PositionSpec("encoder.dropout", "pre", scope="model"),
+    "before_attention_norm": PositionSpec("ln_1", "pre"),
+    "before_attention": PositionSpec("self_attention", "pre"),
+    "before_attention_residual": PositionSpec("dropout", "post"),
+    "before_mlp_norm": PositionSpec("ln_2", "pre"),
+    "after_attention_residual": PositionSpec("ln_2", "pre"),
+    "before_mlp": PositionSpec("mlp", "pre"),
+    "before_mlp_residual": PositionSpec("mlp", "post"),
+    "after_mlp_residual": PositionSpec("", "post"),
+}
 
-    Already-wrapped blocks are re-wrapped at the new rate so a rate sweep stays
-    safe to call repeatedly.
+# Swin-S SwinTransformerBlock (V1) children: norm1, attn, stochastic_depth,
+# norm2, mlp, one per each of 24 blocks. after_embedding targets the model-level
+# patch-embed Sequential features.0 (no existing dropout sits there, unlike ViT).
+#
+# before_attention_residual and before_mlp_residual hook attn and mlp directly
+# (post), not stochastic_depth: self.stochastic_depth is one instance called
+# twice per block (x + stochastic_depth(attn(...)), then x + stochastic_depth(
+# mlp(...))), so a hook on it cannot tell which branch invoked it. Hooking attn
+# and mlp is unambiguous, at the cost of our dropout landing just before
+# stochastic_depth sees the branch output rather than just after it. That is the
+# only ViT/Swin asymmetry, and stochastic_depth itself stays untouched.
+SWIN_POSITIONS: dict[str, PositionSpec] = {
+    "after_embedding": PositionSpec("features.0", "post", scope="model"),
+    "before_attention_norm": PositionSpec("norm1", "pre"),
+    "before_attention": PositionSpec("attn", "pre"),
+    "before_attention_residual": PositionSpec("attn", "post"),
+    "before_mlp_norm": PositionSpec("norm2", "pre"),
+    "after_attention_residual": PositionSpec("norm2", "pre"),
+    "before_mlp": PositionSpec("mlp", "pre"),
+    "before_mlp_residual": PositionSpec("mlp", "post"),
+    "after_mlp_residual": PositionSpec("", "post"),
+}
+
+POSITION_REGISTRY: dict[str, dict[str, PositionSpec]] = {
+    "vit": VIT_POSITIONS,
+    "swin": SWIN_POSITIONS,
+}
+
+BLOCK_TYPES: dict[str, tuple[type, ...]] = {
+    "vit": (EncoderBlock,),
+    "swin": (SwinTransformerBlock,),
+}
+
+# The 8 atomic positions swept in isolation. after_attention_residual is not
+# among them: it exists only so the post_residual combo can resolve.
+SINGLE_POSITION_NAMES: tuple[str, ...] = (
+    "after_embedding",
+    "before_attention_norm",
+    "before_attention",
+    "before_attention_residual",
+    "before_mlp_norm",
+    "before_mlp",
+    "before_mlp_residual",
+    "after_mlp_residual",
+)
+
+# Named multi-position combos. Every single position is also usable directly as a
+# one-element position_names tuple, so it needs no entry here.
+DROPOUT_CONFIGS: dict[str, tuple[str, ...]] = {
+    "pre_residual": ("before_attention_residual", "before_mlp_residual"),
+    "post_residual": ("after_attention_residual", "after_mlp_residual"),
+}
+
+
+def _network_core(model: nn.Module) -> nn.Module:
+    """The classifier network inside the Sequential(Resize, network) wrapper.
+
+    Model-level positions resolve a dotted path from here, not from the wrapper,
+    whose only children are the Resize and the network.
     """
-    if isinstance(module, PostResidualEncoderBlock):
-        return PostResidualEncoderBlock(module.base_block, rate)
-    if isinstance(module, PostResidualSwinBlock):
-        return PostResidualSwinBlock(module.base_block, rate)
-    if isinstance(module, EncoderBlock):
-        return PostResidualEncoderBlock(module, rate)
-    if isinstance(module, _SWIN_BLOCK_TYPES):
-        return PostResidualSwinBlock(module, rate)
-    return None
+    return model[1] if isinstance(model, nn.Sequential) else model
 
 
-def _unwrap_post_residual(module: nn.Module):
-    if isinstance(module, (PostResidualEncoderBlock, PostResidualSwinBlock)):
-        return module.base_block
-    return None
+def _make_pre_hook(dropout: nn.Module) -> Callable:
+    """Perturb a module's positional input before it runs.
 
-
-def _replace_blocks(parent: nn.Module, make_replacement) -> None:
-    """Walk the module tree and swap any block the factory recognizes.
-
-    Recursion stops at a replaced block, so its wrapped base is never revisited.
-    Reassigning by child name works for the Sequential containers ViT and Swin
-    use, whose children are named "0", "1", and so on.
+    When several positional args are the same tensor object (ViT's
+    self_attention receives x as q, k, and v), one dropout mask is drawn and
+    shared, so q, k, and v stay identical after perturbation.
     """
-    for name, child in list(parent.named_children()):
-        replacement = make_replacement(child)
-        if replacement is not None:
-            setattr(parent, name, replacement)
-        else:
-            _replace_blocks(child, make_replacement)
+
+    def pre_hook(module, args):
+        perturbed = dropout(args[0])
+        return tuple(perturbed if arg is args[0] else arg for arg in args)
+
+    return pre_hook
 
 
-def configure_post_residual_dropout(model: nn.Module, rate: float) -> None:
-    _replace_blocks(model, lambda module: _wrap_as_post_residual(module, rate))
+def _make_post_hook(dropout: nn.Module) -> Callable:
+    """Perturb a module's tensor output after it runs."""
+
+    def post_hook(module, args, output):
+        return dropout(output)
+
+    return post_hook
 
 
-def remove_post_residual_dropout(model: nn.Module) -> None:
-    _replace_blocks(model, _unwrap_post_residual)
+def _resolve_targets(
+    model: nn.Module,
+    core: nn.Module,
+    spec: PositionSpec,
+    block_types: tuple[type, ...],
+) -> list[nn.Module]:
+    """Every module a position attaches to: one per block, or one at model level."""
+    if spec.scope == "model":
+        return [core.get_submodule(spec.submodule_name)]
+    targets = []
+    for module in model.modules():
+        if isinstance(module, block_types):
+            target = (
+                module
+                if spec.submodule_name == ""
+                else module.get_submodule(spec.submodule_name)
+            )
+            targets.append(target)
+    return targets
 
 
-def configure_dropout(model: nn.Module, rate: float, placement: str) -> None:
-    """Dispatch to the placement selected in RunConfig."""
-    if placement == "pre_residual":
-        configure_pre_residual_dropout(model, rate)
-    elif placement == "post_residual":
-        configure_post_residual_dropout(model, rate)
-    else:
-        raise ValueError(f"Unknown dropout placement: {placement}")
+def _attach_hook(
+    target: nn.Module,
+    hook_type: str,
+    dropout_factory: Callable[[float], nn.Module],
+    rate: float,
+) -> RemovableHandle:
+    """Build a fresh dropout and register it at target, returning its handle."""
+    dropout = dropout_factory(rate)
+    # Not part of the model tree, so model.eval() never reaches it. Train mode is
+    # set explicitly so the mask is actually sampled during the stochastic passes.
+    dropout.train()
+    if hook_type == "pre":
+        return target.register_forward_pre_hook(_make_pre_hook(dropout))
+    if hook_type == "post":
+        return target.register_forward_hook(_make_post_hook(dropout))
+    raise ValueError(f"Unknown hook type: {hook_type}")
 
 
-def reset_dropout(model: nn.Module, placement: str) -> None:
-    """Return the model to its no-dropout inference state."""
-    if placement == "post_residual":
-        remove_post_residual_dropout(model)
-    configure_pre_residual_dropout(model, rate=0.0)
+def plug_dropout(
+    model: nn.Module,
+    architecture: str,
+    position_names: tuple[str, ...],
+    dropout_factory: dict[str, Callable[[float], nn.Module]],
+    rate: float,
+) -> list[RemovableHandle]:
+    """Attach a fresh dropout at every named position, in every block.
+
+    dropout_factory maps a position name to a constructor taking the rate,
+    defaulting any unlisted position to nn.Dropout, so the perturbation kind is
+    overridable per position without touching the plug mechanics. Returns one
+    handle per attachment (12 or 24 per block-scope position, 1 per model-scope
+    position), all removed together by unplug_dropout.
+    """
+    positions = POSITION_REGISTRY[architecture]
+    block_types = BLOCK_TYPES[architecture]
+    core = _network_core(model)
+
+    handles: list[RemovableHandle] = []
+    for name in position_names:
+        spec = positions[name]
+        factory = dropout_factory.get(name, nn.Dropout)
+        for target in _resolve_targets(model, core, spec, block_types):
+            handles.append(_attach_hook(target, spec.hook_type, factory, rate))
+    return handles
+
+
+def unplug_dropout(handles: list[RemovableHandle]) -> None:
+    """Remove every hook plug_dropout attached, restoring the loaded model exactly."""
+    for handle in handles:
+        handle.remove()
