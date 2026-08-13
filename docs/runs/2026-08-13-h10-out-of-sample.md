@@ -30,3 +30,19 @@ derivation set, so the rule extrapolates rather than interpolates.
 
 The rule is refuted if the predicted band is not the best of the three for either
 checkpoint. A weaker pass would be the predicted band merely beating all-blocks.
+
+## Result
+
+**STRICT: 0/2. WEAK: 2/2.**
+
+| checkpoint | onset | predicted | actual best | strict | weak |
+|---|---|---|---|---|---|
+| `wanet` | 7 | blocks 9-12 (0.975) | blocks 5-8 (0.976) | FAIL by 0.001 | PASS (0.976 > 0.932) |
+| `adaptive_blend` | 12 | blocks 1-4 (0.762) | blocks 5-8 (0.920) | FAIL by 0.158 | PASS (0.920 > 0.784) |
+
+The onset-based selection rule is refuted. The band premise it was attached to
+survives: a band beat all-blocks on both held-out attacks, and now on 6 of 6 overall.
+
+`adaptive_blend` is the informative failure. Its onset of 12 forced the rule to
+extrapolate beyond anything in the derivation set, and it predicted the worst useful
+band while missing the best by 0.158.

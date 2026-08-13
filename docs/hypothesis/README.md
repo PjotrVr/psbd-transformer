@@ -44,7 +44,7 @@ written.
 | [H7](H7-clean-shifts-to-target.md) | Clean samples under dropout shift specifically to the target class | **PARTIALLY REFUTED** |
 | [H8](H8-detection-scales-with-poison-rate.md) | Detection improves with poison rate | INCONCLUSIVE |
 | [H9](H9-strength-not-position.md) | The pre/post gap is a perturbation-strength artifact, not a placement effect | **SUPPORTED** for 3 of 4 attacks |
-| [H10](H10-depth-band-placement.md) | Aiming dropout at the depth where an attack's direction lives beats spreading it over all blocks | **REFUTED as predicted, inverted rule is the best result here** |
+| [H10](H10-depth-band-placement.md) | Aiming dropout at the depth where an attack's direction lives beats spreading it over all blocks | band premise **SUPPORTED** 6/6; onset-based selection **REFUTED** out of sample 0/2 |
 | [H11](H11-adaptive-rate-overshoots.md) | PSBD's adaptive rate rule overshoots on ViT | **SUPPORTED**, 12/12, and free to fix |
 | [H12](H12-psu-is-not-just-confidence.md) | PSU is just a proxy for baseline confidence | **REFUTED** (and yielded a free improvement) |
 

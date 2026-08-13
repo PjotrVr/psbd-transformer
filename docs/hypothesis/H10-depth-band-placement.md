@@ -1,81 +1,79 @@
 # H10 — Aiming dropout at the depth where an attack's direction lives beats spreading it over all blocks
 
-**Status: the premise is SUPPORTED, the predicted direction is REFUTED, and the
-inverted rule is the best result in this study.**
+**Status: the band premise is SUPPORTED (6/6). The onset-based selection rule is
+REFUTED by a pre-registered out-of-sample test, 0/2.**
 
-Restricting pre-residual dropout to a band of blocks beats applying it to all 12.
-But the band to choose is the one **furthest from** where the attack's backdoor
-direction is written, not the one on top of it.
+Restricting pre-residual dropout to a band of blocks always beats applying it to all
+12. But the onset layer does **not** predict which band, in either direction, and the
+rule that appeared to work was fitted to four points.
 
-## Original prediction
+## What survives
 
-If placement works by disturbing the backdoor path where it is being written, then a
-band around an attack's measured onset layer should win: `blend` (onset 5) and `bpp`
-(6) should prefer an early band, `badnet_a2o` (9) a late one.
+**A band beats all-blocks on every attack tested, 6 of 6:**
 
-## Evidence
-
-CIFAR-10 ViT, 10% poisoning, `pre_residual` restricted to each band, each at its own
-best rate, AUROC at the 25th-percentile threshold.
-
-| attack | onset | blocks 1-4 | blocks 5-8 | blocks 9-12 | all 12 | best | predicted |
+| attack | set | onset | blocks 1-4 | blocks 5-8 | blocks 9-12 | all 12 | best |
 |---|---|---|---|---|---|---|---|
-| `blend` | 5 | 0.969 | 0.981 | **0.997** | 0.978 | 9-12 | 5-8 |
-| `bpp` | 6 | 0.982 | 0.985 | **0.996** | 0.977 | 9-12 | 5-8 |
-| `lf` | 8 | 0.925 | 0.988 | **0.998** | 0.947 | 9-12 | 5-8 |
-| `badnet_a2o` | 9 | **0.912** | 0.907 | 0.829 | 0.889 | 1-4 | 9-12 |
-| `badnet_a2a` | 9 | 0.510 | 0.593 | 0.159 | 0.510 | -- | -- |
-| benign control | -- | 0.507 | 0.501 | 0.487 | 0.506 | -- | -- |
+| `blend` | derivation | 5 | 0.969 | 0.981 | **0.997** | 0.978 | 9-12 |
+| `bpp` | derivation | 6 | 0.982 | 0.985 | **0.996** | 0.977 | 9-12 |
+| `wanet` | **held out** | 7 | 0.931 | **0.976** | 0.975 | 0.932 | 5-8 |
+| `lf` | derivation | 8 | 0.925 | 0.988 | **0.998** | 0.947 | 9-12 |
+| `badnet_a2o` | derivation | 9 | **0.912** | 0.907 | 0.829 | 0.889 | 1-4 |
+| `adaptive_blend` | **held out** | 12 | 0.762 | **0.920** | 0.569 | 0.784 | 5-8 |
 
-**The prediction is wrong for all four working attacks, and wrong in the same
-direction each time.** The three attacks whose direction appears *early* are best
-caught by perturbing *late*; the one whose direction appears *late* is best caught by
-perturbing *early*.
+Gains over all-blocks range from +0.019 to +0.136. It is also cheaper: dropout in 4
+blocks instead of 12.
 
-**A band beats all-blocks in every case**, which is the half of the hypothesis that
-survives: 0.997 against 0.978 (blend), 0.996 against 0.977 (bpp), 0.998 against 0.947
-(lf), 0.912 against 0.889 (badnet_a2o). The benign control stays between 0.487 and
-0.507 for every band, so this is not the bands making everything look better.
+## What was refuted, and how
 
-## The corrected rule, and why it makes more sense than the original
+After the four derivation attacks, the pattern looked clean: attacks whose direction
+is written early were best caught late, and the one written late was best caught
+early. The inverted rule "perturb as far as possible from the onset layer" fitted all
+four.
 
-**Perturb where the clean evidence lives and the backdoor does not.**
+It was pre-registered against two held-out attacks. Onsets were measured first, the
+predictions written to `docs/runs/2026-08-13-h10-out-of-sample.md`, and only then were
+the jobs run.
 
-PSU works by destroying the evidence a *clean* prediction rests on while leaving the
-trigger-to-target path intact. So the perturbation should land where clean class
-evidence is being assembled and the backdoor is absent:
+| checkpoint | onset | predicted | actual best | verdict |
+|---|---|---|---|---|
+| `wanet` | 7 | blocks 9-12 (0.975) | blocks 5-8 (0.976) | FAIL by 0.001 |
+| `adaptive_blend` | 12 | blocks 1-4 (0.762) | blocks 5-8 (0.920) | **FAIL by 0.158** |
 
-- `blend`, `bpp`, `lf` write their backdoor direction by layer 5 to 8. By the last
-  four blocks it is already established and robust, while clean class evidence is
-  still being refined. Perturbing blocks 9-12 therefore removes clean evidence and
-  spares the backdoor. Maximum PSU gap.
-- `badnet_a2o` only assembles its direction at layers 9 to 12. Perturbing there
-  damages the backdoor along with everything else, which is why blocks 9-12 is its
-  *worst* band (0.829, below all-blocks). Perturbing blocks 1-4, where the patch
-  trigger has not yet been routed into `[CLS]`, spares it.
+**0 of 2.** The `wanet` miss is a tie and means little on its own. The
+`adaptive_blend` miss does not: the rule predicted the *worst* useful band and missed
+the best by 0.158. That checkpoint was the sharper test by design, because its onset
+of 12 forced the rule to extrapolate past the derivation range.
 
-The original prediction had the mechanism backwards: it aimed the perturbation at the
-backdoor, when the point is to aim it at everything else. The onset measurement is
-still what selects the band, just with the opposite sign, so the practical recipe
-survives intact and is still one cheap measurement away.
+So the onset-to-band mapping was an artifact of four data points. Four attacks,
+three bands, and a rule with a free direction is not enough evidence for a
+mechanism, and it took a deliberate held-out test to see it.
 
-## Practical result
+## What to use instead
 
-`pre_residual` restricted to **blocks 9-12** is the strongest placement found
-anywhere in this study for the three distributed-trigger attacks: 0.996 to 0.998,
-against 0.947 to 0.978 for the same position applied to all blocks, and against
-0.969 for the best all-blocks placement (`before_mlp_residual`).
+**Blocks 5-8 is the robust default.** Over all six attacks it has the best mean rank
+(1.67 against 1.83 for blocks 9-12 and 2.50 for blocks 1-4) and, unlike either
+alternative, it is **never worse than second**. Blocks 9-12 wins more often (3 of 6)
+but collapses badly when it loses: 0.829 on `badnet_a2o` and 0.569 on
+`adaptive_blend`, both below all-blocks.
 
-It is also cheaper: dropout in 4 blocks instead of 12.
+For a defender who does not know the attack, "never worse than second" is the property
+that matters, so the recommendation is blocks 5-8 rather than the higher-variance
+blocks 9-12.
 
-## The one anomaly worth chasing
+## What is still unexplained
 
-`badnet_a2a` at blocks 9-12 scores **0.159**, far *below* chance rather than near it.
-An AUROC that low is a detector working in reverse: backdoor samples are reliably
-scoring HIGHER PSU than clean ones. Everything else about `badnet_a2a` sits at chance,
-so this is the only signal of any kind found for the all-to-all attack, and its sign
-is inverted. Either something is systematically wrong for all-to-all in this band, or
-there is real structure that a flipped decision rule would exploit.
+Why a middle band should be robust across attacks with onsets from 5 to 12 is not
+accounted for by any mechanism proposed here. The honest position is that the band
+effect is real and reproducible, and its cause is not yet known. Candidates worth
+testing, none of them tested:
+
+- Blocks 5-8 may simply be where clean class evidence is most concentrated,
+  independent of where any backdoor is written.
+- Late-block perturbation may be too close to the readout: whatever it damages, the
+  model has no depth left to recover from, so clean and backdoor collapse together.
+- The band effect may be about *how much* of the network is perturbed rather than
+  *where*, with 4 of 12 blocks being near an optimum that the specific band only
+  weakly modulates.
 
 ## Reproduce
 
@@ -86,13 +84,11 @@ python psbd_analyze.py --all
 
 ## Subquestions
 
-1. **Confirm the rule predicts out of sample.** It was derived from four attacks after
-   seeing their results. `wanet` at 10% poisoning (ASR 0.96, excluded elsewhere for
-   failing at lower rates) is an untouched test case: measure its onset, predict the
-   band, then run it.
-2. Is 4 blocks the right width, or would 2 blocks, or a single block, do better still?
-   `--block-range 12 12` is already supported.
-3. Does the strength confound explain any of this? An early band perturbs harder at
-   the same rate, yet the early band *loses* for three of four attacks, which is the
-   opposite of what the confound would produce. Still worth a matched-sigma check.
-4. Why is `badnet_a2a` at blocks 9-12 strongly anti-correlated?
+1. The third candidate above is directly testable and would be decisive: sweep band
+   *width* (2, 4, 6, 8 blocks) at a fixed location. If width explains most of the
+   effect, location is a red herring.
+2. Does blocks 5-8 stay best under SAM and at other poison rates?
+3. `badnet_a2a` at blocks 9-12 scores 0.159, a detector running backwards. That is
+   explained in [H5](H5-all-to-all-breaks-psbd.md), and its two-sided score of 0.966
+   makes blocks 9-12 that attack's *best* band, which the table above does not show
+   because it reports one-sided numbers.
