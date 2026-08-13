@@ -1,6 +1,6 @@
 # H5 — PSBD degrades on all-to-all, which has no single target class
 
-**Status: OPEN**
+**Status: OPEN** (detection pending; a supporting mechanism is already measured)
 
 ## Claim
 
@@ -40,7 +40,21 @@ hypothesis is judged on**. CIFAR-100 a2a is excluded from the grid for this reas
 
 ## Evidence
 
-Pending. `vit_cifar10_badnet_a2a_{0_01,0_05,0_1}` are in the phase-3a grid.
+Detection numbers pending; `vit_cifar10_badnet_a2a_{0_01,0_05,0_1}` are in the
+phase-3a grid.
+
+**A supporting mechanism is already measured, independently of PSBD.**
+`scripts/backdoor_direction_layers/` finds that `badnet_a2a`'s backdoor direction
+is roughly half the magnitude of `badnet_a2o`'s at every layer, despite an
+identical trigger and comparable ASR (0.96 vs 1.00), and that its clean-vs-triggered
+CKA at layer 12 is **0.953** where `badnet_a2o` is 0.419. Clean and triggered
+representations stay nearly indistinguishable.
+
+The reason is structural rather than empirical. A backdoor direction is a *mean* of
+paired differences. All-to-all pushes each source class somewhere different, so the
+mean partially cancels: there is no single direction because the attack does not
+implement one. That predicts failure for any method assuming a single target,
+including the companion paper's steering and orthogonalization, not just PSBD.
 
 ## Subquestions
 

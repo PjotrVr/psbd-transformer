@@ -1,6 +1,6 @@
 # H4 — The best placement tracks where the backdoor direction enters the CLS token
 
-**Status: OPEN**
+**Status: half SUPPORTED** (the layer ordering holds; the placement consequence is untested)
 
 ## Claim
 
@@ -38,17 +38,43 @@ who does not know the attack, and that tension is itself worth reporting.
 
 ## Evidence
 
-Pending on two fronts:
-- `scripts/backdoor_direction_layers/` measures the per-layer direction norm and
-  TAC for each attack (not yet written).
-- The single-position sweep (phase 3b) gives the per-attack position ranking.
+**The layer half is confirmed.** `scripts/backdoor_direction_layers/` measured the
+relative direction norm in `[CLS]` at every layer, CIFAR-10 ViT at 10% poisoning,
+400 paired eligible samples, fp32. Layer at which the direction reaches half its
+final magnitude:
+
+| attack | trigger family | onset |
+|---|---|---|
+| `blend` | global blended | 5 |
+| `bpp` | distributed quantization | 6 |
+| `lf` | low-frequency | 8 |
+| `badnet_a2o` | static patch | 9 |
+| `badnet_a2a` | static patch, all-to-all | 9 |
+
+Exactly the ordering the companion paper predicts: distributed perturbations are
+visible within each token independently and reach `[CLS]` early, while a corner
+patch has to be routed there by attention and does not arrive until layers 9 to 12.
+Spread is 4 layers between the extremes, which is large enough to act on.
+
+The benign control confirms this is reading a learned backdoor rather than the
+input perturbation: probed with the same trigger, its relative direction peaks at
+0.089 and *decays* with depth, against 1.0 to 2.2 growing monotonically for every
+backdoored model.
+
+**The placement half is untested.** Nothing yet shows that a placement targeting an
+attack's onset layer beats a uniform one. That needs the single-position sweep
+(phase 3b) and, more directly, a block-restricted placement variant that does not
+exist yet.
 
 ## Subquestions
 
-1. **Is a per-block placement sweep the real experiment here?** The current
-   registry places dropout at a position in *every* block. A block-restricted
-   variant (blocks 1-4 / 5-8 / 9-12) tests the layer story directly and is a
-   small change to `_resolve_targets`.
+1. **A block-restricted placement is now the sharpest available test, and it does
+   not exist yet.** The registry places dropout at a position in *every* block.
+   Restricting to blocks 1-4 / 5-8 / 9-12 would predict, from the table above,
+   that `blend` and `bpp` are best caught by an early-block placement and
+   `badnet_a2o` by a late-block one. That is a falsifiable, attack-specific
+   prediction and a small change to `_resolve_targets`. It is the single highest
+   value follow-up in this ledger.
 2. If the entry layer predicts the best placement, does the *measured* entry layer
    from the direction analysis predict it quantitatively, or only ordinally?
 3. Does the poison rate move the entry layer? The companion paper reports layer
