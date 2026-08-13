@@ -26,7 +26,6 @@ Example
 
 import argparse
 import glob
-import json
 import os
 
 import numpy as np

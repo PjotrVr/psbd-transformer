@@ -66,7 +66,9 @@ def test_label_policy() -> None:
     assert poisoned_label("clean_label", 7, target_label=0, num_classes=10) == 7
 
     labels = [0, 1, 2, 3, 0, 1, 2, 3]
-    noop = lambda image, index: image
+
+    def noop(image, index):
+        return image
 
     dirty = Attack("dirty", noop, "all_to_one", target_label=0)
     dirty_indices = choose_poison_indices(labels, dirty, poison_rate=0.5, seed=0)

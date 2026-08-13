@@ -31,7 +31,10 @@ from poison import (
 TESTABLE_ATTACK_NAMES = tuple(name for name in ATTACK_NAMES if name != "generated")
 
 SIZE = 32
-IDENTITY = lambda image: image
+
+
+def IDENTITY(image):
+    return image
 
 
 def _mid_gray() -> torch.Tensor:

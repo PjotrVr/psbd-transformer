@@ -32,7 +32,6 @@ import json
 import os
 
 import numpy as np
-import torch
 
 from defences.psbd_cache import (
     baseline_path,
