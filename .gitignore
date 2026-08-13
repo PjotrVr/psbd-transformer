@@ -38,4 +38,5 @@ results/**
 !results/**/backdoor_neurons.json
 !results/**/shift_latent.json
 !results/backdoor_neuron_stability.json
+!results/backdoor_neuron_ablation.json
 !results/psu_vs_confidence.json

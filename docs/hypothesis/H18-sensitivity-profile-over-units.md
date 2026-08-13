@@ -28,15 +28,19 @@ benign control at 0.483 to 0.490 throughout.
 
 **Two things follow, and the first one contradicts this file's claim.**
 
-*Concentration runs the other way.* Gini at 0.058 means backdoored samples have
-**lower** concentration than clean ones, so their profiles are flat, not peaked.
-The claim below predicted the opposite. The coherent reading is that a backdoored
-prediction is robust to *every* kind of capacity removal, giving a uniformly low
-and therefore flat profile, while a clean prediction depends on different capacity
-in different places and so varies. That is more consistent with PSBD's own premise
-than the original claim was. Restating the hypothesis in that direction is
-legitimate only because the direction is fixed once from theory and applied to
-every checkpoint, which is not the same as choosing a tail per checkpoint.
+*Concentration runs the other way, and is not pursued.* Gini at 0.058 means
+backdoored samples have **lower** concentration than clean ones, so their profiles
+are flat, not peaked, which is the opposite of what the claim below predicted. The
+claim is therefore refuted as stated.
+
+The observation is recorded and left there. Turning it into a detector would mean
+scoring a statistic in the direction opposite to PSBD's, and this project reports
+one-sided results only: low PSU means poisoned, and a number below 0.5 is a
+failure rather than a win waiting to be re-signed
+([H15](H15-one-sided-rules-are-the-common-weakness.md), retired for this reason).
+A flat-profile detector would need its own mechanism, its own benign control, and
+its own name before it could be reported as anything, and the `min` statistic
+below already performs as well while keeping PSBD's direction intact.
 
 *The minimum is the better statistic anyway.* It performs as well as any
 concentration measure, needs no direction change (low PSU = poisoned, exactly as

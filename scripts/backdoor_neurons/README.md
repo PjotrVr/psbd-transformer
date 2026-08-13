@@ -1,9 +1,14 @@
-# Where are the backdoor neurons?
+# Where is the backdoor?
 
-Which layers carry each attack, which residual-stream dimensions, whether the
-attacks share any, and whether SAM moves them.
+Which layers carry each attack, whether the attacks share anything, whether SAM
+moves it, and whether the thing that carries it is a set of neurons or a direction.
 
 Written for [H16](../../docs/hypothesis/H16-where-the-backdoor-neurons-are.md).
+
+**The folder is named for the question, not the answer.** The answer turned out to
+be that there are no backdoor *neurons* on ViT: zeroing the top 300 TAC coordinates
+of 768 leaves ASR at 1.00, while removing 1 linear direction takes it to 0.00. The
+backdoor is real, causal, and rotated off the coordinate basis.
 
 ## The question
 
@@ -17,7 +22,7 @@ address, and 3 things become checkable that were previously assertions.
   backdoor gets put?
 - Can a defender find the neurons without any triggered data at all?
 
-## The 3 scripts
+## The 4 scripts
 
 `measure.py` produces `results/<folder>/backdoor_neurons.json`, 1 per checkpoint:
 per-layer TAC / relative direction norm / CKA, per-dimension top-20 and CLP
@@ -30,7 +35,12 @@ report interpretable: a **chance floor** from random k-of-768 draws, and a
 samples. Written after the first pass of results, because a low Jaccard between 2
 models means nothing until you know what a high one looks like on 1 model.
 
-`report.py` aggregates and prints the 5 tables.
+`ablate.py` is the causal half, and the reason the folder's own framing changed. It
+deletes things and re-measures ASR: the backdoor direction, k coordinates from the
+top / bottom / at random, and random rank-1 directions as the control that removing
+*some* direction is not the claim.
+
+`report.py` aggregates and prints the 5 correlational tables.
 
 ## Running it
 
@@ -44,6 +54,10 @@ PYTHONPATH=. python scripts/backdoor_neurons/measure.py \
 
 PYTHONPATH=. python scripts/backdoor_neurons/stability.py \
     --attack badnet_a2o blend bpp lf badnet_a2a benign --rho "" 0_1 0_2
+
+PYTHONPATH=. python scripts/backdoor_neurons/ablate.py \
+    --attack badnet_a2o blend bpp lf badnet_a2a benign --rho "" 0_1 0_2 \
+    --max-samples 1000
 
 PYTHONPATH=. python scripts/backdoor_neurons/report.py
 ```
@@ -76,6 +90,14 @@ checkpoint rather than silently measuring a trigger the model never saw.
    1.000 for 4 of 5 attacks, so UMAP adds nothing. `badnet_a2a` is the exception at
    PCA 0.756 versus UMAP 1.000, because all-to-all has no single target class and
    so no single direction, which is the same structural reason it breaks PSBD.
+6. **A direction, not neurons.** Removing the rank-1 backdoor direction takes ASR
+   from 1.00 to 0.00 on all 4 single-target attacks, costing 0.03 to 0.08 clean
+   accuracy. Zeroing coordinates never works, up to 300 of 768. Random rank-1
+   directions and the benign model are both unaffected.
+7. **SAM makes it less rank-1.** ASR after direction removal rises monotonically
+   with rho (`blend` 0.00 to 0.99 to 1.00, `lf` 0.05 to 0.35 to 0.97). Not a depth
+   artifact: `blend` and `badnet_a2o` both peak at layer 11 under rho 0.1 and give
+   0.99 against 0.00.
 
 ## Caveat
 

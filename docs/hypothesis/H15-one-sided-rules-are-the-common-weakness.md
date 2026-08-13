@@ -1,8 +1,38 @@
 # H15 — One-sided decision rules are a systematic weakness across backdoor detectors
 
-**Status: SUPPORTED.** Found independently in two unrelated detectors. Nine
-checkpoints where STRIP is genuinely anti-correlated, recovering up to +0.98 AUROC
-when the sign is allowed to flip, against a measured chance floor of 0.515.
+**Status: RETIRED as a method. Kept as a recorded negative result.**
+
+The measurements below stand and are not withdrawn: STRIP and PSBD really do run
+anti-correlated on nine checkpoints, and the effect really is concentrated at low
+poison rate. What is withdrawn is the idea of *acting* on it.
+
+**Inversion is a diagnostic symptom of a broken assumption, never a decision
+rule.** A detector that flags the opposite tail when its own premise fails has
+abandoned the premise while keeping the name, and choosing which tail to flag
+requires the poison labels the detector exists to predict. Every downstream
+result in this project is therefore one-sided: low PSU means poisoned, always,
+and an AUROC below 0.5 is reported as the method failing on that attack rather
+than recovered into a win.
+
+No current or planned method uses two-sided scoring, `max(AUROC, 1-AUROC)`,
+per-checkpoint tail selection, or double thresholding. The `auroc_two_sided` and
+`direction` fields still present in `psbd_metrics.json` and
+`baseline_metrics.json` are retained as diagnostics for reading *where* a premise
+breaks, and must not appear in any reported table.
+
+The useful residue of this file is not the fix, it is the finding: **the attacks
+on which a detector inverts are exactly the attacks its stated mechanism does not
+cover**, which is a map of where the method's assumptions fail. That map is what
+[H17](H17-low-poison-rate-is-a-placement-artifact.md) and the perturbation study
+build on.
+
+---
+
+## Original content, retained as recorded observation
+
+**Original status: SUPPORTED.** Found independently in two unrelated detectors.
+Nine checkpoints where STRIP is genuinely anti-correlated, recovering up to +0.98
+AUROC when the sign is allowed to flip, against a measured chance floor of 0.515.
 
 ## Claim
 

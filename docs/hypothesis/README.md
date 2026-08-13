@@ -39,7 +39,7 @@ written.
 | [H2](H2-psbd-transfers-to-vit.md) | PSBD works on ViT at all, and not on benign models | **SUPPORTED** |
 | [H3](H3-why-post-residual-fails.md) | Post-residual fails by saturating | **REFUTED** as stated |
 | [H4](H4-placement-is-attack-dependent.md) | The best placement tracks where the backdoor direction enters `[CLS]` | **SUPPORTED** |
-| [H5](H5-all-to-all-breaks-psbd.md) | PSBD degrades on all-to-all, which has no single target class | **REFUTED**: the signal is inverted, not absent (two-sided 0.97) |
+| [H5](H5-all-to-all-breaks-psbd.md) | PSBD degrades on all-to-all, which has no single target class | **SUPPORTED**: PSBD does not cover all-to-all. The signal is present with the sign reversed, recorded as a diagnostic only, never as detection |
 | [H6](H6-sam-improves-detectability.md) | SAM makes backdoors more detectable | **REFUTED** for prediction-space detection; control explains why |
 | [H7](H7-clean-shifts-to-target.md) | Clean samples under dropout shift specifically to the target class | **PARTIALLY REFUTED** |
 | [H8](H8-detection-scales-with-poison-rate.md) | Detection improves with poison rate | INCONCLUSIVE |
@@ -49,10 +49,16 @@ written.
 | [H12](H12-psu-is-not-just-confidence.md) | PSU is just a proxy for baseline confidence | **REFUTED** (and yielded a free improvement) |
 | [H13](H13-combined-variant.md) | The accumulated changes combine into a materially better defence | **SUPPORTED**: +0.110 derivation, **+0.151 held out (2/2)** |
 | [H14](H14-fusion.md) | PSBD and STRIP fuse into something better than either | **SUPPORTED**: 0.614 TPR at 1% FPR, 93% of oracle-max |
-| [H15](H15-one-sided-rules-are-the-common-weakness.md) | One-sided decision rules are a systematic weakness across detectors | **SUPPORTED**: STRIP inverts on 9 checkpoints, up to +0.98 |
-| [H16](H16-where-the-backdoor-neurons-are.md) | The backdoor occupies a few late-layer dimensions, disjoint across attacks, and SAM relocates them | **SUPPORTED**: cross-attack Jaccard 0.00-0.08 against a 0.87 ceiling; both data-free localizers **REFUTED** |
+| [H15](H15-one-sided-rules-are-the-common-weakness.md) | One-sided decision rules are a systematic weakness across detectors | **RETIRED as a method**, kept as a recorded negative result. Inversion is a symptom of a broken assumption, never a decision rule; nothing downstream uses it |
+| [H16](H16-where-the-backdoor-neurons-are.md) | The backdoor is one late-layer linear direction, disjoint across attacks, and SAM relocates it | **SUPPORTED** for the direction (ablation takes ASR 1.00 to 0.00); the "neurons" framing **REFUTED** (zeroing 300 of 768 coords does nothing); both data-free localizers **REFUTED** |
 | [H17](H17-low-poison-rate-is-a-placement-artifact.md) | PSBD's low-poison-rate failure is a placement artifact, not a limit of the method | **SUPPORTED on CIFAR-10**: `badnet_a2o` at 1% goes 0.297 to 0.839 one-sided, ASR 0.997; out-of-sample test in flight |
 | [H18](H18-sensitivity-profile-over-units.md) | The shape of a per-unit sensitivity profile beats its mean | Stated direction **REFUTED** (backdoored profiles are flatter, not peaked), but the profile **minimum** beats PSBD's mean by +0.12 at 1% poisoning |
+| [H19](H19-channel-mask-structured-vs-elementwise.md) | Masking whole channels beats thinning every channel a little | **PRE-REGISTERED**, pilot running |
+| [H20](H20-token-mask-trigger-locality.md) | Removing whole tokens separates local triggers from distributed ones | **PRE-REGISTERED**, pilot running |
+| [H21](H21-droppath-residual-native.md) | DropPath is the residual-native perturbation | **PRE-REGISTERED**, predicted *not* to win; its failure is the informative outcome |
+| [H22](H22-head-mask-attention-units.md) | Attention heads are the transformer's own unit | **PRE-REGISTERED**, pilot running |
+| [H23](H23-gaussian-noise-control.md) | Does PSBD need capacity removed, or merely disturbed? | **PRE-REGISTERED** control; if noise matches removal, the neuron-bias framing is unnecessary |
+| [H24](H24-monte-carlo-passes.md) | k=3 Monte Carlo passes is the noise floor at low poison rate | Prediction 1 **CONFIRMED** from cache: +0.027 at 1% vs +0.017 at 10%; `badnet_a2o` 1% still climbing at k=3 (+0.089). k=20 submitted |
 
 ## Where this stands after phases 3a and 3b
 
@@ -80,11 +86,15 @@ The two results that would change a paper:
   shows *no* shift-to-target effect (0.052 at 10% poisoning, below the 0.10 chance
   line). PSBD's published mechanism is measurably absent exactly where PSBD works
   best, so on ViT the method and its explanation come apart.
-- **H5.** All-to-all looked undetectable under the paper's one-sided rule (0.510
-  against a benign floor of 0.506), but its PSU signal is **inverted**, not absent:
-  its backdoor samples are 4x *more* fragile than clean ones, where all-to-one's are
-  more robust. Allowing the decision rule to flag either tail gives **0.966**, while
-  the benign control under the identical two-sided rule moves only to 0.522.
+- **H5.** All-to-all is undetectable by PSBD, and the reason is mechanistic rather
+  than statistical: its backdoor samples are 4x *more* fragile under dropout than
+  clean ones, where all-to-one's are more robust. There is no single target class
+  for the perturbed prediction to collapse onto, so the premise PSBD rests on does
+  not hold. The separation is measurable with the sign reversed, but **that is
+  reported as a diagnostic, not as detection** (see the retirement note on
+  [H15](H15-one-sided-rules-are-the-common-weakness.md)): choosing which tail to
+  flag needs the poison labels the detector exists to predict, so a two-sided
+  number is not a result. All-to-all stands as a case PSBD does not cover.
 
 Corrections worth being loud about. **Three verdicts have now been overturned by
 their own follow-ups**: H3 (post-residual does not fail after all), H1 (pre-residual

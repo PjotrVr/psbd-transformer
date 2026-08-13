@@ -1,7 +1,16 @@
-# H16 — The backdoor lives in a few late-layer dimensions, they are disjoint across attacks, and SAM relocates them without weakening them
+# H16 — The backdoor is one late-layer linear direction, not a set of neurons; it is disjoint across attacks, and SAM relocates it without weakening it
 
-**Status: SUPPORTED**, with both data-free localizers REFUTED (Lipschitz channel
-ranking and the head-alignment Z rule).
+**Status: SUPPORTED for layers and for the direction. The "neurons" framing is
+REFUTED by its own causal test**, as are both data-free localizers (Lipschitz
+channel ranking and the head-alignment Z rule).
+
+> **Headline correction.** This file originally read the top-20 TAC dimensions as
+> "the backdoor neurons". The ablation in section 8 shows they are not: zeroing
+> even the top 300 of 768 coordinates leaves ASR at 1.00, while removing the single
+> backdoor *direction* takes ASR to 0.00. The direction is real and causal; it is
+> simply not axis-aligned, so no coordinate ranking can name it. Sections 2 and 4
+> are kept because the disjointness result stands on its own, but they describe
+> where the direction's energy lands in the standard basis, not a set of neurons.
 
 ## Claim
 
@@ -210,13 +219,91 @@ in the geometry directly.
 Benign is at 0.45, below the 0.5 of a random split, so the trigger genuinely does
 nothing to a clean model's representation.
 
+### 8. The causal test, which overturns the "neurons" reading
+
+Everything above is correlational. TAC is a *difference*: it says a dimension moves
+when the trigger appears, not that the model reads it. `scripts/backdoor_neurons/
+ablate.py` deletes things and re-measures ASR and clean accuracy, at each
+checkpoint's own peak layer, as a forward hook so no weight changes.
+
+Adam checkpoints, ASR after each ablation (baseline ASR in brackets):
+
+| attack | baseline | remove **direction** | random dir | top-20 | bottom-20 | random-20 | top-300 |
+|---|---|---|---|---|---|---|---|
+| `badnet_a2o` | 1.00 | **0.00** | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| `blend` | 1.00 | **0.00** | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| `bpp` | 1.00 | **0.01** | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| `lf` | 1.00 | **0.05** | 1.00 | 1.00 | 1.00 | 1.00 | 0.89 |
+| `badnet_a2a` | 0.96 | 0.86 | 0.96 | 0.96 | 0.96 | 0.95 | 0.92 |
+| `benign` | 0.01 | 0.01 | 0.01 | 0.01 | 0.01 | 0.01 | 0.03 |
+
+Removing the rank-1 backdoor direction
+
+    x_ablated = x - (x . unit_direction) * unit_direction
+
+destroys the backdoor on all 4 single-target attacks, at a clean-accuracy cost of
+0.078, 0.041, 0.033, and **-0.004** (`lf` gets slightly *better*). Deleting
+coordinates does essentially nothing, including 300 of 768, which is 39% of the
+residual width.
+
+Three controls, all passing:
+
+- **Random rank-1 directions** (2 per checkpoint, plus 3 extra seeds and the mean
+  clean feature direction checked separately on `badnet_a2o`) leave ASR at 1.00 and
+  clean accuracy unmoved. So it is not "removing any direction breaks the model".
+- **bottom-k and random-k** coordinates match top-k exactly, which is the expected
+  result once top-k itself does nothing, and confirms the coordinate ablation is
+  not silently failing to apply.
+- **Benign** is unaffected on every variant.
+
+So on ViT the backdoor is a genuine linear direction in the residual stream that is
+**not axis-aligned**. TAC's top-20 marks where that direction happens to have the
+most energy in the standard basis, but the energy is spread thinly enough over the
+remaining coordinates that deleting the largest ones leaves the direction intact.
+
+This retroactively explains 2 earlier results. It is why both data-free localizers
+failed in section 6: they rank *coordinates*, and coordinates are not what carries
+the backdoor. And it is what the PCA result in section 7 was already saying, since
+a 2-component linear projection separating at purity 0.999 is exactly the signature
+of a linear-but-rotated direction.
+
+`badnet_a2a` is again the exception, at 0.86. All-to-all has no single target class
+and therefore no single direction to remove, which is the same structural fact
+behind its PCA 0.756 versus UMAP 1.000 and behind [H5](H5-all-to-all-breaks-psbd.md).
+
+### 9. SAM makes the backdoor un-removable by a single direction
+
+ASR after removing the backdoor direction, by optimizer:
+
+| attack | Adam | SAM 0.1 | SAM 0.2 |
+|---|---|---|---|
+| `badnet_a2o` | 0.00 | 0.00 | **0.50** |
+| `blend` | 0.00 | **0.99** | **1.00** |
+| `bpp` | 0.01 | 0.15 | 0.23 |
+| `lf` | 0.05 | 0.35 | **0.97** |
+| `badnet_a2a` | 0.86 | 0.91 | 0.94 |
+
+Monotone in rho for all 5. Read with section 5, SAM does not merely move the
+backdoor to different coordinates; it makes it **less rank-1**, spreading it over a
+subspace that a single-direction ablation cannot remove. ASR is 0.96 to 1.00
+throughout, so this is a change in how the backdoor is represented, not in how well
+it works.
+
+**The obvious confound is ruled out internally.** The ablation fires at the peak
+layer, and SAM moves that peak earlier, so later blocks have more depth in which to
+rewrite the direction. But `blend` at rho 0.1 and `badnet_a2o` at rho 0.1 both peak
+at layer **11**, identical remaining depth, and give ASR 0.99 and 0.00
+respectively. Depth-to-recover does not explain the split.
+
 ## What this does and does not say
 
-It says where the backdoor is. It does not say that knowing where it is helps
-detect it. The gap is [H7](H7-clean-shifts-to-target.md)'s: the mechanism is
-present in the representation and absent in the decision. A PCA that separates
-clean from triggered at purity 0.999 requires triggered inputs to draw, and a
-defender does not have any.
+It says where the backdoor is, and that a single direction carries it causally. It
+does not say that knowing this helps *detect* it. The gap is
+[H7](H7-clean-shifts-to-target.md)'s: the mechanism is present in the
+representation and absent in the decision. Both the PCA that separates at purity
+0.999 and the direction whose removal takes ASR to 0.00 are computed from paired
+clean/triggered inputs, and a defender has no triggered inputs. What this supports
+is a *removal* story given a suspected trigger, not a detection story.
 
 The SAM result reads directly onto [H6](H6-sam-improves-detectability.md). SAM
 amplifies TAC and relocates the backdoor, but relocation is not removal, and the
@@ -233,10 +320,19 @@ detector never sees the difference.
    won on Adam; at rho 0.2 the peaks are at 8 to 10, so blocks 5-8 should hold or
    improve while a 9-12 restriction should degrade. Directly testable on cached
    sweep output, no GPU needed.
-3. Ablating the 5 to 17 outlier dimensions at the peak layer should drop ASR while
-   sparing clean accuracy. If it does not, "these are the backdoor neurons" is a
-   correlational claim, not a causal one. `analysis.direction` already has the
-   projection machinery for this.
+3. **Answered in section 8, and it overturned the framing.** Coordinate ablation
+   does nothing; direction ablation removes the backdoor entirely.
 4. Why is `lf`'s peak at layer 10 rather than 12, with a relative direction norm of
    2.18, double every other attack? It is the only attack whose direction *shrinks*
    over the last 2 blocks.
+5. If SAM makes the backdoor less rank-1 (section 9), how many directions does it
+   take? Removing the top-r subspace of the clean-versus-triggered difference for
+   r = 1, 2, 4, 8 would measure that, and the r at which ASR collapses is a
+   quantitative "how spread out" number rather than a binary one.
+6. Direction ablation costs 0.03 to 0.08 clean accuracy on single-target attacks
+   and **0.26** on `badnet_a2a` at rho 0.1. It is not a free defence, and the cost
+   is worth characterising against fine-tuning-based removal.
+7. The ablation reads the backdoor direction off paired clean/triggered data, which
+   a defender does not have. It is a mechanism result, not a defence. Whether the
+   direction can be estimated from clean data alone is the question that would turn
+   it into one.
