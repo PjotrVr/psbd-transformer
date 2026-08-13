@@ -40,7 +40,7 @@ written.
 | [H3](H3-why-post-residual-fails.md) | Post-residual fails by saturating | **REFUTED** as stated |
 | [H4](H4-placement-is-attack-dependent.md) | The best placement tracks where the backdoor direction enters `[CLS]` | **SUPPORTED** |
 | [H5](H5-all-to-all-breaks-psbd.md) | PSBD degrades on all-to-all, which has no single target class | **REFUTED**: the signal is inverted, not absent (two-sided 0.97) |
-| [H6](H6-sam-improves-detectability.md) | SAM makes backdoors more detectable | OPEN (phase 3c) |
+| [H6](H6-sam-improves-detectability.md) | SAM makes backdoors more detectable | **REFUTED** for prediction-space detection; control explains why |
 | [H7](H7-clean-shifts-to-target.md) | Clean samples under dropout shift specifically to the target class | **PARTIALLY REFUTED** |
 | [H8](H8-detection-scales-with-poison-rate.md) | Detection improves with poison rate | INCONCLUSIVE |
 | [H9](H9-strength-not-position.md) | The pre/post gap is a perturbation-strength artifact, not a placement effect | **SUPPORTED** for 3 of 4 attacks |

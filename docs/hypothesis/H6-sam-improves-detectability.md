@@ -1,7 +1,10 @@
 # H6 — SAM training makes backdoors more detectable
 
-**Status: OPEN.** The sweep is running. But the literature question is now sharp, and
-it is the reason this hypothesis is worth testing rather than a reproduction exercise.
+**Status: REFUTED for prediction-space detection, and the positive control explains
+why.** SAM does amplify the backdoor on ViT, exactly as the paper claims, but the
+amplification does **not** produce the separability gain their detectors feed on, and
+it does produce the clean-variance side effect their method exists to cancel. PSBD has
+no way to cancel it.
 
 ## Why this is a gap and not a reproduction
 
@@ -67,20 +70,54 @@ the mechanism above.
 one whose PSU signal is inverted, so it is the least representative case available.
 The four normal attacks are in the queue.
 
-## What has to be checked before any verdict is written
+## The positive control, run on our own checkpoints with their metrics
 
-1. **A positive control on our own checkpoints.** Does SAM actually strengthen the
-   backdoor in ViT, as it does in their ResNet18? Measurable with tooling already
-   built: backdoor-direction norm and clean-vs-triggered CKA
-   (`scripts/backdoor_direction_layers/`) on matched Adam and SAM checkpoints. If SAM
-   does *not* amplify the backdoor here, the failure is upstream of PSBD and the
-   finding is about transformers or AdamW, not about detector family.
-2. **One feature-space detector on the same checkpoints.** If Spectral Signatures or
-   Activation Clustering improves under SAM on our ViT models while PSBD degrades,
-   the detector-family split is demonstrated directly on one set of models, which is
-   a far stronger claim than either half alone.
-3. Their rho sweep says 0.05 to 0.5 all work, so our {0.05, 0.1, 0.15, 0.2} is inside
-   their good region and rho choice cannot be blamed for a negative.
+CIFAR-10 ViT at 10% poisoning, final block, 500 paired eligible samples, fp32.
+`scripts/sam_backdoor_effect/`. SAM minus Adam, averaged over rho in
+{0.05, 0.1, 0.15, 0.2}:
+
+| attack | d top-2 TAC | d silhouette | d clean intra-class variance |
+|---|---|---|---|
+| `badnet_a2o` | **+0.845** | +0.020 | **+0.108** |
+| `blend` | **+1.516** | -0.019 | **+0.313** |
+| `bpp` | **+0.270** | -0.014 | **+0.177** |
+| `lf` | -0.103 | +0.012 | +0.024 |
+
+Three findings, and together they settle it.
+
+**1. SAM does amplify the backdoor, and it scales with rho.** Top-2 TAC, their
+"backdoor effect", rises monotonically: `badnet_a2o` 3.25 to 6.07, `blend` 3.30 to
+7.57 going from Adam to rho 0.2. So the failure is *not* upstream of PSBD; the
+mechanism their paper describes is present in our models.
+
+**2. But separability does not improve, which is what their detectors actually need.**
+Silhouette moves by at most ±0.02 and has no trend in rho. Their ResNet18 went 0.19 to
+0.32. Ours sits at **0.45 to 0.51 before SAM is applied at all**.
+
+That last number is the explanation. A pretrained ViT already separates clean from
+triggered representations more than twice as well as their trained-from-scratch
+ResNet18 does *after* SAM. There is almost no headroom left for SAM to add. SAM helps
+feature-space detectors when separability is the bottleneck, and on ViT it is not.
+
+**3. The side effect their stage 2 exists to cancel is present and uncancelled.**
+Clean intra-class variance rises with rho on every attack (+0.02 to +0.31). Their
+Sec. 3.4 introduces feature-scaling specifically "to address the increased intra-class
+variance of clean samples after SAM optimization". More clean-feature variance means
+more unstable clean predictions under perturbation, which raises clean PSU and closes
+the very gap PSU thresholds on.
+
+So SAM hands PSBD the cost without the benefit: an amplified backdoor that PSBD cannot
+exploit (it never reads features), plus inflated clean instability that directly
+degrades PSU, with no feature-scaling stage available to undo it.
+
+## Still worth running
+
+One feature-space detector (Activation Clustering is cheapest) on these same
+checkpoints. If it improves under SAM while PSBD degrades, the detector-family split
+is demonstrated within one set of models rather than across two papers.
+
+Their rho sweep says 0.05 to 0.5 all work, so our {0.05, 0.1, 0.15, 0.2} sits inside
+their good region and rho choice cannot be blamed for the negative.
 
 ## Known divergences from their setup, to state in any writeup
 

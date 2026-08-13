@@ -114,8 +114,17 @@ def bands_for(architecture: str):
     ]
 
 
-def viable_checkpoints(architecture, datasets, with_sam, checkpoints_dir):
-    """Checkpoints whose backdoor actually fires, plus the benign controls."""
+def viable_checkpoints(
+    architecture, datasets, with_sam, checkpoints_dir, min_asr=MIN_ASR, only_tags=None
+):
+    """Checkpoints whose backdoor actually fires, plus the benign controls.
+
+    min_asr can be lowered deliberately. A weak backdoor is not the same as no
+    backdoor: at ASR 0.28 roughly a quarter of triggered inputs really are flipped,
+    and detection over exactly those is a well-posed question that the
+    captured-only metric answers. Gating everything at 0.8 silently removes the
+    hardest and most realistic cases from the grid.
+    """
     kept = []
     for dataset in datasets:
         names = []
@@ -131,6 +140,8 @@ def viable_checkpoints(architecture, datasets, with_sam, checkpoints_dir):
                 f"{architecture}_{dataset}_benign_sam_rho_{rho}" for rho in SAM_RHOS
             )
         for folder in names:
+            if only_tags and not any(folder.endswith(tag) for tag in only_tags):
+                continue
             path = os.path.join(checkpoints_dir, folder, "attack_result.pt")
             if not os.path.exists(path):
                 continue
@@ -142,7 +153,7 @@ def viable_checkpoints(architecture, datasets, with_sam, checkpoints_dir):
                 continue
             with open(metrics_path) as handle:
                 asr = json.load(handle).get("asr")
-            if asr is not None and asr >= MIN_ASR:
+            if asr is not None and asr >= min_asr:
                 kept.append(folder)
     return kept
 
@@ -224,6 +235,19 @@ def parse_args() -> argparse.Namespace:
         default=6.0,
         help="requested walltime, comfortably above --hours",
     )
+    parser.add_argument(
+        "--min-asr",
+        type=float,
+        default=MIN_ASR,
+        help="lower this to include weak backdoors; 0 sweeps everything trained",
+    )
+    parser.add_argument(
+        "--only-tag",
+        nargs="*",
+        default=None,
+        help="restrict to checkpoints ending in these tags, e.g. 0_005 0_01",
+    )
+    parser.add_argument("--prefix", default=None, help="job filename prefix")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
 
@@ -239,7 +263,12 @@ def main() -> None:
     for architecture in args.architecture:
         index = 0
         checkpoints = viable_checkpoints(
-            architecture, args.dataset, not args.no_sam, args.checkpoints_dir
+            architecture,
+            args.dataset,
+            not args.no_sam,
+            args.checkpoints_dir,
+            args.min_asr,
+            args.only_tag,
         )
         batches = pack(checkpoints, architecture, args.hours * 60)
         per = minutes_per_checkpoint(architecture)
@@ -254,7 +283,7 @@ def main() -> None:
             body = TEMPLATE.format(
                 walltime=walltime,
                 base=BASE,
-                architecture=architecture,
+                architecture=args.prefix or architecture,
                 index=index,
                 n_checkpoints=len(folders),
                 n_configs=len(folders)
@@ -262,7 +291,8 @@ def main() -> None:
                 estimate=int(per * len(folders)),
                 commands=build_commands(folders, architecture),
             )
-            path = os.path.join(out_dir, f"{architecture}_{index:03d}.pbs")
+            prefix = args.prefix or architecture
+            path = os.path.join(out_dir, f"{prefix}_{index:03d}.pbs")
             if not args.dry_run:
                 with open(path, "w") as handle:
                     handle.write(body)
