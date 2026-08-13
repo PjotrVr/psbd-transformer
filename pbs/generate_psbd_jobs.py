@@ -55,8 +55,8 @@ TEMPLATE = """#!/bin/bash
 #PBS -q gpu
 #PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
 #PBS -l walltime={walltime}
-#PBS -N psbd_{checkpoint}_{position}
-#PBS -o {base}/logs/psbd_sweep/{checkpoint}/{position}.log
+#PBS -N psbd_{checkpoint}_{position}{suffix}
+#PBS -o {base}/logs/psbd_sweep/{checkpoint}/{position}{suffix}.log
 #PBS -j oe
 
 # Compute nodes reach the internet through the proxy, needed on first run for
@@ -135,7 +135,9 @@ def gate_by_asr(
     return kept, rejected
 
 
-def render(checkpoint: str, position: str, rates: tuple[float, ...] = ()) -> str:
+def render(
+    checkpoint: str, position: str, rates: tuple[float, ...] = (), suffix: str = ""
+) -> str:
     extra = ""
     if "benign" in checkpoint:
         extra = (
@@ -147,6 +149,7 @@ def render(checkpoint: str, position: str, rates: tuple[float, ...] = ()) -> str
         base=BASE,
         checkpoint=checkpoint,
         position=position,
+        suffix=suffix,
         extra=extra,
         rates=" \\\n    --rates " + " ".join(f"{r:g}" for r in rates) if rates else "",
     )
@@ -162,7 +165,7 @@ def write_job(
     os.makedirs(log_dir, exist_ok=True)
     path = os.path.join(pbs_dir, f"{position}{suffix}.pbs")
     with open(path, "w") as handle:
-        handle.write(render(checkpoint, position, rates))
+        handle.write(render(checkpoint, position, rates, suffix))
     return path
 
 

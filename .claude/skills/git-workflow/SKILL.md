@@ -616,3 +616,27 @@ out, which is most of what a ledger is for.
 Preliminary verdicts get labelled as preliminary. Two hypotheses here were written up
 as SUPPORTED from a 64-sample smoke run of a single checkpoint, and the full grid cut
 one effect by 4x and refuted the other outright.
+
+### Never edit a script that in-flight jobs read
+
+PBS jobs here run `python psbd_dropout_sweep.py` against the **working tree**, not
+against a snapshot of the commit they were submitted from. So editing an entrypoint
+while jobs are queued changes the code those jobs will execute, mid-sweep.
+
+This has already cost 50 jobs once: a half-applied edit left `write_run_provenance`
+referencing an argparse field that had not been added yet, and every job that started
+after the edit died with `AttributeError` while the ones that started before it
+succeeded. The result directory was left in a state where a job's success depended on
+when it happened to be scheduled.
+
+Rules:
+
+- Before editing any file under a running sweep's import graph, check `qstat`. If jobs
+  are queued or running, either wait, or copy the tree and point the remaining jobs at
+  the copy.
+- Verify an edit actually applied before moving on. String-replacement patches against
+  a `ruff format`-ed file fail silently when the target text has been re-wrapped, which
+  is exactly how the half-applied state above arose. Run `--help` or import the module.
+- A sweep whose jobs did not all run the same code is not one experiment. Identify the
+  failed jobs by their log signature, resubmit them, and confirm they used the fixed
+  code before analysing anything.

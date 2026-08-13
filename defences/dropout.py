@@ -251,20 +251,30 @@ def _resolve_targets(
     core: nn.Module,
     spec: PositionSpec,
     block_types: tuple[type, ...],
+    block_range: tuple[int, int] | None = None,
 ) -> list[nn.Module]:
-    """Every module a position attaches to: one per block, or one at model level."""
+    """Every module a position attaches to: one per block, or one at model level.
+
+    block_range restricts a block-scope position to a contiguous span of blocks,
+    1-indexed and inclusive, matching the layer numbering the latent analysis uses
+    (block 1 produces layer-1 features). None means every block, the default.
+
+    The restriction exists because where a trigger's backdoor direction reaches the
+    CLS token is attack-dependent: measured on CIFAR-10 ViT, blend arrives by layer
+    5 and a static patch trigger not until layer 9. Perturbing all 12 blocks cannot
+    distinguish "this position matters" from "this depth matters", and those are
+    different claims.
+    """
     if spec.scope == "model":
-        return [core.get_submodule(spec.submodule_name)]
-    targets = []
-    for module in model.modules():
-        if isinstance(module, block_types):
-            target = (
-                module
-                if spec.submodule_name == ""
-                else module.get_submodule(spec.submodule_name)
+        if block_range is not None:
+            raise ValueError(
+                f"position {spec.submodule_name!r} is model-scope, so it attaches "
+                "once and a block range is meaningless for it"
             )
-            targets.append(target)
-    if not targets:
+        return [core.get_submodule(spec.submodule_name)]
+
+    blocks = [module for module in model.modules() if isinstance(module, block_types)]
+    if not blocks:
         # Silence here would be the worst failure mode available: no attachment
         # means no perturbation, so PSU is identically 0 and the position reads
         # as "had no effect" rather than as a model that never matched.
@@ -272,7 +282,20 @@ def _resolve_targets(
             f"no {block_types} blocks found in the model, so position "
             f"{spec.submodule_name!r} attached nothing"
         )
-    return targets
+
+    if block_range is not None:
+        first, last = block_range
+        if not 1 <= first <= last <= len(blocks):
+            raise ValueError(
+                f"block range {block_range} is outside 1..{len(blocks)} for this "
+                "architecture"
+            )
+        blocks = blocks[first - 1 : last]
+
+    return [
+        block if spec.submodule_name == "" else block.get_submodule(spec.submodule_name)
+        for block in blocks
+    ]
 
 
 def _attach_hook(
@@ -303,6 +326,7 @@ def plug_dropout(
     position_names: tuple[str, ...],
     dropout_factory: dict[str, Callable[[float], nn.Module]],
     rate: float,
+    block_range: tuple[int, int] | None = None,
 ) -> list[RemovableHandle | _ForwardRestore]:
     """Attach a fresh dropout at every named position, in every block.
 
@@ -311,6 +335,10 @@ def plug_dropout(
     overridable per position without touching the plug mechanics. Returns one
     handle per attachment (12 or 24 per block-scope position, 1 per model-scope
     position), all removed together by unplug_dropout.
+
+    block_range restricts block-scope positions to a contiguous 1-indexed inclusive
+    span, so a placement can be aimed at the depth where a given attack's backdoor
+    direction actually lives rather than applied uniformly.
     """
     positions = POSITION_REGISTRY[architecture]
     block_types = BLOCK_TYPES[architecture]
@@ -321,7 +349,7 @@ def plug_dropout(
         for name in position_names:
             spec = positions[name]
             factory = dropout_factory.get(name, nn.Dropout)
-            for target in _resolve_targets(model, core, spec, block_types):
+            for target in _resolve_targets(model, core, spec, block_types, block_range):
                 handles.append(
                     _attach_hook(target, spec.hook_type, architecture, factory, rate)
                 )

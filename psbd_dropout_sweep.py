@@ -76,6 +76,20 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--probe-target-label", type=int, default=None)
     parser.add_argument(
+        "--block-range",
+        nargs=2,
+        type=int,
+        default=None,
+        metavar=("FIRST", "LAST"),
+        help=(
+            "restrict a block-scope position to blocks FIRST..LAST, 1-indexed and "
+            "inclusive. Where a trigger's backdoor direction reaches the CLS token "
+            "is attack-dependent (blend by layer 5, a static patch not until 9), so "
+            "perturbing all 12 blocks cannot separate 'this position matters' from "
+            "'this depth matters'."
+        ),
+    )
+    parser.add_argument(
         "--rates",
         nargs="*",
         type=float,
@@ -88,6 +102,19 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     return parser.parse_args()
+
+
+def cache_config_name(position_config: str, block_range: tuple[int, int] | None) -> str:
+    """The results/ subfolder name for one placement.
+
+    A band-restricted run is a different measurement from the same position applied
+    to every block, so it needs its own folder. Without the suffix the two would
+    write the same rate_<tag>_<split>.pt filenames and the second run would
+    silently overwrite the first.
+    """
+    if block_range is None:
+        return position_config
+    return f"{position_config}_blocks_{block_range[0]}_{block_range[1]}"
 
 
 def resolve_device() -> torch.device:
@@ -186,6 +213,8 @@ def sweep_rates(
     forward_passes: int,
     use_bfloat16: bool,
     rates: tuple[float, ...] = DROPOUT_RATES,
+    block_range: tuple[int, int] | None = None,
+    cache_name: str | None = None,
 ) -> None:
     """For each rate: plug the position, run every split, save, unplug.
 
@@ -197,15 +226,18 @@ def sweep_rates(
     quietly wrong.
     """
     position_names = DROPOUT_CONFIGS.get(position_config, (position_config,))
+    cache_name = cache_name or position_config
     for rate in rates:
-        handles = plug_dropout(model, architecture, position_names, {}, rate)
+        handles = plug_dropout(
+            model, architecture, position_names, {}, rate, block_range=block_range
+        )
         try:
             run_one_rate(
                 model,
                 loaders,
                 baselines,
                 psbd_dir,
-                position_config,
+                cache_name,
                 rate,
                 device,
                 forward_passes,
@@ -225,6 +257,7 @@ def write_run_provenance(psbd_dir: str, args: argparse.Namespace, device) -> Non
     payload = {
         "git_commit": current_git_commit(),
         "position_config": args.position_config,
+        "block_range": list(args.block_range) if args.block_range else None,
         "dropout_rates": list(args.rates) if args.rates else list(DROPOUT_RATES),
         "forward_passes": args.forward_passes,
         "mask_seed": PSBD_MASK_SEED,
@@ -236,7 +269,10 @@ def write_run_provenance(psbd_dir: str, args: argparse.Namespace, device) -> Non
         if device.type == "cuda"
         else "cpu",
     }
-    path = os.path.join(psbd_dir, f"run_{args.position_config}.json")
+    path = os.path.join(
+        psbd_dir,
+        f"run_{cache_config_name(args.position_config, tuple(args.block_range) if args.block_range else None)}.json",
+    )
     os.makedirs(psbd_dir, exist_ok=True)
     with open(path, "w") as handle:
         json.dump(payload, handle, indent=2)
@@ -270,6 +306,10 @@ def main() -> None:
         args.forward_passes,
         use_bfloat16,
         rates=tuple(args.rates) if args.rates else DROPOUT_RATES,
+        block_range=tuple(args.block_range) if args.block_range else None,
+        cache_name=cache_config_name(
+            args.position_config, tuple(args.block_range) if args.block_range else None
+        ),
     )
 
 
