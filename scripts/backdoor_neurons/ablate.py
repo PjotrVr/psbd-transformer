@@ -73,6 +73,11 @@ def parse_args() -> argparse.Namespace:
     # direction, which is a competing explanation for SAM's resistance. Forcing the
     # layer to 12 removes that freedom and separates the 2 readings.
     parser.add_argument("--layer", type=int, default=None)
+    # Remove the direction AFTER the final LayerNorm instead of at a block output.
+    # LN renormalizes to unit variance, so a component deleted before it is partly
+    # restored by the rescaling of whatever survives; deleting after it is what the
+    # head actually sees.
+    parser.add_argument("--post-ln", action="store_true")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--max-samples", type=int, default=2000)
@@ -175,6 +180,15 @@ def peak_layer_signals(model, metadata, attack, peak, args, device):
     triggered = extract_layer_features(model, triggered_loader, device, False, "cls")[
         peak
     ]
+    # In post-LN mode the direction has to live in the same space as the hook, so
+    # apply the final LayerNorm here too. It is per-token, so running it on the CLS
+    # row alone matches running it on the full sequence.
+    if args.post_ln:
+        layer_norm = vit_core(model).encoder.ln
+        with torch.inference_mode():
+            clean = layer_norm(clean.to(device)).float()
+            triggered = layer_norm(triggered.to(device)).float()
+
     clean, triggered = clean.cpu(), triggered.cpu()
     return (
         trigger_activated_change(clean, triggered),
@@ -222,7 +236,8 @@ def ablate(folder: str, args: argparse.Namespace, device) -> dict | None:
         probe_target_label=0 if benign else None,
     )
     model = load_checkpoint(metadata["architecture"], path, device)
-    block = list(vit_core(model).encoder.layers)[peak - 1]
+    core = vit_core(model)
+    block = core.encoder.ln if args.post_ln else list(core.encoder.layers)[peak - 1]
 
     seed_everything(args.seed)
     base_asr, base_accuracy = evaluate(model, loaders, device)

@@ -1,16 +1,25 @@
-# H16 — The backdoor is one late-layer linear direction, not a set of neurons; it is disjoint across attacks, and SAM relocates it without weakening it
+# H16 — The backdoor is one late-layer linear direction, not a set of neurons
 
 **Status: SUPPORTED for layers and for the direction. The "neurons" framing is
 REFUTED by its own causal test**, as are both data-free localizers (Lipschitz
-channel ranking and the head-alignment Z rule).
+channel ranking and the head-alignment Z rule). **The SAM sub-claim is REFUTED**:
+the apparent effect was a LayerNorm artifact of the ablation, not a property of the
+model.
 
-> **Headline correction.** This file originally read the top-20 TAC dimensions as
-> "the backdoor neurons". The ablation in section 8 shows they are not: zeroing
-> even the top 300 of 768 coordinates leaves ASR at 1.00, while removing the single
-> backdoor *direction* takes ASR to 0.00. The direction is real and causal; it is
-> simply not axis-aligned, so no coordinate ranking can name it. Sections 2 and 4
-> are kept because the disjointness result stands on its own, but they describe
-> where the direction's energy lands in the standard basis, not a set of neurons.
+> **Two headline corrections. Both were caught by a control, and both were wrong in
+> the direction of a more exciting result, which is the pattern to watch for here.**
+>
+> 1. This file originally read the top-20 TAC dimensions as "the backdoor neurons".
+>    They are not: zeroing even the top 300 of 768 coordinates leaves ASR at 1.00,
+>    while removing the single backdoor *direction* takes ASR to 0.00 (section 8).
+>    The direction is real and causal; it is simply not axis-aligned, so no
+>    coordinate ranking can name it. Sections 2 and 4 describe where that
+>    direction's energy lands in the standard basis, not a set of neurons.
+> 2. It then reported that SAM makes the backdoor un-removable, twice, with
+>    different explanations. Both were artifacts of projecting the direction out
+>    **before** the final LayerNorm, which renormalizes and partly undoes the
+>    deletion. Removed after the LayerNorm, where the head actually reads, every SAM
+>    checkpoint drops to ASR 0.000 (sections 9 and 10).
 
 ## Claim
 
@@ -21,7 +30,8 @@ Three separable claims, tested together because they need the same measurement:
 2. **Disjointness.** Different attacks use different dimensions, so a defence tuned
    to 1 attack's neurons does not transfer.
 3. **SAM.** Sharpness-aware training moves the backdoor earlier in depth and onto a
-   different set of dimensions, without reducing attack success.
+   different set of coordinates, without reducing attack success. (It does NOT make
+   the backdoor harder to remove; that reading was an artifact, see section 9.)
 
 ## Method
 
@@ -271,62 +281,84 @@ of a linear-but-rotated direction.
 and therefore no single direction to remove, which is the same structural fact
 behind its PCA 0.756 versus UMAP 1.000 and behind [H5](H5-all-to-all-breaks-psbd.md).
 
-### 9. SAM decouples the backdoor from the mean representation shift
+### 9. SAM does NOT resist direction ablation. The apparent effect was a LayerNorm artifact
 
-ASR after removing the backdoor direction at each checkpoint's peak layer:
+**This section has been wrong twice, and the corrections are the useful part.** The
+final answer is in section 10; what follows is the record of how the artifact
+produced 2 confident and incorrect readings.
+
+**First reading (wrong).** Removing the mean clean-to-triggered direction at the
+peak layer kills the backdoor under Adam and fails under SAM, monotonically in rho:
 
 | attack | Adam | SAM 0.1 | SAM 0.2 |
 |---|---|---|---|
-| `badnet_a2o` | 0.00 | 0.00 | **0.50** |
-| `blend` | 0.00 | **0.99** | **1.00** |
+| `badnet_a2o` | 0.00 | 0.00 | 0.50 |
+| `blend` | 0.00 | 0.99 | 1.00 |
 | `bpp` | 0.01 | 0.15 | 0.23 |
-| `lf` | 0.05 | 0.35 | **0.97** |
-| `badnet_a2a` | 0.86 | 0.91 | 0.94 |
+| `lf` | 0.05 | 0.35 | 0.97 |
 
-Monotone in rho for all 5, with ASR at 0.96 to 1.00 throughout, so whatever changes
-is about representation and not about how well the attack works.
+Read as "SAM makes the backdoor less rank-1".
 
-**The depth confound is ruled out.** The ablation fires at the peak layer, and SAM
-moves that peak earlier, so later blocks have more depth in which to rewrite the
-direction. Forcing the ablation to block **12**, where the output feeds the final
-LayerNorm and the head with no block left to recover in, changes nothing:
+**Second reading (also wrong).** Rank 2, 4, 8 and 16 subspaces of the difference do
+not recover the kill; they destroy clean accuracy (down to 0.556) while ASR stays
+1.00, and the matched random-subspace control is unaffected. Forcing the ablation to
+block 12 reproduces the failure, so it is not that later blocks rewrite the
+direction. Read as "SAM decouples the difference direction from the decision
+direction".
 
-| checkpoint | layer | direction | rank 2 | rank 4 | rank 4 random |
-|---|---|---|---|---|---|
-| `blend` Adam | 12 | **0.00** (CA 0.920) | 0.02 | 0.02 (CA 0.658) | 1.00 |
-| `blend` rho 0.2 | 12 | **1.00** (CA 0.930) | 1.00 (CA 0.752) | 1.00 (CA 0.556) | 1.00 |
-| `lf` Adam | 12 | **0.05** | 0.09 | 0.14 | 1.00 |
-| `lf` rho 0.2 | 12 | 0.90 | 0.26 | 0.23 (CA 0.808) | 1.00 |
-| `badnet_a2o` Adam | 12 | **0.00** | 0.00 | 0.00 | 1.00 |
-| `badnet_a2o` rho 0.2 | 12 | **1.00** | 1.00 (CA 0.782) | 1.00 (CA 0.568) | 1.00 |
+**What was actually wrong.** Every one of those ablations removed the component
+**before** the final LayerNorm. LayerNorm renormalizes each token to unit variance,
+so deleting a component does not delete its effect: the surviving components are
+rescaled up, and a large enough deletion is partly undone by the very normalization
+that follows it. A pre-norm transformer makes "project out a direction at a block
+output" an unreliable ablation, and it fails differently depending on how much of
+the representation's norm that direction carried, which is exactly what differs
+between the Adam and SAM checkpoints.
 
-**But the "spread over a subspace" reading is not supported either**, and this
-corrects the first version of this section. If SAM merely spread the backdoor over
-more directions, a rank-4 or rank-16 removal built from the clean-versus-triggered
-difference would recover the kill. It does not: `blend` and `badnet_a2o` at rho 0.2
-hold ASR 1.00 at every rank tried, while clean accuracy falls to 0.556 and 0.568.
-The subspace is doing real damage; it is just not hitting the backdoor. The
-`rank_r_random` control sits at 1.00 with clean accuracy unmoved, so the damage is
-specific to the difference subspace rather than to removing r dimensions.
+### 10. Removed where the head actually reads it, the backdoor is rank-1 in every checkpoint
 
-What is actually established is narrower and still interesting:
+Hooking `encoder.ln`'s output instead, with the direction computed in the same
+post-LayerNorm space, ASR after removing 1 direction:
 
-- Under Adam, the **mean CLS difference direction is causally sufficient**. Remove
-  it and the backdoor is gone.
-- Under SAM at rho 0.2, it is not, even at the last block, and no low-rank
-  extension of it is either.
+| attack | Adam | SAM 0.2 |
+|---|---|---|
+| `badnet_a2o` | **0.000** | **0.000** |
+| `blend` | **0.026** | **0.000** |
+| `bpp` | 0.085 | **0.000** |
+| `lf` | 0.572 | **0.002** |
 
-So SAM decouples "the direction along which triggered and clean representations
-differ" from "the direction the classifier actually uses to reach the target". Note
-that at rho 0.2 `blend` still has PCA 10-NN purity 1.000 from section 7: clean and
-triggered remain perfectly linearly separable, yet removing the leading difference
-directions leaves ASR at 1.00. Separability and decision have come apart, which is
-the same shape of result as [H7](H7-clean-shifts-to-target.md), now in weight space
-rather than under dropout.
+Clean accuracy costs 0.02 to 0.07. Random directions leave ASR at its baseline on
+every row. The SAM checkpoints are now the *easiest* to clean, not the hardest, and
+the monotone trend in rho is gone.
 
-Naming the direction SAM actually uses is open. The natural next probe is the
-target class's readout direction (the head row, folded with the final LayerNorm
-gain) rather than a direction estimated from the difference.
+**An independent measurement predicted this before the corrected ablation was run,**
+which is why the artifact was caught. `scripts/backdoor_neurons/logit_decomposition.py`
+decomposes the trigger's push on the target logit, post-LayerNorm where the head is
+exactly linear, into the part along the mean shift and the rest:
+
+| checkpoint | mean d logit_t | residual share | dispersion | cos(d, w_target) |
+|---|---|---|---|---|
+| `badnet_a2o` Adam | 9.69 | 0.039 | 0.157 | 0.876 |
+| `badnet_a2o` rho 0.2 | 10.88 | 0.042 | 0.124 | 0.882 |
+| `blend` Adam | 10.38 | 0.039 | 0.104 | 0.846 |
+| `blend` rho 0.2 | 10.86 | 0.045 | 0.104 | 0.858 |
+| `lf` rho 0.2 | 9.31 | 0.052 | 0.141 | 0.868 |
+| `bpp` rho 0.2 | 9.96 | 0.043 | 0.151 | 0.842 |
+| **`benign`** | **0.15** | **0.642** | **1.624** | **0.243** |
+
+Under SAM the mean direction accounts for 95 to 97% of the target-logit push and
+sits at cosine 0.86 to 0.88 from the target readout, slightly *better aligned* than
+Adam. There was never a decoupling. The benign control separates cleanly on all 3
+statistics, which is what makes the backdoored rows readable.
+
+A note on the metric, because the obvious version of it is vacuous: the residual
+`delta - (delta . d)d` has exactly zero mean by construction, so its share of the
+*mean* target-logit push is identically 0 and a ratio-of-means "explained fraction"
+returns 1.000 for every model including benign. The reported share is a ratio of
+mean magnitudes, which is not structurally fixed; on synthetic data it reads 0.006
+for a pure common shift and 0.997 for a per-sample one.
+
+
 
 ## What this does and does not say
 
@@ -339,8 +371,18 @@ clean/triggered inputs, and a defender has no triggered inputs. What this suppor
 is a *removal* story given a suspected trigger, not a detection story.
 
 The SAM result reads directly onto [H6](H6-sam-improves-detectability.md). SAM
-amplifies TAC and relocates the backdoor, but relocation is not removal, and the
-detector never sees the difference.
+amplifies TAC and relocates the backdoor across coordinates, but relocation is not
+removal, and the detector never sees the difference. Section 10 adds that SAM does
+not change the backdoor's *rank* either: it stays a single removable direction.
+
+**The methodological result may outlast the mechanistic one.** Projecting a
+direction out at a block output is the obvious ablation in a residual network and
+it is not sound in a pre-norm transformer, because the LayerNorm that follows
+rescales whatever survives. It produced a clean, monotone, benign-controlled, and
+entirely false SAM trend that survived 2 rounds of follow-up. What caught it was an
+independent measurement of the same quantity (section 10's decomposition), not a
+better ablation. Any ablation in this repo that hooks a block output and is not
+checked post-LayerNorm should be treated as suspect.
 
 ## Subquestions
 

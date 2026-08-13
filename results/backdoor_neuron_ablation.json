@@ -12,8 +12,8 @@
     },
     "ablated": {
       "direction": {
-        "asr": 0.002173913043478261,
-        "clean_accuracy": 0.92
+        "asr": 0.02608695652173913,
+        "clean_accuracy": 0.928
       },
       "random_dir_0": {
         "asr": 1.0,
@@ -24,14 +24,10 @@
         "clean_accuracy": 0.958
       },
       "rank_2": {
-        "asr": 0.008695652173913044,
-        "clean_accuracy": 0.92
+        "asr": 0.08260869565217391,
+        "clean_accuracy": 0.926
       },
-      "rank_4": {
-        "asr": 0.02391304347826087,
-        "clean_accuracy": 0.658
-      },
-      "rank_4_random": {
+      "rank_2_random": {
         "asr": 1.0,
         "clean_accuracy": 0.958
       },
@@ -45,7 +41,7 @@
       },
       "random_20": {
         "asr": 1.0,
-        "clean_accuracy": 0.958
+        "clean_accuracy": 0.956
       }
     }
   },
@@ -62,8 +58,8 @@
     },
     "ablated": {
       "direction": {
-        "asr": 1.0,
-        "clean_accuracy": 0.93
+        "asr": 0.0,
+        "clean_accuracy": 0.904
       },
       "random_dir_0": {
         "asr": 1.0,
@@ -74,14 +70,10 @@
         "clean_accuracy": 0.956
       },
       "rank_2": {
-        "asr": 1.0,
-        "clean_accuracy": 0.752
+        "asr": 0.002173913043478261,
+        "clean_accuracy": 0.884
       },
-      "rank_4": {
-        "asr": 1.0,
-        "clean_accuracy": 0.556
-      },
-      "rank_4_random": {
+      "rank_2_random": {
         "asr": 1.0,
         "clean_accuracy": 0.956
       },
@@ -96,106 +88,6 @@
       "random_20": {
         "asr": 1.0,
         "clean_accuracy": 0.956
-      }
-    }
-  },
-  {
-    "folder_name": "vit_cifar10_lf_0_1",
-    "attack": "lf",
-    "peak_layer": 12,
-    "top_k": [
-      20
-    ],
-    "baseline": {
-      "asr": 1.0,
-      "clean_accuracy": 0.96
-    },
-    "ablated": {
-      "direction": {
-        "asr": 0.05434782608695652,
-        "clean_accuracy": 0.956
-      },
-      "random_dir_0": {
-        "asr": 1.0,
-        "clean_accuracy": 0.96
-      },
-      "random_dir_1": {
-        "asr": 1.0,
-        "clean_accuracy": 0.96
-      },
-      "rank_2": {
-        "asr": 0.08478260869565217,
-        "clean_accuracy": 0.934
-      },
-      "rank_4": {
-        "asr": 0.1391304347826087,
-        "clean_accuracy": 0.784
-      },
-      "rank_4_random": {
-        "asr": 1.0,
-        "clean_accuracy": 0.96
-      },
-      "top_20": {
-        "asr": 1.0,
-        "clean_accuracy": 0.958
-      },
-      "bottom_20": {
-        "asr": 1.0,
-        "clean_accuracy": 0.96
-      },
-      "random_20": {
-        "asr": 1.0,
-        "clean_accuracy": 0.958
-      }
-    }
-  },
-  {
-    "folder_name": "vit_cifar10_lf_0_1_sam_rho_0_2",
-    "attack": "lf",
-    "peak_layer": 12,
-    "top_k": [
-      20
-    ],
-    "baseline": {
-      "asr": 1.0,
-      "clean_accuracy": 0.96
-    },
-    "ablated": {
-      "direction": {
-        "asr": 0.9,
-        "clean_accuracy": 0.942
-      },
-      "random_dir_0": {
-        "asr": 1.0,
-        "clean_accuracy": 0.962
-      },
-      "random_dir_1": {
-        "asr": 1.0,
-        "clean_accuracy": 0.96
-      },
-      "rank_2": {
-        "asr": 0.2565217391304348,
-        "clean_accuracy": 0.918
-      },
-      "rank_4": {
-        "asr": 0.22826086956521738,
-        "clean_accuracy": 0.808
-      },
-      "rank_4_random": {
-        "asr": 1.0,
-        "clean_accuracy": 0.96
-      },
-      "top_20": {
-        "asr": 1.0,
-        "clean_accuracy": 0.96
-      },
-      "bottom_20": {
-        "asr": 1.0,
-        "clean_accuracy": 0.96
-      },
-      "random_20": {
-        "asr": 1.0,
-        "clean_accuracy": 0.96
       }
     }
   },
@@ -213,7 +105,7 @@
     "ablated": {
       "direction": {
         "asr": 0.0,
-        "clean_accuracy": 0.876
+        "clean_accuracy": 0.902
       },
       "random_dir_0": {
         "asr": 1.0,
@@ -225,27 +117,23 @@
       },
       "rank_2": {
         "asr": 0.0,
-        "clean_accuracy": 0.866
+        "clean_accuracy": 0.902
       },
-      "rank_4": {
-        "asr": 0.0,
-        "clean_accuracy": 0.746
-      },
-      "rank_4_random": {
+      "rank_2_random": {
         "asr": 1.0,
         "clean_accuracy": 0.94
       },
       "top_20": {
         "asr": 1.0,
-        "clean_accuracy": 0.942
+        "clean_accuracy": 0.94
       },
       "bottom_20": {
         "asr": 1.0,
-        "clean_accuracy": 0.94
+        "clean_accuracy": 0.942
       },
       "random_20": {
         "asr": 1.0,
-        "clean_accuracy": 0.938
+        "clean_accuracy": 0.94
       }
     }
   },
@@ -262,8 +150,8 @@
     },
     "ablated": {
       "direction": {
-        "asr": 1.0,
-        "clean_accuracy": 0.928
+        "asr": 0.0,
+        "clean_accuracy": 0.888
       },
       "random_dir_0": {
         "asr": 1.0,
@@ -274,14 +162,10 @@
         "clean_accuracy": 0.966
       },
       "rank_2": {
-        "asr": 1.0,
-        "clean_accuracy": 0.782
+        "asr": 0.0,
+        "clean_accuracy": 0.888
       },
-      "rank_4": {
-        "asr": 1.0,
-        "clean_accuracy": 0.568
-      },
-      "rank_4_random": {
+      "rank_2_random": {
         "asr": 1.0,
         "clean_accuracy": 0.966
       },
@@ -295,7 +179,191 @@
       },
       "random_20": {
         "asr": 1.0,
-        "clean_accuracy": 0.968
+        "clean_accuracy": 0.966
+      }
+    }
+  },
+  {
+    "folder_name": "vit_cifar10_lf_0_1",
+    "attack": "lf",
+    "peak_layer": 12,
+    "top_k": [
+      20
+    ],
+    "baseline": {
+      "asr": 1.0,
+      "clean_accuracy": 0.96
+    },
+    "ablated": {
+      "direction": {
+        "asr": 0.5717391304347826,
+        "clean_accuracy": 0.958
+      },
+      "random_dir_0": {
+        "asr": 1.0,
+        "clean_accuracy": 0.96
+      },
+      "random_dir_1": {
+        "asr": 1.0,
+        "clean_accuracy": 0.96
+      },
+      "rank_2": {
+        "asr": 0.6152173913043478,
+        "clean_accuracy": 0.928
+      },
+      "rank_2_random": {
+        "asr": 1.0,
+        "clean_accuracy": 0.96
+      },
+      "top_20": {
+        "asr": 1.0,
+        "clean_accuracy": 0.96
+      },
+      "bottom_20": {
+        "asr": 1.0,
+        "clean_accuracy": 0.96
+      },
+      "random_20": {
+        "asr": 1.0,
+        "clean_accuracy": 0.96
+      }
+    }
+  },
+  {
+    "folder_name": "vit_cifar10_lf_0_1_sam_rho_0_2",
+    "attack": "lf",
+    "peak_layer": 12,
+    "top_k": [
+      20
+    ],
+    "baseline": {
+      "asr": 1.0,
+      "clean_accuracy": 0.96
+    },
+    "ablated": {
+      "direction": {
+        "asr": 0.002173913043478261,
+        "clean_accuracy": 0.894
+      },
+      "random_dir_0": {
+        "asr": 1.0,
+        "clean_accuracy": 0.96
+      },
+      "random_dir_1": {
+        "asr": 1.0,
+        "clean_accuracy": 0.96
+      },
+      "rank_2": {
+        "asr": 0.004347826086956522,
+        "clean_accuracy": 0.896
+      },
+      "rank_2_random": {
+        "asr": 1.0,
+        "clean_accuracy": 0.96
+      },
+      "top_20": {
+        "asr": 1.0,
+        "clean_accuracy": 0.962
+      },
+      "bottom_20": {
+        "asr": 1.0,
+        "clean_accuracy": 0.96
+      },
+      "random_20": {
+        "asr": 1.0,
+        "clean_accuracy": 0.96
+      }
+    }
+  },
+  {
+    "folder_name": "vit_cifar10_bpp_0_1",
+    "attack": "bpp",
+    "peak_layer": 12,
+    "top_k": [
+      20
+    ],
+    "baseline": {
+      "asr": 0.9978260869565218,
+      "clean_accuracy": 0.938
+    },
+    "ablated": {
+      "direction": {
+        "asr": 0.08478260869565217,
+        "clean_accuracy": 0.922
+      },
+      "random_dir_0": {
+        "asr": 0.9978260869565218,
+        "clean_accuracy": 0.938
+      },
+      "random_dir_1": {
+        "asr": 0.9978260869565218,
+        "clean_accuracy": 0.938
+      },
+      "rank_2": {
+        "asr": 0.1108695652173913,
+        "clean_accuracy": 0.93
+      },
+      "rank_2_random": {
+        "asr": 0.9978260869565218,
+        "clean_accuracy": 0.938
+      },
+      "top_20": {
+        "asr": 0.9978260869565218,
+        "clean_accuracy": 0.938
+      },
+      "bottom_20": {
+        "asr": 0.9978260869565218,
+        "clean_accuracy": 0.938
+      },
+      "random_20": {
+        "asr": 0.9978260869565218,
+        "clean_accuracy": 0.938
+      }
+    }
+  },
+  {
+    "folder_name": "vit_cifar10_bpp_0_1_sam_rho_0_2",
+    "attack": "bpp",
+    "peak_layer": 12,
+    "top_k": [
+      20
+    ],
+    "baseline": {
+      "asr": 0.9934782608695653,
+      "clean_accuracy": 0.962
+    },
+    "ablated": {
+      "direction": {
+        "asr": 0.0,
+        "clean_accuracy": 0.916
+      },
+      "random_dir_0": {
+        "asr": 0.9934782608695653,
+        "clean_accuracy": 0.962
+      },
+      "random_dir_1": {
+        "asr": 0.9934782608695653,
+        "clean_accuracy": 0.962
+      },
+      "rank_2": {
+        "asr": 0.0,
+        "clean_accuracy": 0.906
+      },
+      "rank_2_random": {
+        "asr": 0.9934782608695653,
+        "clean_accuracy": 0.962
+      },
+      "top_20": {
+        "asr": 0.9891304347826086,
+        "clean_accuracy": 0.962
+      },
+      "bottom_20": {
+        "asr": 0.9934782608695653,
+        "clean_accuracy": 0.962
+      },
+      "random_20": {
+        "asr": 0.9934782608695653,
+        "clean_accuracy": 0.962
       }
     }
   }

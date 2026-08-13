@@ -50,7 +50,7 @@ written.
 | [H13](H13-combined-variant.md) | The accumulated changes combine into a materially better defence | **SUPPORTED**: +0.110 derivation, **+0.151 held out (2/2)** |
 | [H14](H14-fusion.md) | PSBD and STRIP fuse into something better than either | **SUPPORTED**: 0.614 TPR at 1% FPR, 93% of oracle-max |
 | [H15](H15-one-sided-rules-are-the-common-weakness.md) | One-sided decision rules are a systematic weakness across detectors | **RETIRED as a method**, kept as a recorded negative result. Inversion is a symptom of a broken assumption, never a decision rule; nothing downstream uses it |
-| [H16](H16-where-the-backdoor-neurons-are.md) | The backdoor is one late-layer linear direction, disjoint across attacks, and SAM relocates it | **SUPPORTED** for the direction (ablation takes ASR 1.00 to 0.00); the "neurons" framing **REFUTED** (zeroing 300 of 768 coords does nothing); both data-free localizers **REFUTED** |
+| [H16](H16-where-the-backdoor-neurons-are.md) | The backdoor is one late-layer linear direction, not a set of neurons | **SUPPORTED**: post-LayerNorm rank-1 removal takes ASR 1.00 to 0.00 on every checkpoint; "neurons" framing **REFUTED** (300 of 768 coords does nothing); SAM sub-claim **REFUTED** as a LayerNorm artifact |
 | [H17](H17-low-poison-rate-is-a-placement-artifact.md) | PSBD's low-poison-rate failure is a placement artifact, not a limit of the method | **SUPPORTED on CIFAR-10**: `badnet_a2o` at 1% goes 0.297 to 0.839 one-sided, ASR 0.997; out-of-sample test in flight |
 | [H18](H18-sensitivity-profile-over-units.md) | The shape of a per-unit sensitivity profile beats its mean | Stated direction **REFUTED** (backdoored profiles are flatter, not peaked), but the profile **minimum** beats PSBD's mean by +0.12 at 1% poisoning |
 | [H19](H19-channel-mask-structured-vs-elementwise.md) | Masking whole channels beats thinning every channel a little | **PRE-REGISTERED**, pilot running |
@@ -59,6 +59,7 @@ written.
 | [H22](H22-head-mask-attention-units.md) | Attention heads are the transformer's own unit | **PRE-REGISTERED**, pilot running |
 | [H23](H23-gaussian-noise-control.md) | Does PSBD need capacity removed, or merely disturbed? | **PRE-REGISTERED** control; if noise matches removal, the neuron-bias framing is unnecessary |
 | [H24](H24-monte-carlo-passes.md) | k=3 Monte Carlo passes is the noise floor at low poison rate | Prediction 1 **CONFIRMED** from cache: +0.027 at 1% vs +0.017 at 10%; `badnet_a2o` 1% still climbing at k=3 (+0.089). k=20 submitted |
+| [H25](H25-adaptive-attacker.md) | An adaptive attacker can hide from PSBD, but only from the probe it trained against | **PRE-REGISTERED**: mechanism implemented and unit tested; the transfer table is the point |
 
 ## Where this stands after phases 3a and 3b
 
