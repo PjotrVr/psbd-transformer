@@ -148,9 +148,7 @@ def main() -> None:
 
     output = os.path.join(args.results_dir, "psu_vs_confidence.json")
     with open(output, "w") as handle:
-        json.dump(
-            {"placement": args.placement, "rows": dict(rows)}, handle, indent=2
-        )
+        json.dump({"placement": args.placement, "rows": dict(rows)}, handle, indent=2)
     print(f"\nwritten to {output}")
 
 

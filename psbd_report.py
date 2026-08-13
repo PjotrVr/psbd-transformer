@@ -54,14 +54,18 @@ def read_json(path: str) -> dict | None:
         return json.load(handle)
 
 
-def collect_rows(results_dir: str, checkpoints_dir: str, matched_key: str) -> list[dict]:
+def collect_rows(
+    results_dir: str, checkpoints_dir: str, matched_key: str
+) -> list[dict]:
     """One row per (checkpoint, placement), sorted for a stable diff."""
     rows = []
     for folder in sorted(os.listdir(results_dir)):
         report = read_json(os.path.join(results_dir, folder, "psbd_metrics.json"))
         if report is None:
             continue
-        baseline = read_json(os.path.join(checkpoints_dir, folder, "metrics.json")) or {}
+        baseline = (
+            read_json(os.path.join(checkpoints_dir, folder, "metrics.json")) or {}
+        )
 
         for placement, block in sorted(report["placements"].items()):
             adaptive = block.get("adaptive") or {}
@@ -162,13 +166,19 @@ def summarize_by_placement(rows: list[dict]) -> str:
         else:
             by_placement.setdefault(row["placement"], []).append(value)
 
-    lines = ["", "## Mean AUROC by placement (adaptive rate, backdoored models only)", ""]
+    lines = [
+        "",
+        "## Mean AUROC by placement (adaptive rate, backdoored models only)",
+        "",
+    ]
     lines.append("| placement | n | mean AUROC | min | max | no adaptive rate |")
     lines.append("|---|---|---|---|---|---|")
     for placement in sorted(set(list(by_placement) + list(missing))):
         values = by_placement.get(placement, [])
         if not values:
-            lines.append(f"| {placement} | 0 | -- | -- | -- | {missing.get(placement, 0)} |")
+            lines.append(
+                f"| {placement} | 0 | -- | -- | -- | {missing.get(placement, 0)} |"
+            )
             continue
         lines.append(
             f"| {placement} | {len(values)} | {sum(values) / len(values):.3f} | "
