@@ -1,0 +1,114 @@
+{
+  "chance_mean": 0.013553711374763747,
+  "chance_p95": 0.05263157894736842,
+  "rows": [
+    {
+      "folder_name": "vit_cifar10_badnet_a2o_0_1",
+      "peak_layer": 12,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.7391304347826086
+    },
+    {
+      "folder_name": "vit_cifar10_badnet_a2o_0_1_sam_rho_0_1",
+      "peak_layer": 11,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.7391304347826086
+    },
+    {
+      "folder_name": "vit_cifar10_badnet_a2o_0_1_sam_rho_0_2",
+      "peak_layer": 10,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.8181818181818182
+    },
+    {
+      "folder_name": "vit_cifar10_blend_0_1",
+      "peak_layer": 12,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.8181818181818182
+    },
+    {
+      "folder_name": "vit_cifar10_blend_0_1_sam_rho_0_1",
+      "peak_layer": 11,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.9047619047619048
+    },
+    {
+      "folder_name": "vit_cifar10_blend_0_1_sam_rho_0_2",
+      "peak_layer": 9,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.8181818181818182
+    },
+    {
+      "folder_name": "vit_cifar10_bpp_0_1",
+      "peak_layer": 12,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.7391304347826086
+    },
+    {
+      "folder_name": "vit_cifar10_bpp_0_1_sam_rho_0_1",
+      "peak_layer": 10,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.8181818181818182
+    },
+    {
+      "folder_name": "vit_cifar10_bpp_0_1_sam_rho_0_2",
+      "peak_layer": 10,
+      "n_per_half": 300,
+      "split_half_jaccard": 1.0
+    },
+    {
+      "folder_name": "vit_cifar10_lf_0_1",
+      "peak_layer": 10,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.9047619047619048
+    },
+    {
+      "folder_name": "vit_cifar10_lf_0_1_sam_rho_0_1",
+      "peak_layer": 10,
+      "n_per_half": 300,
+      "split_half_jaccard": 1.0
+    },
+    {
+      "folder_name": "vit_cifar10_lf_0_1_sam_rho_0_2",
+      "peak_layer": 9,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.9047619047619048
+    },
+    {
+      "folder_name": "vit_cifar10_badnet_a2a_0_1",
+      "peak_layer": 11,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.9047619047619048
+    },
+    {
+      "folder_name": "vit_cifar10_badnet_a2a_0_1_sam_rho_0_1",
+      "peak_layer": 11,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.9047619047619048
+    },
+    {
+      "folder_name": "vit_cifar10_badnet_a2a_0_1_sam_rho_0_2",
+      "peak_layer": 8,
+      "n_per_half": 300,
+      "split_half_jaccard": 1.0
+    },
+    {
+      "folder_name": "vit_cifar10_benign",
+      "peak_layer": 8,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.9047619047619048
+    },
+    {
+      "folder_name": "vit_cifar10_benign_sam_rho_0_1",
+      "peak_layer": 8,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.9047619047619048
+    },
+    {
+      "folder_name": "vit_cifar10_benign_sam_rho_0_2",
+      "peak_layer": 8,
+      "n_per_half": 300,
+      "split_half_jaccard": 0.8181818181818182
+    }
+  ]
+}
