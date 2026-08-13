@@ -38,9 +38,12 @@ import torch
 from sklearn.metrics import roc_auc_score
 
 # The paper sets the threshold at the 25th percentile of clean validation PSU in
-# every experiment, and reads it as the tolerable clean loss rate. The others are
-# swept alongside so the result can be shown not to hinge on that one choice.
-PSBD_QUANTILES: tuple[float, ...] = (0.10, 0.15, 0.20, 0.25)
+# every experiment, and reads it as the tolerable clean loss rate. That is a quarter
+# of clean data discarded, which no deployment tolerates, so 0.01 and 0.05 are swept
+# alongside: the quantile IS the false-positive budget, so these are the 1% and 5%
+# FPR operating points a defender would actually pick. The paper's 0.25 stays the
+# headline purely so the numbers remain comparable to the published tables.
+PSBD_QUANTILES: tuple[float, ...] = (0.01, 0.05, 0.10, 0.15, 0.20, 0.25)
 HEADLINE_QUANTILE = 0.25
 
 # The paper's adaptive rule selects the dropout rate where the shift ratio of

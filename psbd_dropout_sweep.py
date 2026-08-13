@@ -54,11 +54,20 @@ PSBD_MASK_SEED = 0
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--checkpoint-folder", required=True)
+    parser.add_argument("--checkpoint-folder", required=True, nargs="+")
     parser.add_argument(
         "--position-config",
         required=True,
+        nargs="+",
         choices=tuple(DROPOUT_CONFIGS) + SINGLE_POSITION_NAMES,
+    )
+    parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help=(
+            "skip a (checkpoint, placement) whose every rate tensor is already on "
+            "disk, so a resubmitted batch does not recompute finished work"
+        ),
     )
     parser.add_argument("--checkpoints-dir", default="checkpoints")
     parser.add_argument("--results-dir", default="results")
@@ -150,12 +159,14 @@ def resolve_architecture(checkpoint_path: str, metadata: dict) -> str:
 
 
 def load_model_and_loaders(
-    args: argparse.Namespace, device: torch.device
+    args: argparse.Namespace, folder: str, device: torch.device
 ) -> tuple[torch.nn.Module, str, dict, dict]:
-    """Side-effecting setup: read the checkpoint, build the model and the splits."""
-    checkpoint_path = os.path.join(
-        args.checkpoints_dir, args.checkpoint_folder, "attack_result.pt"
-    )
+    """Side-effecting setup: read the checkpoint, build the model and the splits.
+
+    The clean test set behind these loaders is lru_cached per process, so the second
+    and later checkpoints of a batch reuse it and pay only the model load.
+    """
+    checkpoint_path = os.path.join(args.checkpoints_dir, folder, "attack_result.pt")
     metadata = read_checkpoint_metadata(checkpoint_path)
     architecture = resolve_architecture(checkpoint_path, metadata)
     model = load_checkpoint(architecture, checkpoint_path, device)
@@ -247,7 +258,9 @@ def sweep_rates(
             unplug_dropout(handles)
 
 
-def write_run_provenance(psbd_dir: str, args: argparse.Namespace, device) -> None:
+def write_run_provenance(
+    psbd_dir: str, args: argparse.Namespace, position_config: str, device
+) -> None:
     """The commit, config, and GPU behind this cache, next to the cache itself.
 
     bfloat16 logits have an 8-bit mantissa, so a near-tie can put the baseline
@@ -256,7 +269,7 @@ def write_run_provenance(psbd_dir: str, args: argparse.Namespace, device) -> Non
     """
     payload = {
         "git_commit": current_git_commit(),
-        "position_config": args.position_config,
+        "position_config": position_config,
         "block_range": list(args.block_range) if args.block_range else None,
         "dropout_rates": list(args.rates) if args.rates else list(DROPOUT_RATES),
         "forward_passes": args.forward_passes,
@@ -271,23 +284,52 @@ def write_run_provenance(psbd_dir: str, args: argparse.Namespace, device) -> Non
     }
     path = os.path.join(
         psbd_dir,
-        f"run_{cache_config_name(args.position_config, tuple(args.block_range) if args.block_range else None)}.json",
+        f"run_{cache_config_name(position_config, tuple(args.block_range) if args.block_range else None)}.json",
     )
     os.makedirs(psbd_dir, exist_ok=True)
     with open(path, "w") as handle:
         json.dump(payload, handle, indent=2)
 
 
-def main() -> None:
-    args = parse_args()
-    device = resolve_device()
-    use_bfloat16 = not args.no_bfloat16
+def already_complete(psbd_dir: str, cache_name: str, rates: tuple[float, ...]) -> bool:
+    """Whether every rate tensor for this placement is already on disk.
 
-    model, architecture, loaders, manifest = load_model_and_loaders(args, device)
+    Checked per split, not just per rate, because a job killed mid-write would
+    otherwise look finished and leave a hole that stage 2 discovers much later.
+    """
+    return all(
+        os.path.exists(dropout_pass_path(psbd_dir, cache_name, rate, split))
+        for rate in rates
+        for split in ("validation", "clean", "backdoor")
+    )
 
-    psbd_dir = os.path.join(args.results_dir, args.checkpoint_folder, "psbd")
+
+def run_one_checkpoint(
+    folder: str, args: argparse.Namespace, device, use_bfloat16: bool
+) -> None:
+    """Every requested placement for one checkpoint, over one loaded model."""
+    block_range = tuple(args.block_range) if args.block_range else None
+    rates = tuple(args.rates) if args.rates else DROPOUT_RATES
+    psbd_dir = os.path.join(args.results_dir, folder, "psbd")
+
+    pending = [
+        position
+        for position in args.position_config
+        if not (
+            args.skip_existing
+            and already_complete(
+                psbd_dir, cache_config_name(position, block_range), rates
+            )
+        )
+    ]
+    if not pending:
+        print(f"[skip] {folder}: every requested placement already complete")
+        return
+
+    model, architecture, loaders, manifest = load_model_and_loaders(
+        args, folder, device
+    )
     write_split_manifest(psbd_dir, manifest)
-    write_run_provenance(psbd_dir, args, device)
     baselines = {
         split: load_or_build_baseline(
             psbd_dir, split, model, loader, device, use_bfloat16
@@ -295,22 +337,36 @@ def main() -> None:
         for split, loader in loaders.items()
     }
 
-    sweep_rates(
-        model,
-        architecture,
-        args.position_config,
-        loaders,
-        baselines,
-        psbd_dir,
-        device,
-        args.forward_passes,
-        use_bfloat16,
-        rates=tuple(args.rates) if args.rates else DROPOUT_RATES,
-        block_range=tuple(args.block_range) if args.block_range else None,
-        cache_name=cache_config_name(
-            args.position_config, tuple(args.block_range) if args.block_range else None
-        ),
-    )
+    for position in pending:
+        write_run_provenance(psbd_dir, args, position, device)
+        sweep_rates(
+            model,
+            architecture,
+            position,
+            loaders,
+            baselines,
+            psbd_dir,
+            device,
+            args.forward_passes,
+            use_bfloat16,
+            rates=rates,
+            block_range=block_range,
+            cache_name=cache_config_name(position, block_range),
+        )
+        print(f"[ok] {folder} {cache_config_name(position, block_range)}", flush=True)
+
+
+def main() -> None:
+    args = parse_args()
+    device = resolve_device()
+    use_bfloat16 = not args.no_bfloat16
+
+    for folder in args.checkpoint_folder:
+        try:
+            run_one_checkpoint(folder, args, device, use_bfloat16)
+        except Exception as error:
+            # One bad checkpoint must not cost the whole batch its remaining hours.
+            print(f"[FAILED] {folder}: {type(error).__name__}: {error}", flush=True)
 
 
 if __name__ == "__main__":
