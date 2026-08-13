@@ -49,6 +49,7 @@ written.
 | [H12](H12-psu-is-not-just-confidence.md) | PSU is just a proxy for baseline confidence | **REFUTED** (and yielded a free improvement) |
 | [H13](H13-combined-variant.md) | The accumulated changes combine into a materially better defence | **SUPPORTED**: +0.110 derivation, **+0.151 held out (2/2)** |
 | [H14](H14-fusion.md) | PSBD and STRIP fuse into something better than either | **SUPPORTED**: 0.614 TPR at 1% FPR, 93% of oracle-max |
+| [H15](H15-one-sided-rules-are-the-common-weakness.md) | One-sided decision rules are a systematic weakness across detectors | **SUPPORTED**: STRIP inverts on 9 checkpoints, up to +0.98 |
 
 ## Where this stands after phases 3a and 3b
 
