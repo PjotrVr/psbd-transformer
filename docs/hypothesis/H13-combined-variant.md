@@ -1,7 +1,7 @@
 # H13 — The accumulated changes combine into a materially better defence
 
-**Status: SUPPORTED on the derivation set (+0.110 mean AUROC, wins 14/15).
-Held-out confirmation is running.**
+**Status: SUPPORTED, and confirmed out of sample.** +0.110 mean AUROC on the
+derivation set (14/15), and **+0.151 on two held-out attacks (2/2)**.
 
 ## Claim
 
@@ -78,12 +78,30 @@ Using the complementary quantile when the direction flips restores TPR 0.295 aga
 FPR 0.284. AUROC was never affected, being rank-based, which is exactly why AUROC
 alone would not have surfaced it.
 
+## Held-out confirmation
+
+`sig` and `lc` at 10% poisoning. Neither was used to choose the band, the shift
+target, or anything else; both were excluded from every earlier grid for failing at
+lower poison rates.
+
+| checkpoint | ASR | paper AUROC | paper TPR | vit AUROC | vit TPR | delta |
+|---|---|---|---|---|---|---|
+| `lc` | 0.98 | 0.515 | 0.250 | **0.786** | 0.645 | **+0.271** |
+| `sig` | 0.90 | 0.900 | 0.906 | **0.931** | 0.911 | +0.031 |
+| **mean** | | 0.708 | | **0.859** | | **+0.151** |
+
+**2 of 2, and the mean gain is larger than on the derivation set** (+0.151 against
++0.110). `lc` is the striking one: the published configuration sits at 0.515, i.e.
+chance, and the adapted one reaches 0.786.
+
+So the two fitted choices are not overfitted. The improvement transfers to attacks
+that had no influence on them.
+
 ## Honest limitations
 
-- **Two of the four changes are fitted here.** The blocks 5-8 band and the 0.7 shift
-  target were both chosen after seeing results on these attacks, so the derivation
-  numbers are optimistic. A held-out run on `sig` and `lc` at 10% poisoning is in
-  flight and is the number to trust.
+- **Two of the four changes were fitted on the derivation set.** The blocks 5-8 band
+  and the 0.7 shift target were chosen after seeing those results, which is why the
+  held-out column above exists and is the one to quote.
 - `psbd_paper` is given the *extended* rate grid (down to 0.005), which the published
   method would not have swept. That is deliberately generous to it: on the original
   0.1-to-0.9 grid it would be worse still.

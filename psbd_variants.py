@@ -40,7 +40,6 @@ import json
 import os
 
 import numpy as np
-import torch
 from sklearn.metrics import roc_auc_score
 
 from defences.psbd_cache import (
@@ -51,6 +50,7 @@ from defences.psbd_cache import (
     read_split_manifest,
 )
 from defences.psbd_metrics import (
+    complete_rates,
     pair_clean_to_backdoor,
     psu_from_cache,
     psu_ratio_from_cache,
@@ -100,16 +100,8 @@ def score_split(psbd_dir, placement, rate, split, kind):
 
 
 def available_rates(psbd_dir: str, placement: str) -> list[float]:
-    folder = os.path.join(psbd_dir, placement)
-    if not os.path.isdir(folder):
-        return []
-    return sorted(
-        {
-            float(name[len("rate_") :].rsplit("_", 1)[0].replace("_", "."))
-            for name in os.listdir(folder)
-            if name.startswith("rate_") and name.endswith(".pt")
-        }
-    )
+    """Only rates with all three splits written, so this is safe against a live sweep."""
+    return complete_rates(psbd_dir, placement)
 
 
 def evaluate(psbd_dir: str, config: dict) -> dict | None:

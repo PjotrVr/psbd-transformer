@@ -67,6 +67,37 @@ ADAPTIVE_SHIFT_TARGET = 0.8
 SHIFT_MATCH_TARGETS: tuple[float, ...] = (0.2, 0.4, 0.6, 0.8)
 
 
+def complete_rates(psbd_dir: str, position_config: str) -> list[float]:
+    """Rates whose validation, clean AND backdoor tensors are all on disk.
+
+    Stage 1 writes the three splits of a rate one after another, so while a sweep is
+    running there is always a rate with some splits present and some missing.
+    Discovering rates by globbing any rate_*.pt therefore returns rates that cannot be
+    loaded, and every analysis script that did so crashed partway through the moment
+    it ran concurrently with a job.
+
+    Requiring all three makes analysis safe to run at any time against a live results
+    tree, which matters because the sweep now runs in multi-hour batches and waiting
+    for it to finish is not practical.
+    """
+    import os
+
+    folder = os.path.join(psbd_dir, position_config)
+    if not os.path.isdir(folder):
+        return []
+    seen: dict[float, set[str]] = {}
+    for name in os.listdir(folder):
+        if not name.startswith("rate_") or not name.endswith(".pt"):
+            continue
+        tag, split = name[len("rate_") : -len(".pt")].rsplit("_", 1)
+        seen.setdefault(float(tag.replace("_", ".")), set()).add(split)
+    return sorted(
+        rate
+        for rate, splits in seen.items()
+        if splits >= {"validation", "clean", "backdoor"}
+    )
+
+
 def psu_from_cache(
     baseline_probs: torch.Tensor,
     baseline_labels: torch.Tensor,

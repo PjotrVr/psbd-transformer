@@ -27,6 +27,7 @@ from defences.psbd_cache import (
 )
 from defences.psbd_metrics import (
     HEADLINE_QUANTILE,
+    complete_rates,
     PSBD_QUANTILES,
     SHIFT_MATCH_TARGETS,
     attack_success_mask,
@@ -79,16 +80,8 @@ def discover_position_configs(psbd_dir: str) -> list[str]:
 
 
 def discover_rates(psbd_dir: str, position_config: str) -> list[float]:
-    """Recover the swept rates from the filenames, so a partial sweep still analyzes."""
-    folder = os.path.join(psbd_dir, position_config)
-    rates = set()
-    for name in os.listdir(folder):
-        if not name.startswith("rate_") or not name.endswith(".pt"):
-            continue
-        # rate_0_5_clean.pt -> "0_5"
-        tag = name[len("rate_") :].rsplit("_", 1)[0]
-        rates.add(float(tag.replace("_", ".")))
-    return sorted(rates)
+    """Rates with all three splits present, so a live sweep does not break analysis."""
+    return complete_rates(psbd_dir, position_config)
 
 
 def load_baselines(

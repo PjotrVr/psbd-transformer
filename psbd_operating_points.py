@@ -43,6 +43,7 @@ from defences.psbd_cache import (
 )
 from defences.psbd_metrics import (
     attack_success_mask,
+    complete_rates,
     pair_clean_to_backdoor,
     psu_ratio_from_cache,
     shift_ratio,
@@ -73,16 +74,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def rates_on_disk(psbd_dir: str, placement: str) -> list[float]:
-    folder = os.path.join(psbd_dir, placement)
-    if not os.path.isdir(folder):
-        return []
-    return sorted(
-        {
-            float(name[len("rate_") :].rsplit("_", 1)[0].replace("_", "."))
-            for name in os.listdir(folder)
-            if name.startswith("rate_") and name.endswith(".pt")
-        }
-    )
+    """Only complete rates, so this is safe to run while a sweep is writing."""
+    return complete_rates(psbd_dir, placement)
 
 
 def scores_at(psbd_dir: str, placement: str, rate: float):
