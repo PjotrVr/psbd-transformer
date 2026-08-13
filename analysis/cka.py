@@ -96,11 +96,11 @@ def unbiased_hsic(gram_k: torch.Tensor, gram_l: torch.Tensor) -> torch.Tensor:
     if n < 4:
         raise ValueError("Unbiased HSIC needs at least 4 samples")
     k = gram_k.clone().fill_diagonal_(0.0)
-    l = gram_l.clone().fill_diagonal_(0.0)
-    dot_term = (k * l).sum()
+    m = gram_l.clone().fill_diagonal_(0.0)
+    dot_term = (k * m).sum()
     total_k = k.sum()
-    total_l = l.sum()
-    row_coupling = (k.sum(dim=0) * l.sum(dim=0)).sum()
+    total_l = m.sum()
+    row_coupling = (k.sum(dim=0) * m.sum(dim=0)).sum()
     return (
         dot_term
         + total_k * total_l / ((n - 1) * (n - 2))
