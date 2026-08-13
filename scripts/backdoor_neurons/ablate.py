@@ -68,6 +68,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--raw-data-dir", default="raw_data")
     parser.add_argument("--top-k", nargs="+", type=int, default=[20, 300])
     parser.add_argument("--random-directions", type=int, default=2)
+    parser.add_argument("--rank", nargs="*", type=int, default=[2, 4, 8, 16])
+    # Ablating at the peak layer leaves every later block free to rewrite the
+    # direction, which is a competing explanation for SAM's resistance. Forcing the
+    # layer to 12 removes that freedom and separates the 2 readings.
+    parser.add_argument("--layer", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--max-samples", type=int, default=2000)
@@ -90,6 +95,48 @@ def make_ablation_hook(dimensions: torch.Tensor):
         return output
 
     return hook
+
+
+def make_subspace_hook(basis: torch.Tensor):
+    """Remove the span of several directions at once.
+
+    Section 9 of H16 shows a rank-1 removal stops working as SAM's rho rises, which
+    says the backdoor becomes spread over a subspace rather than a line. The rank at
+    which ASR finally collapses turns that into a number instead of a binary.
+
+        x_ablated = x - Q (Q^T x),  Q an orthonormal basis of the subspace
+
+    The basis is orthonormalized first, because the leading difference directions
+    are not orthogonal and subtracting them one by one would over-subtract their
+    shared component.
+    """
+    orthonormal, _ = torch.linalg.qr(basis.T)
+
+    def hook(module, inputs, output):
+        coefficients = output @ orthonormal
+        return output - coefficients @ orthonormal.T
+
+    return hook
+
+
+def difference_basis(
+    clean: torch.Tensor, triggered: torch.Tensor, rank: int
+) -> torch.Tensor:
+    """A rank-r basis for the clean-to-triggered difference, mean direction first.
+
+    Row 0 is the mean difference, so rank 1 reproduces the rank-1 ablation exactly
+    and the sweep is a strict extension of it. Rows 1 onward are the leading
+    principal directions of the *centered* difference, which is the variation the
+    mean does not capture. If a backdoor is a pure common shift, those rows carry
+    nothing and rank r behaves like rank 1.
+    """
+    difference = triggered - clean
+    mean_direction = difference.mean(dim=0, keepdim=True)
+    if rank == 1:
+        return mean_direction
+    centered = difference - mean_direction
+    _, _, components = torch.linalg.svd(centered, full_matrices=False)
+    return torch.cat([mean_direction, components[: rank - 1]])
 
 
 def make_direction_hook(direction: torch.Tensor):
@@ -132,6 +179,8 @@ def peak_layer_signals(model, metadata, attack, peak, args, device):
     return (
         trigger_activated_change(clean, triggered),
         backdoor_direction(clean, triggered),
+        clean,
+        triggered,
     )
 
 
@@ -150,7 +199,7 @@ def ablate(folder: str, args: argparse.Namespace, device) -> dict | None:
     if not (os.path.exists(path) and os.path.exists(report_path)):
         return None
     with open(report_path) as handle:
-        peak = json.load(handle)["peak_layer"]
+        peak = args.layer or json.load(handle)["peak_layer"]
 
     metadata = read_checkpoint_metadata(path)
     benign = metadata["attack"] == "benign"
@@ -181,7 +230,9 @@ def ablate(folder: str, args: argparse.Namespace, device) -> dict | None:
     # TAC is recomputed here rather than read from backdoor_neurons.json, because the
     # bottom-of-ranking control needs the full vector and the report stores only the
     # top-k. Same layer, same estimator, so "top" reproduces the report's set.
-    tac, direction = peak_layer_signals(model, metadata, attack, peak, args, device)
+    tac, direction, clean, triggered = peak_layer_signals(
+        model, metadata, attack, peak, args, device
+    )
     width = tac.numel()
     order = tac.argsort(descending=True)
     generator = torch.Generator().manual_seed(args.seed)
@@ -194,6 +245,18 @@ def ablate(folder: str, args: argparse.Namespace, device) -> dict | None:
         random_direction = torch.randn(width, generator=generator)
         variants[f"random_dir_{index}"] = make_direction_hook(
             random_direction.to(device)
+        )
+    for rank in args.rank:
+        variants[f"rank_{rank}"] = make_subspace_hook(
+            difference_basis(clean, triggered, rank).to(device)
+        )
+    # A random subspace of the LARGEST rank, because that is where "you removed 16
+    # dimensions of variance, of course it broke" is the most plausible alternative
+    # explanation. The rank-1 case already has its random_dir controls.
+    if args.rank:
+        largest = max(args.rank)
+        variants[f"rank_{largest}_random"] = make_subspace_hook(
+            torch.randn(largest, width, generator=generator).to(device)
         )
     for k in args.top_k:
         variants[f"top_{k}"] = make_ablation_hook(order[:k].to(device))
@@ -230,6 +293,8 @@ def main() -> None:
     columns = (
         ["direction"]
         + [f"random_dir_{i}" for i in range(args.random_directions)]
+        + [f"rank_{r}" for r in args.rank]
+        + ([f"rank_{max(args.rank)}_random"] if args.rank else [])
         + [f"{side}_{k}" for k in args.top_k for side in ("top", "bottom", "random")]
     )
     header = f"{'checkpoint':30} {'peak':>5} {'base':>12} " + " ".join(

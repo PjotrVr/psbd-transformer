@@ -94,10 +94,12 @@ checkpoint rather than silently measuring a trigger the model never saw.
    from 1.00 to 0.00 on all 4 single-target attacks, costing 0.03 to 0.08 clean
    accuracy. Zeroing coordinates never works, up to 300 of 768. Random rank-1
    directions and the benign model are both unaffected.
-7. **SAM makes it less rank-1.** ASR after direction removal rises monotonically
-   with rho (`blend` 0.00 to 0.99 to 1.00, `lf` 0.05 to 0.35 to 0.97). Not a depth
-   artifact: `blend` and `badnet_a2o` both peak at layer 11 under rho 0.1 and give
-   0.99 against 0.00.
+7. **SAM decouples the backdoor from the mean shift.** ASR after direction removal
+   rises monotonically with rho (`blend` 0.00 to 0.99 to 1.00, `lf` 0.05 to 0.35 to
+   0.97). Not a depth artifact: forcing the ablation to block 12, with no block
+   left to recover in, gives the same answer. And not simply "spread over more
+   directions" either, since rank 2 to 16 subspaces of the difference hold ASR at
+   1.00 while dropping clean accuracy to 0.56.
 
 ## Caveat
 

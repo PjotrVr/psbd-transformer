@@ -271,9 +271,9 @@ of a linear-but-rotated direction.
 and therefore no single direction to remove, which is the same structural fact
 behind its PCA 0.756 versus UMAP 1.000 and behind [H5](H5-all-to-all-breaks-psbd.md).
 
-### 9. SAM makes the backdoor un-removable by a single direction
+### 9. SAM decouples the backdoor from the mean representation shift
 
-ASR after removing the backdoor direction, by optimizer:
+ASR after removing the backdoor direction at each checkpoint's peak layer:
 
 | attack | Adam | SAM 0.1 | SAM 0.2 |
 |---|---|---|---|
@@ -283,17 +283,50 @@ ASR after removing the backdoor direction, by optimizer:
 | `lf` | 0.05 | 0.35 | **0.97** |
 | `badnet_a2a` | 0.86 | 0.91 | 0.94 |
 
-Monotone in rho for all 5. Read with section 5, SAM does not merely move the
-backdoor to different coordinates; it makes it **less rank-1**, spreading it over a
-subspace that a single-direction ablation cannot remove. ASR is 0.96 to 1.00
-throughout, so this is a change in how the backdoor is represented, not in how well
-it works.
+Monotone in rho for all 5, with ASR at 0.96 to 1.00 throughout, so whatever changes
+is about representation and not about how well the attack works.
 
-**The obvious confound is ruled out internally.** The ablation fires at the peak
-layer, and SAM moves that peak earlier, so later blocks have more depth in which to
-rewrite the direction. But `blend` at rho 0.1 and `badnet_a2o` at rho 0.1 both peak
-at layer **11**, identical remaining depth, and give ASR 0.99 and 0.00
-respectively. Depth-to-recover does not explain the split.
+**The depth confound is ruled out.** The ablation fires at the peak layer, and SAM
+moves that peak earlier, so later blocks have more depth in which to rewrite the
+direction. Forcing the ablation to block **12**, where the output feeds the final
+LayerNorm and the head with no block left to recover in, changes nothing:
+
+| checkpoint | layer | direction | rank 2 | rank 4 | rank 4 random |
+|---|---|---|---|---|---|
+| `blend` Adam | 12 | **0.00** (CA 0.920) | 0.02 | 0.02 (CA 0.658) | 1.00 |
+| `blend` rho 0.2 | 12 | **1.00** (CA 0.930) | 1.00 (CA 0.752) | 1.00 (CA 0.556) | 1.00 |
+| `lf` Adam | 12 | **0.05** | 0.09 | 0.14 | 1.00 |
+| `lf` rho 0.2 | 12 | 0.90 | 0.26 | 0.23 (CA 0.808) | 1.00 |
+| `badnet_a2o` Adam | 12 | **0.00** | 0.00 | 0.00 | 1.00 |
+| `badnet_a2o` rho 0.2 | 12 | **1.00** | 1.00 (CA 0.782) | 1.00 (CA 0.568) | 1.00 |
+
+**But the "spread over a subspace" reading is not supported either**, and this
+corrects the first version of this section. If SAM merely spread the backdoor over
+more directions, a rank-4 or rank-16 removal built from the clean-versus-triggered
+difference would recover the kill. It does not: `blend` and `badnet_a2o` at rho 0.2
+hold ASR 1.00 at every rank tried, while clean accuracy falls to 0.556 and 0.568.
+The subspace is doing real damage; it is just not hitting the backdoor. The
+`rank_r_random` control sits at 1.00 with clean accuracy unmoved, so the damage is
+specific to the difference subspace rather than to removing r dimensions.
+
+What is actually established is narrower and still interesting:
+
+- Under Adam, the **mean CLS difference direction is causally sufficient**. Remove
+  it and the backdoor is gone.
+- Under SAM at rho 0.2, it is not, even at the last block, and no low-rank
+  extension of it is either.
+
+So SAM decouples "the direction along which triggered and clean representations
+differ" from "the direction the classifier actually uses to reach the target". Note
+that at rho 0.2 `blend` still has PCA 10-NN purity 1.000 from section 7: clean and
+triggered remain perfectly linearly separable, yet removing the leading difference
+directions leaves ASR at 1.00. Separability and decision have come apart, which is
+the same shape of result as [H7](H7-clean-shifts-to-target.md), now in weight space
+rather than under dropout.
+
+Naming the direction SAM actually uses is open. The natural next probe is the
+target class's readout direction (the head row, folded with the final LayerNorm
+gain) rather than a direction estimated from the difference.
 
 ## What this does and does not say
 
@@ -325,10 +358,11 @@ detector never sees the difference.
 4. Why is `lf`'s peak at layer 10 rather than 12, with a relative direction norm of
    2.18, double every other attack? It is the only attack whose direction *shrinks*
    over the last 2 blocks.
-5. If SAM makes the backdoor less rank-1 (section 9), how many directions does it
-   take? Removing the top-r subspace of the clean-versus-triggered difference for
-   r = 1, 2, 4, 8 would measure that, and the r at which ASR collapses is a
-   quantitative "how spread out" number rather than a binary one.
+5. **Answered in section 9, and it refuted the guess.** Rank 2, 4, 8 and 16
+   subspaces of the difference do not recover the kill under SAM; they destroy
+   clean accuracy instead. The open form of the question is now which direction
+   SAM's backdoor does use, with the target class readout direction as the first
+   candidate.
 6. Direction ablation costs 0.03 to 0.08 clean accuracy on single-target attacks
    and **0.26** on `badnet_a2a` at rho 0.1. It is not a free defence, and the cost
    is worth characterising against fine-tuning-based removal.
