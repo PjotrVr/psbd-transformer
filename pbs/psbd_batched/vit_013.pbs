@@ -1,0 +1,52 @@
+#!/bin/bash
+#PBS -q gpu
+#PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
+#PBS -l walltime=06:00:00
+#PBS -N psbd_vit_013
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/psbd_batch/vit_013.log
+#PBS -j oe
+
+export http_proxy="http://10.150.1.1:3128"
+export https_proxy="http://10.150.1.1:3128"
+
+echo "Job ID:  $PBS_JOBID"
+echo "Node:    $(hostname)"
+echo "Started: $(date)"
+echo "Batch:   7 checkpoints, 49 configs, est 217 min"
+nvidia-smi --query-gpu=name --format=csv,noheader
+
+BASE=/lustre/home/pstika/projects/PSBD-ViT
+cd $BASE
+source .venv/bin/activate
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_wanet_0_1_sam_rho_0_2 vit_cifar10_adaptive_blend_0_01_sam_rho_0_15 vit_cifar10_adaptive_blend_0_01_sam_rho_0_2 vit_cifar10_adaptive_blend_0_05 vit_cifar10_adaptive_blend_0_05_sam_rho_0_05 vit_cifar10_adaptive_blend_0_05_sam_rho_0_1 vit_cifar10_adaptive_blend_0_05_sam_rho_0_15 \
+    --position-config pre_residual before_mlp_residual before_attention_norm \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_wanet_0_1_sam_rho_0_2 vit_cifar10_adaptive_blend_0_01_sam_rho_0_15 vit_cifar10_adaptive_blend_0_01_sam_rho_0_2 vit_cifar10_adaptive_blend_0_05 vit_cifar10_adaptive_blend_0_05_sam_rho_0_05 vit_cifar10_adaptive_blend_0_05_sam_rho_0_1 vit_cifar10_adaptive_blend_0_05_sam_rho_0_15 \
+    --position-config post_residual \
+    --rates 0.005 0.01 0.02 0.03 0.05 0.07 0.09 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_wanet_0_1_sam_rho_0_2 vit_cifar10_adaptive_blend_0_01_sam_rho_0_15 vit_cifar10_adaptive_blend_0_01_sam_rho_0_2 vit_cifar10_adaptive_blend_0_05 vit_cifar10_adaptive_blend_0_05_sam_rho_0_05 vit_cifar10_adaptive_blend_0_05_sam_rho_0_1 vit_cifar10_adaptive_blend_0_05_sam_rho_0_15 \
+    --position-config pre_residual \
+    --block-range 1 4 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_wanet_0_1_sam_rho_0_2 vit_cifar10_adaptive_blend_0_01_sam_rho_0_15 vit_cifar10_adaptive_blend_0_01_sam_rho_0_2 vit_cifar10_adaptive_blend_0_05 vit_cifar10_adaptive_blend_0_05_sam_rho_0_05 vit_cifar10_adaptive_blend_0_05_sam_rho_0_1 vit_cifar10_adaptive_blend_0_05_sam_rho_0_15 \
+    --position-config pre_residual \
+    --block-range 5 8 \
+    --skip-existing
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder vit_cifar10_wanet_0_1_sam_rho_0_2 vit_cifar10_adaptive_blend_0_01_sam_rho_0_15 vit_cifar10_adaptive_blend_0_01_sam_rho_0_2 vit_cifar10_adaptive_blend_0_05 vit_cifar10_adaptive_blend_0_05_sam_rho_0_05 vit_cifar10_adaptive_blend_0_05_sam_rho_0_1 vit_cifar10_adaptive_blend_0_05_sam_rho_0_15 \
+    --position-config pre_residual \
+    --block-range 9 12 \
+    --skip-existing
+
+echo "Finished: $(date)"
+exit 0

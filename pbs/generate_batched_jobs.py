@@ -74,8 +74,8 @@ TEMPLATE = """#!/bin/bash
 #PBS -q gpu
 #PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
 #PBS -l walltime={walltime}
-#PBS -N psbd_batch_{index:03d}
-#PBS -o {base}/logs/psbd_batch/batch_{index:03d}.log
+#PBS -N psbd_{architecture}_{index:03d}
+#PBS -o {base}/logs/psbd_batch/{architecture}_{index:03d}.log
 #PBS -j oe
 
 export http_proxy="http://10.150.1.1:3128"
@@ -235,8 +235,9 @@ def main() -> None:
     out_dir = os.path.join(BASE, "pbs", "psbd_batched")
     os.makedirs(out_dir, exist_ok=True)
 
-    index, written = 0, []
+    written = []
     for architecture in args.architecture:
+        index = 0
         checkpoints = viable_checkpoints(
             architecture, args.dataset, not args.no_sam, args.checkpoints_dir
         )
@@ -253,6 +254,7 @@ def main() -> None:
             body = TEMPLATE.format(
                 walltime=walltime,
                 base=BASE,
+                architecture=architecture,
                 index=index,
                 n_checkpoints=len(folders),
                 n_configs=len(folders)
@@ -260,7 +262,7 @@ def main() -> None:
                 estimate=int(per * len(folders)),
                 commands=build_commands(folders, architecture),
             )
-            path = os.path.join(out_dir, f"batch_{index:03d}.pbs")
+            path = os.path.join(out_dir, f"{architecture}_{index:03d}.pbs")
             if not args.dry_run:
                 with open(path, "w") as handle:
                     handle.write(body)
