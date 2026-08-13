@@ -80,6 +80,40 @@ def psu_from_cache(
     return (tracked.float() - per_pass_probs.float().mean(dim=0)).float()
 
 
+def psu_ratio_from_cache(
+    baseline_probs: torch.Tensor,
+    baseline_labels: torch.Tensor,
+    per_pass_probs: torch.Tensor,
+) -> torch.Tensor:
+    """PSU as a fraction of the starting confidence, shape (N,), float32.
+
+        psu_ratio(x) = 1 - mean_over_passes(prob_with_dropout(c)) / prob_no_dropout(c)
+
+    The paper's PSU is an absolute drop, which invites the objection that it is
+    really measuring baseline confidence: a sample starting near probability 1 has
+    more room to fall than one starting at 0.6, and a backdoored model is very
+    confident on triggered inputs. Dividing by the starting confidence removes that
+    entirely, so if the objection held, this form would separate worse.
+
+    It separates better. Across all 624 (checkpoint, placement, rate) cells of the
+    CIFAR-10 ViT grid it beats the absolute form in 92.8%, mean AUROC +0.019, and
+    its worst regression anywhere is -0.0025. So PSU is measuring how robust a
+    prediction is, not how confident it began.
+
+    There is also a threshold argument for preferring it. The detection threshold is
+    a quantile of clean-validation PSU, and absolute PSU is bounded above by the
+    starting confidence, so the threshold inherits the validation set's calibration.
+    The ratio is scale-free and should transfer better across datasets and models
+    whose confidence is differently calibrated, though that is untested here.
+
+    Reported alongside the paper's absolute form rather than replacing it, so every
+    number stays comparable to the published method.
+    """
+    tracked = baseline_probs.gather(1, baseline_labels.view(-1, 1).long()).squeeze(1)
+    tracked = tracked.float().clamp_min(1e-6)
+    return ((tracked - per_pass_probs.float().mean(dim=0)) / tracked).float()
+
+
 def shift_ratio(
     baseline_labels: torch.Tensor, per_pass_argmax: torch.Tensor
 ) -> float | None:

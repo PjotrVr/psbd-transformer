@@ -15,6 +15,7 @@ from defences.psbd_metrics import (
     detection_report,
     pair_clean_to_backdoor,
     psu_from_cache,
+    psu_ratio_from_cache,
     select_rate_adaptively,
     select_rate_by_oracle,
     shift_ratio,
@@ -183,3 +184,34 @@ def test_captured_subset_must_restrict_both_sides():
         "the unrestricted comparison should look like strong detection, which is "
         "exactly why it is the wrong reading"
     )
+
+
+def test_psu_ratio_divides_out_the_starting_confidence():
+    """The fractional form must be scale-free in the baseline confidence.
+
+    Two samples with the same PROPORTIONAL drop but very different starting
+    confidence must score identically. Absolute PSU cannot do this, which is the
+    whole point: it is why absolute PSU is open to the objection that it proxies
+    confidence.
+    """
+    # Sample 0 starts at 0.9 and halves; sample 1 starts at 0.2 and halves.
+    baseline_probs = torch.tensor([[0.9, 0.1], [0.2, 0.8]])
+    baseline_labels = torch.tensor([0, 0])
+    per_pass_probs = torch.tensor([[0.45, 0.10]])
+
+    absolute = psu_from_cache(baseline_probs, baseline_labels, per_pass_probs)
+    ratio = psu_ratio_from_cache(baseline_probs, baseline_labels, per_pass_probs)
+
+    assert not torch.allclose(absolute[0], absolute[1]), (
+        "absolute PSU should differ, since the same proportional drop is a larger "
+        "absolute drop for the more confident sample"
+    )
+    assert torch.allclose(ratio, torch.tensor([0.5, 0.5]), atol=1e-6)
+
+
+def test_psu_ratio_is_zero_without_perturbation():
+    baseline_probs = torch.tensor([[0.7, 0.3]])
+    ratio = psu_ratio_from_cache(
+        baseline_probs, torch.tensor([0]), torch.tensor([[0.7]])
+    )
+    assert torch.allclose(ratio, torch.zeros(1), atol=1e-6)

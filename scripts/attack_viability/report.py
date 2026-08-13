@@ -65,8 +65,14 @@ def viability_table(rows: list[dict], architecture: str, datasets: list[str]) ->
     return table
 
 
-def sam_holds(rows: list[dict], architecture: str, dataset: str, attack: str,
-              poison_rate: float, min_asr: float) -> bool:
+def sam_holds(
+    rows: list[dict],
+    architecture: str,
+    dataset: str,
+    attack: str,
+    poison_rate: float,
+    min_asr: float,
+) -> bool:
     """Whether the attack stays viable across every SAM rho at this poison rate."""
     matching = [
         row
@@ -91,12 +97,13 @@ def main() -> None:
     print("-" * (len(header) + 30))
 
     viable = []
-    for (attack, dataset) in sorted(table):
+    for attack, dataset in sorted(table):
         column = table[(attack, dataset)]
         swept = [rate for rate in rates if rate in column and rate >= 0.01]
         passes = [rate for rate in swept if column[rate] >= args.min_asr]
         cells = " ".join(
-            f"{column[rate]:>7.3f}" if rate in column else f"{'--':>7}" for rate in rates
+            f"{column[rate]:>7.3f}" if rate in column else f"{'--':>7}"
+            for rate in rates
         )
         if len(passes) == len(swept) and swept:
             sam_ok = all(

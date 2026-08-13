@@ -72,9 +72,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def final_layer_features(
-    model, loader, device, layer: int, seed: int
-) -> torch.Tensor:
+def final_layer_features(model, loader, device, layer: int, seed: int) -> torch.Tensor:
     """CLS features at one layer, with the mask sequence pinned by seed.
 
     Reseeding immediately before extraction is what makes the clean and triggered
@@ -90,7 +88,9 @@ def final_layer_features(
     return features[layer]
 
 
-def separation(clean_projection: torch.Tensor, backdoor_projection: torch.Tensor) -> float:
+def separation(
+    clean_projection: torch.Tensor, backdoor_projection: torch.Tensor
+) -> float:
     """Standardized mean difference along the direction (Cohen's d).
 
     A plain mean difference would confound "the two groups moved apart" with "the
@@ -125,7 +125,12 @@ def main() -> None:
         target_label,
     )
     clean_loader, backdoor_loader, _ = build_paired_loaders(
-        dataset_name, attack, args.raw_data_dir, args.batch_size, args.samples, args.seed
+        dataset_name,
+        attack,
+        args.raw_data_dir,
+        args.batch_size,
+        args.samples,
+        args.seed,
     )
     model = load_checkpoint(architecture, checkpoint_path, device)
 
@@ -142,8 +147,12 @@ def main() -> None:
     )
 
     print(f"{args.checkpoint_folder}  attack={attack_name}  layer={args.layer}")
-    print(f"unperturbed separation along the backdoor direction: {baseline_separation:.3f}\n")
-    print(f"{'placement':16} {'rate':>5} {'proj_clean':>11} {'proj_bd':>9} {'sep':>7} {'sep/base':>9}")
+    print(
+        f"unperturbed separation along the backdoor direction: {baseline_separation:.3f}\n"
+    )
+    print(
+        f"{'placement':16} {'rate':>5} {'proj_clean':>11} {'proj_bd':>9} {'sep':>7} {'sep/base':>9}"
+    )
 
     results = {
         "folder_name": args.checkpoint_folder,
@@ -158,7 +167,7 @@ def main() -> None:
     for placement in args.placement:
         names = DROPOUT_CONFIGS.get(placement, (placement,))
         rows = []
-        for rate in (tuple(args.rates) if args.rates else RATES):
+        for rate in tuple(args.rates) if args.rates else RATES:
             handles = plug_dropout(model, architecture, names, {}, rate)
             try:
                 clean_features = final_layer_features(

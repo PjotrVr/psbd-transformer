@@ -45,11 +45,33 @@ And normalising the confidence out does not destroy the signal, it slightly impr
 it, on every checkpoint. So PSU measures how **robust** a prediction is, not how
 confident it started.
 
-## The free improvement
+## The free improvement, checked across the whole grid
 
-The fractional form is better on all four working attacks (blend +0.013, lf +0.012,
-badnet_a2o +0.003, bpp +0.001). Small, but one-sided, and it costs nothing: the same
-cached tensors divided by a number already on disk.
+The single-placement result generalizes. Over **all 624 (checkpoint, placement, rate)
+cells** of the CIFAR-10 ViT grid:
+
+| | |
+|---|---|
+| fractional form better | **579 cells (92.8%)** |
+| absolute form better | 45 cells (7.2%) |
+| mean AUROC delta | **+0.019** |
+| worst regression anywhere | **-0.0025** |
+| best gain | +0.075 |
+| 5th / 95th percentile | -0.0000 / +0.054 |
+
+By placement, mean delta and win rate: `post_residual` +0.026 / 97%, `pre_residual`
++0.026 / 96%, `before_mlp_residual` +0.022 / 88%, `before_attention` +0.008 / 91%,
+`before_attention_norm` +0.007 / 89%.
+
+It is never meaningfully worse. The largest regression across 624 cells is 0.0025
+AUROC, which is smaller than the noise on any single measurement, while the gains
+reach 0.075. This is as close to a free lunch as this study has produced, and it
+costs nothing: the same cached tensors divided by a number already on disk.
+
+Now computed as `defences.psbd_metrics.psu_ratio_from_cache` and reported for every
+(placement, rate) as `detection_psu_ratio` alongside the paper's absolute form, so the
+headline numbers stay comparable to the published method while the improvement stays
+visible.
 
 It also has a principled edge over the paper's absolute form. The threshold is a
 quantile of clean-validation PSU, and absolute PSU is bounded above by the starting

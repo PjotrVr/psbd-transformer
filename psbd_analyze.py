@@ -33,6 +33,7 @@ from defences.psbd_metrics import (
     detection_report,
     pair_clean_to_backdoor,
     psu_from_cache,
+    psu_ratio_from_cache,
     select_rate_adaptively,
     select_rate_at_matched_shift,
     select_rate_by_oracle,
@@ -113,6 +114,7 @@ def analyze_one_rate(
     whole unfiltered pool would actually see.
     """
     psu: dict[str, torch.Tensor] = {}
+    psu_ratio: dict[str, torch.Tensor] = {}
     sigma: dict[str, float | None] = {}
     histograms: dict[str, list[int] | None] = {}
 
@@ -122,6 +124,7 @@ def analyze_one_rate(
             dropout_pass_path(psbd_dir, position_config, rate, split)
         )
         psu[split] = psu_from_cache(probs, labels, per_pass_probs)
+        psu_ratio[split] = psu_ratio_from_cache(probs, labels, per_pass_probs)
         sigma[split] = shift_ratio(labels, per_pass_argmax)
         histograms[split] = shift_target_histogram(labels, per_pass_argmax, num_classes)
 
@@ -167,9 +170,23 @@ def analyze_one_rate(
             for quantile in PSBD_QUANTILES
         }
 
+    # The same detection, scored on the confidence-normalised PSU. Reported beside
+    # the paper's absolute form rather than replacing it, so the headline numbers
+    # stay comparable to the published method while the improvement is visible.
+    ratio_detection = {
+        f"q{quantile:.2f}": detection_report(
+            psu_ratio["validation"],
+            pair_clean_to_backdoor(psu_ratio["clean"], manifest),
+            psu_ratio["backdoor"],
+            quantile,
+        )
+        for quantile in PSBD_QUANTILES
+    }
+
     return {
         "rate": rate,
         "shift_ratio": sigma,
+        "detection_psu_ratio": ratio_detection,
         "shift_target_histogram": histograms,
         # The fraction of all shifted clean predictions that landed on the
         # attacker's target class: PSBD's mechanism claim as one number.
