@@ -1,0 +1,2 @@
+- [User role and review style](user_role.md) — ML security researcher; wants read-only, severity-ranked audits with exact file:line and no padding
+- [PSBD-ViT research validity](psbd_vit_research_validity.md) — poison-rate caps, the reframing away from the PSBD paper, and the a2a ASR confound

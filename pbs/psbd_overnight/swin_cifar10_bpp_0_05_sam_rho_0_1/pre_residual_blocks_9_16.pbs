@@ -1,0 +1,27 @@
+#!/bin/bash
+#PBS -q gpu
+#PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
+#PBS -l walltime=00:20:00
+#PBS -N psbd_swin_cifar10_bpp_0_05_sam_rho_0_1_pre_residual_blocks_9_16
+#PBS -o /lustre/home/pstika/projects/PSBD-ViT/logs/psbd_sweep/swin_cifar10_bpp_0_05_sam_rho_0_1/pre_residual_blocks_9_16.log
+#PBS -j oe
+
+export http_proxy="http://10.150.1.1:3128"
+export https_proxy="http://10.150.1.1:3128"
+
+echo "Job ID:  $PBS_JOBID"
+echo "Node:    $(hostname)"
+echo "Started: $(date)"
+nvidia-smi
+
+BASE=/lustre/home/pstika/projects/PSBD-ViT
+cd $BASE
+source .venv/bin/activate
+
+python psbd_dropout_sweep.py \
+    --checkpoint-folder swin_cifar10_bpp_0_05_sam_rho_0_1 \
+    --position-config pre_residual \
+    --block-range 9 16
+
+echo "Finished: $(date)"
+exit 0
