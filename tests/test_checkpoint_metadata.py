@@ -75,6 +75,7 @@ def test_read_checkpoint_metadata_round_trip(tmp_path):
         "attack": "badnet_a2o",
         "target_label": 0,
         "poison_rate": 0.1,
+        "architecture": "vit",
     }
     with open(os.path.join(tmp_path, "args.json"), "w") as handle:
         json.dump(metadata, handle)
@@ -82,3 +83,19 @@ def test_read_checkpoint_metadata_round_trip(tmp_path):
     assert (
         read_checkpoint_metadata(os.path.join(tmp_path, "attack_result.pt")) == metadata
     )
+
+
+def test_read_checkpoint_metadata_rejects_a_file_missing_architecture(tmp_path):
+    """architecture is required because the sweep builds the model from it.
+
+    Absent, psbd_dropout_sweep raised a bare KeyError from a line that gave no
+    hint which file was malformed. Worse, the architecture recorded there is
+    itself only inferred, so it is cross-checked against the checkpoint's own
+    state_dict keys before use.
+    """
+    metadata = {"dataset": "cifar10", "attack": "badnet_a2o", "target_label": 0}
+    with open(os.path.join(tmp_path, "args.json"), "w") as handle:
+        json.dump(metadata, handle)
+
+    with pytest.raises(KeyError, match="architecture"):
+        read_checkpoint_metadata(os.path.join(tmp_path, "attack_result.pt"))
