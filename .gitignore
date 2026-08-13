@@ -33,3 +33,6 @@ papers/
 results/**
 !results/**/
 !results/**/psbd_metrics.json
+!results/**/direction_layers_*.json
+!results/**/dropout_direction_survival.json
+!results/psu_vs_confidence.json
