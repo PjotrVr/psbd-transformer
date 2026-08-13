@@ -84,14 +84,31 @@ attention-branch perturbation actively dilutes the MLP-branch one, so the
 two-position combos that framed this study were never the right unit of analysis.
 And the top three placements are not residual positions at all.
 
-**All-to-all is undetectable, and the reason is structural.** `badnet_a2a` scores
-0.510 at 10% poisoning, against a benign floor of 0.506, while its backdoor fires on
-96% of inputs. Identical trigger to `badnet_a2o` at 0.889. A backdoor direction is a
-*mean* of paired differences, and all-to-all sends each source class somewhere
-different, so the mean cancels: its direction is half the magnitude of
-`badnet_a2o`'s at every layer, and its clean-vs-triggered CKA at layer 12 is 0.953
-against 0.419. There is no single direction because the attack implements none. This
-should break any single-target method, not only PSBD.
+**All-to-all is not undetectable. Its signal is inverted.** Under the paper's
+one-tailed rule `badnet_a2a` scores 0.510, against a benign floor of 0.506, and that
+was recorded as a clean falsification. The depth-band sweep then produced 0.159 for
+the same model, which is too far below chance to be noise: it is a detector running
+backwards. The PSU means show why (blocks 9-12, rate 0.7):
+
+| | PSU clean | PSU backdoor | |
+|---|---|---|---|
+| `badnet_a2o` | 0.101 | **0.022** | backdoor more robust, the paper's premise |
+| `badnet_a2a` | 0.144 | **0.588** | backdoor 4x more **fragile**, premise inverted |
+
+Allowing the rule to flag either tail gives **0.988 / 0.946 / 0.966** at 1 / 5 / 10
+percent poisoning. The benign control scored under the identical two-sided rule, with
+the same max over rates and placements, moves only from 0.506 to **0.522**, so the
+gain is not an artifact of two-sidedness.
+
+The mechanism is the label geometry, but it changes the *sign* rather than removing
+the effect. All-to-one learns one shortcut reinforced by every poisoned sample, and it
+survives perturbation. All-to-all learns K mappings, each from 1/K of the poison and
+each conditional on the source class, which is a more delicate function that degrades
+faster than the clean evidence it depends on.
+
+Consistent with this, its backdoor *direction* is also half the magnitude of
+`badnet_a2o`'s at every layer, with layer-12 CKA 0.953 against 0.419: a mean of paired
+differences largely cancels when each class is sent somewhere different.
 
 ## What broke
 
