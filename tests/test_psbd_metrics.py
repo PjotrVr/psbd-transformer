@@ -215,3 +215,46 @@ def test_psu_ratio_is_zero_without_perturbation():
         baseline_probs, torch.tensor([0]), torch.tensor([[0.7]])
     )
     assert torch.allclose(ratio, torch.zeros(1), atol=1e-6)
+
+
+def test_two_sided_auroc_recovers_an_inverted_detector():
+    """PSBD's rule is one-tailed; all-to-all backdoors invert the tail.
+
+    A detector at AUROC 0.159 is not failing, it is separating almost perfectly with
+    the sign reversed. The one-sided number must keep reporting 0.159, so nothing
+    already published silently changes, and the two-sided number must surface the
+    0.841 that a flipped rule would achieve.
+    """
+    # Backdoor PSU strictly HIGHER than clean, the opposite of PSBD's premise.
+    report = detection_report(
+        torch.arange(100).float(),
+        torch.arange(20).float(),
+        torch.arange(50, 70).float(),
+        quantile=0.25,
+    )
+    assert report["auroc"] < 0.5
+    assert math.isclose(report["auroc_two_sided"], 1.0 - report["auroc"], rel_tol=1e-9)
+    assert report["direction"] == "inverted"
+
+
+def test_two_sided_auroc_is_a_no_op_when_the_direction_is_as_expected():
+    report = detection_report(
+        torch.arange(100).float(),
+        torch.arange(50, 70).float(),
+        torch.arange(20).float(),
+        quantile=0.25,
+    )
+    assert report["direction"] == "as_expected"
+    assert math.isclose(report["auroc_two_sided"], report["auroc"], rel_tol=1e-9)
+
+
+def test_two_sided_auroc_barely_moves_a_chance_detector():
+    """The control that makes the two-sided rule trustworthy.
+
+    A two-sided statistic can flatter anything, so the guarantee that matters is
+    that it does NOT rescue a detector with no signal. Identical distributions must
+    stay at 0.5, not jump toward 1.
+    """
+    same = torch.arange(50).float()
+    report = detection_report(same, same, same.clone(), quantile=0.25)
+    assert math.isclose(report["auroc_two_sided"], 0.5, abs_tol=1e-9)

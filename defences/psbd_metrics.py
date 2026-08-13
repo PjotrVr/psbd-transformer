@@ -185,6 +185,18 @@ def detection_report(
 
     AUROC negates both score sets because low PSU is the positive (poisoned)
     evidence, and roc_auc_score expects higher to mean more positive.
+
+    auroc_two_sided is max(auroc, 1 - auroc), and it is not a cosmetic addition.
+    PSBD's rule is one-tailed: flag low PSU. That assumes the backdoor is the more
+    robust feature, which holds for all-to-one but is measurably false for
+    all-to-all, whose per-class conditional mappings are more fragile than the clean
+    evidence they depend on. Its AUROC lands at 0.159, which a one-tailed reading
+    scores as total failure when it is in fact near-perfect separation with the sign
+    reversed. Reported alongside, never instead of, the one-sided number.
+
+    A two-sided statistic can flatter anything, so it has to be read against a
+    control scored the same way. On the benign model it moves 0.506 to 0.522, while
+    on all-to-all it moves 0.159 to 0.966.
     """
     threshold = threshold_at_quantile(validation_psu, quantile)
     tpr = float((backdoor_psu < threshold).float().mean().item())
@@ -204,6 +216,12 @@ def detection_report(
         "tpr": tpr,
         "fpr": fpr,
         "auroc": auroc,
+        "auroc_two_sided": max(auroc, 1.0 - auroc) if auroc == auroc else float("nan"),
+        # "inverted" means backdoor samples are LESS robust to the perturbation than
+        # clean ones, the opposite of PSBD's premise.
+        "direction": ("inverted" if auroc < 0.5 else "as_expected")
+        if auroc == auroc
+        else None,
     }
 
 
