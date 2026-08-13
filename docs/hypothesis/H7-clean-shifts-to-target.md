@@ -63,10 +63,64 @@ than a backdoor-driven bias. The table above deliberately uses a lower rate. Bot
 are in `psbd_metrics.json`; reading the saturated one would have made `bpp` look
 like 0.75 and inflated the whole effect.
 
+## Independent verification in latent space
+
+Everything above is prediction-space: it counts which class *label* the model outputs.
+That is one technique, and the neuron-bias claim is really about representations, so it
+was checked again with a different measurement entirely
+(`scripts/shift_in_latent_space/`).
+
+For clean samples whose prediction shifts under dropout, measure where the CLS feature
+actually *moves*: the cosine between the dropout-induced displacement and the direction
+from the sample's own class centroid to the target class centroid. `pre_residual`
+blocks 5-8, p=0.5, layer 12, 800 samples, fp32. `cos->landed` is the control, the same
+cosine but toward whichever class the prediction actually went to.
+
+| checkpoint | landed on y_t | cos -> target | cos -> landed | excess | proj on backdoor dir |
+|---|---|---|---|---|---|
+| `badnet_a2o` | 0.374 | 0.4724 | 0.3986 | +0.074 | 0.622 |
+| `blend` | 0.145 | 0.4301 | 0.3437 | +0.087 | 1.461 |
+| `bpp` | 0.300 | 0.4630 | 0.3784 | +0.085 | 1.859 |
+| `lf` | 0.214 | 0.5086 | 0.4606 | +0.048 | 1.354 |
+| **benign control** | 0.295 | **0.4781** | 0.4028 | +0.075 | 0.422 |
+
+**Clean features do drift toward the target class centroid, and the benign model drifts
+just as much.** Backdoored mean 0.4685 against a benign control of **0.4781**, i.e. the
+control is marginally *higher*. The excess over the landed-class control is +0.074 for
+`badnet_a2o` and +0.075 for benign: identical.
+
+So a second, independent technique reaches the same conclusion the label histogram did,
+and supplies the control the label version lacked. The drift toward class 0 is a
+property of the perturbation and the pretrained backbone, not of the poisoning.
+
+Note the one place the two measurements diverge, which is informative: displacement
+along the *backdoor direction* is clearly larger for backdoored models (0.62 to 1.86)
+than for benign (0.42). So dropout does push clean samples along the trigger's
+direction more in a poisoned model. It simply does not push them far enough, or in the
+right way, to land on the target class. The mechanism is present in the representation
+and absent in the decision.
+
+## Techniques used, and not used
+
+Used for this hypothesis: the per-pass argmax histogram (prediction space) and the
+class-centroid displacement cosine plus backdoor-direction projection (latent space).
+
+**Not used**: UMAP and the Lipschitz tooling. Both exist in `analysis/` and neither has
+been run. UMAP would add a qualitative picture of the same displacement and is worth
+doing; the Lipschitz tools are weight-space and data-free, so they bear on detector
+design rather than on this claim.
+
 ## Reproduce
 
-`results/<folder>/psbd_metrics.json`, keys `clean_shift_to_target_fraction` and
-`shift_target_histogram.clean`, per rate.
+```bash
+# prediction space
+# results/<folder>/psbd_metrics.json, clean_shift_to_target_fraction and
+# shift_target_histogram.clean, per rate
+
+# latent space
+PYTHONPATH=. python scripts/shift_in_latent_space/measure.py \
+    --checkpoint-folder vit_cifar10_blend_0_1 --samples 800 --rate 0.5
+```
 
 ## Follow-up: subquestions 1 and 2, answered
 
