@@ -177,7 +177,13 @@ def main() -> None:
         f"{args.shift_target}), placement chosen by best deployable TPR at "
         f"{min(args.fpr):.0%} FPR.\n"
     )
-    header = f"{'attack':16} {'pr':>5} {'ASR':>5} {'best placement':>26} {'p':>4}"
+    # Architecture and dataset are in the row because the sweep now spans 2 of the
+    # first and 4 of the second. Without them the same attack appears several times
+    # with different numbers and reads as a bug, or worse, gets averaged.
+    header = (
+        f"{'arch':5} {'dataset':14} {'attack':16} {'pr':>5} {'ASR':>5} "
+        f"{'best placement':>26} {'p':>4}"
+    )
     for target in args.fpr:
         header += f" | {f'TPR@{target:.0%}':>9} {'(FPR)':>7}"
     print(header)
@@ -204,7 +210,9 @@ def main() -> None:
         attack = meta.get("attack") or "benign"
         asr = meta.get("asr")
         line = (
-            f"{attack:16} {meta.get('poison_rate') or 0:>5.3f} "
+            f"{meta.get('architecture') or '?':5} "
+            f"{meta.get('dataset') or '?':14} {attack:16} "
+            f"{meta.get('poison_rate') or 0:>5.3f} "
             f"{'--' if asr is None else f'{asr:.2f}':>5} {placement:>26} {rate:>4g}"
         )
         for target in args.fpr:
