@@ -39,7 +39,7 @@ written.
 | [H2](H2-psbd-transfers-to-vit.md) | PSBD works on ViT at all, and not on benign models | **SUPPORTED** |
 | [H3](H3-why-post-residual-fails.md) | Post-residual fails by saturating | **REFUTED** as stated |
 | [H4](H4-placement-is-attack-dependent.md) | The best placement tracks where the backdoor direction enters `[CLS]` | **SUPPORTED** |
-| [H5](H5-all-to-all-breaks-psbd.md) | PSBD degrades on all-to-all, which has no single target class | **SUPPORTED, strongly** |
+| [H5](H5-all-to-all-breaks-psbd.md) | PSBD degrades on all-to-all, which has no single target class | **REFUTED**: the signal is inverted, not absent (two-sided 0.97) |
 | [H6](H6-sam-improves-detectability.md) | SAM makes backdoors more detectable | OPEN (phase 3c) |
 | [H7](H7-clean-shifts-to-target.md) | Clean samples under dropout shift specifically to the target class | **PARTIALLY REFUTED** |
 | [H8](H8-detection-scales-with-poison-rate.md) | Detection improves with poison rate | INCONCLUSIVE |
@@ -74,9 +74,11 @@ The two results that would change a paper:
   shows *no* shift-to-target effect (0.052 at 10% poisoning, below the 0.10 chance
   line). PSBD's published mechanism is measurably absent exactly where PSBD works
   best, so on ViT the method and its explanation come apart.
-- **H5.** All-to-all is undetectable (AUROC 0.510 at 10% poisoning, against a benign
-  floor of 0.506) while its backdoor fires on 96% of inputs. Identical trigger to
-  `badnet_a2o`, which reaches 0.889. Label geometry, not trigger, decides.
+- **H5.** All-to-all looked undetectable under the paper's one-sided rule (0.510
+  against a benign floor of 0.506), but its PSU signal is **inverted**, not absent:
+  its backdoor samples are 4x *more* fragile than clean ones, where all-to-one's are
+  more robust. Allowing the decision rule to flag either tail gives **0.966**, while
+  the benign control under the identical two-sided rule moves only to 0.522.
 
 Corrections worth being loud about. **Three verdicts have now been overturned by
 their own follow-ups**: H3 (post-residual does not fail after all), H1 (pre-residual
