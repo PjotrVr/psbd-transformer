@@ -29,9 +29,11 @@ from defences.checkpoint_eval import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
+from defences.perturbations import PERTURBATIONS, build_perturbation
 from defences.dropout import (
     DROPOUT_CONFIGS,
     SINGLE_POSITION_NAMES,
+    STRUCTURED_POSITION_NAMES,
     plug_dropout,
     unplug_dropout,
 )
@@ -59,7 +61,9 @@ def parse_args() -> argparse.Namespace:
         "--position-config",
         required=True,
         nargs="+",
-        choices=tuple(DROPOUT_CONFIGS) + SINGLE_POSITION_NAMES,
+        choices=tuple(DROPOUT_CONFIGS)
+        + SINGLE_POSITION_NAMES
+        + STRUCTURED_POSITION_NAMES,
     )
     parser.add_argument(
         "--skip-existing",
@@ -77,6 +81,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--forward-passes", type=int, default=3)
     # A smoke and timing knob only. The real jobs leave it None for the full split.
     parser.add_argument("--max-samples", type=int, default=None)
+    parser.add_argument(
+        "--perturbation",
+        default="dropout",
+        choices=sorted(PERTURBATIONS),
+        help="which perturbation operator to inject; dropout is the paper's",
+    )
     parser.add_argument("--no-bfloat16", action="store_true")
     parser.add_argument(
         "--probe-attack",
@@ -113,7 +123,11 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def cache_config_name(position_config: str, block_range: tuple[int, int] | None) -> str:
+def cache_config_name(
+    position_config: str,
+    block_range: tuple[int, int] | None,
+    perturbation: str = "dropout",
+) -> str:
     """The results/ subfolder name for one placement.
 
     A band-restricted run is a different measurement from the same position applied
@@ -122,8 +136,12 @@ def cache_config_name(position_config: str, block_range: tuple[int, int] | None)
     silently overwrite the first.
     """
     if block_range is None:
-        return position_config
-    return f"{position_config}_blocks_{block_range[0]}_{block_range[1]}"
+        stem = position_config
+    else:
+        stem = f"{position_config}_blocks_{block_range[0]}_{block_range[1]}"
+    # dropout keeps the bare name so every cache written before perturbations
+    # existed stays addressable and --skip-existing still finds it.
+    return stem if perturbation == "dropout" else f"{stem}_{perturbation}"
 
 
 def resolve_device() -> torch.device:
@@ -226,6 +244,7 @@ def sweep_rates(
     rates: tuple[float, ...] = DROPOUT_RATES,
     block_range: tuple[int, int] | None = None,
     cache_name: str | None = None,
+    perturbation: str = "dropout",
 ) -> None:
     """For each rate: plug the position, run every split, save, unplug.
 
@@ -238,9 +257,10 @@ def sweep_rates(
     """
     position_names = DROPOUT_CONFIGS.get(position_config, (position_config,))
     cache_name = cache_name or position_config
+    factory = {name: build_perturbation(perturbation) for name in position_names}
     for rate in rates:
         handles = plug_dropout(
-            model, architecture, position_names, {}, rate, block_range=block_range
+            model, architecture, position_names, factory, rate, block_range=block_range
         )
         try:
             run_one_rate(
@@ -270,6 +290,7 @@ def write_run_provenance(
     payload = {
         "git_commit": current_git_commit(),
         "position_config": position_config,
+        "perturbation": args.perturbation,
         "block_range": list(args.block_range) if args.block_range else None,
         "dropout_rates": list(args.rates) if args.rates else list(DROPOUT_RATES),
         "forward_passes": args.forward_passes,
@@ -284,7 +305,7 @@ def write_run_provenance(
     }
     path = os.path.join(
         psbd_dir,
-        f"run_{cache_config_name(position_config, tuple(args.block_range) if args.block_range else None)}.json",
+        f"run_{cache_config_name(position_config, tuple(args.block_range) if args.block_range else None, args.perturbation)}.json",
     )
     os.makedirs(psbd_dir, exist_ok=True)
     with open(path, "w") as handle:
@@ -318,7 +339,9 @@ def run_one_checkpoint(
         if not (
             args.skip_existing
             and already_complete(
-                psbd_dir, cache_config_name(position, block_range), rates
+                psbd_dir,
+                cache_config_name(position, block_range, args.perturbation),
+                rates,
             )
         )
     ]
@@ -351,9 +374,13 @@ def run_one_checkpoint(
             use_bfloat16,
             rates=rates,
             block_range=block_range,
-            cache_name=cache_config_name(position, block_range),
+            cache_name=cache_config_name(position, block_range, args.perturbation),
+            perturbation=args.perturbation,
         )
-        print(f"[ok] {folder} {cache_config_name(position, block_range)}", flush=True)
+        print(
+            f"[ok] {folder} {cache_config_name(position, block_range, args.perturbation)}",
+            flush=True,
+        )
 
 
 def main() -> None:

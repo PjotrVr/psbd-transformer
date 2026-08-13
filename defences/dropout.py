@@ -41,6 +41,7 @@ from torch.utils.hooks import RemovableHandle
 from torchvision.models.vision_transformer import EncoderBlock
 from torchvision.models.swin_transformer import SwinTransformerBlock
 
+from defences.perturbations import masked_attention_forward
 from models import network_core
 
 
@@ -60,7 +61,7 @@ class PositionSpec:
     """
 
     submodule_name: str
-    hook_type: str  # "pre", "post", or "residual"
+    hook_type: str  # "pre", "post", "residual", or "attention"
     scope: str = "block"
 
 
@@ -73,14 +74,30 @@ class PositionSpec:
 # after the residual add, before the activation) and it is not reachable with a
 # hook, since x is a local consumed twice. Contrast before_mlp_norm, a pre-hook on
 # ln_2, which perturbs only the MLP branch's input and leaves the skip untouched.
+#
+# attention_heads and mlp_neurons exist for the structured operators in
+# defences.perturbations, and are the only two positions where a transformer's
+# own units are separable along the channel axis:
+#
+#   attention_heads is the second position no hook can express. The per-head
+#   outputs exist only inside F.multi_head_attention_forward, which reads
+#   out_proj.weight directly and never calls out_proj as a module, so a hook on
+#   out_proj never fires (verified: the model output was bit-identical). It
+#   therefore uses a forward wrapper that recomputes attention and exposes the
+#   head axis; see _attach_attention_wrapper.
+#
+#   mlp_neurons is an ordinary pre-hook. mlp.3 receives the 3072-dim post-GELU
+#   hidden layer, so one channel there is exactly one hidden neuron.
 VIT_POSITIONS: dict[str, PositionSpec] = {
     "after_embedding": PositionSpec("encoder.dropout", "pre", scope="model"),
     "before_attention_norm": PositionSpec("ln_1", "pre"),
     "before_attention": PositionSpec("self_attention", "pre"),
+    "attention_heads": PositionSpec("self_attention", "attention"),
     "before_attention_residual": PositionSpec("dropout", "post"),
     "before_mlp_norm": PositionSpec("ln_2", "pre"),
     "after_attention_residual": PositionSpec("", "residual"),
     "before_mlp": PositionSpec("mlp", "pre"),
+    "mlp_neurons": PositionSpec("mlp.3", "pre"),
     "before_mlp_residual": PositionSpec("mlp", "post"),
     "after_mlp_residual": PositionSpec("", "post"),
 }
@@ -129,6 +146,16 @@ SINGLE_POSITION_NAMES: tuple[str, ...] = (
     "before_mlp",
     "before_mlp_residual",
     "after_mlp_residual",
+)
+
+# Positions where the channel axis indexes a transformer unit rather than an
+# arbitrary feature, so a structured operator masks whole heads or whole neurons.
+# Kept out of SINGLE_POSITION_NAMES because that tuple defines the 9-position
+# placement study, and adding to it would silently change what every existing
+# sweep over "all single positions" covers.
+STRUCTURED_POSITION_NAMES: tuple[str, ...] = (
+    "attention_heads",
+    "mlp_neurons",
 )
 
 # Named multi-position combos. Every single position is also usable directly as a
@@ -208,6 +235,24 @@ def _attach_residual_wrapper(
     dropout.train()
     block.forward = functools.partial(RESIDUAL_FORWARDS[architecture], block, dropout)
     return _ForwardRestore(block)
+
+
+def _attach_attention_wrapper(
+    attention: nn.Module,
+    dropout_factory: Callable[[float], nn.Module],
+    rate: float,
+) -> _ForwardRestore:
+    """Swap in the attention forward that exposes the head axis.
+
+    The second position a hook cannot express, for the same reason as the
+    residual one: the per-head outputs are a local inside
+    F.multi_head_attention_forward and never cross a module boundary. Mutates no
+    weights, so remove() restores the loaded model exactly.
+    """
+    mask = dropout_factory(rate)
+    mask.train()
+    attention.forward = functools.partial(masked_attention_forward, attention, mask)
+    return _ForwardRestore(attention)
 
 
 def _make_pre_hook(dropout: nn.Module) -> Callable:
@@ -308,6 +353,8 @@ def _attach_hook(
     """Build a fresh dropout and attach it at target, returning its handle."""
     if hook_type == "residual":
         return _attach_residual_wrapper(target, architecture, dropout_factory, rate)
+    if hook_type == "attention":
+        return _attach_attention_wrapper(target, dropout_factory, rate)
 
     dropout = dropout_factory(rate)
     # Not part of the model tree, so model.eval() never reaches it. Train mode is
