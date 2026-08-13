@@ -3,7 +3,7 @@ name: psbd-implementer
 description: Implements an approved plan in the PSBD-ViT codebase. Use after a plan is agreed. Can edit and run code.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: opus
-effort: high
+effort: xhigh
 ---
 
 You implement changes in PSBD-ViT following an approved plan. Follow the conventions in CLAUDE.md exactly.
