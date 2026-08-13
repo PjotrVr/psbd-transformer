@@ -114,3 +114,54 @@ def compute_psu_and_shift(
     scores = torch.cat(per_sample_scores) if per_sample_scores else torch.empty(0)
     shift_ratio = shift_count / max(total_pass_samples, 1)
     return scores.float(), shift_ratio
+
+
+@torch.inference_mode()
+def compute_dropout_pass_probs(
+    model: nn.Module,
+    loader: DataLoader,
+    baseline_labels: torch.Tensor,
+    device: torch.device,
+    forward_passes: int,
+    use_bfloat16: bool,
+    seed: int,
+) -> torch.Tensor:
+    """Per-pass probability of the baseline-argmax class, shape (forward_passes, N).
+
+    Raw, not reduced: compute_psu_and_shift collapses the k passes to one score
+    per sample internally, which throws away the ability to recompute PSU under a
+    different aggregation (median instead of mean, a different k) without rerunning
+    the GPU pass. Saving one float per pass per sample keeps that open at trivial
+    disk cost.
+
+    baseline_labels is the flat (N,) no-dropout argmax class per sample, in the
+    same shuffle=False order the loader serves, so a running offset pairs each
+    batch to its labels without re-batching.
+
+    The perturbation comes from dropout modules plugged in by hooks (see
+    defences.dropout), which are already in train mode, so this never toggles the
+    model's own dropout. model.eval() keeps every existing dropout at its natural
+    identity. Reseeding here makes the sampled masks reproducible and identical
+    across the paired validation, clean, and backdoor calls.
+    """
+    model.eval()
+    seed_everything(seed)
+
+    per_batch: list[torch.Tensor] = []
+    offset = 0
+    for images, _ in loader:
+        batch_size = images.size(0)
+        images = images.to(device)
+        labels = baseline_labels[offset : offset + batch_size].to(device)
+        offset += batch_size
+
+        pass_columns = []
+        for _ in range(forward_passes):
+            probs = forward_probs(model, images, device, use_bfloat16)
+            selected = probs.gather(1, labels.view(-1, 1)).squeeze(1)
+            pass_columns.append(selected.cpu())
+        per_batch.append(torch.stack(pass_columns, dim=0))
+
+    if not per_batch:
+        return torch.empty(forward_passes, 0)
+    return torch.cat(per_batch, dim=1).float()
