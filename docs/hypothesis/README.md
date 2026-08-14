@@ -120,6 +120,25 @@ blocks. Treat it as the default hazard of this whole line of work: **no comparis
 across placements is valid at a shared dropout rate.** Match on clean-validation
 shift ratio instead.
 
+## The failure mode this ledger keeps hitting
+
+Three distinct versions of one mistake, each of which inverted a conclusion:
+
+1. **Comparing outside a placement's operating range** (H9, H1, H3). Fixed by
+   matching on clean-validation shift ratio, never on rate.
+2. **Averaging over unequal coverage** (H19, H20). Different groups were swept over
+   different checkpoints, so the means compared different problems. Run through
+   `scripts/balanced_panels/audit.py`, **4 of 6 comparisons here invert**, the worst
+   at 45x imbalance. The 2 that survive are the 2 with imbalance under 1.5x.
+3. **Measuring across a normalization layer with a scale-dependent statistic**
+   (H16 sections 9 and 10). A pre-LayerNorm ablation produced a clean, monotone,
+   benign-controlled and entirely false result that survived 2 rounds of follow-up.
+
+All 3 produce *more* exciting results than the truth, pass their benign controls, and
+are invisible without an explicitly constructed comparison. Treat any table here that
+was not built on a balanced panel, at matched shift ratio, and with a scale-invariant
+statistic as unverified.
+
 ## Protocol notes that apply to every hypothesis
 
 - **Seeding.** `lightning.seed_everything`, seeds `0, 1, 2, 3, ...`. Split seed

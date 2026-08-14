@@ -209,6 +209,45 @@ coverage, and that the confound was large enough to invert the sign. The running
 sweep will supply `badnet_a2o`, `blend`, `bpp` and `lf` matched cells, and
 [H6](H6-sam-improves-detectability.md) should be re-decided on those.
 
+## Answered: how widespread the imbalance is
+
+`scripts/balanced_panels/audit.py` run over every comparison this ledger makes.
+"Disagrees" means the naive winner and the balanced winner are different groups.
+
+| architecture | comparison | metric | coverage imbalance | verdict |
+|---|---|---|---|---|
+| vit | placement | deployable | 1.9x | **disagrees**: `before_attention` to `before_attention_norm` |
+| vit | placement | oracle | 1.9x | **disagrees**: `pre_residual_blocks_5_8` to `before_attention_norm` |
+| vit | rho | deployable | **45.5x** | **disagrees**: Adam to SAM 0.05 |
+| vit | rho | oracle | **45.5x** | **disagrees**: Adam to SAM 0.10 |
+| swin | placement | deployable | 1.3x | agrees |
+| swin | placement | oracle | 1.3x | agrees |
+| swin | rho | either | -- | **no complete block exists; not comparable at all** |
+
+**4 of the 6 comparable configurations invert.** The 2 that agree are the 2 with
+coverage imbalance under 1.5x, which is the expected pattern and a weak check that the
+tool is measuring what it claims.
+
+The rho rows are the worst: a 45x imbalance, and on a balanced panel **SAM wins at
+both metrics**, where the naive table says Adam wins by a wide margin. That is the
+same reversal found by hand above, reproduced mechanically.
+
+**One correction to this file falls out of it.** The ViT panel above ("it holds on ViT
+too") includes `badnet_a2a`. Excluding it, as the audit does by default since it is
+the known PSBD failure case, the oracle and deployable winners become the same
+placement:
+
+| panel | oracle winner | deployable winner |
+|---|---|---|
+| 13 x 15, with `badnet_a2a` | `pre_residual_blocks_5_8` | `before_attention` |
+| 13 x 12, without `badnet_a2a` | `before_attention_norm` | `before_attention_norm` |
+
+So the headline oracle-versus-deployable *reordering* on ViT is partly carried by an
+attack on which nothing detects. The rate-selection gap itself is unaffected, and it
+is still what separates the placements on Swin, but the ViT version of the claim is
+weaker than first stated. See [H20](H20-input-side-beats-residual-adjacent.md), which
+draws the conclusion that survives both panels.
+
 ## Subquestions
 
 1. Is the gap predictable from the shape of the AUROC-versus-shift-ratio curve
@@ -218,7 +257,5 @@ sweep will supply `badnet_a2o`, `blend`, `bpp` and `lf` matched cells, and
 2. Re-decide [H6](H6-sam-improves-detectability.md) on matched cells once the sweep
    supplies `badnet_a2o`, `blend`, `bpp` and `lf` at both Adam and SAM. The current
    matched evidence is 13/18 `badnet_a2a` and cannot carry the question.
-3. How many other comparisons in this ledger are unbalanced the same way? The
-   placement ranking needed a 13x15 balanced panel and the SAM comparison needed
-   matched cells; both inverted a conclusion. Any table here built by averaging over
-   whatever checkpoints happened to be swept should be rebuilt on a common set.
+3. **Answered above: 4 of 6.** Every remaining table in this ledger should be run
+   through `scripts/balanced_panels/audit.py` before it is quoted.
