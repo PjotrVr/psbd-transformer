@@ -133,6 +133,37 @@ The difference from Swin is that on ViT the placements are genuinely unequal at 
 oracle too (spread 0.094, against 0.017 on Swin). So on ViT rate selection reshuffles
 the ranking; on Swin it produces the ranking outright.
 
+## The obvious fix does not work
+
+If the ranking is driven by rate selection, the natural repair is a
+**placement-dependent** target for the shift-ratio rule, since
+[H11](H11-adaptive-rate-overshoots.md) treated the target as 1 global constant to
+retune. The `matched_shift` blocks already contain AUROC at targets 0.2, 0.4, 0.6
+and 0.8, so this is answerable without any GPU work.
+
+Over the same 15 shared checkpoints, mean AUROC per placement per target:
+
+| | best target | best-single-target mean | per-placement-target mean | gain |
+|---|---|---|---|---|
+| 14 placements | 0.8 for 11 of 14 | **0.784** | **0.785** | **+0.002** |
+
+**Refuted.** Tuning the target per placement buys 0.002 AUROC. 11 of 14 placements
+want the same target, and the 3 that differ (`pre_residual` at 0.6,
+`pre_residual_blocks_5_8` and `_9_12` at 0.4) gain almost nothing from it. So the
+gap H19 identifies is not something a smarter constant closes; the placements whose
+adaptive rate lands badly are not simply mis-targeted.
+
+Caveat: the available grid is coarse (steps of 0.2) and does not contain 0.7, which
+is the value H11 found best on ViT, so this rules out a *large* placement-dependent
+effect rather than a small one.
+
+A useful consistency check falls out of the same table. At matched shift ratio,
+which is the comparison [H9](H9-strength-not-position.md) says is the only fair one,
+the top placements are `before_mlp` (0.837), `before_attention` (0.831) and
+`before_attention_norm` (0.826), with `pre_residual_blocks_5_8` at 0.783. That is
+the deployable ordering, not the oracle one. 2 of the 3 ways of comparing placements
+agree with each other and disagree with the oracle.
+
 ## Subquestions
 
 1. Is the gap predictable from the shape of the AUROC-versus-shift-ratio curve
