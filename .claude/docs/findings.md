@@ -3,7 +3,7 @@
 State after the ViT CIFAR-10 grid, the baseline comparison, the SAM control, the
 latent-mechanism study, and the first Swin results. The CIFAR-100, GTSRB, Tiny
 ImageNet and remaining Swin sweeps are still running. Per-hypothesis detail with
-full numbers is in `docs/hypothesis/` (H1 to H19).
+full numbers is in `docs/hypothesis/` (H1 to H20).
 
 ## The short version
 
@@ -40,6 +40,14 @@ because the ranking is not stable across either. Mean over the 4 working attacks
 `before_attention` wins 5 of 6 slices, and its lead grows exactly where the problem
 gets hard: +0.085 at 1% poisoning and +0.093 on the deployable metric.
 `before_mlp_residual` wins only the top row.
+
+**But naming any single placement overstates it** (H20). On a fully balanced 13x12
+panel the top 4 are within 0.024 of each other and the ordering inside that group is
+noise (`before_attention_norm` over `before_attention` is 0.41 SE, winning 5 of 12).
+What is real is the **family**: perturbing what a sub-layer *reads* beats perturbing
+what the residual stream *carries* by **+0.054, 4.0 standard errors, on 11 of 12
+units**. And pre-residual against post-residual, the question this project was founded
+on, is **+0.002**, both sitting 0.06 below the winning family.
 
 **Oracle against deployable is the distinction to keep** (H19). *Oracle* picks the
 dropout rate by maximizing AUROC, which reads the labels, so it is an upper bound
