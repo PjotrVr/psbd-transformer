@@ -34,6 +34,25 @@ derivation set (14/15), and **+0.151 on two held-out attacks (2/2)**.
 > another, and the only way to settle it was to run the variant. Recorded because the
 > estimate was cheap, confident, and misleading.
 
+> **Generalizes to 3 new datasets.** H13 was derived entirely on CIFAR-10. The sweep
+> has since produced 33 backdoored checkpoints on other datasets, which are pure
+> out-of-distribution tests since nothing was fitted on them:
+>
+> | dataset | n | mean delta | wins | worst | best |
+> |---|---|---|---|---|---|
+> | CIFAR-10 (derivation) | 35 | +0.054 | 25/35 | -0.210 | +0.396 |
+> | **CIFAR-100** | 21 | **+0.206** | **21/21** | +0.043 | +0.687 |
+> | Tiny ImageNet | 11 | +0.042 | 10/11 | -0.031 | +0.140 |
+> | GTSRB | 1 | -0.028 | 0/1 | -- | -- |
+> | **all non-CIFAR-10** | **33** | **+0.145** | **31/33** | | |
+>
+> CIFAR-100 is a clean sweep, 21 of 21, at nearly double the derivation-set effect.
+> GTSRB has 1 checkpoint and decides nothing. Note the CIFAR-10 figure has fallen from
+> +0.110 on the original 15 to +0.054 on 35, because the sweep has since added harder
+> CIFAR-10 checkpoints (low poison rates, weak attacks); the variant still wins 25 of
+> them, and the 2 numbers are not comparable to each other for the coverage reason
+> [H19](H19-placement-ranking-is-rate-selection.md) describes.
+
 ## Claim
 
 Each earlier hypothesis moved one knob in isolation. Assembled into a single

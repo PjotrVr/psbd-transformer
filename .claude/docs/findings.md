@@ -61,6 +61,13 @@ fractional PSU, a retuned rate target, and a two-sided rule. Against published P
 attacks (2/2)**, all with the rate chosen on clean validation data only. On `lc` the
 published configuration sits at chance (0.515) and the adapted one reaches 0.786.
 
+**And it generalizes off CIFAR-10**, where it was derived: **+0.145 over 33
+backdoored checkpoints on 3 other datasets, winning 31 of 33**, including a clean
+**21 of 21 on CIFAR-100** at +0.206. Its placement was also challenged directly using
+[H20](../../docs/hypothesis/H20-input-side-beats-residual-adjacent.md)'s result and
+defended: swapping to the winning placement family is +0.017 at 1.1 SE on the
+derivation set and worse on the held-out pair.
+
 **Rate selection is mistuned for ViT** (H11). The paper targets a clean-validation
 shift ratio of 0.8; on ViT the optimum is near **0.70**, and the rule overshoots on
 **12 of 12** checkpoints, costing about 0.09 AUROC that retuning one constant recovers
