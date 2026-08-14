@@ -7,6 +7,15 @@ Restricting pre-residual dropout to a band of blocks always beats applying it to
 12. But the onset layer does **not** predict which band, in either direction, and the
 rule that appeared to work was fitted to four points.
 
+> **Metric note, added later.** Every AUROC in this file is the **oracle** value:
+> the rate is chosen by maximizing AUROC, which reads the labels. See
+> [H19](H19-placement-ranking-is-rate-selection.md). The headline "a band beats
+> all-blocks" survives at the deployable rate (15 of 19 checkpoints), but the
+> per-attack recommendation of blocks 9-12 does not: that placement has **no
+> deployable operating point on any checkpoint**, because 4 blocks of dropout never
+> move the clean-validation shift ratio past 0.171 even at rate 0.9, against a
+> target of 0.7. The deployable band recommendation is blocks 5-8.
+
 ## What survives
 
 **A band beats all-blocks on every attack tested, 6 of 6:**

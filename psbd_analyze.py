@@ -329,10 +329,15 @@ def main() -> None:
         headline = f"q{HEADLINE_QUANTILE:.2f}"
         summary = []
         for config, block in sorted(report["placements"].items()):
-            oracle = block["oracle"]
+            # Both numbers, always. Printing the oracle alone reads as the result
+            # and it is not one: it picks the rate by reading the labels, so it is
+            # an upper bound. The adaptive value is what a defender gets, and on
+            # some placements the 2 differ by 0.19 AUROC.
+            adaptive, oracle = block["adaptive"], block["oracle"]
             summary.append(
-                f"{config} auroc={oracle['auroc']:.3f}@p={block['oracle_rate']}"
-                if oracle
+                f"{config} adaptive={adaptive['auroc']:.3f}@p={block['adaptive_rate']}"
+                f" oracle={oracle['auroc']:.3f}@p={block['oracle_rate']}"
+                if adaptive and oracle
                 else f"{config} auroc=n/a"
             )
         print(f"{folder} [{headline}] " + "  ".join(summary))
