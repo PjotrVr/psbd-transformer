@@ -46,6 +46,23 @@ derivation set (14/15), and **+0.151 on two held-out attacks (2/2)**.
 > | GTSRB | 1 | -0.028 | 0/1 | -- | -- |
 > | **all non-CIFAR-10** | **33** | **+0.145** | **31/33** | | |
 >
+> **Matched on attack strength, the pattern holds and explains itself.** The datasets
+> differ in mean ASR (0.955 on CIFAR-100 against 0.749 on CIFAR-10), so restrict to
+> checkpoints with ASR >= 0.90 and mean ASR becomes 0.97 everywhere:
+>
+> | dataset | n | `psbd_paper` | `psbd_vit` | delta | wins |
+> |---|---|---|---|---|---|
+> | CIFAR-10 | 23 | 0.752 | 0.872 | +0.119 | 22/23 |
+> | CIFAR-100 | 18 | 0.731 | **0.938** | **+0.207** | **18/18** |
+> | Tiny ImageNet | 11 | **0.929** | 0.972 | +0.043 | 10/11 |
+>
+> The gain tracks the **headroom**, not the dataset: where the published method is
+> weakest (CIFAR-100, 0.731) the variant gains most, and where it is already strong
+> (Tiny ImageNet, 0.929) there is little left to win. The baseline does not collapse
+> anywhere, so this is the variant improving rather than the comparison flattering it.
+> The matched CIFAR-10 figure, +0.119, also lands close to the originally published
+> +0.110, which is a useful consistency check on the whole re-run.
+>
 > CIFAR-100 is a clean sweep, 21 of 21, at nearly double the derivation-set effect.
 > GTSRB has 1 checkpoint and decides nothing. Note the CIFAR-10 figure has fallen from
 > +0.110 on the original 15 to +0.054 on 35, because the sweep has since added harder
