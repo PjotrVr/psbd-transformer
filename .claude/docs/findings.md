@@ -1,8 +1,9 @@
 # PSBD on Vision Transformers: findings
 
-State after the ViT CIFAR-10 grid, the baseline comparison, and the SAM control.
-The CIFAR-100, Swin and low-poison-rate sweeps are still running. Per-hypothesis
-detail with full numbers is in `docs/hypothesis/` (H1 to H15).
+State after the ViT CIFAR-10 grid, the baseline comparison, the SAM control, the
+latent-mechanism study, and the first Swin results. The CIFAR-100, GTSRB, Tiny
+ImageNet and remaining Swin sweeps are still running. Per-hypothesis detail with
+full numbers is in `docs/hypothesis/` (H1 to H19).
 
 ## The short version
 
@@ -22,12 +23,37 @@ do not cover**, which is worth up to +0.98 AUROC.
 same trigger: AUROC 0.502 to 0.508 across all 14 placements, TPR 0.016 at 1% FPR.
 Backdoored models reach 0.89 to 0.99 on four of five attacks.
 
-**The best placement is not the one the project was built on.** Ranked over the four
-working attacks: `before_mlp_residual` 0.969, `before_attention_norm` 0.965,
-`before_attention` 0.962, `pre_residual` 0.948. Restricting `pre_residual` to a band of
-blocks beats applying it to all twelve on **6 of 6** attacks (+0.019 to +0.136) at a
-third of the perturbation cost; **blocks 5-8** is the robust default (best mean rank,
-never worse than second).
+**The best placement is not the one the project was built on, and it is
+`before_attention`.** An earlier version of this section named `before_mlp_residual`
+on the strength of 1 slice: oracle AUROC at 10% poisoning. Both qualifiers matter,
+because the ranking is not stable across either. Mean over the 4 working attacks:
+
+| slice | `before_attention` | `before_attention_norm` | `before_mlp_residual` | `pre_residual` |
+|---|---|---|---|---|
+| oracle, 10% poisoning | 0.962 | 0.965 | **0.969** | 0.948 |
+| oracle, 5% | **0.963** | 0.956 | 0.952 | 0.948 |
+| oracle, 1% | **0.909** | 0.793 | 0.824 | 0.797 |
+| oracle, all rates | **0.945** | 0.871 | 0.880 | 0.861 |
+| **deployable, all rates** | **0.905** | 0.812 | 0.718 | 0.722 |
+| matched shift 0.6, all rates | **0.909** | 0.822 | 0.817 | 0.832 |
+
+`before_attention` wins 5 of 6 slices, and its lead grows exactly where the problem
+gets hard: +0.085 at 1% poisoning and +0.093 on the deployable metric.
+`before_mlp_residual` wins only the top row.
+
+**Oracle against deployable is the distinction to keep** (H19). *Oracle* picks the
+dropout rate by maximizing AUROC, which reads the labels, so it is an upper bound
+and not a method. *Deployable* picks it from clean validation data only. The gap is
+placement-dependent, from 0.025 to 0.116, so it reorders the table rather than
+shifting it. The sharpest case: `pre_residual_blocks_9_12` has the best oracle AUROC
+in the project (0.997 on `blend`) and **no deployable operating point on any of 20
+checkpoints**, because 4 blocks of dropout never move the clean-validation shift
+ratio past 0.171 against a target of 0.7.
+
+Restricting `pre_residual` to a band of blocks still beats applying it to all 12, on
+**15 of 19** checkpoints at the deployable rate (it was 6 of 6 at the oracle), at a
+third of the perturbation cost. **Blocks 5-8** is the deployable band default;
+blocks 9-12, which the oracle prefers, cannot be selected at all.
 
 **Four changes combine into a materially better defence** (H13): band placement,
 fractional PSU, a retuned rate target, and a two-sided rule. Against published PSBD:
@@ -96,6 +122,50 @@ SAM hands a prediction-space detector the cost without the benefit. Their paper
 validates on five feature-space detectors, never cites PSBD, and its only
 prediction-space detector (STRIP) appears solely in **commented-out** tables where it
 is the one method SAM does not help.
+
+SAM also **relocates** the backdoor without weakening it (H16). The peak layer moves
+earlier monotonically in rho for all 5 attacks (12 to 10, 12 to 9, 11 to 8) while the
+benign control stays at 8, and the top-20 TAC coordinates at rho 0.2 overlap Adam's at
+0.03 to 0.08, against a chance floor of 0.014 and a split-half reproducibility ceiling
+of 0.87. ASR stays 0.96 to 1.00 and clean accuracy rises about 2 points. It does not
+change the backdoor's *rank*: after the final LayerNorm, removing 1 direction takes
+every SAM checkpoint to ASR 0.000.
+
+## Where the backdoor is (H16)
+
+**A direction, not neurons.** Removing the rank-1 backdoor direction, measured after
+the final LayerNorm where the head reads, takes ASR from 1.00 to 0.000 on all 4
+single-target attacks for 0.02 to 0.07 clean accuracy. Zeroing TAC-ranked
+*coordinates* never works, up to 300 of 768. Random rank-1 directions and the benign
+model are unaffected. The backdoor is linear and simply not axis-aligned, which is
+why both data-free localizers failed (they rank coordinates) and why a 2-component
+PCA already separates clean from triggered at 10-NN purity 0.996 to 1.000.
+
+**Attacks are disjoint.** Cross-attack Jaccard of top-20 TAC dimensions is 0.00 to
+0.08 at a chance floor of 0.014. `badnet_a2o` and `badnet_a2a` use the identical
+trigger image and overlap at exactly 0.00, so the label mapping sets the dimensions,
+not the trigger's appearance.
+
+**A methodological result that may outlast the mechanistic one.** Projecting a
+direction out at a block output is the obvious ablation in a residual network and is
+**not sound in a pre-norm transformer**: the LayerNorm that follows rescales whatever
+survives, partly undoing the deletion. It produced a clean, monotone, benign-controlled
+and entirely false result (that SAM makes the backdoor un-removable) which survived 2
+rounds of follow-up before an independent measurement caught it. The rule: across a
+normalization layer, scale-invariant statistics transfer and absolute ones do not.
+`scripts/dropout_kills_direction/` survives the same check precisely because it
+reports a standardized separation.
+
+## Swin (first results, 11 checkpoints)
+
+PSBD transfers to a second architecture. `badnet_a2o` reaches **0.926 deployable
+AUROC** (`before_attention_norm`), and `badnet_a2a` sits at 0.470 to 0.532 across all
+3 placements, reproducing H5's all-to-all failure on Swin.
+
+The placement finding is stronger here than on ViT. At the oracle rate the 3
+placements tested are indistinguishable (0.962 to 0.979, spread **0.017**); at the
+deployable rate they differ by **0.11**. On Swin the ranking is produced entirely by
+how well the adaptive rate rule aims, not by the placement (H19).
 
 ## Honest limitations
 
