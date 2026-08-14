@@ -6,16 +6,184 @@
   "seed": 0,
   "baseline_separation": 10.098673820495605,
   "placements": {
-    "pre_residual": [
+    "before_attention": [
+      {
+        "rate": 0.05,
+        "clean_shift_ratio": 0.009999999776482582,
+        "projection_clean": -0.47768890857696533,
+        "projection_backdoor": 15.326139450073242,
+        "separation": 6.799564838409424,
+        "separation_ratio": 0.6733126506779012
+      },
       {
         "rate": 0.1,
+        "clean_shift_ratio": 0.01666666753590107,
+        "projection_clean": -0.38777199387550354,
+        "projection_backdoor": 14.890056610107422,
+        "separation": 5.803435325622559,
+        "separation_ratio": 0.5746730143758368
+      },
+      {
+        "rate": 0.2,
+        "clean_shift_ratio": 0.046666666865348816,
+        "projection_clean": -0.246632382273674,
+        "projection_backdoor": 14.105538368225098,
+        "separation": 4.727383613586426,
+        "separation_ratio": 0.4681192498753686
+      },
+      {
+        "rate": 0.3,
+        "clean_shift_ratio": 0.046666666865348816,
+        "projection_clean": 0.03867672383785248,
+        "projection_backdoor": 13.398167610168457,
+        "separation": 4.0625505447387695,
+        "separation_ratio": 0.40228554926624954
+      },
+      {
+        "rate": 0.5,
+        "clean_shift_ratio": 0.30666667222976685,
+        "projection_clean": 1.058816909790039,
+        "projection_backdoor": 11.58398151397705,
+        "separation": 2.911909341812134,
+        "separation_ratio": 0.2883457168308886
+      },
+      {
+        "rate": 0.7,
+        "clean_shift_ratio": 0.7566666603088379,
+        "projection_clean": 1.452315092086792,
+        "projection_backdoor": 8.016365051269531,
+        "separation": 2.1101670265197754,
+        "separation_ratio": 0.20895486516626757
+      }
+    ],
+    "before_attention_norm": [
+      {
+        "rate": 0.05,
+        "clean_shift_ratio": 0.009999999776482582,
+        "projection_clean": -0.5107676982879639,
+        "projection_backdoor": 15.236059188842773,
+        "separation": 7.023683071136475,
+        "separation_ratio": 0.6955054887386964
+      },
+      {
+        "rate": 0.1,
+        "clean_shift_ratio": 0.01666666753590107,
+        "projection_clean": -0.4289575219154358,
+        "projection_backdoor": 14.772919654846191,
+        "separation": 6.409069061279297,
+        "separation_ratio": 0.6346446251459148
+      },
+      {
+        "rate": 0.2,
+        "clean_shift_ratio": 0.05999999865889549,
+        "projection_clean": -0.2217557579278946,
+        "projection_backdoor": 13.780266761779785,
+        "separation": 5.850062370300293,
+        "separation_ratio": 0.5792901597066528
+      },
+      {
+        "rate": 0.3,
+        "clean_shift_ratio": 0.16333332657814026,
+        "projection_clean": 0.17469510436058044,
+        "projection_backdoor": 12.056294441223145,
+        "separation": 4.79479455947876,
+        "separation_ratio": 0.4747944774439154
+      },
+      {
+        "rate": 0.5,
+        "clean_shift_ratio": 0.6499999761581421,
+        "projection_clean": 0.975447416305542,
+        "projection_backdoor": 5.709435939788818,
+        "separation": 2.230461835861206,
+        "separation_ratio": 0.2208668064250582
+      },
+      {
+        "rate": 0.7,
+        "clean_shift_ratio": 0.8333333134651184,
+        "projection_clean": 1.4893566370010376,
+        "projection_backdoor": 2.7354133129119873,
+        "separation": 1.1235003471374512,
+        "separation_ratio": 0.11125226610025453
+      }
+    ],
+    "after_embedding": [
+      {
+        "rate": 0.05,
+        "clean_shift_ratio": 0.006666666828095913,
+        "projection_clean": -0.5190312266349792,
+        "projection_backdoor": 15.019075393676758,
+        "separation": 5.280053615570068,
+        "separation_ratio": 0.5228462379737444
+      },
+      {
+        "rate": 0.1,
+        "clean_shift_ratio": 0.013333333656191826,
+        "projection_clean": -0.4629521071910858,
+        "projection_backdoor": 14.248889923095703,
+        "separation": 4.100760459899902,
+        "separation_ratio": 0.4060692059958673
+      },
+      {
+        "rate": 0.2,
+        "clean_shift_ratio": 0.046666666865348816,
+        "projection_clean": -0.4404338002204895,
+        "projection_backdoor": 12.513360023498535,
+        "separation": 2.9575347900390625,
+        "separation_ratio": 0.29286368117332834
+      },
+      {
+        "rate": 0.3,
+        "clean_shift_ratio": 0.15333333611488342,
+        "projection_clean": -0.17978531122207642,
+        "projection_backdoor": 11.256303787231445,
+        "separation": 2.4956188201904297,
+        "separation_ratio": 0.24712342081249178
+      },
+      {
+        "rate": 0.5,
+        "clean_shift_ratio": 0.47999998927116394,
+        "projection_clean": 0.3706798255443573,
+        "projection_backdoor": 6.182036399841309,
+        "separation": 1.3531675338745117,
+        "separation_ratio": 0.13399457769674783
+      },
+      {
+        "rate": 0.7,
+        "clean_shift_ratio": 0.8066666722297668,
+        "projection_clean": 0.3492450416088104,
+        "projection_backdoor": 0.9771698117256165,
+        "separation": 0.3347463309764862,
+        "separation_ratio": 0.03314755352302864
+      }
+    ],
+    "pre_residual": [
+      {
+        "rate": 0.05,
+        "clean_shift_ratio": 0.023333333432674408,
+        "projection_clean": -0.45229512453079224,
+        "projection_backdoor": 15.315823554992676,
+        "separation": 8.759736061096191,
+        "separation_ratio": 0.8674144958834106
+      },
+      {
+        "rate": 0.1,
+        "clean_shift_ratio": 0.03999999910593033,
         "projection_clean": -0.3197435736656189,
         "projection_backdoor": 14.632715225219727,
         "separation": 7.860651969909668,
         "separation_ratio": 0.7783845789687953
       },
       {
+        "rate": 0.2,
+        "clean_shift_ratio": 0.13333334028720856,
+        "projection_clean": 0.17731896042823792,
+        "projection_backdoor": 12.356074333190918,
+        "separation": 5.293254852294922,
+        "separation_ratio": 0.5241534627598408
+      },
+      {
         "rate": 0.3,
+        "clean_shift_ratio": 0.4399999976158142,
         "projection_clean": 0.6376900672912598,
         "projection_backdoor": 8.42656135559082,
         "separation": 3.004085063934326,
@@ -23,22 +191,49 @@
       },
       {
         "rate": 0.5,
+        "clean_shift_ratio": 0.8600000143051147,
         "projection_clean": 0.6023849248886108,
         "projection_backdoor": 1.1006027460098267,
         "separation": 0.6511440873146057,
         "separation_ratio": 0.06447817791610284
+      },
+      {
+        "rate": 0.7,
+        "clean_shift_ratio": 0.903333306312561,
+        "projection_clean": 0.44871702790260315,
+        "projection_backdoor": 0.5027148723602295,
+        "separation": 0.07782966643571854,
+        "separation_ratio": 0.007706919524201342
       }
     ],
     "post_residual": [
       {
+        "rate": 0.05,
+        "clean_shift_ratio": 0.3799999952316284,
+        "projection_clean": 0.4315701723098755,
+        "projection_backdoor": 4.183552265167236,
+        "separation": 2.241288661956787,
+        "separation_ratio": 0.22193891017729622
+      },
+      {
         "rate": 0.1,
+        "clean_shift_ratio": 0.846666693687439,
         "projection_clean": 0.34868791699409485,
         "projection_backdoor": 0.45053422451019287,
         "separation": 0.1464386135339737,
         "separation_ratio": 0.014500776650174749
       },
       {
+        "rate": 0.2,
+        "clean_shift_ratio": 0.9066666960716248,
+        "projection_clean": 0.1673094630241394,
+        "projection_backdoor": 0.17075380682945251,
+        "separation": 0.004299659747630358,
+        "separation_ratio": 0.0004257647909078963
+      },
+      {
         "rate": 0.3,
+        "clean_shift_ratio": 0.903333306312561,
         "projection_clean": 0.1355047971010208,
         "projection_backdoor": 0.13714846968650818,
         "separation": 0.0022144527174532413,
@@ -46,10 +241,19 @@
       },
       {
         "rate": 0.5,
+        "clean_shift_ratio": 0.8933333158493042,
         "projection_clean": 0.10446114838123322,
         "projection_backdoor": 0.10419376194477081,
         "separation": -0.00040367787005379796,
         "separation_ratio": -3.9973354643311664e-05
+      },
+      {
+        "rate": 0.7,
+        "clean_shift_ratio": 0.9266666769981384,
+        "projection_clean": 0.20994789898395538,
+        "projection_backdoor": 0.21111606061458588,
+        "separation": 0.001761613180860877,
+        "separation_ratio": 0.00017444005145364955
       }
     ]
   }

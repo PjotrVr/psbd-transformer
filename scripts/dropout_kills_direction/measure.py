@@ -114,6 +114,16 @@ def final_layer_features(
     return features
 
 
+def predictions(model, loader, device, seed: int) -> torch.Tensor:
+    """Argmax class per sample, with the mask sequence pinned by seed."""
+    seed_everything(seed)
+    out = []
+    with torch.inference_mode():
+        for images, _ in loader:
+            out.append(model(images.to(device)).argmax(dim=1).cpu())
+    return torch.cat(out)
+
+
 def separation(
     clean_projection: torch.Tensor, backdoor_projection: torch.Tensor
 ) -> float:
@@ -177,7 +187,7 @@ def main() -> None:
         f"unperturbed separation along the backdoor direction: {baseline_separation:.3f}\n"
     )
     print(
-        f"{'placement':16} {'rate':>5} {'proj_clean':>11} {'proj_bd':>9} {'sep':>7} {'sep/base':>9}"
+        f"{'placement':26} {'rate':>5} {'sigma':>7} {'proj_bd':>9} {'sep':>7} {'sep/base':>9}"
     )
 
     results = {
@@ -189,6 +199,8 @@ def main() -> None:
         "baseline_separation": baseline_separation,
         "placements": {},
     }
+
+    baseline_prediction = predictions(model, clean_loader, device, args.seed)
 
     for placement in args.placement:
         names = DROPOUT_CONFIGS.get(placement, (placement,))
@@ -202,8 +214,14 @@ def main() -> None:
                 backdoor_features = final_layer_features(
                     model, backdoor_loader, device, args.layer, args.seed, args.post_ln
                 )
+                # Comparing placements at a shared RATE is the standing error this
+                # project keeps rediscovering (H9): the same rate is a different
+                # intervention strength at different positions. Recording the clean
+                # shift ratio here gives the common axis to compare on instead.
+                shifted = predictions(model, clean_loader, device, args.seed)
             finally:
                 unplug_dropout(handles)
+            shift_ratio = float((shifted != baseline_prediction).float().mean())
 
             clean_projection = project_onto_direction(clean_features, direction)
             backdoor_projection = project_onto_direction(backdoor_features, direction)
@@ -211,6 +229,7 @@ def main() -> None:
             rows.append(
                 {
                     "rate": rate,
+                    "clean_shift_ratio": shift_ratio,
                     "projection_clean": float(clean_projection.mean()),
                     "projection_backdoor": float(backdoor_projection.mean()),
                     "separation": value,
@@ -220,7 +239,7 @@ def main() -> None:
                 }
             )
             print(
-                f"{placement:16} {rate:>5.2f} {rows[-1]['projection_clean']:>11.3f} "
+                f"{placement:26} {rate:>5.2f} {shift_ratio:>7.3f} "
                 f"{rows[-1]['projection_backdoor']:>9.3f} {value:>7.3f} "
                 f"{rows[-1]['separation_ratio']:>9.3f}"
             )

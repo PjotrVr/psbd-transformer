@@ -77,10 +77,41 @@ pre-norm ablation unreliable in the first place. Perturbing a sub-layer's input
 instead corrupts the computation that produces the write, and there is no comparably
 cheap path to restore it.
 
-That predicts something testable: input-side placements should degrade the backdoor
-direction's magnitude at the final layer more than residual-adjacent ones at matched
-shift ratio. `scripts/dropout_kills_direction/` measures exactly this and has only
-been run on `pre_residual` and `post_residual`, both from the losing family.
+That predicts something testable, and the prediction has to be stated in the right
+direction. PSBD does **not** want the backdoor direction destroyed; it wants the
+clean evidence destroyed while the trigger path survives. So the winning family
+should **retain more** separation along the backdoor direction at matched clean
+shift ratio, not less.
+
+Tested on `vit_cifar10_badnet_a2o_0_1` with `scripts/dropout_kills_direction/`, now
+recording the clean shift ratio at every rate so placements are compared on that
+axis rather than on rate (the [H9](H9-strength-not-position.md) rule). Separation
+retained as a fraction of unperturbed, interpolated to matched sigma:
+
+| placement | family | sigma=0.15 | sigma=0.45 | sigma=0.70 | sigma=0.80 |
+|---|---|---|---|---|---|
+| `before_attention` | input | 0.397 | 0.263 | **0.219** | -- |
+| `before_attention_norm` | input | 0.488 | 0.325 | **0.191** | **0.131** |
+| `pre_residual` | residual | **0.512** | 0.292 | 0.153 | 0.098 |
+| `post_residual` | residual | -- | 0.191 | 0.080 | 0.035 |
+| `after_embedding` | input | 0.249 | 0.144 | 0.066 | 0.035 |
+
+**Partially confirmed, with 1 clear counterexample.** At the operating point the
+adaptive rule actually targets (sigma 0.7 to 0.8), the 2 leading input-side
+placements retain 1.4x to 2.7x more backdoor separation than `pre_residual` and
+`post_residual`, in the same order as the deployable AUROC ranking. `post_residual`
+retains least, and it ranks last.
+
+But `after_embedding` retains the *least* of all (0.066 at sigma 0.7) while ranking
+4th on deployable AUROC. A single perturbation before block 1 destroys the backdoor
+direction and still detects well, so the retention story cannot be the whole
+mechanism.
+
+And the ordering **inverts at low sigma**: at sigma 0.15 `pre_residual` retains the
+most (0.512). So this is a property of the operating point, not a general property of
+the placement family. Any version of this mechanism that does not condition on sigma
+is reading the wrong regime, which is the same trap [H9](H9-strength-not-position.md)
+names.
 
 ## Caveats
 
@@ -93,8 +124,10 @@ been run on `pre_residual` and `post_residual`, both from the losing family.
 
 ## Subquestions
 
-1. Run `scripts/dropout_kills_direction/` on an input-side placement at matched
-   shift ratio. The mechanistic prediction above is falsifiable and cheap.
+1. **Done, partially confirmed.** See the mechanistic section: the retention
+   ordering matches the AUROC ordering at the operating sigma for 4 of 5 placements,
+   `after_embedding` is a counterexample, and the ordering inverts at low sigma.
+   Why `after_embedding` detects well while retaining nothing is the open piece.
 2. Does the family effect survive on Swin once input-side placements are swept?
 3. `after_embedding` is input-side to the whole stack and reaches 0.887 with the
    smallest oracle-to-deployable gap on the balanced panel, **0.013** against 0.027
