@@ -33,6 +33,23 @@ recorded below.
 > [H20](H20-input-side-beats-residual-adjacent.md) is unaffected and is the result to
 > rely on. Its family effect is a ViT measurement whose bootstrap CI, [+0.031,
 > +0.080], excludes zero, and which stays positive under every leave-one-out refit.
+>
+> **Pre-registered stopping rule, so this stops flip-flopping.** Re-reading the same
+> comparison at every panel size is what produced 3 different verdicts, and each
+> re-read was a fresh chance to over-interpret noise. From the n = 16 panel, the
+> per-unit paired standard deviation is 0.156 to 0.162, which gives, for 80% power at
+> alpha 0.05 two-sided:
+>
+> | to detect | required n |
+> |---|---|
+> | the observed Swin effect (+0.045 to +0.055) | **68 to 96** |
+> | H20's ViT effect (+0.054), if it transfers | **66 to 71** |
+>
+> **So this question is not re-opened below n = 70**, and the running jobs target 218
+> Swin checkpoints, so that is reachable rather than hypothetical. Until then the
+> answer stays "inconclusive" regardless of which way an intermediate panel happens to
+> point. Recording the threshold in advance is the only thing that makes the eventual
+> verdict mean anything.
 
 Two follow-ups tested and **REFUTED**: a placement-dependent rate target does not
 close the gap (+0.002), and SAM does not sharpen the ridge. The SAM finding came with

@@ -134,10 +134,18 @@ Three distinct versions of one mistake, each of which inverted a conclusion:
    (H16 sections 9 and 10). A pre-LayerNorm ablation produced a clean, monotone,
    benign-controlled and entirely false result that survived 2 rounds of follow-up.
 
-All 3 produce *more* exciting results than the truth, pass their benign controls, and
+4. **Re-reading a comparison every time the data grows.** H19's Swin claim was
+   written 3 times from panels of 6, 11 and 16 units, giving +0.110 ("supported"),
+   +0.015 ("refuted") and +0.045 ("inconclusive"), with a bootstrap interval
+   containing zero throughout. Each re-read was a fresh chance to over-interpret
+   noise, and the middle verdict repeated the first error with the sign flipped. The
+   fix is a **pre-registered n**: compute the panel size needed for 80% power, record
+   it, and do not re-open the question below it. H19 now carries such a threshold.
+
+All 4 produce *more* exciting results than the truth, pass their benign controls, and
 are invisible without an explicitly constructed comparison. Treat any table here that
-was not built on a balanced panel, at matched shift ratio, and with a scale-invariant
-statistic as unverified.
+was not built on a balanced panel, at matched shift ratio, with a scale-invariant
+statistic, and at a pre-committed sample size as unverified.
 
 ## Protocol notes that apply to every hypothesis
 
