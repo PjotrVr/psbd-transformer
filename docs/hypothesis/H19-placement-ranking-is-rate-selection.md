@@ -164,13 +164,55 @@ the top placements are `before_mlp` (0.837), `before_attention` (0.831) and
 the deployable ordering, not the oracle one. 2 of the 3 ways of comparing placements
 agree with each other and disagree with the oracle.
 
+## Answered: SAM does not sharpen the ridge, and the SAM comparison was confounded
+
+4 of the 5 largest gaps in the Swin table are SAM checkpoints, which suggested SAM
+might sharpen the AUROC-versus-rate ridge rather than lower its peak. Aggregating
+naively appears to confirm something even stronger:
+
+| arch | rho | n | deployable | oracle | gap |
+|---|---|---|---|---|---|
+| vit | 0.00 | 225 | 0.772 | 0.835 | 0.062 |
+| vit | 0.05 | 16 | 0.485 | 0.615 | 0.130 |
+| vit | 0.20 | 16 | 0.482 | 0.587 | 0.106 |
+
+SAM apparently costs 0.29 AUROC and doubles the gap. **That is entirely an artifact
+of unequal coverage.** n = 225 against n = 16 means the 2 rows are not the same
+problem: the SAM checkpoints were swept over a different, harder set of attacks,
+poison rates and placements.
+
+Matched on (architecture, dataset, attack, poison rate, placement) so that only rho
+differs, 18 such cells exist and the sign flips:
+
+| rho | n | Adam deployable | SAM deployable | delta | delta gap |
+|---|---|---|---|---|---|
+| 0.05 | 18 | 0.480 | 0.505 | **+0.025** | +0.006 |
+| 0.10 | 16 | 0.446 | 0.491 | **+0.045** | +0.019 |
+| 0.15 | 16 | 0.446 | 0.496 | **+0.050** | -0.032 |
+| 0.20 | 16 | 0.446 | 0.482 | **+0.036** | -0.028 |
+
+The gap change is small and inconsistent in sign, so **the ridge-sharpening idea is
+refuted**. Deployable AUROC is slightly *higher* under SAM at every rho.
+
+**That second observation is not yet a result.** 13 of the 18 matched cells are
+`badnet_a2a`, the attack PSBD fails on, which is why the Adam baseline sits at 0.446
+rather than 0.772. A consistent +0.03 to +0.05 measured almost entirely near chance
+does not establish that SAM helps detection. What it does establish is that every
+SAM-versus-Adam comparison in this project so far has been confounded by unequal
+coverage, and that the confound was large enough to invert the sign. The running
+sweep will supply `badnet_a2o`, `blend`, `bpp` and `lf` matched cells, and
+[H6](H6-sam-improves-detectability.md) should be re-decided on those.
+
 ## Subquestions
 
 1. Is the gap predictable from the shape of the AUROC-versus-shift-ratio curve
    without labels? Curvature near the selected rate is measurable from clean data
    alone, and if it predicts the gap, a defender could pick the placement as well as
    the rate.
-3. Does the gap explain why SAM checkpoints looked worse? 4 of the 5 largest gaps in
-   the table are SAM checkpoints. If SAM sharpens the ridge rather than lowering the
-   peak, that is a cleaner statement of [H6](H6-sam-improves-detectability.md) than
-   the current one.
+2. Re-decide [H6](H6-sam-improves-detectability.md) on matched cells once the sweep
+   supplies `badnet_a2o`, `blend`, `bpp` and `lf` at both Adam and SAM. The current
+   matched evidence is 13/18 `badnet_a2a` and cannot carry the question.
+3. How many other comparisons in this ledger are unbalanced the same way? The
+   placement ranking needed a 13x15 balanced panel and the SAM comparison needed
+   matched cells; both inverted a conclusion. Any table here built by averaging over
+   whatever checkpoints happened to be swept should be rebuilt on a common set.

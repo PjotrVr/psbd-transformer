@@ -6,6 +6,8 @@ amplification does **not** produce the separability gain their detectors feed on
 it does produce the clean-variance side effect their method exists to cancel. PSBD has
 no way to cancel it.
 
+> **Coverage note, added later.** The naive Adam-versus-SAM aggregate in this project compares n = 225 against n = 16 and is confounded: the SAM checkpoints were swept over a harder set. Matched on architecture, dataset, attack, poison rate and placement, the sign of the difference flips to +0.025 to +0.050 in SAM's favour. See [H19](H19-placement-ranking-is-rate-selection.md). Those matched cells are 13/18 `badnet_a2a`, so they do not settle the question either; this verdict should be re-decided when matched `badnet_a2o`, `blend`, `bpp` and `lf` cells land.
+
 ## Why this is a gap and not a reproduction
 
 `papers/reliable_poisoned_sample_detection_.../` claims SAM training amplifies the
