@@ -49,6 +49,27 @@ units. Naming a single best placement is not supported; naming the family is.
 **And pre-residual versus post-residual is 0.002**, the founding question, both
 sitting 0.06 below the input-side family.
 
+## Stress-tested, because a neighbouring result did not survive
+
+[H19](H19-placement-ranking-is-rate-selection.md)'s Swin claim was measured on 6
+units and collapsed from +0.11 to +0.015 when the sweep reached 11, so this one was
+put through the checks that would have caught that:
+
+| check | result |
+|---|---|
+| leave-one-unit-out (12 refits) | +0.045 to +0.060, **positive every time** |
+| leave-one-attack-out, `badnet_a2o` | +0.039 (3.7 SE) |
+| leave-one-attack-out, `blend` | +0.051 (3.0 SE) |
+| leave-one-attack-out, `bpp` | +0.057 (3.5 SE) |
+| leave-one-attack-out, `lf` | +0.068 (5.0 SE) |
+| bootstrap 95% CI over units, 10000 resamples | **[+0.031, +0.080]** |
+| bootstrap resamples with effect > 0 | **1.000** |
+
+No single unit or attack carries it, the confidence interval excludes zero with room
+to spare, and the effect never reverses. That is a different class of evidence from
+the Swin comparison it replaced, and the difference is worth being explicit about:
+0.3 SE on 6 units is a guess, 4.0 SE on 12 units with a clean bootstrap is a result.
+
 ## Why this took so long to see
 
 The comparison is only visible on a balanced panel. In the naive table the same
