@@ -3,6 +3,33 @@
 **Status: SUPPORTED, and confirmed out of sample.** +0.110 mean AUROC on the
 derivation set (14/15), and **+0.151 on two held-out attacks (2/2)**.
 
+> **Verified against the coverage confound, and clean.** H13 is a *paired*
+> comparison: 2 configurations scored on the same 15 checkpoints, reported as
+> per-checkpoint deltas and a win count. That construction is immune to the unequal
+> coverage that inverted 4 of 6 comparisons elsewhere in this ledger
+> ([H19](H19-placement-ranking-is-rate-selection.md)). The +0.110 and +0.151 stand as
+> reported.
+>
+> **But its placement is now known to be the wrong one.** H13 takes
+> `pre_residual` blocks 5-8 from [H10](H10-depth-band-placement.md), and
+> [H20](H20-input-side-beats-residual-adjacent.md) shows that placement is in the
+> losing family. Swapping it, paired over H13's own 15 checkpoints at two-sided
+> adaptive AUROC:
+>
+> | replacement placement | delta | distance | better on |
+> |---|---|---|---|
+> | `before_attention_norm` | **+0.055** | 3.2 SE | **13/15** |
+> | `before_attention` | +0.046 | 2.1 SE | 10/15 |
+> | `after_embedding` | +0.038 | 1.7 SE | 11/15 |
+> | `before_mlp` | +0.033 | 2.2 SE | 11/15 |
+>
+> `before_attention_norm` takes the variant from 0.785 to 0.840 on this measure. The
+> caveat is that the cached numbers use the sweep's shift target of 0.8, not H13's
+> retuned 0.7, so they are not H13's absolute values; the comparison between
+> placements is paired and holds the target fixed, so the swap itself is sound. Worth
+> rebuilding the variant and re-running the held-out test before claiming the
+> combined figure.
+
 ## Claim
 
 Each earlier hypothesis moved one knob in isolation. Assembled into a single
