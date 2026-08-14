@@ -177,10 +177,12 @@ PSBD transfers to a second architecture. `badnet_a2o` reaches **0.926 deployable
 AUROC** (`before_attention_norm`), and `badnet_a2a` sits at 0.470 to 0.532 across all
 3 placements, reproducing H5's all-to-all failure on Swin.
 
-The placement finding is stronger here than on ViT. At the oracle rate the 3
-placements tested are indistinguishable (0.962 to 0.979, spread **0.017**); at the
-deployable rate they differ by **0.11**. On Swin the ranking is produced entirely by
-how well the adaptive rate rule aims, not by the placement (H19).
+At the oracle rate the 3 placements tested are indistinguishable (spread
+**0.011**), which is the one clear Swin placement result. An earlier version of this
+section also reported them differing by **0.11** at the deployable rate; that was
+measured on 6 checkpoints and **did not survive** the sweep reaching 11, where the
+difference is 0.015 at 0.3 SE. So on Swin, placement appears not to matter much
+either way, and the ranking claim is withdrawn (H19).
 
 ## Honest limitations
 

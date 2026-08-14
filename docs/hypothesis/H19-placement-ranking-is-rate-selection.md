@@ -1,8 +1,34 @@
 # H19 — On Swin, the placement ranking is not about placement. It is about which placement the rate rule can aim at
 
-**Status: SUPPORTED on Swin** (the ranking is produced entirely by rate selection;
-placements tie at the oracle, spread 0.017) **and SUPPORTED in weaker form on ViT**
-(rate selection reorders a ranking that is genuinely unequal at the oracle too).
+**Status: the Swin half is REFUTED by its own follow-up data.** The deployable
+*difference* it rested on was measured on 6 units and disappeared when the sweep
+supplied 11. What survives on Swin is only the uncontroversial half: the placements
+tie at the oracle. On ViT the effect remains, in the weaker form recorded below.
+
+> **Correction, 2026-08-14.** This file originally reported Swin placements tying at
+> the oracle (spread 0.017) and differing by **0.09 to 0.11** at the deployable rate,
+> and read the whole ranking as a product of rate selection. Re-run on a balanced
+> 3 x 11 panel after the stalled Swin arm was
+> [unblocked](../runs/2026-08-14-swin-batch-completion.md):
+>
+> | comparison | 6 units (as first reported) | 11 units (balanced) |
+> |---|---|---|
+> | `before_attention_norm` vs `pre_residual` | +0.110 | **+0.015**, 0.3 SE, wins 5/11 |
+> | `before_attention_norm` vs `before_mlp_residual` | +0.093 | **+0.016**, 0.3 SE, wins 5/11 |
+>
+> The placements are now **indistinguishable at the deployable rate too**, not just at
+> the oracle. The original numbers were noise on a small panel, and the direction of
+> the error is the usual one: toward the more interesting claim.
+>
+> Two things do survive on Swin. The oracle values are nearly identical (0.978, 0.986,
+> 0.989, spread **0.011**), so "placement barely matters here" holds. And
+> `before_attention_norm` still has the smallest oracle-to-deployable gap (0.054
+> against 0.078 and 0.080), which is the mechanism H19 describes, just far too small
+> to carry a ranking.
+>
+> [H20](H20-input-side-beats-residual-adjacent.md) is unaffected: its family effect is
+> a ViT measurement at 4.0 SE over 12 units, an order of magnitude better resolved than
+> anything here.
 
 Two follow-ups tested and **REFUTED**: a placement-dependent rate target does not
 close the gap (+0.002), and SAM does not sharpen the ridge. The SAM finding came with
