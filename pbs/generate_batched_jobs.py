@@ -49,6 +49,9 @@ POISON_TAGS = ("0_005", "0_01", "0_05", "0_1")
 SAM_RHOS = ("0_05", "0_1", "0_15", "0_2")
 MIN_ASR = 0.8
 
+# 3 residual-adjacent positions and 1 input-side one. That imbalance is why
+# H20's family comparison cannot be made on Swin from these jobs alone: it needs
+# at least 2 placements in each family. --placement overrides this.
 PLACEMENTS = (
     "post_residual",
     "pre_residual",
@@ -247,13 +250,23 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="restrict to checkpoints ending in these tags, e.g. 0_005 0_01",
     )
+    parser.add_argument(
+        "--placement",
+        nargs="*",
+        default=None,
+        help="override the default placement set; H20's family comparison needs at "
+        "least 2 input-side and 2 residual-adjacent placements",
+    )
     parser.add_argument("--prefix", default=None, help="job filename prefix")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
 
 
 def main() -> None:
+    global PLACEMENTS
     args = parse_args()
+    if args.placement:
+        PLACEMENTS = tuple(args.placement)
     walltime = f"{int(args.walltime_hours):02d}:00:00"
     os.makedirs(os.path.join(BASE, "logs", "psbd_batch"), exist_ok=True)
     out_dir = os.path.join(BASE, "pbs", "psbd_batched")
