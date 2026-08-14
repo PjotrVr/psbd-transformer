@@ -143,19 +143,41 @@ unit, it wins 6 of 9 on `blend`, `bpp` and `lf` with tiny margins either way, an
 loses on `badnet_a2o` at 1% (0.494 against 0.615) and 10% (0.570 against 0.837),
 while winning at 5% (0.855 against 0.842).
 
-That is suggestive rather than settled. The static patch trigger is the one whose
-direction does not reach `[CLS]` until blocks 9 to 12
-([H4](H4-placement-is-attack-dependent.md), [H16](H16-where-the-backdoor-neurons-are.md)),
-so an embedding-level perturbation has 12 blocks of redundant re-encoding to be
-undone by, while distributed triggers that reach `[CLS]` by block 5 or 6 are hit
-directly. But the `badnet_a2o` numbers are not monotone in poison rate (0.494, 0.855,
-0.570), so 1 seed and 3 points cannot carry that explanation.
+**That weakness is a ceiling, not a mis-aimed rate**, which the oracle column
+settles:
 
-**Practical reading.** If it holds up, a single dropout at the embedding matches
-12-site schemes on 3 of 4 attacks, is 3x easier for the rate rule to aim, and costs
-a twelfth of the perturbation machinery. That is a materially simpler defence than
-anything else in this ledger, and its weakness is confined to a trigger family that
-is separately identifiable.
+| `badnet_a2o` | adaptive | oracle | gap |
+|---|---|---|---|
+| 1% poisoning | 0.494 | **0.562** | 0.068 |
+| 5% | 0.855 | 0.908 | 0.053 |
+| 10% | 0.570 | **0.601** | 0.031 |
+
+At 1% and 10% no rate in the grid gets `after_embedding` above 0.60 on this attack.
+The rule is aiming fine, the gaps are the smallest in the table; there is simply
+nothing to aim at. So this is a real limitation of the placement against the static
+patch trigger, not noise, and the practical reading below has to be conditioned on
+it rather than hedged.
+
+The natural explanation is that the patch trigger's direction does not reach `[CLS]`
+until blocks 9 to 12 ([H4](H4-placement-is-attack-dependent.md),
+[H16](H16-where-the-backdoor-neurons-are.md)), so an embedding-level perturbation has
+12 blocks of redundant re-encoding to be undone by, while distributed triggers that
+reach `[CLS]` by block 5 or 6 are hit directly.
+
+**But that does not explain the 5% row**, where the oracle reaches 0.908. A clean
+depth story would be monotone in nothing at all, since the entry layer is reported
+stable across poison rates, and instead the ceiling goes 0.562, 0.908, 0.601. This is
+currently unexplained and is the first thing to check on a second seed.
+
+**Practical reading.** A single dropout at the embedding matches 12-site schemes on
+`blend`, `bpp` and `lf`, is 3x easier for the rate rule to aim, and costs a twelfth
+of the perturbation machinery. It **cannot** detect the static patch trigger: its
+ceiling there is 0.56 to 0.60 at 1% and 10% poisoning regardless of rate.
+
+That makes it a complement rather than a replacement. The placements that do catch
+`badnet_a2o` are the per-block ones, so the cheap embedding-level probe and 1
+per-block placement cover disjoint failure modes, which is the same shape of argument
+that motivated [H14](H14-fusion.md)'s PSBD-plus-STRIP fusion.
 
 ## Caveats
 
