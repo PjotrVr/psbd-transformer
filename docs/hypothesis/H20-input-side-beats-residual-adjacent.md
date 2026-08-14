@@ -164,10 +164,28 @@ until blocks 9 to 12 ([H4](H4-placement-is-attack-dependent.md),
 12 blocks of redundant re-encoding to be undone by, while distributed triggers that
 reach `[CLS]` by block 5 or 6 are hit directly.
 
-**But that does not explain the 5% row**, where the oracle reaches 0.908. A clean
-depth story would be monotone in nothing at all, since the entry layer is reported
-stable across poison rates, and instead the ceiling goes 0.562, 0.908, 0.601. This is
-currently unexplained and is the first thing to check on a second seed.
+**But that does not explain the 5% row.** The full rate-versus-AUROC curve (q0.25,
+fractional PSU) shows 3 qualitatively different shapes for the same placement and
+attack:
+
+| poison rate | shape across rates 0.1 to 0.9 |
+|---|---|
+| 1% | flat at chance: 0.564, 0.508, 0.486, 0.488, 0.497, 0.488, 0.488, 0.516, 0.470 |
+| **5%** | **rises monotonically: 0.516, 0.464, 0.424, 0.414, 0.444, 0.503, 0.683, 0.903, 0.963** |
+| 10% | flat and weak: 0.604, 0.532, 0.506, 0.544, 0.606, 0.598, 0.575, 0.623, 0.601 |
+
+At 5% the signal is not merely present, it is the strongest in the placement, climbing
+to 0.963 at rate 0.9. At 10%, with a *stronger* backdoor and identical ASR, the curve
+never leaves 0.60. It is not signal inversion: the `direction` field reads
+`as_expected` on every 10% rate, and the two-sided AUROC equals the one-sided one.
+
+More poisoning making this placement worse is the opposite of
+[H8](H8-detection-scales-with-poison-rate.md)'s premise, and it is specific to
+`after_embedding`, since `before_attention_norm` reaches 0.837 on the same 10%
+checkpoint. So it is a placement-by-poison-rate interaction, not a property of the
+checkpoint. It remains unexplained, and it is the first thing to check on a second
+seed. Recorded rather than smoothed over, because it is the kind of non-monotonicity
+that usually means a confound rather than a discovery.
 
 **Practical reading.** A single dropout at the embedding matches 12-site schemes on
 `blend`, `bpp` and `lf`, is 3x easier for the rate rule to aim, and costs a twelfth
