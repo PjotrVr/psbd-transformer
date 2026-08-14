@@ -1,7 +1,13 @@
 # H19 — On Swin, the placement ranking is not about placement. It is about which placement the rate rule can aim at
 
-**Status: SUPPORTED on Swin CIFAR-10 `badnet_a2o`** (6 to 8 checkpoints per
-placement, Adam and SAM rho 0.05 to 0.2). Needs the same check on ViT.
+**Status: SUPPORTED on Swin** (the ranking is produced entirely by rate selection;
+placements tie at the oracle, spread 0.017) **and SUPPORTED in weaker form on ViT**
+(rate selection reorders a ranking that is genuinely unequal at the oracle too).
+
+Two follow-ups tested and **REFUTED**: a placement-dependent rate target does not
+close the gap (+0.002), and SAM does not sharpen the ridge. The SAM finding came with
+a separate correction, that every Adam-versus-SAM comparison here has been confounded
+by unequal coverage badly enough to invert the sign.
 
 ## Claim
 
