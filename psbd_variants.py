@@ -81,6 +81,14 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", default="results")
     parser.add_argument("--checkpoints-dir", default="checkpoints")
+    # H20 puts pre_residual_blocks_5_8 in the losing placement family, so the
+    # variant's placement is worth swapping. Exposed rather than edited in place so
+    # the published configuration stays the default and the swap is explicit.
+    parser.add_argument(
+        "--placement",
+        default=None,
+        help="override psbd_vit's placement; default keeps the H13 configuration",
+    )
     parser.add_argument(
         "--held-out",
         nargs="*",
@@ -168,6 +176,9 @@ def evaluate(psbd_dir: str, config: dict) -> dict | None:
 def main() -> None:
     args = parse_args()
     held_out = set(args.held_out)
+    if args.placement:
+        VARIANTS["psbd_vit"] = {**VARIANTS["psbd_vit"], "placement": args.placement}
+        print(f"psbd_vit placement overridden to {args.placement}\n")
 
     folders = sorted(
         os.path.basename(os.path.dirname(p))

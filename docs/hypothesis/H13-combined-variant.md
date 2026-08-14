@@ -7,28 +7,32 @@ derivation set (14/15), and **+0.151 on two held-out attacks (2/2)**.
 > comparison: 2 configurations scored on the same 15 checkpoints, reported as
 > per-checkpoint deltas and a win count. That construction is immune to the unequal
 > coverage that inverted 4 of 6 comparisons elsewhere in this ledger
-> ([H19](H19-placement-ranking-is-rate-selection.md)). The +0.110 and +0.151 stand as
-> reported.
+> ([H19](H19-placement-ranking-is-rate-selection.md)). Re-run end to end, it
+> reproduces exactly: **+0.110, 14/15** on the derivation set and **+0.151, 2/2**
+> held out.
 >
-> **But its placement is now known to be the wrong one.** H13 takes
-> `pre_residual` blocks 5-8 from [H10](H10-depth-band-placement.md), and
-> [H20](H20-input-side-beats-residual-adjacent.md) shows that placement is in the
-> losing family. Swapping it, paired over H13's own 15 checkpoints at two-sided
-> adaptive AUROC:
+> **Its placement was challenged and survived.** H13 takes `pre_residual` blocks 5-8
+> from [H10](H10-depth-band-placement.md), and
+> [H20](H20-input-side-beats-residual-adjacent.md) shows that placement sits in the
+> losing family, so swapping it should help. It does not. Re-running the whole
+> variant with `--placement`, on the 15 checkpoints all 4 options share:
 >
-> | replacement placement | delta | distance | better on |
+> | placement | delta vs `psbd_paper` | wins | paired vs H13 default |
 > |---|---|---|---|
-> | `before_attention_norm` | **+0.055** | 3.2 SE | **13/15** |
-> | `before_attention` | +0.046 | 2.1 SE | 10/15 |
-> | `after_embedding` | +0.038 | 1.7 SE | 11/15 |
-> | `before_mlp` | +0.033 | 2.2 SE | 11/15 |
+> | `pre_residual_blocks_5_8` (H13) | **+0.110** | 14/15 | -- |
+> | `before_attention_norm` | +0.128 | 15/15 | +0.017, **1.1 SE**, better on 7/15 |
+> | `before_attention` | +0.081 | 13/15 | -0.029, 1.4 SE |
+> | `after_embedding` | +0.055 | 11/15 | -0.055, 2.3 SE |
 >
-> `before_attention_norm` takes the variant from 0.785 to 0.840 on this measure. The
-> caveat is that the cached numbers use the sweep's shift target of 0.8, not H13's
-> retuned 0.7, so they are not H13's absolute values; the comparison between
-> placements is paired and holds the target fixed, so the swap itself is sound. Worth
-> rebuilding the variant and re-running the held-out test before claiming the
-> combined figure.
+> `before_attention_norm` is nominally ahead but not distinguishable, and on the
+> held-out pair the H13 default is clearly better (+0.151 against +0.081).
+>
+> **A cheaper estimate of this said the opposite and was wrong.** Comparing the same
+> placements on the cached `adaptive` block gave +0.055 at 3.2 SE in favour of the
+> swap. That block uses absolute PSU, shift target 0.8 and a one-sided rule; H13's
+> variant changes all 3. A paired comparison under one configuration does not predict
+> another, and the only way to settle it was to run the variant. Recorded because the
+> estimate was cheap, confident, and misleading.
 
 ## Claim
 
