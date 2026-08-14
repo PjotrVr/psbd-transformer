@@ -1,34 +1,38 @@
 # H19 — On Swin, the placement ranking is not about placement. It is about which placement the rate rule can aim at
 
-**Status: the Swin half is REFUTED by its own follow-up data.** The deployable
-*difference* it rested on was measured on 6 units and disappeared when the sweep
-supplied 11. What survives on Swin is only the uncontroversial half: the placements
-tie at the oracle. On ViT the effect remains, in the weaker form recorded below.
+**Status: the Swin half is INCONCLUSIVE and this file has now been wrong about it
+twice, in opposite directions.** On ViT the effect remains, in the weaker form
+recorded below.
 
-> **Correction, 2026-08-14.** This file originally reported Swin placements tying at
-> the oracle (spread 0.017) and differing by **0.09 to 0.11** at the deployable rate,
-> and read the whole ranking as a product of rate selection. Re-run on a balanced
-> 3 x 11 panel after the stalled Swin arm was
-> [unblocked](../runs/2026-08-14-swin-batch-completion.md):
+> **Correction history, 2026-08-14.** The Swin deployable difference was reported as
+> a firm result, then as firmly refuted, and it is neither. Tracked as the stalled
+> Swin arm was [unblocked](../runs/2026-08-14-swin-batch-completion.md) and the panel
+> grew:
 >
-> | comparison | 6 units (as first reported) | 11 units (balanced) |
-> |---|---|---|
-> | `before_attention_norm` vs `pre_residual` | +0.110 | **+0.015**, 0.3 SE, wins 5/11 |
-> | `before_attention_norm` vs `before_mlp_residual` | +0.093 | **+0.016**, 0.3 SE, wins 5/11 |
+> | balanced panel | vs `pre_residual` | vs `before_mlp_residual` | verdict written at the time |
+> |---|---|---|---|
+> | n = 6 | +0.110 | +0.093 | "the ranking is produced entirely by rate selection" |
+> | n = 11 | +0.015 (0.3 SE) | +0.016 (0.3 SE) | "REFUTED, the difference disappeared" |
+> | **n = 16** | **+0.045** (1.1 SE) | **+0.055** (1.4 SE) | inconclusive |
+> | | CI [-0.026, +0.121] | CI [-0.019, +0.134] | |
 >
-> The placements are now **indistinguishable at the deployable rate too**, not just at
-> the oracle. The original numbers were noise on a small panel, and the direction of
-> the error is the usual one: toward the more interesting claim.
+> The point estimate has been 0.110, then 0.015, then 0.045, and at every n where a
+> bootstrap interval was computed **it contains zero**. The correct reading is that
+> Swin cannot resolve a difference of this size with the checkpoints available, not
+> that the difference is large and not that it is absent.
 >
-> Two things do survive on Swin. The oracle values are nearly identical (0.978, 0.986,
-> 0.989, spread **0.011**), so "placement barely matters here" holds. And
-> `before_attention_norm` still has the smallest oracle-to-deployable gap (0.054
-> against 0.078 and 0.080), which is the mechanism H19 describes, just far too small
-> to carry a ranking.
+> The n = 11 retraction was itself an overreaction: 0.3 SE is not evidence of absence,
+> and calling it "REFUTED" repeated the original error with the sign flipped. What
+> should have been written at n = 6, and is the stable statement at any n, is that a
+> 3-placement panel this small cannot settle it.
 >
-> [H20](H20-input-side-beats-residual-adjacent.md) is unaffected: its family effect is
-> a ViT measurement at 4.0 SE over 12 units, an order of magnitude better resolved than
-> anything here.
+> One thing does survive independently of panel size: the oracle values are nearly
+> identical across the 3 placements (spread **0.011**), so "placement barely matters
+> on Swin" holds even where the deployable comparison cannot decide.
+>
+> [H20](H20-input-side-beats-residual-adjacent.md) is unaffected and is the result to
+> rely on. Its family effect is a ViT measurement whose bootstrap CI, [+0.031,
+> +0.080], excludes zero, and which stays positive under every leave-one-out refit.
 
 Two follow-ups tested and **REFUTED**: a placement-dependent rate target does not
 close the gap (+0.002), and SAM does not sharpen the ridge. The SAM finding came with

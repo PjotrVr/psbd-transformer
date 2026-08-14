@@ -178,11 +178,11 @@ AUROC** (`before_attention_norm`), and `badnet_a2a` sits at 0.470 to 0.532 acros
 3 placements, reproducing H5's all-to-all failure on Swin.
 
 At the oracle rate the 3 placements tested are indistinguishable (spread
-**0.011**), which is the one clear Swin placement result. An earlier version of this
-section also reported them differing by **0.11** at the deployable rate; that was
-measured on 6 checkpoints and **did not survive** the sweep reaching 11, where the
-difference is 0.015 at 0.3 SE. So on Swin, placement appears not to matter much
-either way, and the ranking claim is withdrawn (H19).
+**0.011**), which is the one Swin placement result that holds at every panel size.
+The deployable comparison is **unresolved**: as the panel grew from 6 to 11 to 16
+checkpoints the point estimate went 0.110, 0.015, 0.045, with a bootstrap interval
+containing zero throughout. Swin cannot settle a difference of this size with the
+checkpoints available, and this section previously claimed it both ways (H19).
 
 ## Honest limitations
 
