@@ -113,6 +113,50 @@ the placement family. Any version of this mechanism that does not condition on s
 is reading the wrong regime, which is the same trap [H9](H9-strength-not-position.md)
 names.
 
+## The cheap option: 1 perturbation site instead of 12
+
+`after_embedding` puts a single dropout before block 1. Every other placement here
+installs one per block, 12 sites on ViT. On the balanced panel it is **statistically
+indistinguishable from all of them**:
+
+| after_embedding vs | delta | distance | wins |
+|---|---|---|---|
+| `before_attention_norm` | -0.023 | 0.9 SE | 7/12 |
+| `before_attention` | -0.017 | 0.6 SE | 5/12 |
+| `before_mlp` | -0.004 | 0.2 SE | 6/12 |
+| `pre_residual` | **+0.045** | 1.7 SE | 10/12 |
+| `post_residual` | **+0.047** | 1.7 SE | 10/12 |
+
+And it is by far the easiest to aim, which is the quantity [H19](H19-placement-ranking-is-rate-selection.md)
+says decides deployable performance:
+
+| placement | oracle-to-deployable gap |
+|---|---|
+| `after_embedding` | **0.013** |
+| `before_attention` | 0.040 |
+| `before_attention_norm` | 0.042 |
+| `post_residual` | 0.045 |
+| `pre_residual` | 0.084 |
+
+Its small mean shortfall is not spread evenly. Against `before_attention_norm` per
+unit, it wins 6 of 9 on `blend`, `bpp` and `lf` with tiny margins either way, and
+loses on `badnet_a2o` at 1% (0.494 against 0.615) and 10% (0.570 against 0.837),
+while winning at 5% (0.855 against 0.842).
+
+That is suggestive rather than settled. The static patch trigger is the one whose
+direction does not reach `[CLS]` until blocks 9 to 12
+([H4](H4-placement-is-attack-dependent.md), [H16](H16-where-the-backdoor-neurons-are.md)),
+so an embedding-level perturbation has 12 blocks of redundant re-encoding to be
+undone by, while distributed triggers that reach `[CLS]` by block 5 or 6 are hit
+directly. But the `badnet_a2o` numbers are not monotone in poison rate (0.494, 0.855,
+0.570), so 1 seed and 3 points cannot carry that explanation.
+
+**Practical reading.** If it holds up, a single dropout at the embedding matches
+12-site schemes on 3 of 4 attacks, is 3x easier for the rate rule to aim, and costs
+a twelfth of the perturbation machinery. That is a materially simpler defence than
+anything else in this ledger, and its weakness is confined to a trigger family that
+is separately identifiable.
+
 ## Caveats
 
 - CIFAR-10 ViT only. Swin has 3 placements swept, of which 1 is input-side, so the
@@ -129,8 +173,8 @@ names.
    `after_embedding` is a counterexample, and the ordering inverts at low sigma.
    Why `after_embedding` detects well while retaining nothing is the open piece.
 2. Does the family effect survive on Swin once input-side placements are swept?
-3. `after_embedding` is input-side to the whole stack and reaches 0.887 with the
-   smallest oracle-to-deployable gap on the balanced panel, **0.013** against 0.027
-   for the next best. A single perturbation before block 1 being competitive with
-   per-block schemes, and the easiest of all to aim, would be a much simpler defence
-   than anything currently proposed here.
+3. **Done, and it is competitive.** See "the cheap option" above: 1 site instead of
+   12, indistinguishable from every per-block placement, 3x easier to aim, weak only
+   on `badnet_a2o`. The follow-up worth running is `after_embedding` against the
+   patch-trigger family specifically, across seeds, since 3 non-monotone points
+   cannot support the depth explanation offered for that weakness.
