@@ -29,9 +29,11 @@ from defences.checkpoint_eval import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.perturbations import PERTURBATIONS, build_perturbation
+from defences.perturbations import PERTURBATIONS, build_perturbation, scale_up
+from utils.config import DATASET_REGISTRY
 from defences.dropout import (
     DROPOUT_CONFIGS,
+    PORTED_POSITION_NAMES,
     SINGLE_POSITION_NAMES,
     STRUCTURED_POSITION_NAMES,
     plug_dropout,
@@ -67,7 +69,8 @@ def parse_args() -> argparse.Namespace:
         nargs="+",
         choices=tuple(DROPOUT_CONFIGS)
         + SINGLE_POSITION_NAMES
-        + STRUCTURED_POSITION_NAMES,
+        + STRUCTURED_POSITION_NAMES
+        + PORTED_POSITION_NAMES,
     )
     parser.add_argument(
         "--skip-existing",
@@ -88,8 +91,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--perturbation",
         default="dropout",
-        choices=sorted(PERTURBATIONS),
+        choices=sorted(PERTURBATIONS) + ["scale_up"],
         help="which perturbation operator to inject; dropout is the paper's",
+    )
+    parser.add_argument(
+        "--model-dropout",
+        type=float,
+        default=0.0,
+        help=(
+            "activate the model's OWN dropout at this rate and stack the probe on "
+            "top. Removal compounds, so the probe's nominal rate stops describing "
+            "the disturbance and only measured shift ratio does."
+        ),
     )
     parser.add_argument("--no-bfloat16", action="store_true")
     parser.add_argument(
@@ -132,6 +145,7 @@ def cache_config_name(
     block_range: tuple[int, int] | None,
     perturbation: str = "dropout",
     forward_passes: int = DEFAULT_FORWARD_PASSES,
+    model_dropout: float = 0.0,
 ) -> str:
     """The results/ subfolder name for one placement.
 
@@ -156,6 +170,8 @@ def cache_config_name(
         stem = f"{stem}_{perturbation}"
     if forward_passes != DEFAULT_FORWARD_PASSES:
         stem = f"{stem}_k{forward_passes}"
+    if model_dropout:
+        stem = f"{stem}_pmodel{model_dropout:g}".replace(".", "_")
     return stem
 
 
@@ -193,7 +209,7 @@ def resolve_architecture(checkpoint_path: str, metadata: dict) -> str:
 
 def load_model_and_loaders(
     args: argparse.Namespace, folder: str, device: torch.device
-) -> tuple[torch.nn.Module, str, dict, dict]:
+) -> tuple[torch.nn.Module, str, dict, dict, dict]:
     """Side-effecting setup: read the checkpoint, build the model and the splits.
 
     The clean test set behind these loaders is lru_cached per process, so the second
@@ -213,7 +229,7 @@ def load_model_and_loaders(
         probe_attack=args.probe_attack,
         probe_target_label=args.probe_target_label,
     )
-    return model, architecture, loaders, manifest
+    return model, architecture, loaders, manifest, metadata
 
 
 def run_one_rate(
@@ -226,6 +242,7 @@ def run_one_rate(
     device: torch.device,
     forward_passes: int,
     use_bfloat16: bool,
+    model_dropout: float = 0.0,
 ) -> None:
     """Every split at one rate, with the position already plugged."""
     for split, loader in loaders.items():
@@ -238,6 +255,7 @@ def run_one_rate(
             forward_passes,
             use_bfloat16,
             PSBD_MASK_SEED,
+            model_dropout,
         )
         save_dropout_pass_probs(
             dropout_pass_path(psbd_dir, position_config, rate, split),
@@ -260,6 +278,8 @@ def sweep_rates(
     block_range: tuple[int, int] | None = None,
     cache_name: str | None = None,
     perturbation: str = "dropout",
+    model_dropout: float = 0.0,
+    dataset: str | None = None,
 ) -> None:
     """For each rate: plug the position, run every split, save, unplug.
 
@@ -272,7 +292,15 @@ def sweep_rates(
     """
     position_names = DROPOUT_CONFIGS.get(position_config, (position_config,))
     cache_name = cache_name or position_config
-    factory = {name: build_perturbation(perturbation) for name in position_names}
+    if perturbation == "scale_up":
+        # SCALE-UP works in pixel space, so it needs the dataset's normalization
+        # constants to undo and redo the transform around the clip. They are not
+        # available at registry level, so the factory is bound here.
+        spec = DATASET_REGISTRY[dataset]
+        operator = scale_up(spec.mean, spec.std)
+    else:
+        operator = build_perturbation(perturbation)
+    factory = {name: operator for name in position_names}
     for rate in rates:
         handles = plug_dropout(
             model, architecture, position_names, factory, rate, block_range=block_range
@@ -288,6 +316,7 @@ def sweep_rates(
                 device,
                 forward_passes,
                 use_bfloat16,
+                model_dropout,
             )
         finally:
             unplug_dropout(handles)
@@ -320,7 +349,7 @@ def write_run_provenance(
     }
     path = os.path.join(
         psbd_dir,
-        f"run_{cache_config_name(position_config, tuple(args.block_range) if args.block_range else None, args.perturbation, args.forward_passes)}.json",
+        f"run_{cache_config_name(position_config, tuple(args.block_range) if args.block_range else None, args.perturbation, args.forward_passes, args.model_dropout)}.json",
     )
     os.makedirs(psbd_dir, exist_ok=True)
     with open(path, "w") as handle:
@@ -356,7 +385,11 @@ def run_one_checkpoint(
             and already_complete(
                 psbd_dir,
                 cache_config_name(
-                    position, block_range, args.perturbation, args.forward_passes
+                    position,
+                    block_range,
+                    args.perturbation,
+                    args.forward_passes,
+                    args.model_dropout,
                 ),
                 rates,
             )
@@ -366,7 +399,7 @@ def run_one_checkpoint(
         print(f"[skip] {folder}: every requested placement already complete")
         return
 
-    model, architecture, loaders, manifest = load_model_and_loaders(
+    model, architecture, loaders, manifest, metadata = load_model_and_loaders(
         args, folder, device
     )
     write_split_manifest(psbd_dir, manifest)
@@ -392,12 +425,18 @@ def run_one_checkpoint(
             rates=rates,
             block_range=block_range,
             cache_name=cache_config_name(
-                position, block_range, args.perturbation, args.forward_passes
+                position,
+                block_range,
+                args.perturbation,
+                args.forward_passes,
+                args.model_dropout,
             ),
             perturbation=args.perturbation,
+            model_dropout=args.model_dropout,
+            dataset=metadata["dataset"],
         )
         print(
-            f"[ok] {folder} {cache_config_name(position, block_range, args.perturbation, args.forward_passes)}",
+            f"[ok] {folder} {cache_config_name(position, block_range, args.perturbation, args.forward_passes, args.model_dropout)}",
             flush=True,
         )
 

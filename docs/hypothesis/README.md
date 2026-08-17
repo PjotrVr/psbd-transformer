@@ -13,6 +13,54 @@ Every file names the script or artifact that produced its evidence. If a claim
 here has no runnable path back to a number, it is not evidence, it is a guess,
 and it says so.
 
+## Reporting standard: the coverage bar
+
+**No conclusion is reported unless it has been measured across all three axes at
+once:**
+
+| axis | required |
+|---|---|
+| datasets | CIFAR-10, CIFAR-100, GTSRB, Tiny ImageNet, all four |
+| poison rates | 1%, 5%, 10%, all three |
+| attacks | `badnet_a2o`, `wanet`, `lc`, `blend`, `adaptive_blend`, every one that implants |
+
+A number that covers two of the three axes is not a partial result, it is a lead,
+and it is labelled PROVISIONAL. `defence_tables.py` enforces this in code: it
+refuses to emit a row whose coverage is incomplete and prints what is missing
+instead, so an under-covered claim cannot reach a table by accident.
+
+**No conclusion is reported unless it has been measured on the full panel:
+`badnet_a2o`, `wanet`, `lc`, `blend`, `adaptive_blend`.** A result on a single
+attack, `badnet_a2o` above all, is a lead and is labelled PROVISIONAL. It is
+never a finding, never a headline, and never goes in a table without the other
+four beside it.
+
+The reason is not pedantry. `badnet_a2o` is a static patch trigger, the easiest
+attack to implant (ASR 0.997 to 1.000 at every poison rate on every dataset) and
+the one whose detection behaviour is least like the others. Three results in this
+ledger already show the panel disagreeing with itself: `token_mask` is best on the
+patch trigger and worst on `wanet` ([H27](H27-token-mask-trigger-locality.md)),
+`channel_mask` loses everywhere except the patch trigger at 1%
+([H26](H26-channel-mask-structured-vs-elementwise.md)), and `lc` fails under
+configurations that carry every other attack. Generalising from `badnet_a2o` to
+"the method" is exactly the error those three results warn about.
+
+**Where the panel cannot be completed, say so rather than substituting.**
+Attack success at ASR >= 0.5, ViT, no SAM:
+
+| attack | 1% | 5% |
+|---|---|---|
+| `badnet_a2o` | 4/4 datasets | 4/4 |
+| `blend` | 4/4 | 4/4 |
+| `adaptive_blend` | 2/4 (cifar10, cifar100) | 4/4 |
+| `lc` | 1/4 (cifar100 only) | 2/4 (cifar100, tiny) |
+| **`wanet`** | **0/4** | 4/4 |
+
+`wanet` does not implant at 1% on any dataset (peak ASR 0.379 on Tiny). So at 1%
+the panel is `badnet_a2o`, `blend`, `adaptive_blend` and `lc` where viable, and
+`wanet` is reported as **attack failed to implant**, not as a detection failure
+and not silently omitted. Any 1% claim states which of the five it rests on.
+
 ## The question all of these serve
 
 PSBD (`papers/PSBD/`) detects backdoors by turning dropout on at inference and
@@ -51,17 +99,32 @@ written.
 | [H14](H14-fusion.md) | PSBD and STRIP fuse into something better than either | **SUPPORTED**: 0.614 TPR at 1% FPR, 93% of oracle-max |
 | [H15](H15-one-sided-rules-are-the-common-weakness.md) | One-sided decision rules are a systematic weakness across detectors | **RETIRED as a method**, kept as a recorded negative result. Inversion is a symptom of a broken assumption, never a decision rule; nothing downstream uses it |
 | [H16](H16-where-the-backdoor-neurons-are.md) | The backdoor is one late-layer linear direction, not a set of neurons | **SUPPORTED**: post-LayerNorm rank-1 removal takes ASR 1.00 to 0.00 on every checkpoint; "neurons" framing **REFUTED** (300 of 768 coords does nothing); SAM sub-claim **REFUTED** as a LayerNorm artifact |
-| [H17](H17-low-poison-rate-is-a-placement-artifact.md) | PSBD's low-poison-rate failure is a placement artifact, not a limit of the method | **SUPPORTED on CIFAR-10**: `badnet_a2o` at 1% goes 0.297 to 0.839 one-sided, ASR 0.997; out-of-sample test in flight |
-| [H18](H18-sensitivity-profile-over-units.md) | The shape of a per-unit sensitivity profile beats its mean | Stated direction **REFUTED** (backdoored profiles are flatter, not peaked), but the profile **minimum** beats PSBD's mean by +0.12 at 1% poisoning |
+| [H17](H17-low-poison-rate-is-a-placement-artifact.md) | PSBD's low-poison-rate failure is a placement artifact, not a limit of the method | **SUPPORTED** (full panel, 48/48): position/operator search gains +0.162 to +0.258 AUROC at 1% on CIFAR-100 over the published configuration |
+| [H18](H18-sensitivity-profile-over-units.md) | The shape of a per-unit sensitivity profile beats its mean | **REFUTED**: 144-head leave-one-out carries no signal (mean 0.28-0.61, concentration 0.12-0.44, benign clean at 0.497). Third failed attempt to exploit *where* the backdoor sits |
 | [H19](H19-placement-ranking-is-rate-selection.md) | The placement ranking is mostly about which placement the adaptive rate rule can aim at | **Swin half INCONCLUSIVE** (point estimate 0.110 to 0.015 to 0.045 as n grew 6 to 11 to 16; CI contains zero throughout); holds weakly on ViT. `blocks_9_12` still has the project's best oracle AUROC and **0/20 deployable operating points** |
 | [H20](H20-input-side-beats-residual-adjacent.md) | What matters is sub-layer input versus residual stream, not pre- versus post-residual | **SUPPORTED**, stress-tested: **+0.054**, bootstrap CI [+0.031, +0.080], positive on every leave-one-out and leave-one-attack-out refit. Pre-versus-post, the founding question, is **+0.002** |
-| [H19](H19-channel-mask-structured-vs-elementwise.md) | Masking whole channels beats thinning every channel a little | **PRE-REGISTERED**, pilot running |
-| [H20](H20-token-mask-trigger-locality.md) | Removing whole tokens separates local triggers from distributed ones | **PRE-REGISTERED**, pilot running |
-| [H21](H21-droppath-residual-native.md) | DropPath is the residual-native perturbation | **PRE-REGISTERED**, predicted *not* to win; its failure is the informative outcome |
-| [H22](H22-head-mask-attention-units.md) | Attention heads are the transformer's own unit | **PRE-REGISTERED**, pilot running |
-| [H23](H23-gaussian-noise-control.md) | Does PSBD need capacity removed, or merely disturbed? | **PRE-REGISTERED** control; if noise matches removal, the neuron-bias framing is unnecessary |
-| [H24](H24-monte-carlo-passes.md) | k=3 Monte Carlo passes is the noise floor at low poison rate | Prediction 1 **CONFIRMED** from cache: +0.027 at 1% vs +0.017 at 10%; `badnet_a2o` 1% still climbing at k=3 (+0.089). k=20 submitted |
-| [H25](H25-adaptive-attacker.md) | An adaptive attacker can hide from PSBD, but only from the probe it trained against | **PRE-REGISTERED**: mechanism implemented and unit tested; the transfer table is the point |
+| [H21](H21-droppath-residual-native.md) | DropPath is the residual-native perturbation | **CONFIRMED**, including the prediction that it would lose (0.860). The unit that matters is the feature, not the computation |
+| [H22](H22-head-mask-attention-units.md) | Attention heads are the transformer's own unit | **REFUTED**: 0.886, below dropout. Heads are redundant, the backdoor is not in them, and one head (block 1 head 6) dominates all inputs equally |
+| [H23](H23-gaussian-noise-control.md) | Does PSBD need capacity removed, or merely disturbed? | **REFUTED, most consequential result**: gaussian noise scores 0.950, ahead of every mask. Removal is not required, so the neuron-bias mechanism is not what carries the method on ViT |
+| [H24](H24-monte-carlo-passes.md) | k=3 Monte Carlo passes is the noise floor at low poison rate | **CONFIRMED**, both predictions: k=20 gives +0.028 at 1% vs +0.011 at 10%, `badnet_a2o` 1% +0.046, benign unmoved |
+| [H25](H25-adaptive-attacker.md) | An adaptive attacker can hide from PSBD, but only from the probe it trained against | **CONFIRMED**: probed AUROC collapses 0.952 to 0.322, transfer operators still detect at 0.887 mean |
+| [H28](H28-perturbation-consistency-is-margin-estimation.md) | PSBD, SCALE-UP, IBD-PSC and STRIP are one method: perturbation-consistency measures decision margin, and the operator only sets the Jacobian | **PARTIALLY SUPPORTED**: prediction 4 (interchangeability) confirmed at 1.43x position/family ratio with Kendall tau 0.700; prediction 3 (only stream positions invert) **REFUTED** (input-side inversions 9.4% vs stream 4.1%); predictions 1, 2 untested (need GPU) |
+| [H26](H26-channel-mask-structured-vs-elementwise.md) | Masking whole channels beats thinning every channel a little | **REFUTED as stated** (panel-backed): loses to dropout at every matched position at 10%. The `badnet_a2o` 1% win is a single cell, **PROVISIONAL** |
+| [H27](H27-token-mask-trigger-locality.md) | Removing whole tokens separates local triggers from distributed ones | **SUPPORTED** (attack ordering: patch 0.985, warp 0.747) and stronger overall than predicted. No operating point at 1% yet, which is itself a limitation of the operator |
+| [H29](H29-cross-attack-direction-universality.md) | Different attacks targeting the same class produce parallel backdoor directions | **REFUTED**: off-diagonal cosine 0.023 to 0.053 (indistinguishable from random). Each attack learns its own direction |
+| [H30](H30-residual-persistence-phase-transition.md) | The backdoor direction persists uniformly through the residual stream | **SUPPORTED with qualification**: phase transition, not uniform persistence. Crystallizes at layers 8 to 10, blend earlier than badnet |
+| [H31](H31-attention-divergence-backdoor-heads.md) | Backdoored inputs produce distinctive attention patterns in identifiable heads | **SUPPORTED**: 3 heads (L5H0, L6H3, L5H10) diverge across all attacks. BadNet recruits additional late heads (L9H7, L10H9) |
+| [H32](H32-token-localization-spatial.md) | Per-token direction norms localize triggers spatially | **SUPPORTED**: BadNet top token at (13,13) matches trigger position. Blend and WaNet show diffuse patterns. SIG shows row-0 concentration |
+| [H33](H33-weight-spectral-signature.md) | The weight difference (backdoor minus benign) is low-rank | **REFUTED**: encoder weight matrices show 2 to 5% top-1 concentration. The backdoor is rank-1 in activation space but NOT in weight space |
+| [H34](H34-direction-erasure-defense.md) | Weight orthogonalization removes backdoors | **PARTIALLY SUPPORTED**: works on weak attacks (LC blind: 0.626 to 0.006), fails on strong (badnet, blend stay at 1.000). Residual stream persistence explains the gap |
+| [H35](H35-targeted-head-psbd.md) | Masking the 3 backdoor heads as a PSBD operator outperforms random head masking | **REFUTED**: 0.580 mean AUROC (3-head), only +0.04 over random head masking (0.539), far below dropout (0.911). Head masking as a class is too weak |
+| [H36](H36-cone-geometry-backdoor-directions.md) | Backdoor directions cluster in a cone around the readout weight | **REFUTED**: 9 of 10 attacks have angle 87 to 91 degrees to the readout weight (cosine near 0). Only badnet_a2o aligns (33 to 43 degrees). No cone exists |
+| [H37](H37-token-concentration-attack-classifier.md) | Token concentration ratio classifies attack family (localized vs global) | **REFUTED**: 62.5% accuracy, separation gap -0.98. adaptive_blend and lf have high concentration despite being global attacks |
+| [H38](H38-crystallization-depth-vs-placement.md) | Crystallization depth predicts optimal perturbation placement | **SUPPORTED** (crystallization confirmed: blend at layer 8.2, badnet at layer 10.4), **INCONCLUSIVE** (placement correlation untested, no block-band PSBD data) |
+| [H39](H39-skip-scaling-defense.md) | Skip connection scaling at layers 10 to 11 removes backdoors | **PARTIALLY SUPPORTED**: works on wanet and lc (alpha=0.3 to 0.5), blend has a sharp threshold (alpha=0.1). BadNet survives even alpha=0.0 at 5% (ASR=0.995). No universal alpha |
+| [H40](H40-attention-entropy-detection.md) | Per-sample attention entropy in backdoor heads detects backdoor samples | **REFUTED**: AUROC 0.48 to 0.54 for most attacks (random). Blend shows strong inverted signal (higher entropy, AUROC 0.000 under one-sided convention) |
+| [H41](H41-multi-probe-defence.md) | Multi-probe PSBD defeats the adaptive attacker | **SUPPORTED**: min-rank union of k probes recovers AUROC 0.951 from single-probed 0.322. 48/56 above 0.90 |
+| [H42](H42-evasion-identification.md) | The evaded operator can be identified without poison labels | **REFUTED**: 8.9% accuracy by val PSU std, below 25% chance. Inherent operator differences dominate. Identification not needed: multi-probe works without it |
 
 ## Where this stands after phases 3a and 3b
 

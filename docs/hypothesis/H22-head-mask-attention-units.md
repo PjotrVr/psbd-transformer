@@ -1,8 +1,45 @@
 # H22 — Attention heads are the transformer's own unit, and masking them is the ViT-native PSBD
 
-**Status: PRE-REGISTERED.** Written before the pilot results land. Jobs
-`psbd_pilot_001/002`, submitted 2026-08-14 at commit `b37ceaf`. One early
-data point exists and is noted below.
+**Status: REFUTED.** Attention heads are not a privileged unit for this statistic,
+and the early smoke number that looked promising did not survive the full sweep.
+
+## Result
+
+`head_mask` / `attention_heads` scores **0.886** at 10% poisoning (matched sigma
+0.6, mean over 8 backdoored attacks), below plain `dropout` at several positions
+and below the best configuration (0.944). At 1% it scores 0.856, again below
+`dropout` / `before_attention_norm` (0.934).
+
+The prediction was a win on patch triggers, where attention to a spatial location
+is most obviously head-mediated. On `badnet_a2o` at 10%, `head_mask` gives 0.934
+against `dropout` / `before_attention`'s 0.958. It is close but it does not win.
+
+## Three independent reasons it fails, all now measured
+
+1. **Heads are redundant.** Masking 60% of all 144 heads reaches clean-validation
+   sigma of only 0.762, while masking 10% of the residual stream reaches 0.870
+   (`docs/runs/2026-08-14-perturbation-calibration.md`). There is far less to
+   remove than the head count suggests.
+2. **The backdoor is not in any set of heads, and cannot be.**
+   [H16](H16-where-the-backdoor-neurons-are.md), as corrected, shows it is a single
+   **non-axis-aligned** direction in the residual stream: zeroing the top 300 of
+   768 coordinates leaves ASR at 1.00, while removing the direction itself takes
+   ASR to 0.00. A head is an axis-aligned object, so no head subset names that
+   direction. H16 separately refuted the head-alignment localizer (0 of 15 true
+   positives), which is the same fact measured another way.
+3. **One head dominates everything.** The leave-one-out profile
+   ([H18](H18-sensitivity-profile-over-units.md)) shows block 1 head 6 costing
+   0.506 mean confidence against 0.033 for the next head. Random head masking
+   mostly removes heads that do nothing, and the one head that matters is used
+   equally by clean and poisoned inputs, so removing it separates neither.
+
+The early smoke reading (0.633 on 300 samples at 2 rates, against the published
+configuration's 0.297) was, as the pre-registration said, a reason to run the
+pilot rather than a result. The pilot did not confirm it.
+
+---
+
+## Original pre-registration, retained
 
 ## Mechanism
 

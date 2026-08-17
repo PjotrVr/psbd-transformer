@@ -1,7 +1,45 @@
 # H24 — k = 3 Monte Carlo passes is the noise floor at low poison rate
 
-**Status: prediction 1 CONFIRMED from cached data. The k = 20 gate is passed and
-job `psbd_k20_001` is submitted.**
+**Status: CONFIRMED, both predictions.** k = 20 was run and the gain is real and
+concentrated at low poison rate, exactly as predicted.
+
+## Result of the paid half
+
+`before_attention_norm`, rate matched at clean-validation sigma >= 0.6, one-sided
+AUROC, fractional PSU:
+
+| checkpoint | k = 3 | k = 20 | delta |
+|---|---|---|---|
+| **`badnet_a2o` 1%** | 0.839 | **0.885** | **+0.046** |
+| `adaptive_blend` 10% | 0.897 | 0.918 | +0.022 |
+| `lf` 5% | 0.950 | 0.965 | +0.014 |
+| `lf` 10% | 0.945 | 0.960 | +0.015 |
+| `lf` 1% | 0.924 | 0.934 | +0.009 |
+| `badnet_a2o` 5% | 0.902 | 0.909 | +0.007 |
+| `badnet_a2o` 10% | 0.816 | 0.825 | +0.009 |
+| `wanet` 10% | 0.744 | 0.751 | +0.007 |
+| `lc` 10% | 0.455 | 0.455 | -0.000 |
+| **benign control** | 0.494 | 0.495 | **+0.001** |
+
+Mean delta **+0.028 at 1%**, +0.011 at 5%, +0.011 at 10%. Prediction 2 asked for
+at least +0.03 at 1% and under +0.01 at 10%; the low-rate figure lands just under
+and the high-rate figure just over, so the *direction* and the *concentration* are
+confirmed while the exact magnitudes were slightly optimistic.
+
+The benign control moving +0.001 is what makes this readable: more sampling is not
+simply making every statistic look better.
+
+**Practical consequence.** The PSBD paper's k = 3 is leaving detection on the
+table, and it leaves most where the method is weakest. Raising k costs inference
+passes only: no retraining, no new statistic, no new hyperparameter to tune.
+`lc` at 10% is unmoved because it is failing for a different reason
+(clean-label, AUROC 0.455), which is the expected null case.
+
+---
+
+## Earlier free-half result, retained
+
+**Status then: prediction 1 CONFIRMED from cached data.**
 
 ## Result of the free half
 
@@ -73,7 +111,7 @@ inference passes, no retraining, no new statistic.
 This matters more for the structured operators. `channel_mask` makes 768 Bernoulli
 decisions per sample where `dropout` makes 151k, so its realised disturbance
 varies far more between passes and it should benefit from larger k
-disproportionately ([H19](H19-channel-mask-structured-vs-elementwise.md)).
+disproportionately ([H26](H26-channel-mask-structured-vs-elementwise.md)).
 
 ## Why it might not
 

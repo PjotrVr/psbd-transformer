@@ -1,0 +1,23 @@
+{
+  "folder_name": "vit_cifar10_badnet_a2o_0_1",
+  "attack": "badnet_a2o",
+  "probe_attack": "badnet_a2o",
+  "target_label": 0,
+  "poison_rate": 0.1,
+  "placement": "pre_residual",
+  "block_range": [
+    5,
+    8
+  ],
+  "rate": 0.5,
+  "layer": 12,
+  "n_samples": 800,
+  "n_shifted": 91,
+  "shift_fraction": 0.11375,
+  "fraction_landed_on_target": 0.37362637362637363,
+  "cos_toward_target": 0.47242159576533915,
+  "cos_toward_landed_class": 0.39859674752249824,
+  "projection_along_backdoor_direction": 0.621699333190918,
+  "displacement_norm": 16.510107040405273,
+  "clean_feature_norm": 29.405624389648438
+}

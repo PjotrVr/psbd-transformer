@@ -1,0 +1,23 @@
+{
+  "folder_name": "vit_cifar10_blend_0_1",
+  "attack": "blend",
+  "probe_attack": "blend",
+  "target_label": 0,
+  "poison_rate": 0.1,
+  "placement": "pre_residual",
+  "block_range": [
+    5,
+    8
+  ],
+  "rate": 0.5,
+  "layer": 12,
+  "n_samples": 800,
+  "n_shifted": 69,
+  "shift_fraction": 0.08625,
+  "fraction_landed_on_target": 0.14492753623188406,
+  "cos_toward_target": 0.4301330405894829,
+  "cos_toward_landed_class": 0.3436823370664016,
+  "projection_along_backdoor_direction": 1.4608948230743408,
+  "displacement_norm": 15.178572654724121,
+  "clean_feature_norm": 26.957298278808594
+}

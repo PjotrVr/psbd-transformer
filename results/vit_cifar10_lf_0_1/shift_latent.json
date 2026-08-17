@@ -1,0 +1,23 @@
+{
+  "folder_name": "vit_cifar10_lf_0_1",
+  "attack": "lf",
+  "probe_attack": "lf",
+  "target_label": 0,
+  "poison_rate": 0.1,
+  "placement": "pre_residual",
+  "block_range": [
+    5,
+    8
+  ],
+  "rate": 0.5,
+  "layer": 12,
+  "n_samples": 800,
+  "n_shifted": 103,
+  "shift_fraction": 0.12875,
+  "fraction_landed_on_target": 0.21359223300970873,
+  "cos_toward_target": 0.5086178147387737,
+  "cos_toward_landed_class": 0.4606091815942121,
+  "projection_along_backdoor_direction": 1.3536406755447388,
+  "displacement_norm": 18.14673614501953,
+  "clean_feature_norm": 30.052980422973633
+}

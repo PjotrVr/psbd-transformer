@@ -1,0 +1,23 @@
+{
+  "folder_name": "vit_cifar10_benign",
+  "attack": "benign",
+  "probe_attack": "badnet_a2o",
+  "target_label": 0,
+  "poison_rate": 0.0,
+  "placement": "pre_residual",
+  "block_range": [
+    5,
+    8
+  ],
+  "rate": 0.5,
+  "layer": 12,
+  "n_samples": 800,
+  "n_shifted": 95,
+  "shift_fraction": 0.11875,
+  "fraction_landed_on_target": 0.29473684210526313,
+  "cos_toward_target": 0.47813879988695446,
+  "cos_toward_landed_class": 0.4027734783723166,
+  "projection_along_backdoor_direction": 0.4224145710468292,
+  "displacement_norm": 15.203003883361816,
+  "clean_feature_norm": 27.43610382080078
+}

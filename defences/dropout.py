@@ -100,6 +100,19 @@ VIT_POSITIONS: dict[str, PositionSpec] = {
     "mlp_neurons": PositionSpec("mlp.3", "pre"),
     "before_mlp_residual": PositionSpec("mlp", "post"),
     "after_mlp_residual": PositionSpec("", "post"),
+    # LayerNorm OUTPUTS, which is where the IBD-PSC port acts. Scaling a
+    # LayerNorm's gamma and beta together is exactly scaling its output, so
+    # amplifying the affine parameters needs no weight mutation, only a
+    # post-hook. Distinct from before_attention_norm / before_mlp_norm, which
+    # are PRE-hooks on the same modules and perturb their inputs instead.
+    "attention_norm_out": PositionSpec("ln_1", "post"),
+    "mlp_norm_out": PositionSpec("ln_2", "post"),
+    "final_norm_out": PositionSpec("encoder.ln", "post", scope="model"),
+    # The raw normalized image, before the Resize wrapper, which is where the
+    # SCALE-UP port acts. Model-root scope rather than "model": the position
+    # registry resolves model scope against network_core, which is inside the
+    # Resize, and SCALE-UP has to clip at the original resolution.
+    "input_pixels": PositionSpec("", "pre", scope="root"),
 }
 
 # Swin-S SwinTransformerBlock (V1) children: norm1, attn, stochastic_depth,
@@ -123,6 +136,13 @@ SWIN_POSITIONS: dict[str, PositionSpec] = {
     "before_mlp": PositionSpec("mlp", "pre"),
     "before_mlp_residual": PositionSpec("mlp", "post"),
     "after_mlp_residual": PositionSpec("", "post"),
+    # Swin equivalents of the ViT ported positions. norm1/norm2 are Swin's
+    # per-block LayerNorms (ViT calls them ln_1/ln_2). The final norm is
+    # SwinTransformer.norm rather than ViT's encoder.ln.
+    "attention_norm_out": PositionSpec("norm1", "post"),
+    "mlp_norm_out": PositionSpec("norm2", "post"),
+    "final_norm_out": PositionSpec("norm", "post", scope="model"),
+    "input_pixels": PositionSpec("", "pre", scope="root"),
 }
 
 POSITION_REGISTRY: dict[str, dict[str, PositionSpec]] = {
@@ -158,6 +178,16 @@ STRUCTURED_POSITION_NAMES: tuple[str, ...] = (
     "mlp_neurons",
 )
 
+# Positions that exist to host the ported detectors rather than the placement
+# study. Kept separate so a sweep over "all single positions" keeps meaning what
+# it meant before these were added.
+PORTED_POSITION_NAMES: tuple[str, ...] = (
+    "attention_norm_out",
+    "mlp_norm_out",
+    "final_norm_out",
+    "input_pixels",
+)
+
 # Named multi-position combos. Every single position is also usable directly as a
 # one-element position_names tuple, so it needs no entry here.
 #
@@ -168,6 +198,7 @@ STRUCTURED_POSITION_NAMES: tuple[str, ...] = (
 DROPOUT_CONFIGS: dict[str, tuple[str, ...]] = {
     "pre_residual": ("before_attention_residual", "before_mlp_residual"),
     "post_residual": ("after_attention_residual", "after_mlp_residual"),
+    "both_sublayer_inputs": ("before_attention_norm", "before_mlp_norm"),
 }
 
 
@@ -310,6 +341,10 @@ def _resolve_targets(
     distinguish "this position matters" from "this depth matters", and those are
     different claims.
     """
+    if spec.scope == "root":
+        if block_range is not None:
+            raise ValueError("input_pixels is model-wide; a block range is meaningless")
+        return [model]
     if spec.scope == "model":
         if block_range is not None:
             raise ValueError(
@@ -406,6 +441,49 @@ def plug_dropout(
         unplug_dropout(handles)
         raise
     return handles
+
+
+def activate_model_dropout(
+    model: nn.Module, rate: float
+) -> list[tuple[nn.Module, float]]:
+    """Switch the model's OWN dropout modules on, returning what to restore.
+
+    Everything else in this file deliberately avoids touching the model's own
+    dropouts, because a trained dropout's scaling was calibrated against the next
+    layer's weights and reusing it conflates the model's regularization with
+    PSBD's probe. This function exists to study exactly that conflation: what
+    PSBD measures on a model whose own dropout is live, with the probe stacked on
+    top.
+
+    Skips *.encoder.dropout for the same reason the position registry treats it
+    separately: it is the embedding dropout applied once before the block stack,
+    not a per-block placement, so including it would change the depth profile of
+    the disturbance rather than its magnitude.
+
+    Removal compounds. A probe at p_probe on top of a model dropout at p_model
+    leaves (1 - p_model)(1 - p_probe) alive, so the nominal probe rate no longer
+    describes the disturbance and only measured shift ratio does.
+    """
+    restore: list[tuple[nn.Module, float]] = []
+    for name, module in model.named_modules():
+        if not isinstance(module, nn.Dropout) or name.endswith("encoder.dropout"):
+            continue
+        restore.append((module, module.p))
+        module.p = rate
+        module.train()
+    if not restore:
+        raise ValueError(
+            "no nn.Dropout modules found outside the embedding dropout, so model "
+            "dropout cannot be activated for this architecture"
+        )
+    return restore
+
+
+def restore_model_dropout(restore: list[tuple[nn.Module, float]]) -> None:
+    """Put every rate back and return the modules to eval, exactly as loaded."""
+    for module, rate in restore:
+        module.p = rate
+        module.eval()
 
 
 def unplug_dropout(handles: list[RemovableHandle | _ForwardRestore]) -> None:

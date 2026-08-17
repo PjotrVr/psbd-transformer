@@ -32,7 +32,14 @@ from poison import (
     choose_indices_with_cover,
     choose_poison_indices,
 )
-from train import checkpoint_metadata, save_checkpoint, train_classifier, utc_timestamp
+from adaptive_evasion import FlaggedPoisonedSet, calibrate_probe_rate
+from train import (
+    build_model,
+    checkpoint_metadata,
+    save_checkpoint,
+    train_classifier,
+    utc_timestamp,
+)
 import time
 
 
@@ -95,6 +102,10 @@ def build_training_loader(args, image_size: int):
         normalize,
         spec.num_classes,
     )
+    if getattr(args, "evade_psbd", False):
+        # The attacker knows which samples it poisoned. This flag never reaches
+        # the defender's side of any evaluation.
+        poisoned_train = FlaggedPoisonedSet(poisoned_train)
     train_loader = DataLoader(
         poisoned_train,
         batch_size=args.batch_size,
@@ -113,6 +124,35 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--architecture", choices=("vit", "swin"), default="vit")
     parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--batch-size", type=int, default=128)
+    parser.add_argument(
+        "--evade-psbd",
+        action="store_true",
+        help=(
+            "adaptive attacker: add a hinge penalty that raises poisoned samples' "
+            "prediction shift onto the clean distribution, removing the statistic "
+            "PSBD reads while keeping the backdoor"
+        ),
+    )
+    parser.add_argument("--evade-weight", type=float, default=1.0)
+    parser.add_argument("--evade-position", default="before_attention_norm")
+    parser.add_argument("--evade-operator", default="dropout")
+    parser.add_argument(
+        "--evade-rate",
+        type=float,
+        default=0.0,
+        help="perturbation rate for the evasion probe. 0 (default) auto-calibrates "
+        "to the sigma=0.6 matched rate on the validation set before training.",
+    )
+    parser.add_argument("--evade-passes", type=int, default=3)
+    parser.add_argument(
+        "--model-dropout-train",
+        type=float,
+        default=0.0,
+        help=(
+            "train WITH dropout at this rate. PSBD requires a dropout-free model; "
+            "this exists to test that requirement, not to change the default"
+        ),
+    )
     parser.add_argument("--use-sam", action="store_true")
     parser.add_argument("--rho", type=float, default=0.1)
     parser.add_argument(
@@ -157,6 +197,37 @@ def main() -> None:
     # Reseed right before the regular workflow so model init and training start from
     # an identical RNG state whether or not --max-samples triggered any subsetting.
     seed_everything(args.seed)
+
+    evade_rate = args.evade_rate
+    evasion = None
+    if args.evade_psbd:
+        if evade_rate == 0.0:
+            calib_model = build_model(args.architecture, num_classes).to(device)
+            evade_rate = calibrate_probe_rate(
+                calib_model,
+                val_loader,
+                {
+                    "position": args.evade_position,
+                    "operator": args.evade_operator,
+                    "architecture": args.architecture,
+                },
+                device,
+            )
+            del calib_model
+            torch.cuda.empty_cache()
+            seed_everything(args.seed)
+
+        evasion = {
+            "probe": {
+                "position": args.evade_position,
+                "operator": args.evade_operator,
+                "rate": evade_rate,
+                "architecture": args.architecture,
+            },
+            "weight": args.evade_weight,
+            "passes": args.evade_passes,
+        }
+
     model = train_classifier(
         args.architecture,
         num_classes,
@@ -166,6 +237,8 @@ def main() -> None:
         epochs=args.epochs,
         use_sam=args.use_sam,
         rho=args.rho,
+        model_dropout=args.model_dropout_train,
+        evasion=evasion,
     )
     ended_at = utc_timestamp()
 
@@ -204,6 +277,17 @@ def main() -> None:
             asr=metrics["asr"],
             started_at=started_at,
             ended_at=ended_at,
+            evasion={
+                "weight": args.evade_weight,
+                "position": args.evade_position,
+                "operator": args.evade_operator,
+                "rate": evade_rate,
+                "rate_requested": args.evade_rate,
+                "passes": args.evade_passes,
+            }
+            if args.evade_psbd
+            else None,
+            model_dropout=args.model_dropout_train,
         ),
     )
     print(f"saved {args.output}")

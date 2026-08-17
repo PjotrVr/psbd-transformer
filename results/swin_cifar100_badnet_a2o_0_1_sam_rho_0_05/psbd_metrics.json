@@ -1,0 +1,31 @@
+{
+  "folder_name": "swin_cifar100_badnet_a2o_0_1_sam_rho_0_05",
+  "dataset": "cifar100",
+  "attack": "badnet_a2o",
+  "label_mode": "all_to_one",
+  "poison_rate": 0.1,
+  "optimizer": "sam",
+  "rho": 0.05,
+  "target_label": 0,
+  "headline_quantile": 0.25,
+  "split_sizes": {
+    "validation": 2000,
+    "clean": 8000,
+    "backdoor": 7915
+  },
+  "placements": {
+    "pre_residual": {
+      "rates": [],
+      "adaptive_rate": null,
+      "adaptive": null,
+      "oracle_rate": null,
+      "oracle": null,
+      "matched_shift": {
+        "sigma0.2": null,
+        "sigma0.4": null,
+        "sigma0.6": null,
+        "sigma0.8": null
+      }
+    }
+  }
+}

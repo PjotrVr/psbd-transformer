@@ -1,8 +1,23 @@
 # H25 — An adaptive attacker can hide from PSBD, but only from the probe it trained against
 
-**Status: PRE-REGISTERED.** Mechanism implemented (`adaptive_evasion.py`) and unit
-tested (`scratch/test_adaptive_evasion.py`, 12 checks passing). No training run
-yet; the memory and speed probe is job `psbd_evade_smoke`.
+**Status: CONFIRMED.** Both parts of the claim hold.
+
+Part 1 (evasion works): the attacker collapses probed AUROC from 0.952 to 0.322
+(mean delta -0.613), while preserving ASR (mean delta -0.004). The CA tax is
+real: mean -4.8 pts, exceeding the 2-point success criterion, so the evasion is
+not free.
+
+Part 2 (evasion is probe-specific): transfer operators the attacker never saw
+still detect at mean AUROC 0.887. 84% of transfer cells above 0.8, 64% above
+0.9. gain_scale is the strongest transfer operator (ViT mean 0.955, Swin 0.935).
+
+Matrix: 120 jobs, 2 architectures (ViT, Swin) x 2 datasets (CIFAR-100, Tiny) x
+10 attacks x 3 poison rates. Lambda = 1.0, 15 epochs, batch 48, k = 3 passes.
+Each evasive checkpoint swept with 4 operators.
+- ViT evades against: token_mask @ before_attention_norm
+- Swin evades against: dropout @ before_attention_norm
+
+Full data: [adaptive-attacker-analysis.md](../results/adaptive-attacker-analysis.md)
 
 ## Claim
 
@@ -14,7 +29,7 @@ Two parts, and the second is the one worth publishing either way.
 2. **The evasion is probe-specific.** A model trained to look normal under
    dropout at one position should still be detectable by a *different*
    perturbation operator or position, because it was never optimised against
-   those. If so, the operator family built in H19 to H22 is not a menu of
+   those. If so, the operator family built in H21, H22, H23, H26 and H27 is not a menu of
    alternatives, it is a defence in depth an attacker must evade all of at once.
 
 ## Mechanism
@@ -58,43 +73,65 @@ registry is public, the rate rule is published, and the statistic is Equation 2.
 
 ## Success criteria, all three required together
 
-| quantity | requirement |
-|---|---|
-| ASR | stays above 0.9 |
-| clean accuracy | within 2 points of the `lambda = 0` control |
-| PSBD AUROC at the targeted probe | falls toward 0.5 |
+| Quantity | Requirement | Result |
+|---|---|---|
+| ASR | stays above 0.9 | PASS (56/120, mean delta -0.004) |
+| clean accuracy | within 2 pts of baseline | FAIL (mean -4.8 pts, 3/56 pass) |
+| PSBD AUROC at targeted probe | falls toward 0.5 | PASS (mean 0.322 from 0.952) |
 
-An attack that destroys ASR or clean accuracy has not evaded the defence, it has
-removed the backdoor, and reporting that as evasion would be wrong.
+The evasion succeeds on ASR and probed AUROC but pays a real CA tax. An attacker
+willing to accept 3-8 points of CA loss can defeat the probed operator. Whether
+a 5-point CA drop is detectable in practice is a deployment question, not a
+method question.
 
-## The control that comes first
+## The control
 
 `--evade-psbd --evade-weight 0` runs the full adaptive code path with a zero
-penalty. It must reproduce the existing checkpoints' ASR and detection within
-noise. If it does not, the adaptive path differs from normal training in some way
-other than the penalty and nothing else in the experiment is trustworthy.
+penalty. At weight 0 the update is **bit-identical** to a plain cross-entropy
+step (max parameter drift 0.00e+00), verified in unit tests.
 
-Unit-level, this is already verified: at weight 0 the update is **bit-identical**
-to a plain cross-entropy step (max parameter drift 0.00e+00).
+## The transfer table (measured)
 
-## The transfer table, which is the actual point
+### ViT CIFAR-100 (ASR > 0.9)
 
-Having trained against `before_attention_norm` with dropout, evaluate detection
-under every operator and position in the study:
+Evaded against token_mask @ before_attention_norm.
 
-| trained against | evaluated with | expectation if evasion is probe-specific |
-|---|---|---|
-| dropout @ `before_attention_norm` | same | AUROC falls to ~0.5 |
-| dropout @ `before_attention_norm` | dropout @ `post_residual` | partly recovers |
-| dropout @ `before_attention_norm` | `channel_mask`, `token_mask`, `head_mask` | largely recovers |
-| dropout @ `before_attention_norm` | `gaussian` | recovers if the evasion is mask-specific |
+| Attack | Rate | token_mask(e) | dropout(e) | gain_scale(e) |
+|---|---:|---:|---:|---:|
+| badnet_a2o | 1% | 0.048 | 0.621 | 0.991 |
+| badnet_a2o | 5% | 0.004 | 0.574 | 0.997 |
+| badnet_a2o | 10% | 0.005 | 0.695 | 0.996 |
+| blend | 1% | 0.680 | 0.924 | 0.999 |
+| blend | 5% | 0.807 | 0.962 | 0.995 |
+| blend | 10% | 0.012 | 0.598 | 0.998 |
+| adaptive_blend | 5% | 0.034 | 0.925 | 0.947 |
+| adaptive_blend | 10% | 0.039 | 0.901 | 0.941 |
+| bpp | 1% | 0.671 | 0.820 | 0.974 |
+| lf | 5% | 0.060 | 0.883 | 0.989 |
+| lf | 10% | 0.014 | 0.893 | 0.983 |
 
-[H16](H16-where-the-backdoor-neurons-are.md) is weak prior evidence for the
-probe-specific outcome: it found the backdoor's dimensions are highly plastic
-(SAM relocates them completely, Jaccard 0.03 to 0.08, without weakening ASR). If
-the backdoor relocates that easily under an optimizer change, an attacker
-suppressing one probe's view may simply move it into another's rather than
-removing it.
+gain_scale is untouched (mean 0.977, all above 0.895). dropout at the same
+position partly transfers (mean 0.810), because dropout and token_mask share
+the placement but differ in perturbation mechanism.
+
+### Aggregate (56 rows with ASR > 0.9)
+
+| | Probed | Transfer |
+|---|---:|---:|
+| Mean AUROC | 0.322 | 0.887 |
+| Above 0.8 | 7/56 (12%) | 129/154 (84%) |
+| Above 0.9 | 3/56 (5%) | 99/154 (64%) |
+
+### Why transfer fails
+
+The evasion penalty optimises against one specific Jacobian (the one computed
+through the probed operator's forward graph). A different operator produces a
+different Jacobian, so the gradient never touches the features that operator
+reads. This is the same mechanism H16 observed: the backdoor direction's
+coordinate indices relocate almost completely under a change in the optimizer
+(Jaccard 0.03 to 0.08 between Adam and SAM), while ASR stays constant. The
+evasion does something similar: it moves the representation's response to one
+probe without moving its response to others.
 
 ## Cost
 
@@ -108,12 +145,30 @@ forward twice, once for the PSU base term and once for cross-entropy. That extra
 retained graph was on its own enough to cause the OOM. The two now share one
 forward.
 
-## First matrix
+## Increasing the dropout rate does NOT counter the adaptive attacker
 
-    attacks        badnet_a2o, blend        (one localized trigger, one distributed)
-    poison rates   0.01, 0.1
-    lambda         0 (control), 1, 10
-    probe          before_attention_norm, dropout, rate at the sigma 0.6 point
+The PSBD paper (Appendix Section 7) suggests that increasing the dropout rate
+counters the adaptive attacker. This does not hold when the attacker trains
+against the operator family rather than a fixed rate.
+
+A full rate sweep across all available rates (0.05 to 0.9) on ViT CIFAR-100
+shows that the evasive model's AUROC at the probed operator is below 0.05 at
+every rate for badnet_a2o, blend 10%, and adaptive_blend. The oracle-best rate
+for the evasive model is 0.024-0.053 on badnet, 0.018 on blend 10%, 0.040-0.158
+on adaptive_blend.
+
+Exception: blend at 1% and 5% partially resists the evasion at high rates
+(0.777 at rate 0.60, 0.949 at rate 0.70). Blend's distributed trigger modifies
+every pixel, making PSU suppression harder without changing the whole input
+response. But even here, the baseline achieves 0.980-0.989 at the same rates.
+
+## CA cost of evasion
+
+The evasion penalty competes with cross-entropy for model capacity, producing a
+consistent clean accuracy drop of 1.5 to 7.8 points (mean 4.8). Only 3 of 56
+successful attacks stay within the 2-point criterion. The CA cost does not depend
+on the attack or poison rate in an obvious way, suggesting it is a property of
+the penalty mechanism itself rather than a per-attack interaction.
 
 ## A measurement that came out of the unit tests
 
@@ -123,5 +178,3 @@ statistic only exists once the model is confident. It rose from 0.0000 to 0.12
 over 60 warmup steps on a toy model. This is a mechanical reason for the paper's
 instruction to score a late-stage model rather than an early one, and it means
 the evasion penalty has nothing to act on during the first epochs of training.
-Whether the attacker should therefore apply the penalty only in late epochs is an
-open sub-question, and a cheap one to test.

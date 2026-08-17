@@ -65,6 +65,22 @@ OPERATORS: dict[str, tuple[tuple[str, ...], tuple[float, ...]]] = {
         ("attention_heads",),
         (0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9),
     ),
+    # Ports of two published perturbation-consistency detectors. They complete
+    # the taxonomy: SCALE-UP perturbs the INPUT, the mask/noise operators perturb
+    # ACTIVATIONS, and gain_scale perturbs PARAMETERS (scaling a LayerNorm's gamma
+    # and beta is exactly scaling its output).
+    #
+    # Both rate axes are read as (factor - 1) so rate 0 is the identity, matching
+    # every other operator. scale_up rates 0.5 to 10 are SCALE-UP's factors 1.5 to
+    # 11; gain_scale rates 0.25 to 9 are omega 1.25 to 10.
+    "scale_up": (
+        ("input_pixels",),
+        (0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0),
+    ),
+    "gain_scale": (
+        ("attention_norm_out", "mlp_norm_out", "final_norm_out"),
+        (0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 6.0, 9.0),
+    ),
     # The paper's operator, present so it can act as the matched baseline and
     # carry the k ablation. Its k=3 caches already exist, so --skip-existing
     # makes re-listing it free.
@@ -112,6 +128,10 @@ FULL_POSITION_SETS: dict[str, tuple[str, ...]] = {
     "droppath": DROPPATH_POSITIONS,
     "head_mask": ("attention_heads",),
     "dropout": FULL_POSITIONS,
+    # Both ports are defined by WHERE they act, so their position sets are the
+    # same in the full sweep as in the core one.
+    "scale_up": ("input_pixels",),
+    "gain_scale": ("attention_norm_out", "mlp_norm_out", "final_norm_out"),
 }
 
 PILOT_CHECKPOINTS: tuple[str, ...] = (
@@ -159,7 +179,7 @@ COMMAND = """python psbd_dropout_sweep.py \\
     --position-config {positions} \\
     --perturbation {operator} \\
     --rates {rates}{probe} \\
-    --forward-passes {passes} \\
+    --forward-passes {passes}{stack} \\
     --skip-existing
 """
 
@@ -206,7 +226,7 @@ def pack(units: list[dict], target_minutes: float) -> list[list[dict]]:
     return batches
 
 
-def build_commands(batch: list[dict], passes: int) -> str:
+def build_commands(batch: list[dict], passes: int, model_dropout: float = 0.0) -> str:
     """One command per (operator, position, benign-ness), covering many checkpoints."""
     grouped: dict[tuple, list[str]] = {}
     for unit in batch:
@@ -232,12 +252,17 @@ def build_commands(batch: list[dict], passes: int) -> str:
                 rates=" ".join(f"{r:g}" for r in rates),
                 probe=probe,
                 passes=passes,
+                stack=f" \\\n    --model-dropout {model_dropout:g}"
+                if model_dropout
+                else "",
             )
         )
     return "\n".join(lines)
 
 
-def write_jobs(batches, prefix: str, walltime: str, passes: int) -> list[str]:
+def write_jobs(
+    batches, prefix: str, walltime: str, passes: int, model_dropout: float = 0.0
+) -> list[str]:
     out_dir = os.path.join(REPO, "pbs", "psbd_perturb")
     os.makedirs(out_dir, exist_ok=True)
     os.makedirs(os.path.join(REPO, "logs", "psbd_perturb"), exist_ok=True)
@@ -253,7 +278,7 @@ def write_jobs(batches, prefix: str, walltime: str, passes: int) -> list[str]:
                     base=REPO,
                     n_units=len(batch),
                     estimate=int(sum(u["minutes"] for u in batch)),
-                    commands=build_commands(batch, passes),
+                    commands=build_commands(batch, passes, model_dropout),
                 )
             )
         written.append(path)
@@ -268,7 +293,7 @@ def resolve_folders(args) -> list[str]:
     return viable_checkpoints(
         args.architecture,
         args.dataset,
-        with_sam=False,
+        with_sam=args.with_sam,
         checkpoints_dir=os.path.join(REPO, "checkpoints"),
         min_asr=args.min_asr,
         only_tags=args.only_tag or None,
@@ -283,6 +308,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--architecture", default="vit")
     parser.add_argument("--dataset", nargs="*", default=["cifar10"])
     parser.add_argument("--only-tag", nargs="*", default=[])
+    parser.add_argument(
+        "--with-sam",
+        action="store_true",
+        help=(
+            "include SAM checkpoints. Combine with --only-tag sam_rho_0_1 to pick "
+            "one rho; the tag match is endswith, so sam_rho_0_1 does not also "
+            "catch sam_rho_0_15"
+        ),
+    )
     parser.add_argument("--min-asr", type=float, default=0.8)
     parser.add_argument("--forward-passes", type=int, default=3)
     parser.add_argument("--hours", type=float, default=4.0, help="packed work per job")
@@ -305,6 +339,12 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=[],
         help="override the operator's rate grid",
+    )
+    parser.add_argument(
+        "--model-dropout",
+        type=float,
+        default=0.0,
+        help="activate the model's own dropout at this rate and stack the probe on top",
     )
     parser.add_argument("--prefix", default="pert")
     parser.add_argument("--dry-run", action="store_true")
@@ -347,7 +387,11 @@ def main() -> None:
 
     hours, minutes = divmod(int(round(args.walltime_hours * 60)), 60)
     written = write_jobs(
-        batches, args.prefix, f"{hours:02d}:{minutes:02d}:00", args.forward_passes
+        batches,
+        args.prefix,
+        f"{hours:02d}:{minutes:02d}:00",
+        args.forward_passes,
+        args.model_dropout,
     )
     for path in written:
         print(f"  wrote {os.path.relpath(path, REPO)}")

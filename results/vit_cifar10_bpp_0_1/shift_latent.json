@@ -1,0 +1,23 @@
+{
+  "folder_name": "vit_cifar10_bpp_0_1",
+  "attack": "bpp",
+  "probe_attack": "bpp",
+  "target_label": 0,
+  "poison_rate": 0.1,
+  "placement": "pre_residual",
+  "block_range": [
+    5,
+    8
+  ],
+  "rate": 0.5,
+  "layer": 12,
+  "n_samples": 800,
+  "n_shifted": 90,
+  "shift_fraction": 0.1125,
+  "fraction_landed_on_target": 0.3,
+  "cos_toward_target": 0.46298035016904276,
+  "cos_toward_landed_class": 0.3783979826296369,
+  "projection_along_backdoor_direction": 1.8587666749954224,
+  "displacement_norm": 16.88753890991211,
+  "clean_feature_norm": 27.4327335357666
+}

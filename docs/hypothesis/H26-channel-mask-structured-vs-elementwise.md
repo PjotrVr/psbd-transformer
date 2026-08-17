@@ -1,7 +1,44 @@
-# H19 — Masking whole channels beats thinning every channel a little
+# H26 — Masking whole channels beats thinning every channel a little
 
-**Status: PRE-REGISTERED.** Written before the pilot results land. Jobs
-`psbd_pilot_001/002`, submitted 2026-08-14 at commit `b37ceaf`.
+**Status: REFUTED as stated. The consolation claim is PROVISIONAL.**
+
+> The refutation is panel-backed: `channel_mask` loses to dropout at every matched
+> position, averaged over 8 attacks. That stands.
+>
+> The consolation ("but it wins at 1% on `badnet_a2o`") is a single cell on a
+> single attack and does **not** meet the panel standard. It is retained below as
+> a lead only.
+
+## Result
+
+At 10% poisoning, compared to `dropout` at the **same** position (matched sigma
+0.6, mean over 8 backdoored attacks), `channel_mask` loses everywhere:
+
+| position | `dropout` | `channel_mask` |
+|---|---|---|
+| `before_attention` | 0.967 | 0.911 |
+| `before_attention_residual` | 0.935 | 0.873 |
+| `before_mlp` | 0.935 | 0.858 |
+| `before_mlp_residual` | 0.909 | 0.848 |
+| `after_mlp_residual` | 0.907 | 0.848 |
+
+The prediction was a win on at least 4 of 5 attacks. It loses at every matched
+position. Removing a whole feature is not better than thinning all of them, at
+least where the signal is already strong.
+
+**But at 1% poisoning on the hardest checkpoint it is the best number in the
+study.** `channel_mask` / `before_attention_norm` on `badnet_a2o` at 1% scores
+**0.861** against `dropout`'s 0.839 at the same position, and 0.194 for the
+published configuration. Overall at 1% the two are a tie (0.928 against 0.934).
+
+So the honest statement is narrower than the claim: structured removal buys
+nothing when the backdoor is easy to see and may buy a little when it is not.
+Whether that low-rate edge survives the other three datasets is exactly what the
+full grid is for; on one checkpoint it is an observation, not a result.
+
+---
+
+## Original pre-registration, retained
 
 ## Mechanism
 

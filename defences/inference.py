@@ -27,6 +27,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from lightning import seed_everything
+
+from defences.dropout import activate_model_dropout, restore_model_dropout
 from torch.utils.data import DataLoader
 
 
@@ -94,6 +96,7 @@ def compute_dropout_pass_probs(
     forward_passes: int,
     use_bfloat16: bool,
     seed: int,
+    model_dropout: float = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Raw per-pass evidence, both shaped (forward_passes, N).
 
@@ -120,33 +123,43 @@ def compute_dropout_pass_probs(
     The perturbation comes from dropout modules plugged in by hooks (see
     defences.dropout), which are already in train mode, so this never toggles the
     model's own dropout. model.eval() keeps every existing dropout at its natural
-    identity. Reseeding here fixes the mask sequence, so rerunning the same
+    identity, unless model_dropout is set, which deliberately switches them on so
+    the probe stacks on top of live model dropout (see the E2 experiment in
+    docs/plans/adaptive-attacker-and-dropout-stacking.md). Removal compounds in
+    that case, so the nominal probe rate stops describing the disturbance. Reseeding here fixes the mask sequence, so rerunning the same
     (split, position, rate) reproduces the same masks exactly. Across two splits
     of different length the sequences agree only up to the shorter one's batch
     count, which is why clean and backdoor pairing is done by sample index at
     analysis time, not by assuming shared masks.
     """
     model.eval()
+    # Ordering matters: activation must follow eval(), which would otherwise put
+    # the model's own dropouts straight back to identity and silently produce a
+    # complete, plausible, unstacked result.
+    restore = activate_model_dropout(model, model_dropout) if model_dropout else []
     seed_everything(seed)
 
-    prob_batches: list[torch.Tensor] = []
-    argmax_batches: list[torch.Tensor] = []
-    offset = 0
-    for images, _ in loader:
-        batch_size = images.size(0)
-        images = images.to(device)
-        labels = baseline_labels[offset : offset + batch_size].to(device)
-        offset += batch_size
+    try:
+        prob_batches: list[torch.Tensor] = []
+        argmax_batches: list[torch.Tensor] = []
+        offset = 0
+        for images, _ in loader:
+            batch_size = images.size(0)
+            images = images.to(device)
+            labels = baseline_labels[offset : offset + batch_size].to(device)
+            offset += batch_size
 
-        prob_columns = []
-        argmax_columns = []
-        for _ in range(forward_passes):
-            probs = forward_probs(model, images, device, use_bfloat16)
-            selected = probs.gather(1, labels.view(-1, 1)).squeeze(1)
-            prob_columns.append(selected.cpu())
-            argmax_columns.append(probs.argmax(dim=1).to(torch.int16).cpu())
-        prob_batches.append(torch.stack(prob_columns, dim=0))
-        argmax_batches.append(torch.stack(argmax_columns, dim=0))
+            prob_columns = []
+            argmax_columns = []
+            for _ in range(forward_passes):
+                probs = forward_probs(model, images, device, use_bfloat16)
+                selected = probs.gather(1, labels.view(-1, 1)).squeeze(1)
+                prob_columns.append(selected.cpu())
+                argmax_columns.append(probs.argmax(dim=1).to(torch.int16).cpu())
+            prob_batches.append(torch.stack(prob_columns, dim=0))
+            argmax_batches.append(torch.stack(argmax_columns, dim=0))
+    finally:
+        restore_model_dropout(restore)
 
     if not prob_batches:
         return (

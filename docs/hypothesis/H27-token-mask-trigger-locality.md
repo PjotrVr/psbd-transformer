@@ -1,7 +1,42 @@
-# H20 — Removing whole tokens separates local triggers from distributed ones
+# H27 — Removing whole tokens separates local triggers from distributed ones
 
-**Status: PRE-REGISTERED.** Written before the pilot results land. Jobs
-`psbd_pilot_001/002`, submitted 2026-08-14 at commit `b37ceaf`.
+**Status: prediction 1 SUPPORTED. Prediction 2 untested. One coverage gap that is
+itself a finding.**
+
+## Result
+
+`token_mask` is one of the strongest operators at 10%, taking three of the top six
+full-coverage rows (`before_mlp_residual` 0.929, `before_attention_norm` 0.927,
+`mlp_neurons` 0.927), which the pre-registration did not predict; it expected an
+operator useful on patch triggers and useless elsewhere.
+
+**Prediction 1 (the attack ordering) holds.** At `before_attention_norm`:
+
+| attack | trigger support | token_mask |
+|---|---|---|
+| `badnet_a2o` | corner patch | **0.985** |
+| `lf` | low-frequency | 0.993 |
+| `blend` | whole image | 0.978 |
+| `wanet` | whole-image warp | **0.747** |
+
+The patch trigger is its best case and the warping trigger its worst, the opposite
+ordering to most other operators in the study, which is what a spatially
+structured perturbation should produce.
+
+**Coverage gap, and it is informative.** At 1% poisoning `token_mask`'s core
+positions never reach clean-validation sigma 0.6, so it has no comparable
+operating point there at all. That is a property of the operator (removing tokens
+disturbs predictions less than removing channels, at every rate up to 0.9), not a
+missing run. The full position sweep at 1% will settle whether any position
+reaches the window; if none does, the limitation is the result.
+
+Prediction 2 (AUROC falling with rate on patch triggers as masking shifts from
+perturbing the trigger to deleting it) needs the per-rate curves and has not been
+read yet.
+
+---
+
+## Original pre-registration, retained
 
 ## Mechanism
 

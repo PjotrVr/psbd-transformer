@@ -1,7 +1,68 @@
 # H23 — Does PSBD need capacity removed, or merely disturbed?
 
-**Status: PRE-REGISTERED.** Written before the pilot results land. Jobs
-`psbd_pilot_001/002`, submitted 2026-08-14 at commit `b37ceaf`.
+**Status: REFUTED, and it is the most consequential result of the operator study.**
+Additive noise is not worse than structured removal. It is competitive with the
+best mask operators and ahead of most of them.
+
+## Result
+
+ViT CIFAR-10 at 10% poisoning, matched at clean-validation sigma >= 0.6, one-sided
+AUROC, mean over 8 backdoored attacks (all-to-all excluded), full position sweep:
+
+| operator / position | mean |
+|---|---|
+| `dropout` / `pre_residual_blocks_5_8` | 0.944 |
+| **`gaussian` / `before_attention`** | **0.950** |
+| `token_mask` / `before_mlp_residual` | 0.929 |
+| **`gaussian` / `mlp_neurons`** | **0.918** |
+| `channel_mask` / `before_attention` | 0.911 |
+| `head_mask` / `attention_heads` | 0.886 |
+| `dropout` / `post_residual` (published) | 0.849 |
+
+The prediction was that removal would beat disturbance by at least 0.03 mean.
+It does not. `gaussian` at `before_attention` is at the top of the table.
+
+## The confidence-null check, which the refutation needed
+
+If noise matched removal because the perturbation earns nothing at all, the
+conclusion would be different and much worse for PSBD. It does not: the
+confidence-only null in `defences/baselines.py`, scored on the same checkpoints,
+averages **0.520** AUROC over 21 backdoored CIFAR-10 checkpoints with TPR at 1%
+FPR of **0.000** on all but three.
+
+So the perturbation is doing real work; what it does not need to be is a
+*removal*. That distinction is the whole content of this file.
+
+## What this costs the paper's framing
+
+PSBD's stated mechanism is the "neuron bias effect": under dropout, clean features
+collapse onto the target-biased path while the backdoor path survives. That is a
+claim about **removing** capacity, and it predicts that an operator which removes
+nothing should underperform. Additive isotropic noise removes nothing and matches
+the best removers.
+
+The reading that survives is simpler and weaker: **PSBD measures how far a
+prediction moves under perturbation of any kind, which is a statement about margin
+rather than about neurons.** A backdoored input sits far from the decision
+boundary in the direction the trigger pushes, so bounded perturbation fails to
+move it while a clean input near a boundary moves easily. Nothing in that argument
+requires structure.
+
+This lines up with [H22](H22-head-mask-attention-units.md) (the transformer's own
+computational unit is not privileged) and
+[H18](H18-sensitivity-profile-over-units.md) (per-unit sensitivity carries no
+detection signal at all). Three independent results now point the same way: the
+unit-level story is not what carries the method on ViT.
+
+## Still open
+
+The secondary prediction, that `gaussian` should do relatively worse where a
+LayerNorm immediately follows, is not yet separated from position effects and
+needs the full grid across datasets before it can be read.
+
+---
+
+## Original pre-registration, retained
 
 ## Why this is the control, not a candidate
 

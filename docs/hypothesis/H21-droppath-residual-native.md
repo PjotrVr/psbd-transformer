@@ -1,7 +1,34 @@
 # H21 — DropPath is the residual-native perturbation and should beat activation noise
 
-**Status: PRE-REGISTERED.** Written before the pilot results land. Jobs
-`psbd_pilot_001/002`, submitted 2026-08-14 at commit `b37ceaf`.
+**Status: CONFIRMED, including the part that predicted it would lose.**
+
+## Result
+
+`droppath` / `before_attention_residual` scores 0.860 at 10% poisoning (matched
+sigma 0.6, mean over 8 backdoored attacks), below `dropout` at the same position
+(0.935) and well below the best configuration in the study (0.944).
+
+Both halves of the prediction hold. Its usable window sits an order of magnitude
+lower than the mask operators', as the grid anticipated (sigma 0.194 at rate 0.1
+against 0.65 at 0.3), and at matched disturbance it is comparable to or worse
+than plain dropout rather than better.
+
+**What the failure says.** DropPath is the ViT-native noise and the only operator
+here that removes a *computation* rather than a *feature*. That it loses is
+evidence that the unit that matters is not the computation. Since
+[H16](H16-where-the-backdoor-neurons-are.md)'s correction the sharper statement is
+available: the backdoor is a single non-axis-aligned direction in the residual
+stream, and a branch either writes to that direction or does not. Removing whole
+branches deletes the backdoor's contribution and the clean signal together,
+because they share the branches, so the ratio PSU measures does not move.
+
+The follow-up the pre-registration named, restricting droppath to H16's peak
+layers with `--block-range`, is still worth one cheap run before the operator is
+set aside.
+
+---
+
+## Original pre-registration, retained
 
 ## Mechanism
 

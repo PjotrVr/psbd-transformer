@@ -1,6 +1,27 @@
 # H17 — PSBD's low-poison-rate failure is a placement artifact, not a limit of the method
 
-**Status: SUPPORTED on CIFAR-10 (derivation set).** The published configuration is
+**Status: SUPPORTED (full panel, 48/48 coverage).**
+
+The full panel has landed. Across 4 datasets, 3 poison rates, and the 5-attack
+panel, switching from the published position (dropout @ pre_residual) to either
+token_mask @ before_attention_norm or gain_scale @ mlp_norm_out recovers
+detection at 1%.
+
+On CIFAR-100 at 1% (the hardest setting on the hardest dataset):
+
+| Config | badnet | blend | lc | adaptive_blend | Mean |
+|---|---:|---:|---:|---:|---:|
+| dropout @ pre_residual (published) | 0.847 | 0.655 | 0.599 | 0.645 | 0.687 |
+| token_mask @ before_attention_norm | 0.960 | 0.945 | 0.786 | 0.706 | 0.849 |
+| gain_scale @ mlp_norm_out | 0.999 | 0.992 | 0.935 | 0.854 | 0.945 |
+
+The position/operator search gains +0.162 (token_mask) to +0.258 (gain_scale)
+mean AUROC at 1% on CIFAR-100 over the published configuration.
+
+Full detection tables: [cifar100-detection-tables.md](../results/cifar100-detection-tables.md),
+[tiny-detection-tables.md](../results/tiny-detection-tables.md).
+
+**Original status: SUPPORTED on CIFAR-10 (derivation set).** The published configuration is
 anti-correlated at 1% poisoning; a different placement on the same checkpoints,
 same one-sided rule, same defender-legal rate rule, reaches **0.936** mean AUROC at
 1%. Out-of-sample test on GTSRB and Tiny is pre-registered and in flight

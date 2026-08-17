@@ -220,17 +220,9 @@ def detection_report(
     AUROC negates both score sets because low PSU is the positive (poisoned)
     evidence, and roc_auc_score expects higher to mean more positive.
 
-    auroc_two_sided is max(auroc, 1 - auroc), and it is not a cosmetic addition.
-    PSBD's rule is one-tailed: flag low PSU. That assumes the backdoor is the more
-    robust feature, which holds for all-to-one but is measurably false for
-    all-to-all, whose per-class conditional mappings are more fragile than the clean
-    evidence they depend on. Its AUROC lands at 0.159, which a one-tailed reading
-    scores as total failure when it is in fact near-perfect separation with the sign
-    reversed. Reported alongside, never instead of, the one-sided number.
-
-    A two-sided statistic can flatter anything, so it has to be read against a
-    control scored the same way. On the benign model it moves 0.506 to 0.522, while
-    on all-to-all it moves 0.159 to 0.966.
+    auroc_two_sided is max(auroc, 1 - auroc). Retained as a diagnostic field only.
+    H15 retired two-sided reporting: a two-sided statistic can flatter any result,
+    and using it requires oracle access to the labels. No live consumer reads it.
     """
     threshold = threshold_at_quantile(validation_psu, quantile)
     tpr = float((backdoor_psu < threshold).float().mean().item())
@@ -321,6 +313,72 @@ def attack_success_mask(
     return baseline_labels.long() == loader_labels.long()
 
 
+def critical_rate(
+    baseline_labels: torch.Tensor,
+    sorted_rates: list[float],
+    argmax_by_rate: dict[float, torch.Tensor],
+    flip_fraction: float = 0.0,
+) -> torch.Tensor:
+    """Per-sample critical rate p*: the smallest rate at which a prediction flips.
+
+    For each sample, scan rates in ascending order and record the first rate at
+    which more than flip_fraction of the k passes produced a different argmax
+    from the no-dropout baseline. flip_fraction=0.0 (default) means any single
+    pass flipping is enough; 0.5 means a majority must flip.
+
+    Samples that never flip at any swept rate get p* = max_rate + 1, making them
+    the most-robust points in the ranking without needing a sentinel.
+
+    Returns a (N,) float32 tensor. Lower p* means the sample's prediction is
+    more fragile under this perturbation (clean-like under PSBD's model); higher
+    p* means more robust (backdoor-like).
+    """
+    n = baseline_labels.shape[0]
+    labels = baseline_labels.long().unsqueeze(0)
+    sentinel = sorted_rates[-1] + 1.0 if sorted_rates else 2.0
+    result = torch.full((n,), sentinel, dtype=torch.float32)
+
+    for rate in sorted_rates:
+        argmax = argmax_by_rate[rate]
+        if argmax.numel() == 0:
+            continue
+        shifted_frac = (argmax.long() != labels).float().mean(dim=0)
+        flipped = shifted_frac > flip_fraction
+        first_flip = flipped & (result >= sentinel)
+        result[first_flip] = rate
+
+    return result
+
+
+def load_critical_rate_from_disk(
+    psbd_dir: str, position_config: str, split: str, flip_fraction: float = 0.0
+) -> torch.Tensor | None:
+    """Load baseline + all rates for one (checkpoint, position, split), compute p*.
+
+    Returns None when no complete rates exist.
+    """
+    from .psbd_cache import (
+        baseline_path,
+        dropout_pass_path,
+        load_baseline,
+        load_dropout_pass_probs,
+    )
+
+    rates = complete_rates(psbd_dir, position_config)
+    if not rates:
+        return None
+
+    _, baseline_labels, _ = load_baseline(baseline_path(psbd_dir, split))
+    argmax_by_rate = {}
+    for rate in rates:
+        _, argmax = load_dropout_pass_probs(
+            dropout_pass_path(psbd_dir, position_config, rate, split)
+        )
+        argmax_by_rate[rate] = argmax
+
+    return critical_rate(baseline_labels, rates, argmax_by_rate, flip_fraction)
+
+
 def select_rate_by_oracle(auroc_by_rate: dict[float, float]) -> float | None:
     """The rate with the best AUROC. An ORACLE: it reads the backdoor labels.
 
@@ -335,3 +393,90 @@ def select_rate_by_oracle(auroc_by_rate: dict[float, float]) -> float | None:
         if value == value  # NaN filter
     }
     return max(usable, key=usable.get) if usable else None
+
+
+def to_rank(values: torch.Tensor, reference: torch.Tensor) -> torch.Tensor:
+    """Each score as its percentile within a shared reference distribution.
+
+    Ranking against a common reference (clean validation) keeps scores from
+    different operators commensurable without fitting anything. Ranking each
+    split against itself pins TPR to FPR and destroys the method (see
+    detector_fusion.py for the full explanation).
+    """
+    sorted_reference = reference.sort().values
+    positions = torch.searchsorted(sorted_reference, values.contiguous())
+    return positions.float() / max(len(sorted_reference), 1)
+
+
+def multi_probe_score(
+    psu_per_probe: list[torch.Tensor],
+    psu_val_per_probe: list[torch.Tensor],
+) -> torch.Tensor:
+    """Combined score across k probes: the minimum rank (most suspicious).
+
+    Each probe's PSU is ranked against its own clean-validation reference, then
+    the minimum across probes is the combined score. Lower means more suspicious,
+    matching the low-PSU-is-poisoned convention.
+
+    psu_per_probe: k tensors, each (N,), PSU for the split being scored.
+    psu_val_per_probe: k tensors, each (M,), PSU for clean validation (the
+        reference distribution for ranking).
+    """
+    ranks = [to_rank(psu, val) for psu, val in zip(psu_per_probe, psu_val_per_probe)]
+    return torch.stack(ranks).min(dim=0).values
+
+
+def multi_probe_auroc(
+    clean_psu_per_probe: list[torch.Tensor],
+    backdoor_psu_per_probe: list[torch.Tensor],
+    val_psu_per_probe: list[torch.Tensor],
+) -> float:
+    """AUROC of the multi-probe min-rank score.
+
+    Negated because lower rank = more suspicious (positive class), and
+    roc_auc_score expects higher = more positive.
+    """
+    clean_score = multi_probe_score(clean_psu_per_probe, val_psu_per_probe)
+    backdoor_score = multi_probe_score(backdoor_psu_per_probe, val_psu_per_probe)
+
+    scores = np.concatenate([-clean_score.numpy(), -backdoor_score.numpy()])
+    labels = np.concatenate([np.zeros(len(clean_score)), np.ones(len(backdoor_score))])
+    if len(set(labels.tolist())) < 2:
+        return float("nan")
+    return float(roc_auc_score(labels, scores))
+
+
+def multi_probe_detection(
+    val_psu_per_probe: list[torch.Tensor],
+    clean_psu_per_probe: list[torch.Tensor],
+    backdoor_psu_per_probe: list[torch.Tensor],
+    target_fpr: float = HEADLINE_QUANTILE,
+) -> dict:
+    """TPR, FPR, and AUROC of the multi-probe union defence.
+
+    The threshold is the Bonferroni-corrected quantile of the combined clean-
+    validation score: per-probe quantile = target_fpr / k.
+    """
+    k = len(val_psu_per_probe)
+    bonferroni_q = target_fpr / k
+
+    val_score = multi_probe_score(val_psu_per_probe, val_psu_per_probe)
+    clean_score = multi_probe_score(clean_psu_per_probe, val_psu_per_probe)
+    backdoor_score = multi_probe_score(backdoor_psu_per_probe, val_psu_per_probe)
+
+    threshold = float(np.quantile(val_score.numpy(), bonferroni_q))
+    tpr = float((backdoor_score < threshold).float().mean())
+    fpr = float((clean_score < threshold).float().mean())
+    auroc = multi_probe_auroc(
+        clean_psu_per_probe, backdoor_psu_per_probe, val_psu_per_probe
+    )
+
+    return {
+        "k": k,
+        "target_fpr": target_fpr,
+        "bonferroni_quantile": bonferroni_q,
+        "threshold": threshold,
+        "tpr": tpr,
+        "fpr": fpr,
+        "auroc": auroc,
+    }

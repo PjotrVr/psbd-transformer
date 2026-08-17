@@ -1,7 +1,71 @@
 # H18 — Stop looking for the backdoor units; use the shape of the per-unit sensitivity profile
 
-**Status: the stated direction is REFUTED, and the cheap test produced a better
-statistic than the one it was testing.** Backdoored profiles turn out to be
+**Status: REFUTED outright by the real measurement.** The 144-head leave-one-out
+profile was run on 7 checkpoints and carries no detection signal under any
+summary. The proxy result below (that the profile *minimum* across placements
+beats the mean) still stands, but it was never a test of this file's claim.
+
+## The real measurement
+
+`psbd_head_profile.py`, all 144 heads ablated one at a time, deterministic mask so
+no Monte Carlo averaging is needed. One-sided AUROC, direction fixed a priori per
+statistic:
+
+| checkpoint | mean | max | std | gini | top-5 mass |
+|---|---|---|---|---|---|
+| `badnet_a2o` 1% | 0.284 | 0.213 | 0.256 | 0.137 | 0.136 |
+| `badnet_a2o` 10% | 0.475 | 0.421 | 0.452 | 0.120 | 0.105 |
+| `wanet` 10% | 0.493 | 0.513 | 0.508 | 0.419 | 0.442 |
+| `blend` 10% | **0.608** | 0.579 | 0.589 | 0.331 | 0.293 |
+| `bpp` 10% | 0.534 | 0.502 | 0.518 | 0.202 | 0.187 |
+| `badnet_a2a` 10% | 0.078 | 0.013 | 0.052 | 0.443 | 0.337 |
+| **benign control** | **0.497** | 0.500 | 0.499 | 0.520 | 0.521 |
+
+Only `blend` clears 0.6 on any statistic. The benign control is clean at 0.497,
+so this is a real negative rather than a broken measurement, and the concentration
+statistics this file was built on (gini, top-5 mass) sit at 0.12 to 0.44 across
+the board.
+
+**Concentration of per-unit sensitivity does not detect backdoors.**
+
+[H16](H16-where-the-backdoor-neurons-are.md) has since been corrected in a way
+that explains this cleanly rather than merely agreeing with it. The backdoor is
+**one linear direction in the residual stream, and it is not axis-aligned**:
+zeroing even the top 300 of 768 coordinates leaves ASR at 1.00, while removing the
+single direction takes ASR to 0.00. So there are no "backdoor units" to find. A
+head, a neuron and a coordinate are all axis-aligned objects, and no ranking over
+them can name a direction that lies across the axes.
+
+That is now the third and most decisive failure of the where-to-mask programme,
+after H16's own two refuted data-free localizers. It also predicts
+[H22](H22-head-mask-attention-units.md)'s failure and is consistent with
+[H23](H23-gaussian-noise-control.md): isotropic noise is indifferent to axis
+alignment, and so is the backdoor.
+
+## An architectural finding that came out of it
+
+In every profile one head dominates. On `badnet_a2o` at 1%, ablating block 1
+head 6 costs a mean **0.506** of confidence; the next-largest head costs 0.033, a
+15x gap:
+
+    block  1 head  6   0.5057
+    block 10 head  7   0.0327
+    block  7 head  5   0.0260
+    block 12 head  8   0.0123
+
+A single early attention head carries roughly half this model's confidence on
+every input, clean or triggered. That is a property of fine-tuned ViT-B/16 rather
+than of backdoors, and it plausibly explains why random head masking is weak
+([H22](H22-head-mask-attention-units.md)): most masks remove heads that do
+nothing, and the one head that matters is shared by clean and poisoned inputs
+alike, so removing it moves both equally and separates neither.
+
+---
+
+## Earlier proxy result, retained
+
+**Status of the proxy: the stated direction is REFUTED, and the cheap test
+produced a better statistic than the one it was testing.** Backdoored profiles turn out to be
 *flatter* than clean ones, not more peaked. Separately, the simplest reduction of
 the profile, its **minimum**, beats PSBD's mean on the low-poison-rate case by
 +0.12 while keeping PSBD's direction unchanged. Per-unit masking machinery is

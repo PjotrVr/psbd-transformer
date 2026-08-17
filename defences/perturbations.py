@@ -57,11 +57,19 @@ class GroupChannelMask(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if not self.training or self.rate == 0.0:
             return x
+        # Swin features are (B, H, W, C); flatten spatial dims temporarily
+        if x.dim() == 4:
+            b, h, w, c = x.shape
+            out = self._mask_channels(x.reshape(b, h * w, c))
+            return out.reshape(b, h, w, c)
         if x.dim() != 3:
             raise ValueError(
-                f"expected (batch, tokens, channels), got {tuple(x.shape)}; this "
-                "operator is channel-structured and cannot infer groups otherwise"
+                f"expected (batch, tokens, channels) or (batch, H, W, channels), "
+                f"got {tuple(x.shape)}"
             )
+        return self._mask_channels(x)
+
+    def _mask_channels(self, x: torch.Tensor) -> torch.Tensor:
         batch, _, channels = x.shape
         if channels % self.group_size:
             raise ValueError(
@@ -95,17 +103,28 @@ class TokenMask(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if not self.training or self.rate == 0.0:
             return x
+        # Swin features are (B, H, W, C); flatten spatial dims to token dim
+        if x.dim() == 4:
+            b, h, w, c = x.shape
+            x_flat = x.reshape(b, h * w, c)
+            out = self._mask_tokens(x_flat, protect_cls=False)
+            return out.reshape(b, h, w, c)
         if x.dim() != 3:
             raise ValueError(
-                f"expected (batch, tokens, channels), got {tuple(x.shape)}"
+                f"expected (batch, tokens, channels) or (batch, H, W, channels), "
+                f"got {tuple(x.shape)}"
             )
+        return self._mask_tokens(x, protect_cls=self.protect_cls)
+
+    def _mask_tokens(self, x: torch.Tensor, protect_cls: bool) -> torch.Tensor:
         batch, tokens, _ = x.shape
         keep = torch.empty(batch, tokens, 1, device=x.device, dtype=x.dtype).bernoulli_(
             1.0 - self.rate
         )
-        if self.protect_cls:
+        keep *= _keep_scale(self.rate)
+        if protect_cls:
             keep[:, 0, :] = 1.0
-        return x * keep * _keep_scale(self.rate)
+        return x * keep
 
 
 class DropPath(nn.Module):
@@ -223,6 +242,84 @@ def masked_attention_forward(attention, mask, query, key, value, **kwargs):
     return attention.out_proj(merged), None
 
 
+class GainScale(nn.Module):
+    """Amplify a normalization layer's output, the IBD-PSC perturbation.
+
+    IBD-PSC (Hou et al., ICML 2024) detects backdoors by scaling BatchNorm's
+    affine parameters and measuring whether the prediction survives. ViT has no
+    BatchNorm, so a direct port is impossible; the LayerNorm analogue is exact
+    rather than approximate:
+
+        original form
+            y = gamma * x_hat + beta,  scale both by omega
+        restated
+            omega*gamma * x_hat + omega*beta = omega * (gamma * x_hat + beta) = omega * y
+
+    so amplifying both affine parameters is identical to multiplying the layer's
+    output, which a post-hook can do without touching a single weight.
+
+    rate is read as omega - 1, so rate 0 is the identity like every other
+    operator here and the rate grids stay comparable in shape.
+
+    This is a PARAMETER-space perturbation expressed in activation space, and it
+    is the only operator in the study that amplifies rather than removes.
+    """
+
+    def __init__(self, rate: float):
+        super().__init__()
+        self.rate = float(rate)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if not self.training or self.rate == 0.0:
+            return x
+        return x * (1.0 + self.rate)
+
+
+class ScaleUp(nn.Module):
+    """Amplify pixel values, the SCALE-UP perturbation, in normalized space.
+
+    SCALE-UP (Guo et al., ICLR 2023) multiplies pixel values by an integer factor
+    and asks whether the prediction stays the same; a backdoored input keeps its
+    target prediction because the trigger survives amplification.
+
+    The loaders deliver normalized tensors, so the operator has to undo the
+    normalization, amplify, clip to the valid pixel range, and renormalize.
+    Skipping the round trip and scaling the normalized tensor directly would
+    amplify the dataset mean as though it were signal, and the clip, which is
+    where SCALE-UP's nonlinearity lives, would land at the wrong place entirely.
+
+    rate is read as factor - 1, so rate 0 is the identity, matching every other
+    operator.
+    """
+
+    def __init__(self, rate: float, mean, std):
+        super().__init__()
+        self.rate = float(rate)
+        self.register_buffer("mean", torch.tensor(mean).view(1, -1, 1, 1))
+        self.register_buffer("std", torch.tensor(std).view(1, -1, 1, 1))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if not self.training or self.rate == 0.0:
+            return x
+        mean = self.mean.to(x.device, x.dtype)
+        std = self.std.to(x.device, x.dtype)
+        pixels = (x * std + mean).clamp(0.0, 1.0)
+        return ((pixels * (1.0 + self.rate)).clamp(0.0, 1.0) - mean) / std
+
+
+def scale_up(mean, std):
+    """Factory matching plug_dropout's (rate) -> Module contract.
+
+    The normalization constants are dataset-specific and are not available at
+    the registry level, so they are bound here by the caller.
+    """
+
+    def build(rate: float) -> ScaleUp:
+        return ScaleUp(rate, mean, std)
+
+    return build
+
+
 class FixedHeadMask(nn.Module):
     """Zero one named attention head, deterministically, for every sample.
 
@@ -289,6 +386,11 @@ PERTURBATIONS: dict[str, type[nn.Module]] = {
     "token_mask": TokenMask,
     "droppath": DropPath,
     "gaussian": GaussianNoise,
+    # Ports of two published perturbation-consistency detectors, so all three
+    # perturbation families (input, activation, parameter) sit in one registry.
+    # scale_up is absent because it needs the dataset's normalization constants
+    # and so cannot be built from a rate alone; see scale_up().
+    "gain_scale": GainScale,
 }
 
 # Which perturbations are meaningful at which positions. head_mask is the

@@ -22,13 +22,29 @@ from torch.utils.data import DataLoader
 
 from defences.detection import clean_accuracy
 from models import build_swin, build_vit
+from adaptive_evasion import train_one_epoch_evasive
 from sam import SAM
 
 
-def build_model(architecture: str, num_classes: int) -> nn.Module:
+def build_model(
+    architecture: str, num_classes: int, model_dropout: float = 0.0
+) -> nn.Module:
+    """model_dropout is TRAINING-time dropout, 0.0 for every checkpoint so far.
+
+    PSBD requires a model trained without dropout and applies dropout only at
+    inference. This argument exists to test that requirement (see E2b in
+    docs/plans/adaptive-attacker-and-dropout-stacking.md), not to change the
+    default.
+    """
     if architecture == "vit":
-        return build_vit(num_classes)
+        return build_vit(num_classes, dropout=model_dropout)
     if architecture == "swin":
+        if model_dropout:
+            # swin_s takes its own dropout arguments and ships with stochastic
+            # depth already active, so a rate here would not mean the same thing
+            # it means for ViT. Refusing is better than quietly measuring
+            # something else.
+            raise ValueError("training-time dropout is implemented for ViT only")
         return build_swin(num_classes)
     raise ValueError(f"Unknown architecture: {architecture}")
 
@@ -116,6 +132,8 @@ def checkpoint_metadata(
     asr: float | None,
     started_at: str,
     ended_at: str,
+    evasion: dict | None = None,
+    model_dropout: float = 0.0,
 ) -> dict:
     """Training provenance for a checkpoint, written alongside it as args.json.
 
@@ -140,6 +158,13 @@ def checkpoint_metadata(
         "asr": asr,
         "trained_started_at": started_at,
         "trained_ended_at": ended_at,
+        # None for every normally trained checkpoint. Present and non-null only
+        # for an adaptive-attacker run, so the two can never be confused when a
+        # detection number is read back off this folder.
+        "evasion": evasion,
+        # Training-time dropout. 0.0 for every checkpoint trained before this
+        # existed, which is what PSBD's protocol requires.
+        "model_dropout": model_dropout,
     }
 
 
@@ -177,19 +202,46 @@ def train_classifier(
     weight_decay: float = 1e-4,
     rho: float = 0.1,
     use_bfloat16: bool = True,
+    evasion: dict | None = None,
+    model_dropout: float = 0.0,
 ) -> nn.Module:
-    """Train a fresh model and report validation accuracy each epoch."""
-    model = build_model(architecture, num_classes).to(device)
+    """Train a fresh model and report validation accuracy each epoch.
+
+    evasion, when set, replaces the plain epoch with the adaptive-attacker one
+    (adaptive_evasion). It is the attacker's knob, not the defender's, and is
+    recorded in the checkpoint metadata so a run can never be mistaken for a
+    normally trained one.
+    """
+    model = build_model(architecture, num_classes, model_dropout).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = build_optimizer(model, use_sam, learning_rate, weight_decay, rho)
 
     for epoch in range(1, epochs + 1):
-        average_loss = train_one_epoch(
-            model, train_loader, criterion, optimizer, device, use_sam
-        )
+        if evasion:
+            average_loss, stats = train_one_epoch_evasive(
+                model,
+                train_loader,
+                criterion,
+                optimizer,
+                device,
+                evasion["probe"],
+                evasion["weight"],
+                evasion["passes"],
+            )
+            extra = (
+                f" psu_clean={stats['psu_clean']:.4f}"
+                f" psu_poisoned={stats['psu_poisoned']:.4f}"
+                f" penalty={stats['penalty']:.4f}"
+            )
+        else:
+            average_loss = train_one_epoch(
+                model, train_loader, criterion, optimizer, device, use_sam
+            )
+            extra = ""
         validation_accuracy = clean_accuracy(model, val_loader, device, use_bfloat16)
         print(
-            f"epoch {epoch}: loss={average_loss:.4f} val_acc={validation_accuracy:.4f}"
+            f"epoch {epoch}: loss={average_loss:.4f} "
+            f"val_acc={validation_accuracy:.4f}{extra}"
         )
 
     return model

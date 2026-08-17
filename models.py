@@ -25,8 +25,27 @@ def _wrap_with_resize(network: nn.Module) -> nn.Module:
     return nn.Sequential(transforms_v2.Resize((224, 224)), network)
 
 
-def build_vit(num_classes: int) -> nn.Module:
-    network = vit_b_16(weights=ViT_B_16_Weights.IMAGENET1K_V1)
+def build_vit(
+    num_classes: int, dropout: float = 0.0, attention_dropout: float = 0.0
+) -> nn.Module:
+    """ViT-B/16 with an ImageNet head replaced by a fresh num_classes head.
+
+    dropout defaults to 0.0, which is both torchvision's default and PSBD's
+    requirement: the paper trains "following the standard training procedure,
+    which excludes the use of dropout" and then applies dropout only at inference.
+    Every checkpoint in this project so far was built at 0.0.
+
+    The arguments exist to test that requirement rather than assume it. A model
+    trained with dropout has already been regularized against the single-path
+    dependence PSBD's neuron-bias mechanism relies on, so detection should degrade
+    if the mechanism is real and hold if it is not. Dropout carries no parameters,
+    so the pretrained weights load unchanged at any value.
+    """
+    network = vit_b_16(
+        weights=ViT_B_16_Weights.IMAGENET1K_V1,
+        dropout=dropout,
+        attention_dropout=attention_dropout,
+    )
     network.heads.head = nn.Linear(network.heads.head.in_features, num_classes)
     return _wrap_with_resize(network)
 

@@ -52,6 +52,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-bfloat16", action="store_true")
     parser.add_argument("--probe-attack", default=None)
     parser.add_argument("--probe-target-label", type=int, default=None)
+    parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="skip folders whose baseline_metrics.json is already written",
+    )
     return parser.parse_args()
 
 
@@ -141,6 +146,10 @@ def main() -> None:
         raise SystemExit("nothing to score: pass --checkpoint-folder or --all")
 
     for folder in folders:
+        written = os.path.join(args.results_dir, folder, "baseline_metrics.json")
+        if args.skip_existing and os.path.exists(written):
+            print(f"[skip] {folder}", flush=True)
+            continue
         try:
             report = score_checkpoint(folder, args, device)
         except Exception as error:
