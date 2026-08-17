@@ -11,21 +11,29 @@ import importlib
 import pytest
 
 MODULES = [
-    # Root-level: shared pipeline core and entrypoints, deliberately not
-    # folded into any package (see docs/plans/reorganization.md).
+    "adaptive_evasion",
     "backdoor_data",
+    "baseline_detect",
+    "defence_tables",
+    "detector_comparison",
+    "detector_fusion",
     "evaluate",
     "loaders",
     "metrics",
     "models",
+    "pbs_grid",
     "poison",
+    "psbd_analyze",
     "psbd_dropout_sweep",
+    "psbd_head_profile",
+    "psbd_operating_points",
+    "psbd_report",
+    "psbd_variants",
     "sam",
     "stealth",
     "train",
     "train_backdoor",
     "train_benign",
-    # attacks/: the registry plus its 10 sibling attack modules.
     "attacks",
     "attacks.adaptive_blend",
     "attacks.badnet",
@@ -37,7 +45,6 @@ MODULES = [
     "attacks.sig",
     "attacks.tact",
     "attacks.wanet",
-    # analysis/: latent-space tools.
     "analysis",
     "analysis.analyze_latent",
     "analysis.cka",
@@ -45,19 +52,18 @@ MODULES = [
     "analysis.embedding",
     "analysis.features",
     "analysis.lipschitz",
-    # defences/: the PSBD detection mechanism.
     "defences",
+    "defences.baselines",
     "defences.checkpoint_eval",
     "defences.detection",
     "defences.dropout",
     "defences.inference",
+    "defences.perturbations",
     "defences.psbd_cache",
-    # utils/: config and dataset helpers (models.py deliberately excluded).
+    "defences.psbd_metrics",
     "utils",
     "utils.config",
     "utils.datasets",
-    # plotting/: currently an empty scaffold.
-    "plotting",
 ]
 
 

@@ -1,2 +1,0 @@
-move attacks to "attacks/" and have "common.py" and other attacks renamed to just attack name
-same for defences, move to "defences/" and have "common.py" and other defences renamed to just defence name
