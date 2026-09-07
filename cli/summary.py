@@ -42,6 +42,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoints-dir", default="checkpoints")
     parser.add_argument("--output", default="results/detection_summary.csv")
     parser.add_argument(
+        "--operating-points",
+        action="store_true",
+        help=(
+            "emit one row per placement, rate, PSU variant and quantile instead of "
+            "the compact table, so TPR at 1 and 5 percent FPR is available rather "
+            "than only the 25 percent headline"
+        ),
+    )
+    parser.add_argument(
         "--include-sam",
         action="store_true",
         help=(
@@ -175,6 +184,94 @@ def placement_is_cache_backed(results_dir: str, folder: str, placement: str) -> 
     return os.path.isdir(cache_directory)
 
 
+# The PSU variants each per-rate block records. The absolute form is the paper's,
+# the ratio form divides by the starting confidence, and captured-only restricts
+# BOTH splits to the images the trigger actually flipped.
+PSU_VARIANTS = {
+    "absolute": "detection",
+    "fractional": "detection_psu_ratio",
+    "captured_only": "detection_captured_only",
+}
+
+OPERATING_POINT_FIELDS = (
+    "folder",
+    "architecture",
+    "dataset",
+    "attack",
+    "poison_rate",
+    "asr",
+    "placement",
+    "position",
+    "operator",
+    "variant",
+    "cache_backed",
+    "psu_variant",
+    "rate",
+    "sigma_validation",
+    "quantile",
+    "tpr",
+    "fpr",
+    "auroc",
+)
+
+
+def operating_point_rows(folder, report, metadata, results_dir="results"):
+    """One row per placement, rate, PSU variant and quantile.
+
+    The compact summary keeps only the headline 0.25 quantile, which is a 25
+    percent clean loss and not an operating point any deployment would run at. A
+    security venue asks for TPR at 1 and 5 percent FPR, and every per-rate block
+    already records all 6 quantiles, so this reads them out rather than
+    recomputing anything.
+
+    Shares split_operator and placement_is_cache_backed with the compact summary
+    deliberately. A second parser is how audit finding A4 happened.
+    """
+    base = {
+        "folder": folder,
+        "architecture": metadata.get("architecture"),
+        "dataset": metadata.get("dataset"),
+        "attack": metadata.get("attack"),
+        "poison_rate": metadata.get("poison_rate"),
+        "asr": metadata.get("asr"),
+    }
+
+    rows = []
+    for placement, block in sorted(report.get("placements", {}).items()):
+        position, operator, variant = split_operator(placement, KNOWN_OPERATORS)
+        shared = {
+            **base,
+            "placement": placement,
+            "position": position,
+            "operator": operator,
+            "variant": variant,
+            "cache_backed": placement_is_cache_backed(results_dir, folder, placement),
+        }
+        for entry in block.get("rates", []):
+            # The clean-validation shift ratio is what makes 2 placements
+            # comparable, so it travels with every row rather than being looked
+            # up separately later.
+            sigma = (entry.get("shift_ratio") or {}).get("validation")
+            for variant_name, key in PSU_VARIANTS.items():
+                detection = entry.get(key)
+                if not detection:
+                    continue
+                for quantile_key, values in detection.items():
+                    rows.append(
+                        {
+                            **shared,
+                            "psu_variant": variant_name,
+                            "rate": entry.get("rate"),
+                            "sigma_validation": sigma,
+                            "quantile": values.get("quantile"),
+                            "tpr": values.get("tpr"),
+                            "fpr": values.get("fpr"),
+                            "auroc": values.get("auroc"),
+                        }
+                    )
+    return rows
+
+
 def rows_for_checkpoint(
     folder: str, report: dict, metadata: dict, results_dir: str = "results"
 ) -> list[dict]:
@@ -298,10 +395,18 @@ def main() -> None:
         if metadata.get("optimizer") == "sam" and not args.include_sam:
             excluded_sam += 1
             continue
-        all_rows.extend(rows_for_checkpoint(folder, report, metadata, args.results_dir))
+        if args.operating_points:
+            all_rows.extend(
+                operating_point_rows(folder, report, metadata, args.results_dir)
+            )
+        else:
+            all_rows.extend(
+                rows_for_checkpoint(folder, report, metadata, args.results_dir)
+            )
 
     with open(args.output, "w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=FIELDS)
+        fields = OPERATING_POINT_FIELDS if args.operating_points else FIELDS
+        writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(all_rows)
 

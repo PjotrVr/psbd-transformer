@@ -6,7 +6,10 @@ copied_codebase/
 vit_b_16_weights/
 unzip_script.py
 colab_run_uncertainty_defenses.ipynb
-experiments/
+# archive/ holds superseded output kept for reference: the .npz score files the
+# pre-rewrite sweep wrote into a directory now used for experiment CODE. Nothing
+# reads them, the current pipeline writes results/<checkpoint>/psbd/ instead.
+archive/
 figures/
 **/__pycache__/
 tmp**
@@ -61,3 +64,8 @@ pbs/psbd_*/
 pbs/swin_*/
 pbs/vit_*/
 pbs/eval/
+
+# results/operating_points.csv is 189 MB, rebuilt in seconds by
+# `python -m cli.summary --operating-points`. The compact summary is the tracked
+# artifact; this one regenerates from the same psbd_metrics.json files.
+results/operating_points.csv
