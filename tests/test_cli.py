@@ -372,9 +372,40 @@ def test_summary_writes_a_versionable_csv(tmp_path) -> None:
     if not rows:
         pytest.skip("no psbd_metrics.json on disk to summarize")
 
-    assert {"folder", "placement", "rule", "auroc"} <= set(rows[0])
+    # A 4-column subset was the whole assertion here, which is how cli/summary.py
+    # drifted into a fork missing every fix audit findings A4 and A19 were about
+    # while still passing. The columns that mark a row unusable are the ones worth
+    # requiring, since their absence is what makes a bad row invisible.
+    required = {
+        "folder",
+        "placement",
+        "position",
+        "operator",
+        "rule",
+        "auroc",
+        "variant",
+        "cache_backed",
+    }
+    missing = required - set(rows[0])
+    assert not missing, f"the summary lost columns that mark unusable rows: {missing}"
+
     # --include-sam defaults off, so a SAM checkpoint must not appear in the table.
     assert all(row["optimizer"] != "sam" for row in rows)
+
+    # A4 was an unrecognized suffix silently attributed to the paper's own
+    # baseline. Nothing may parse as an operator the registry does not have.
+    # KNOWN_OPERATORS rather than psbd.operators.PERTURBATIONS, because scale_up
+    # is a legitimate operator that the perturbation registry deliberately omits:
+    # it needs the dataset's normalization constants and cannot be built from a
+    # rate alone. The summary's own vocabulary is the right authority here.
+    from cli.summary import KNOWN_OPERATORS
+
+    known = set(KNOWN_OPERATORS) | {"dropout", "unknown"}
+    seen = {row["operator"] for row in rows}
+    assert seen <= known, f"summary invented operators: {sorted(seen - known)}"
+    assert "unknown" not in seen, (
+        "a placement parsed as 'unknown', so the parser does not cover the tree"
+    )
 
 
 def test_tables_coverage_only_reports_the_bar() -> None:

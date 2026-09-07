@@ -22,9 +22,6 @@ already produced 2 wrong conclusions in this project:
 achieved_shift_ratio travels with every matched row. A cell whose grid never
 reaches the target is still selected by the nearest rule, so without the achieved
 value a table cannot tell a matched cell from an unmatched one.
-
-Example
-    python -m cli.summary --output results/detection_summary.csv
 """
 
 import argparse
@@ -32,46 +29,11 @@ import csv
 import glob
 import json
 import os
+import re
+
+from psbd.positions import DROPOUT_CONFIGS, POSITION_REGISTRY
 
 SELECTION_RULES = ("adaptive", "oracle")
-
-# Longest names first, so channel_mask is not read as a position ending in mask.
-KNOWN_OPERATORS = (
-    "channel_mask",
-    "gain_scale",
-    "token_mask",
-    "head_mask",
-    "droppath",
-    "gaussian",
-    "scale_up",
-)
-
-FIELDS = (
-    "folder",
-    "architecture",
-    "dataset",
-    "attack",
-    "label_mode",
-    "poison_rate",
-    "realized_poison_rate",
-    "poison_rate_capped",
-    "optimizer",
-    "rho",
-    "asr",
-    "clean_accuracy",
-    "target_label",
-    "placement",
-    "position",
-    "operator",
-    "rule",
-    "rate",
-    "achieved_shift_ratio",
-    "auroc",
-    "tpr",
-    "fpr",
-    "threshold",
-    "quantile",
-)
 
 
 def parse_args() -> argparse.Namespace:
@@ -94,28 +56,128 @@ def parse_args() -> argparse.Namespace:
 
 
 def read_json(path: str) -> dict | None:
-    """One JSON file, or None when it does not exist."""
     if not os.path.exists(path):
         return None
-
     with open(path) as handle:
         return json.load(handle)
 
 
-def split_operator(placement: str, known_operators: tuple[str, ...]) -> tuple[str, str]:
-    """(position, operator) from a placement name.
+# Every position name a bare placement may legitimately carry, across both
+# architectures plus the named multi-position configs.
+VALID_POSITION_NAMES: frozenset[str] = frozenset(
+    name for positions in POSITION_REGISTRY.values() for name in positions
+) | frozenset(DROPOUT_CONFIGS)
+
+
+# Suffixes that qualify a placement without naming its operator. Stripped before
+# the operator is read, and recorded so a variant can be filtered rather than
+# silently pooled with the plain measurement.
+VARIANT_SUFFIXES = (
+    # The superseded batch-coupled Gaussian, archived under audit finding A2. Its
+    # caches were moved out of results/, but the psbd_metrics.json records they
+    # produced were not, so they still reach this script.
+    ("_gaussian_batchstd", "gaussian", "batch_coupled_superseded"),
+)
+
+# A trailing _k<digits> is a Monte Carlo pass-count variant, not an operator.
+PASS_COUNT_SUFFIX = re.compile(r"_k(\d+)$")
+
+# A trailing _pmodel<rate> marks a run with the model's OWN dropouts activated,
+# the deliberate conflation study. It qualifies the run, not the operator.
+MODEL_DROPOUT_SUFFIX = re.compile(r"_pmodel([0-9_.]+)$")
+
+# A trailing _blocks_<first>_<last> restricts a block-scope position to a span of
+# blocks. It qualifies the position rather than naming an operator, and the depth
+# band sweep (H10) is entirely made of these.
+BLOCK_RANGE_SUFFIX = re.compile(r"_blocks_(\d+)_(\d+)$")
+
+KNOWN_OPERATORS = (
+    "channel_mask",
+    "gain_scale",
+    "token_mask",
+    "head_mask",
+    "droppath",
+    "gaussian",
+    "rademacher",
+    "scale_up",
+)
+
+UNKNOWN_OPERATOR = "unknown"
+
+
+def split_operator(
+    placement: str, known_operators: tuple[str, ...]
+) -> tuple[str, str, str | None]:
+    """(position, operator, variant) from a placement name.
 
     A bare name is the paper's dropout, which is exactly why the naming keeps it
-    bare. known_operators must be ordered longest first so a compound name is not
-    matched by its own suffix.
+    bare. Longest operator names are tried first so channel_mask is not read as a
+    position ending in mask.
+
+    The fallback used to be an unconditional "dropout", which is how audit finding
+    A4 happened: any suffix this function did not recognize was attributed to the
+    paper's own baseline at a position that does not exist. Since dropout is the
+    baseline every other operator is compared against, that inflated the thing
+    every margin is measured from. An unrecognized placement is now labelled
+    UNKNOWN_OPERATOR so it can be found and excluded instead of quietly joining
+    the baseline.
     """
+    variant = None
+    remaining = placement
+
+    for suffix, operator, variant_name in VARIANT_SUFFIXES:
+        if remaining.endswith(suffix):
+            position = remaining[: -len(suffix)]
+            return position, operator, variant_name
+
+    model_dropout = MODEL_DROPOUT_SUFFIX.search(remaining)
+    if model_dropout is not None:
+        variant = f"model_dropout_{model_dropout.group(1)}"
+        remaining = remaining[: model_dropout.start()]
+
+    block_range = BLOCK_RANGE_SUFFIX.search(remaining)
+    if block_range is not None:
+        variant = f"blocks_{block_range.group(1)}_{block_range.group(2)}"
+        remaining = remaining[: block_range.start()]
+
+    pass_count = PASS_COUNT_SUFFIX.search(remaining)
+    if pass_count is not None:
+        variant = f"passes_{pass_count.group(1)}"
+        remaining = remaining[: pass_count.start()]
+
     for operator in known_operators:
-        if placement.endswith(f"_{operator}"):
-            return placement[: -len(operator) - 1], operator
-    return placement, "dropout"
+        if remaining.endswith(f"_{operator}"):
+            position = remaining[: -len(operator) - 1]
+            return position, operator, variant
+
+    if remaining in VALID_POSITION_NAMES:
+        return remaining, "dropout", variant
+
+    return remaining, UNKNOWN_OPERATOR, variant
 
 
-def rows_for_checkpoint(folder: str, report: dict, metadata: dict) -> list[dict]:
+def placement_is_cache_backed(results_dir: str, folder: str, placement: str) -> bool:
+    """Whether a stage-2 record still has its stage-1 tensors under results/.
+
+    A psbd_metrics.json entry outlives the cache it was computed from. Audit
+    finding A2 archived the batch-coupled Gaussian caches by MOVING the placement
+    directories out of results/, but the stage-2 records they had already produced
+    stayed behind, so 1401 rows describe a superseded operator while being
+    labelled as the plain one. The suffix tag in VARIANT_SUFFIXES only catches
+    placements literally named *_gaussian_batchstd, and the archived directories
+    are not named that.
+
+    Checking for the directory is the rule that does not depend on a naming
+    convention: a record whose tensors are gone cannot be recomputed, verified, or
+    trusted, whatever it is called.
+    """
+    cache_directory = os.path.join(results_dir, folder, "psbd", placement)
+    return os.path.isdir(cache_directory)
+
+
+def rows_for_checkpoint(
+    folder: str, report: dict, metadata: dict, results_dir: str = "results"
+) -> list[dict]:
     """Every (placement, rule) row this checkpoint contributes."""
     base = {
         "folder": folder,
@@ -135,12 +197,18 @@ def rows_for_checkpoint(folder: str, report: dict, metadata: dict) -> list[dict]
 
     rows = []
     for placement, block in sorted(report.get("placements", {}).items()):
-        position, operator = split_operator(placement, KNOWN_OPERATORS)
+        position, operator, variant = split_operator(placement, KNOWN_OPERATORS)
         shared = {
             **base,
             "placement": placement,
             "position": position,
             "operator": operator,
+            # None for a plain measurement. Anything else marks a row that must
+            # not be pooled with the plain one without saying so.
+            "variant": variant,
+            # False means the stage-1 tensors this row came from are no longer
+            # under results/, so the row cannot be recomputed or verified.
+            "cache_backed": placement_is_cache_backed(results_dir, folder, placement),
         }
 
         for rule in SELECTION_RULES:
@@ -177,52 +245,70 @@ def rows_for_checkpoint(folder: str, report: dict, metadata: dict) -> list[dict]
                     "quantile": matched.get("quantile"),
                 }
             )
-
     return rows
 
 
-def collect_rows(
-    results_dir: str, checkpoints_dir: str, include_sam: bool
-) -> tuple[list[dict], int, int]:
-    """Every row in the tree, plus how many checkpoints were skipped and why."""
-    all_rows: list[dict] = []
-    skipped = 0
-    excluded_sam = 0
-
-    for path in sorted(glob.glob(os.path.join(results_dir, "*", "psbd_metrics.json"))):
-        folder = os.path.basename(os.path.dirname(path))
-        report = read_json(path)
-        metadata = read_json(os.path.join(checkpoints_dir, folder, "args.json")) or {}
-        if report is None:
-            skipped += 1
-            continue
-        if metadata.get("optimizer") == "sam" and not include_sam:
-            excluded_sam += 1
-            continue
-        all_rows.extend(rows_for_checkpoint(folder, report, metadata))
-
-    return all_rows, skipped, excluded_sam
-
-
-def write_csv(output_path: str, rows: list[dict]) -> None:
-    """Write the summary table, one line per (checkpoint, placement, rule)."""
-    with open(output_path, "w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=FIELDS)
-        writer.writeheader()
-        writer.writerows(rows)
+FIELDS = (
+    "folder",
+    "architecture",
+    "dataset",
+    "attack",
+    "label_mode",
+    "poison_rate",
+    "realized_poison_rate",
+    "poison_rate_capped",
+    "optimizer",
+    "rho",
+    "asr",
+    "clean_accuracy",
+    "target_label",
+    "placement",
+    "position",
+    "operator",
+    "variant",
+    "cache_backed",
+    "rule",
+    "rate",
+    "achieved_shift_ratio",
+    "auroc",
+    "tpr",
+    "fpr",
+    "threshold",
+    "quantile",
+)
 
 
 def main() -> None:
     args = parse_args()
-    rows, skipped, excluded_sam = collect_rows(
-        args.results_dir, args.checkpoints_dir, args.include_sam
-    )
-    write_csv(args.output, rows)
+    all_rows = []
+    skipped = 0
+    excluded_sam = 0
+
+    for path in sorted(
+        glob.glob(os.path.join(args.results_dir, "*", "psbd_metrics.json"))
+    ):
+        folder = os.path.basename(os.path.dirname(path))
+        report = read_json(path)
+        metadata = (
+            read_json(os.path.join(args.checkpoints_dir, folder, "args.json")) or {}
+        )
+        if report is None:
+            skipped += 1
+            continue
+        if metadata.get("optimizer") == "sam" and not args.include_sam:
+            excluded_sam += 1
+            continue
+        all_rows.extend(rows_for_checkpoint(folder, report, metadata, args.results_dir))
+
+    with open(args.output, "w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=FIELDS)
+        writer.writeheader()
+        writer.writerows(all_rows)
 
     size_mb = os.path.getsize(args.output) / 1048576
-    checkpoints = len({row["folder"] for row in rows})
-    placements = len({row["placement"] for row in rows})
-    print(f"rows:        {len(rows)}")
+    checkpoints = len({row["folder"] for row in all_rows})
+    placements = len({row["placement"] for row in all_rows})
+    print(f"rows:        {len(all_rows)}")
     print(f"checkpoints: {checkpoints}")
     print(f"placements:  {placements}")
     print(f"skipped:     {skipped}")

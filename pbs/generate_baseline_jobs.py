@@ -27,7 +27,16 @@ BENIGN_PROBE_TARGET_LABEL = 0
 
 # 8 overlays over roughly 18k images across the 3 splits, one forward pass each,
 # at the ~2130 img/s measured for this model on an A100.
-MINUTES_PER_CHECKPOINT = 4.0
+# Measured, not estimated. The Aug run did confidence and strip only, 9 forward
+# passes per input, at about 1.2 minutes per checkpoint on an A100. The full set
+# is 98 passes per input (confidence 1, strip 8, scale_up 6, scale_up_data_limited
+# 6, ibd_psc 6, teco 71), so roughly 11 times that.
+#
+# TeCo alone is 71 of the 98 and 2 of its corruptions are not GPU bound:
+# glass_blur runs a Python triple loop over pixels and jpeg_compression round
+# trips each image through PIL on CPU. The measured figure will be worse than the
+# pass ratio implies, so this is deliberately generous rather than tight.
+MINUTES_PER_CHECKPOINT = 20.0
 
 TEMPLATE = """#!/bin/bash
 #PBS -q gpu
