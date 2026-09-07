@@ -39,6 +39,15 @@ Beyond that:
 - Notebooks are committed **with** their outputs, so the numbers are readable
   without a GPU and a change in them shows up in a diff.
 
+## Reading order
+
+`00-start-here.ipynb` is the index. It lists every notebook with the question it
+answers, separates what is settled from what was withdrawn or downgraded, and
+states the known gaps rather than leaving them to be discovered.
+
+If you read only 2, read **06** for the method and **12** for whether to believe
+any of the numbers.
+
 ## Running them
 
 ```bash
