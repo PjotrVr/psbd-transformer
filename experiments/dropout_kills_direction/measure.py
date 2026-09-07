@@ -41,7 +41,7 @@ absorbs the rescaling LayerNorm applies. A raw mean difference here would have b
 as fragile as the ablation was.
 
 Example
-    PYTHONPATH=. python scripts/dropout_kills_direction/measure.py \
+    PYTHONPATH=. python experiments/dropout_kills_direction/measure.py \
         --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
         --placement pre_residual post_residual
 """
@@ -59,7 +59,7 @@ from attacks import build_attack, default_config
 from defences.checkpoint_eval import read_checkpoint_metadata, resolve_probe_attack
 from defences.dropout import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
 from models import load_checkpoint, vit_core
-from scripts.backdoor_direction_layers.measure import build_paired_loaders
+from experiments.backdoor_direction_layers.measure import build_paired_loaders
 from utils.config import DATASET_REGISTRY
 
 # The default grid. A residual-stream placement saturates below its first entry,

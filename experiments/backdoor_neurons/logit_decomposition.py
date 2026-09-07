@@ -41,7 +41,7 @@ deleting d deletes the attack. Near 1 means the push is per-sample and lives off
 entirely, so deleting d is beside the point however large d is.
 
 Example
-    PYTHONPATH=. python scripts/backdoor_neurons/logit_decomposition.py
+    PYTHONPATH=. python experiments/backdoor_neurons/logit_decomposition.py
 """
 
 import argparse
@@ -55,7 +55,7 @@ from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
 from defences.checkpoint_eval import read_checkpoint_metadata, resolve_probe_attack
 from models import load_checkpoint, vit_core
-from scripts.backdoor_direction_layers.measure import build_paired_loaders
+from experiments.backdoor_direction_layers.measure import build_paired_loaders
 from utils.config import DATASET_REGISTRY
 
 FINAL_BLOCK = 12

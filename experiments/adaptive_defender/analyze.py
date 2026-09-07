@@ -3,7 +3,15 @@
 For each evasive checkpoint from H25, computes:
 1. Per-operator diagnostics (validation PSU stats, sigma curves)
 2. Single-operator AUROCs (uses labels, for post-hoc understanding)
-3. Multi-probe AUROC at all k-of-n combinations
+3. Multi-probe AUROC, plus TPR/FPR under both thresholding rules that
+   defences.psbd_metrics.multi_probe_detection returns:
+     calibrated  the target_fpr quantile of the combined clean-validation
+                 min-rank, which lands on target_fpr by construction because the
+                 combined score is already a minimum over k probes
+     bonferroni  the literal value target_fpr / k on the rank scale, conservative
+                 by the union bound, so its achieved FPR sits under target_fpr
+   Both are read from the by_rule dict and printed with the FPR each achieves.
+   AUROC is threshold-free and identical under either rule.
 4. Forensic evasion identification (which operator was evaded?)
 5. Protocol recommendation
 
@@ -13,14 +21,17 @@ Parts 2-4 use labels and are for analysis only.
 Runs entirely on CPU using cached .pt files. No new GPU jobs needed.
 
 Example
-    python scripts/adaptive_defender/analyze.py
-    python scripts/adaptive_defender/analyze.py --architecture vit --dataset cifar100
+    python experiments/adaptive_defender/analyze.py
+    python experiments/adaptive_defender/analyze.py --architecture vit --dataset cifar100
 """
 
 import argparse
-import itertools
 import json
 import os
+import sys
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, REPO_ROOT)
 
 import numpy as np
 from sklearn.metrics import roc_auc_score
@@ -76,6 +87,12 @@ SWIN_OPERATORS = [
 
 SIGMA_TARGET = 0.6
 TARGET_FPR = 0.25
+
+DETECTION_RULES = ("calibrated", "bonferroni")
+RULE_DESCRIPTION = {
+    "calibrated": f"{TARGET_FPR} quantile of clean-validation min-rank",
+    "bonferroni": f"literal {TARGET_FPR}/k on the rank scale",
+}
 
 
 def sigma_curve(psbd_dir, op_name):
@@ -262,8 +279,10 @@ def analyze_one(arch, dataset, attack, rate_tag, rate_float, operators):
     bd_all = [available[l]["psu"]["backdoor"] for l in all_labels]
     row["multi_all_auroc"] = multi_probe_auroc(clean_all, bd_all, val_all)
     det = multi_probe_detection(val_all, clean_all, bd_all, TARGET_FPR)
-    row["multi_all_tpr"] = det["tpr"]
-    row["multi_all_fpr"] = det["fpr"]
+    row["multi_all_k"] = det["k"]
+    for rule in DETECTION_RULES:
+        row[f"multi_all_{rule}_tpr"] = det["by_rule"][rule]["tpr"]
+        row[f"multi_all_{rule}_fpr"] = det["by_rule"][rule]["fpr"]
 
     # Transfer-only multi-probe (exclude the evaded operator)
     xfer_labels = [l for l in all_labels if not available[l]["is_probed"]]
@@ -272,6 +291,10 @@ def analyze_one(arch, dataset, attack, rate_tag, rate_float, operators):
         clean_x = [available[l]["psu"]["clean"] for l in xfer_labels]
         bd_x = [available[l]["psu"]["backdoor"] for l in xfer_labels]
         row["multi_xfer_auroc"] = multi_probe_auroc(clean_x, bd_x, val_x)
+        det_x = multi_probe_detection(val_x, clean_x, bd_x, TARGET_FPR)
+        for rule in DETECTION_RULES:
+            row[f"multi_xfer_{rule}_tpr"] = det_x["by_rule"][rule]["tpr"]
+            row[f"multi_xfer_{rule}_fpr"] = det_x["by_rule"][rule]["fpr"]
 
     # Exclude the forensically-identified operator (defender protocol)
     id_label = row.get("id_by_val_std")
@@ -391,6 +414,31 @@ def print_summary(rows):
             f"  {'Multi-probe (after forensic exclude by val_std)':50} {np.mean(exclude_multi):8.3f} {sum(1 for a in exclude_multi if a > 0.9):>4}/{len(exclude_multi):<5}"
         )
 
+    print(f"\n  Detection at target FPR {TARGET_FPR}. AUROC above is threshold-free")
+    print("  and is the same number under either rule.\n")
+    print(f"  {'pool':14} {'rule':11} {'TPR':>7} {'FPR':>7}   {'threshold':38} n")
+    for pool, prefix in (
+        ("all operators", "multi_all"),
+        ("transfer only", "multi_xfer"),
+    ):
+        for rule in DETECTION_RULES:
+            tprs = [
+                r[f"{prefix}_{rule}_tpr"]
+                for r in high_asr
+                if r.get(f"{prefix}_{rule}_tpr") is not None
+            ]
+            fprs = [
+                r[f"{prefix}_{rule}_fpr"]
+                for r in high_asr
+                if r.get(f"{prefix}_{rule}_fpr") is not None
+            ]
+            if not tprs:
+                continue
+            print(
+                f"  {pool:14} {rule:11} {np.mean(tprs):>7.3f} {np.mean(fprs):>7.3f}"
+                f"   {RULE_DESCRIPTION[rule]:38} {len(tprs)}"
+            )
+
     # Section 4: Protocol recommendation
     print(f"\n{'=' * 80}")
     print("SECTION 4: ADAPTIVE DEFENDER PROTOCOL")
@@ -402,12 +450,16 @@ operator was evaded.
 
 RECOMMENDED PROTOCOL:
 1. Run all available perturbation operators at their sigma-matched rates.
-2. Use min-rank (union rule) across operators: flag a sample when ANY
-   operator's PSU rank falls below the Bonferroni-corrected threshold.
+2. Use min-rank (union rule) across operators, then threshold the combined
+   min-rank at the target-FPR quantile of its own clean-validation
+   distribution (the calibrated rule). That quantile already absorbs the
+   union over k probes, so no further Bonferroni division is applied. The
+   bonferroni rule, which flags a sample when any single probe ranks it
+   below target_FPR / k, is reported alongside as the conservative variant.
 3. If baseline data exists, check for sigma-curve suppression to identify
    the evaded operator. Exclude it to tighten the probe pool.
 4. If no baseline exists, use all operators. The multi-probe score is
-   within 0.02 AUROC of the oracle-exclude result.
+   within 0.011 AUROC of the oracle-exclude result.
 """)
 
 

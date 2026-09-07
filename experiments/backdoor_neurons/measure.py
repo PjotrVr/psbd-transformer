@@ -24,7 +24,7 @@ TAC is a mean of absolute differences and does not average that noise away, and 
 residual norms grow with depth.
 
 Example
-    PYTHONPATH=. python scripts/backdoor_neurons/measure.py \
+    PYTHONPATH=. python experiments/backdoor_neurons/measure.py \
         --attack badnet_a2o blend bpp lf --rho "" 0_1 0_2
 """
 
@@ -52,7 +52,7 @@ from analysis.lipschitz import (
 from attacks import build_attack, default_config
 from defences.checkpoint_eval import read_checkpoint_metadata, resolve_probe_attack
 from models import load_checkpoint
-from scripts.backdoor_direction_layers.measure import build_paired_loaders
+from experiments.backdoor_direction_layers.measure import build_paired_loaders
 from utils.config import DATASET_REGISTRY
 
 TOP_K = 20

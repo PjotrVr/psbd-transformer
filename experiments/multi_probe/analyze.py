@@ -2,19 +2,35 @@
 
 For each evasive checkpoint from H25, loads per-operator PSBD sweep caches,
 computes the min-rank combined score across all available operators, and
-reports multi-probe AUROC and TPR/FPR at the Bonferroni-corrected threshold.
+reports multi-probe AUROC plus TPR/FPR under both thresholding rules that
+defences.psbd_metrics.multi_probe_detection returns:
+
+  calibrated  threshold = the target_fpr quantile of the combined clean-validation
+              min-rank. The combined score is already a minimum over k probes, so
+              its own quantile lands on target_fpr by construction.
+  bonferroni  threshold = the literal value target_fpr / k on the rank scale, which
+              flags a sample when any single probe ranks it below that. The union
+              bound makes it conservative, so its achieved FPR sits under target_fpr.
+
+Both are read from the by_rule dict and printed side by side with the FPR each
+one actually achieves. AUROC is threshold-free and is the same number under
+either rule.
 
 Runs entirely on CPU using cached .pt files. No new GPU jobs needed.
 
 Example
-    python scripts/multi_probe/analyze.py
-    python scripts/multi_probe/analyze.py --architecture vit --dataset cifar100
+    python experiments/multi_probe/analyze.py
+    python experiments/multi_probe/analyze.py --architecture vit --dataset cifar100
 """
 
 import argparse
 import itertools
 import json
 import os
+import sys
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, REPO_ROOT)
 
 import numpy as np
 
@@ -69,6 +85,12 @@ SWIN_OPERATORS = [
 
 SIGMA_TARGET = 0.6
 TARGET_FPR = 0.25
+
+DETECTION_RULES = ("calibrated", "bonferroni")
+RULE_DESCRIPTION = {
+    "calibrated": f"{TARGET_FPR} quantile of clean-validation min-rank",
+    "bonferroni": f"literal {TARGET_FPR}/k on the rank scale",
+}
 
 
 def load_psu_at_sigma(psbd_dir, operator_name, sigma_target=SIGMA_TARGET):
@@ -184,9 +206,10 @@ def analyze_one(arch, dataset, attack, rate_tag, rate_float, operators):
             det = multi_probe_detection(val_list, clean_list, bd_list, TARGET_FPR)
 
             row[f"combo_{combo_key}_auroc"] = auroc
-            row[f"combo_{combo_key}_tpr"] = det["tpr"]
-            row[f"combo_{combo_key}_fpr"] = det["fpr"]
             row[f"combo_{combo_key}_bonf_q"] = det["bonferroni_quantile"]
+            for rule in DETECTION_RULES:
+                row[f"combo_{combo_key}_{rule}_tpr"] = det["by_rule"][rule]["tpr"]
+                row[f"combo_{combo_key}_{rule}_fpr"] = det["by_rule"][rule]["fpr"]
 
     transfer_labels = [l for l in all_labels if not available[l]["is_probed"]]
     if transfer_labels:
@@ -198,8 +221,9 @@ def analyze_one(arch, dataset, attack, rate_tag, rate_float, operators):
         det = multi_probe_detection(val_list, clean_list, bd_list, TARGET_FPR)
 
         row["transfer_only_auroc"] = auroc
-        row["transfer_only_tpr"] = det["tpr"]
-        row["transfer_only_fpr"] = det["fpr"]
+        for rule in DETECTION_RULES:
+            row[f"transfer_only_{rule}_tpr"] = det["by_rule"][rule]["tpr"]
+            row[f"transfer_only_{rule}_fpr"] = det["by_rule"][rule]["fpr"]
         row["transfer_only_k"] = len(transfer_labels)
         row["transfer_only_labels"] = transfer_labels
 
@@ -211,8 +235,9 @@ def analyze_one(arch, dataset, attack, rate_tag, rate_float, operators):
     det = multi_probe_detection(val_all, clean_all, bd_all, TARGET_FPR)
 
     row["all_auroc"] = auroc
-    row["all_tpr"] = det["tpr"]
-    row["all_fpr"] = det["fpr"]
+    for rule in DETECTION_RULES:
+        row[f"all_{rule}_tpr"] = det["by_rule"][rule]["tpr"]
+        row[f"all_{rule}_fpr"] = det["by_rule"][rule]["fpr"]
     row["all_k"] = len(all_labels)
 
     return row
@@ -227,11 +252,11 @@ def print_summary(rows):
         r for r in rows if r.get("evade_asr") is not None and r["evade_asr"] > 0.9
     ]
 
-    print(f"\n=== Multi-Probe PSBD Defence (H41) ===")
+    print("\n=== Multi-Probe PSBD Defence (H41) ===")
     print(f"Total evasive checkpoints analyzed: {len(rows)}")
     print(f"With ASR > 0.9: {len(high_asr)}")
 
-    print(f"\n--- Main table (ASR > 0.9 only) ---\n")
+    print("\n--- Main table (ASR > 0.9 only) ---\n")
     header = "| arch | dataset | attack | rate | probed | best_xfer | all_multi | xfer_multi |"
     print(header)
     print("|" + "|".join(["---"] * 8) + "|")
@@ -327,16 +352,31 @@ def print_summary(rows):
                 f"  above 0.90: {sum(1 for a in xfer_multi_list if a > 0.9)}/{len(xfer_multi_list)}"
             )
 
-        tpr_all = [r.get("all_tpr") for r in high_asr if r.get("all_tpr") is not None]
-        fpr_all = [r.get("all_fpr") for r in high_asr if r.get("all_fpr") is not None]
-        if tpr_all:
-            print(f"\nAll-operator TPR at Bonferroni:   {np.mean(tpr_all):.3f}")
-        if fpr_all:
-            print(
-                f"All-operator FPR at Bonferroni:   {np.mean(fpr_all):.3f} (target {TARGET_FPR})"
-            )
+        print(f"\n--- Detection at target FPR {TARGET_FPR} (ASR > 0.9) ---\n")
+        print(f"  {'pool':14} {'rule':11} {'TPR':>7} {'FPR':>7}   {'threshold':38} n")
+        for pool, prefix in (
+            ("all operators", "all"),
+            ("transfer only", "transfer_only"),
+        ):
+            for rule in DETECTION_RULES:
+                tprs = [
+                    r[f"{prefix}_{rule}_tpr"]
+                    for r in high_asr
+                    if r.get(f"{prefix}_{rule}_tpr") is not None
+                ]
+                fprs = [
+                    r[f"{prefix}_{rule}_fpr"]
+                    for r in high_asr
+                    if r.get(f"{prefix}_{rule}_fpr") is not None
+                ]
+                if not tprs:
+                    continue
+                print(
+                    f"  {pool:14} {rule:11} {np.mean(tprs):>7.3f} {np.mean(fprs):>7.3f}"
+                    f"   {RULE_DESCRIPTION[rule]:38} {len(tprs)}"
+                )
 
-    print(f"\n--- Combo breakdown (all k-of-n, ASR > 0.9) ---\n")
+    print("\n--- Combo breakdown (all k-of-n, ASR > 0.9) ---\n")
 
     combo_stats = {}
     for r in high_asr:

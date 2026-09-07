@@ -33,7 +33,7 @@ Writes results/<folder>/shift_latent.json and, with --umap, a projection coloure
 where each sample landed.
 
 Example
-    PYTHONPATH=. python scripts/shift_in_latent_space/measure.py \
+    PYTHONPATH=. python experiments/shift_in_latent_space/measure.py \
         --checkpoint-folder vit_cifar10_blend_0_1 vit_cifar10_badnet_a2o_0_1
 """
 
@@ -55,7 +55,7 @@ import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader, Subset
 
 from poison import PoisonedTrainingSet
-from scripts.backdoor_direction_layers.measure import build_paired_loaders
+from experiments.backdoor_direction_layers.measure import build_paired_loaders
 from utils.config import DATASET_REGISTRY
 from utils.datasets import extract_labels, load_clean_datasets
 

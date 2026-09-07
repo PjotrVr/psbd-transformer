@@ -12,7 +12,7 @@ Result: multi-probe with 4 operators recovers AUROC from 0.322 (evaded) to
 
 Runs on CPU using cached PSBD sweep data. No GPU needed.
 
-    python scripts/multi_probe/analyze.py
-    python scripts/multi_probe/analyze.py --architecture vit --dataset cifar100
+    python experiments/multi_probe/analyze.py
+    python experiments/multi_probe/analyze.py --architecture vit --dataset cifar100
 
 Hypothesis doc: `docs/hypothesis/H41-multi-probe-defence.md`

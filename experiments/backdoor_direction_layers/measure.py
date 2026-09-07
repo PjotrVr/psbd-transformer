@@ -30,7 +30,7 @@ non-target image.
 Run on the login node; one checkpoint at 1000 samples takes about a minute.
 
 Example
-    python scripts/backdoor_direction_layers/measure.py \
+    python experiments/backdoor_direction_layers/measure.py \
         --checkpoint-folder vit_cifar10_badnet_a2o_0_1
 """
 

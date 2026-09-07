@@ -27,7 +27,7 @@ All three are computed at the final block output, matching their "last convoluti
 layer" choice, in fp32, over eligible paired samples only.
 
 Example
-    PYTHONPATH=. python scripts/sam_backdoor_effect/measure.py \
+    PYTHONPATH=. python experiments/sam_backdoor_effect/measure.py \
         --attack badnet_a2o blend bpp lf --poison-tag 0_1
 """
 
@@ -44,7 +44,7 @@ from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
 from defences.checkpoint_eval import read_checkpoint_metadata
 from models import load_checkpoint
-from scripts.backdoor_direction_layers.measure import build_paired_loaders
+from experiments.backdoor_direction_layers.measure import build_paired_loaders
 from utils.config import DATASET_REGISTRY
 
 RHOS = ("", "0_05", "0_1", "0_15", "0_2")

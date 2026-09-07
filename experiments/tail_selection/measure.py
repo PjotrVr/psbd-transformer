@@ -21,7 +21,7 @@ tail AGREES with the tail the labels would have chosen. If agreement is high, th
 two-sided gain is real and deployable; if not, H15 stays an upper bound.
 
 Example
-    PYTHONPATH=. python scripts/tail_selection/measure.py --detector strip
+    PYTHONPATH=. python experiments/tail_selection/measure.py --detector strip
 """
 
 import argparse

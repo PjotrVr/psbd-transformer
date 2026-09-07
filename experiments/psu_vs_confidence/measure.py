@@ -22,7 +22,7 @@ are negated (low means poisoned); confidence is NOT negated, because the claim t
 is that backdoor samples are MORE confident.
 
 Example
-    PYTHONPATH=. python scripts/psu_vs_confidence/measure.py
+    PYTHONPATH=. python experiments/psu_vs_confidence/measure.py
 """
 
 import argparse

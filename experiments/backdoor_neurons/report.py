@@ -13,7 +13,7 @@ Also reports the 2 data-free channels, which are the ones that would be cheap to
 deploy: the Lipschitz-versus-TAC rank correlation, and the head-alignment Z rule.
 
 Example
-    PYTHONPATH=. python scripts/backdoor_neurons/report.py
+    PYTHONPATH=. python experiments/backdoor_neurons/report.py
 """
 
 import argparse

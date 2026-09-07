@@ -10,13 +10,17 @@ compares to the matching non-evasive baseline. Reports:
 Runs entirely on CPU using cached .pt files from the PSBD sweep.
 
 Example
-    python scripts/adaptive_attack/analyze.py
-    python scripts/adaptive_attack/analyze.py --architecture vit --dataset cifar100
+    python experiments/adaptive_attack/analyze.py
+    python experiments/adaptive_attack/analyze.py --architecture vit --dataset cifar100
 """
 
 import argparse
 import json
 import os
+import sys
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, REPO_ROOT)
 
 import numpy as np
 from sklearn.metrics import roc_auc_score

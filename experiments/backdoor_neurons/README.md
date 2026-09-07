@@ -47,19 +47,19 @@ top / bottom / at random, and random rank-1 directions as the control that remov
 ```bash
 export http_proxy=http://10.150.1.1:3128 https_proxy=http://10.150.1.1:3128
 
-PYTHONPATH=. python scripts/backdoor_neurons/measure.py \
+PYTHONPATH=. python experiments/backdoor_neurons/measure.py \
     --attack badnet_a2o blend bpp lf badnet_a2a --rho "" 0_1 0_2 --samples 600
-PYTHONPATH=. python scripts/backdoor_neurons/measure.py \
+PYTHONPATH=. python experiments/backdoor_neurons/measure.py \
     --attack benign --rho "" 0_1 0_2 --samples 600
 
-PYTHONPATH=. python scripts/backdoor_neurons/stability.py \
+PYTHONPATH=. python experiments/backdoor_neurons/stability.py \
     --attack badnet_a2o blend bpp lf badnet_a2a benign --rho "" 0_1 0_2
 
-PYTHONPATH=. python scripts/backdoor_neurons/ablate.py \
+PYTHONPATH=. python experiments/backdoor_neurons/ablate.py \
     --attack badnet_a2o blend bpp lf badnet_a2a benign --rho "" 0_1 0_2 \
     --max-samples 1000
 
-PYTHONPATH=. python scripts/backdoor_neurons/report.py
+PYTHONPATH=. python experiments/backdoor_neurons/report.py
 ```
 
 Login node, about 25 minutes for all 18 checkpoints. No PBS job needed.

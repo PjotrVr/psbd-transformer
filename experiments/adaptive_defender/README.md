@@ -15,8 +15,8 @@ The protocol: use all operators, do not try to identify the evaded one.
 
 Runs on CPU using cached PSBD sweep data. No GPU needed.
 
-    python scripts/adaptive_defender/analyze.py
-    python scripts/adaptive_defender/analyze.py --architecture vit --dataset cifar100
+    python experiments/adaptive_defender/analyze.py
+    python experiments/adaptive_defender/analyze.py --architecture vit --dataset cifar100
 
 Hypothesis doc: `docs/hypothesis/H42-evasion-identification.md`
 Protocol doc: `docs/results/adaptive-defender-protocol.md`

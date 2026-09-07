@@ -18,8 +18,8 @@ gate costs nothing and is now wired into `pbs/generate_psbd_jobs.py` directly.
 ## Run
 
 ```bash
-python scripts/attack_viability/report.py                 # ViT, CIFAR-10 + CIFAR-100
-python scripts/attack_viability/report.py --architecture swin --min-asr 0.9
+python experiments/attack_viability/report.py                 # ViT, CIFAR-10 + CIFAR-100
+python experiments/attack_viability/report.py --architecture swin --min-asr 0.9
 ```
 
 ## Finding

@@ -14,7 +14,7 @@ control a confidence-only detector scores 0.514 against PSBD's 0.506.
 ## Run
 
 ```bash
-PYTHONPATH=. python scripts/psu_vs_confidence/measure.py
+PYTHONPATH=. python experiments/psu_vs_confidence/measure.py
 ```
 
 No GPU, seconds, reads only the cached tensors.

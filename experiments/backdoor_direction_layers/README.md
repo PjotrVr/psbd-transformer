@@ -11,10 +11,10 @@ should work, per attack ([H4](../../docs/hypothesis/H4-placement-is-attack-depen
 ## Run
 
 ```bash
-PYTHONPATH=. python scripts/backdoor_direction_layers/measure.py \
+PYTHONPATH=. python experiments/backdoor_direction_layers/measure.py \
     --checkpoint-folder vit_cifar10_badnet_a2o_0_1 --samples 400
 # benign control needs an explicit trigger, since it has no attack of its own
-PYTHONPATH=. python scripts/backdoor_direction_layers/measure.py \
+PYTHONPATH=. python experiments/backdoor_direction_layers/measure.py \
     --checkpoint-folder vit_cifar10_benign --probe-attack badnet_a2o --probe-target-label 0
 ```
 

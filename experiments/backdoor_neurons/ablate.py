@@ -26,7 +26,7 @@ Ablation is applied as a forward hook on the block output, so no weight is modif
 and the model is restored exactly by removing the handle.
 
 Example
-    PYTHONPATH=. python scripts/backdoor_neurons/ablate.py --attack badnet_a2o blend
+    PYTHONPATH=. python experiments/backdoor_neurons/ablate.py --attack badnet_a2o blend
 """
 
 import argparse
@@ -46,7 +46,7 @@ from defences.checkpoint_eval import (
 )
 from defences.detection import attack_success_rate, clean_accuracy
 from models import load_checkpoint, vit_core
-from scripts.backdoor_direction_layers.measure import build_paired_loaders
+from experiments.backdoor_direction_layers.measure import build_paired_loaders
 from utils.config import DATASET_REGISTRY
 
 PSBD_SPLIT_SEED = 0

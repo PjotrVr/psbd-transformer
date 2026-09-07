@@ -11,8 +11,8 @@ answer beside the balanced one, flagging disagreement. It is meant to be run bef
 any table in `docs/hypothesis/` or `.claude/docs/` is believed.
 
 ```bash
-PYTHONPATH=. python scripts/balanced_panels/audit.py --architecture vit
-PYTHONPATH=. python scripts/balanced_panels/audit.py --group rho --metric oracle
+PYTHONPATH=. python experiments/balanced_panels/audit.py --architecture vit
+PYTHONPATH=. python experiments/balanced_panels/audit.py --group rho --metric oracle
 ```
 
 What it found on first run: the ViT placement ranking disagrees between the naive

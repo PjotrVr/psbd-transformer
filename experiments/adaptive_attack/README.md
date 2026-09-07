@@ -11,7 +11,7 @@ Result: evasion is probe-specific. The probed operator's AUROC collapses from
 
 Runs on CPU using cached PSBD sweep data. No GPU needed.
 
-    python scripts/adaptive_attack/analyze.py
-    python scripts/adaptive_attack/analyze.py --architecture vit --dataset cifar100
+    python experiments/adaptive_attack/analyze.py
+    python experiments/adaptive_attack/analyze.py --architecture vit --dataset cifar100
 
 Hypothesis doc: `docs/hypothesis/H25-adaptive-attacker.md`

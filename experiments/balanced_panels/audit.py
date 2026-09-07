@@ -21,8 +21,8 @@ attack, poison rate). A "group" is what is being compared: a placement, an optim
 a rate rule.
 
 Example
-    PYTHONPATH=. python scripts/balanced_panels/audit.py
-    PYTHONPATH=. python scripts/balanced_panels/audit.py --group rho --metric oracle
+    PYTHONPATH=. python experiments/balanced_panels/audit.py
+    PYTHONPATH=. python experiments/balanced_panels/audit.py --group rho --metric oracle
 """
 
 import argparse

@@ -17,7 +17,7 @@ A cross-model Jaccard is only interpretable BETWEEN those 2 numbers. Near the
 split-half value means the dimensions were preserved; near chance means they moved.
 
 Example
-    PYTHONPATH=. python scripts/backdoor_neurons/stability.py --attack badnet_a2o blend
+    PYTHONPATH=. python experiments/backdoor_neurons/stability.py --attack badnet_a2o blend
 """
 
 import argparse
@@ -33,7 +33,7 @@ from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
 from defences.checkpoint_eval import read_checkpoint_metadata, resolve_probe_attack
 from models import load_checkpoint
-from scripts.backdoor_direction_layers.measure import build_paired_loaders
+from experiments.backdoor_direction_layers.measure import build_paired_loaders
 from utils.config import DATASET_REGISTRY
 
 TOP_K = 20
