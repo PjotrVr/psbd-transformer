@@ -7,7 +7,7 @@ the continue-on-error wrapper, filenames, and the input-validation guards.
 
 import pytest
 
-from pbs_grid import (
+from pbs.grid import (
     PbsHeader,
     build_pbs_grid,
     cartesian_product,

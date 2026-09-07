@@ -9,9 +9,13 @@ expected number visibly rather than by a rounding-sized amount.
 
 import math
 
+import pytest
+
 import torch
 
 from defences.psbd_metrics import (
+    bracket_target_shift,
+    interpolate_at_target_shift,
     detection_report,
     pair_clean_to_backdoor,
     psu_from_cache,
@@ -258,3 +262,48 @@ def test_two_sided_auroc_barely_moves_a_chance_detector():
     same = torch.arange(50).float()
     report = detection_report(same, same, same.clone(), quantile=0.25)
     assert math.isclose(report["auroc_two_sided"], 0.5, abs_tol=1e-9)
+
+
+def test_bracket_target_shift_finds_the_neighbouring_rates():
+    shift_by_rate = {0.1: 0.18, 0.2: 0.33, 0.3: 0.52, 0.4: 0.75}
+    assert bracket_target_shift(shift_by_rate, 0.6) == (0.3, 0.4)
+    # A target sitting exactly on a swept rate brackets with itself on that side.
+    assert bracket_target_shift(shift_by_rate, 0.52) == (0.3, 0.3)
+
+
+def test_bracket_target_shift_returns_none_when_the_grid_never_crosses():
+    shift_by_rate = {0.1: 0.18, 0.2: 0.33}
+    assert bracket_target_shift(shift_by_rate, 0.6) is None
+    assert bracket_target_shift({0.1: None}, 0.6) is None
+
+
+def test_interpolation_reproduces_a_swept_point_exactly():
+    shift_by_rate = {0.3: 0.523, 0.4: 0.751}
+    value_by_rate = {0.3: 0.815, 0.4: 0.932}
+    assert interpolate_at_target_shift(
+        shift_by_rate, value_by_rate, 0.523
+    ) == pytest.approx(0.815)
+    assert interpolate_at_target_shift(
+        shift_by_rate, value_by_rate, 0.751
+    ) == pytest.approx(0.932)
+
+
+def test_interpolation_lands_between_the_two_single_rate_rules():
+    """The real cell that motivated interpolation.
+
+    vit_tiny_badnet_a2o_0_01 at token_mask before_attention_norm sweeps sigma
+    0.523 and 0.751 with nothing between, so a target of 0.6 reads 0.815 under
+    the nearest rule and 0.932 under the smallest-reaching rule. Interpolation
+    resolves that 0.117 disagreement to a single value at the actual target.
+    """
+    shift_by_rate = {0.3: 0.523, 0.4: 0.751}
+    value_by_rate = {0.3: 0.815, 0.4: 0.932}
+    interpolated = interpolate_at_target_shift(shift_by_rate, value_by_rate, 0.6)
+    assert 0.815 < interpolated < 0.932
+    assert interpolated == pytest.approx(0.8545, abs=1e-3)
+
+
+def test_interpolation_returns_none_outside_the_swept_range():
+    shift_by_rate = {0.3: 0.523, 0.4: 0.751}
+    value_by_rate = {0.3: 0.815, 0.4: 0.932}
+    assert interpolate_at_target_shift(shift_by_rate, value_by_rate, 0.99) is None

@@ -21,7 +21,17 @@ MODULES = [
     "loaders",
     "metrics",
     "models",
-    "pbs_grid",
+    "pbs.grid",
+    # The detector ports and the pre-flight gate. Absent from this list, a syntax
+    # error in either surfaces only when a cluster job fails hours later.
+    "psbd.detectors",
+    "psbd.detectors.confidence",
+    "psbd.detectors.ibd_psc",
+    "psbd.detectors.scale_up",
+    "psbd.detectors.strip",
+    "psbd.detectors.teco",
+    "experiments.preflight.synthetic",
+    "experiments.preflight.check_signs",
     "poison",
     "psbd_analyze",
     "psbd_dropout_sweep",
