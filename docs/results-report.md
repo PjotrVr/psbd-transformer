@@ -28,19 +28,47 @@ GTSRB, Tiny ImageNet. Poison rates: 1%, 5%, 10%. Benign controls at AUROC
 
 The hardest setting on the hardest dataset. Three configurations:
 
-| Config | badnet | blend | lc | adaptive_blend | Mean |
-|---|---:|---:|---:|---:|---:|
-| dropout @ pre_residual (published) | 0.847 | 0.655 | 0.599 | 0.645 | 0.687 |
-| token_mask @ before_attention_norm | 0.960 | 0.945 | 0.786 | 0.706 | **0.849** |
-| gain_scale @ mlp_norm_out | 0.999 | 0.992 | 0.935 | 0.854 | **0.945** |
+Read at **matched clean-validation shift ratio 0.6**, which is the only comparison
+this project's own protocol permits. The rate each arm needs to reach that
+strength differs, and that is the point.
 
-- gain_scale's **+0.258** at 1% is WITHDRAWN, see the audit: it is read at shift
-  ratio 0.95 to 0.98 against a baseline at 0.65 to 0.76, and at matched shift ratio
-  over the full panel it gains **-0.007**
-- token_mask gains **+0.166** at 1% on CIFAR-100 and **+0.089** over the full panel,
-  both at matched shift ratio
-- token_mask gains **+0.162** and has zero inversions across all 48 cells
-- Source: H17
+There are 2 estimators of "at sigma 0.6" and they do not agree, so both are given
+rather than one being quietly chosen:
+
+- **nearest swept rate** takes whichever swept rate lands closest to the target.
+  Cheap, and what `results/detection_summary.csv` stores.
+- **interpolated** reads between the 2 bracketing rates via
+  `psbd.decision.interpolate_at_target_shift`. More faithful to the target, and the
+  method audit A16 used to withdraw the old headline.
+
+The table below is the nearest-rate estimator. The interpolated one gives dropout
+0.652 and token_mask 0.818, a gain of **+0.166**. Quoting either is defensible;
+quoting one number from one and comparing it against the other is not, which is a
+mistake this document previously made.
+
+| Config | badnet | blend | lc | adaptive_blend | Mean | vs baseline |
+|---|---:|---:|---:|---:|---:|---:|
+| dropout @ pre_residual (published) | 0.780 | 0.525 | 0.532 | 0.697 | 0.634 | |
+| **token_mask @ before_attention_norm** | 0.958 | 0.939 | 0.658 | 0.844 | **0.850** | **+0.216** |
+| gain_scale @ mlp_norm_out | 0.729 | 0.845 | 0.730 | 0.582 | 0.721 | +0.087 |
+
+- **token_mask gains +0.216 by the nearest-rate estimator and +0.166 by the
+  interpolated one**, and **+0.089 over the full 48-cell panel** (interpolated),
+  stable at +0.081 to +0.103 across shift ratios 0.2 to 0.8. Its own strength
+  mismatch against the baseline is **-0.048**, meaning it is read at the LOWER
+  disturbance, so the gain is conservative rather than flattered.
+- gain_scale gains **+0.087** here by the nearest-rate estimator, against the
+  withdrawn +0.258.
+- **gain_scale's +0.258 is WITHDRAWN** (audit A16). At the unmatched rates that
+  produced it the winner was read at shift ratio 0.95 to 0.98 against a baseline at
+  0.65 to 0.76, a gap the same size as the claimed effect. Over the full panel at
+  matched strength that arm gains **-0.007**. It is also deterministic, so it pays
+  no Monte Carlo penalty the stochastic baseline pays, worth about 0.03.
+- The previous version of this table printed the unmatched numbers (0.847 / 0.960 /
+  0.999 and a 0.945 mean) with the withdrawal only as a footnote underneath. The
+  numbers above replace them rather than annotate them.
+- Source: H17, audit A16, and `notebooks/09-placement-search.ipynb` cell 11, which
+  reached this independently.
 
 ### 1.2 Recommended deployment configuration
 
@@ -249,18 +277,35 @@ The discriminating experiment. Gaussian noise removes nothing, it adds zero-mean
 noise. If it matches removal operators, the "neuron bias effect" is not what
 carries the method.
 
-| Operator / position | Mean AUROC |
-|---|---:|
-| dropout / pre_residual_blocks_5_8 | 0.944 |
-| **gaussian / before_attention** | **0.950** |
-| token_mask / before_mlp_residual | 0.929 |
-| gaussian / mlp_neurons | 0.918 |
-| channel_mask / before_attention | 0.911 |
-| head_mask / attention_heads | 0.886 |
-| dropout / post_residual (published) | 0.849 |
+**This table was measured with the superseded batch-coupled Gaussian and is
+restated below.** Its cells had no cache-backed source until the corrected
+operator was re-swept over `before_attention` and `mlp_neurons`; see audit
+finding A19.
 
-CIFAR-10 at 10%, matched at sigma >= 0.6. gaussian at before_attention is at
-the top. The prediction was that removal would beat disturbance by at least 0.03.
+Recomputed from cache-backed records, CIFAR-10 at 10 percent, matched at
+sigma 0.6, 8 attacks, all-to-all excluded:
+
+| Operator / position | Mean AUROC | was |
+|---|---:|---:|
+| token_mask / before_attention_norm | **0.936** | |
+| token_mask / before_mlp_residual | 0.913 | 0.929 |
+| token_mask / mlp_neurons | 0.904 | |
+| dropout / before_mlp_residual | 0.901 | |
+| channel_mask / before_attention | 0.900 | 0.911 |
+| **gaussian / before_attention** | **0.897** | 0.950 |
+| dropout / pre_residual | 0.894 | |
+| gaussian / mlp_neurons | 0.861 | 0.918 |
+
+Both gaussian cells fall by about 0.055, which matches the 0.087 inflation
+measured for records whose tensors were archived. The structured mask, which was
+never affected, moves 0.011.
+
+**The conclusion survives and the framing does not.** Gaussian is 6th, not 1st, so
+the claim that it sits "at the top of the table" is withdrawn. But it remains
+within 0.002 of `channel_mask` and ahead of `dropout` at `pre_residual`, so the
+load-bearing point holds: an operator that removes **no capacity at all** is
+competitive with operators that do, which is what refutes the capacity-removal
+account. The prediction was that removal would beat disturbance by at least 0.03.
 It does not.
 
 **Confidence-only null:** 0.520 AUROC. The perturbation is doing real work, but
@@ -528,7 +573,7 @@ Masking the 3 backdoor heads as a deterministic PSBD operator:
 | **targeted 3-head** | **0.580** | H35 |
 | targeted 5-head | 0.599 | H35 |
 | token_mask (dropout) | 0.911 | ranking |
-| gaussian noise | 0.950 | H23 |
+| gaussian noise | 0.897 | H23, restated from cache-backed records |
 
 - Only +0.04 over random head masking
 - Masking 3 of 144 heads (2.1% of attention capacity) does not produce enough
@@ -653,7 +698,7 @@ and are invisible without an explicitly constructed comparison.
 | H20 | **SUPPORTED** | Input-side beats residual-adjacent by +0.054, CI [+0.031, +0.080] |
 | H21 | **CONFIRMED** | DropPath loses (0.860) despite being residual-native |
 | H22 | **REFUTED** | Random head masking: 0.539 (near random) |
-| H23 | **REFUTED** | Gaussian noise (0.950) beats all masks. Removal not required |
+| H23 | **REFUTED, restated** | Gaussian noise (0.897, was 0.950) is 6th not 1st, but stays within 0.002 of channel_mask and ahead of dropout at pre_residual. Removal not required |
 | H24 | **CONFIRMED** | k=20 gives +0.028 at 1% vs +0.011 at 10% |
 | H25 | **PRE-REGISTERED** | Adaptive attacker: control reproduced, transfer table next |
 | H26 | **REFUTED** | Channel mask loses to dropout at every matched position |
