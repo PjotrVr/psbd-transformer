@@ -22,17 +22,26 @@ scratch/
 # live in history forever.
 papers/
 
-# results/ holds two very different things. The raw PSBD stage-1 tensors are
-# large, regenerable, and stay out. psbd_metrics.json is the small derived
-# detection record (TPR/FPR/AUROC per placement and rate), and every number
-# reported anywhere has to trace back to a commit, so it is versioned.
+# results/ holds three very different things. The raw PSBD stage-1 tensors are
+# large, regenerable, and stay out.
+#
+# psbd_metrics.json was versioned when 77 of them existed and totalled 28 MB.
+# Running stage 2 over the whole cache tree produced 793 of them at 1.2 GB, so
+# they are now excluded and regenerated on demand with `psbd_analyze.py --all`.
+#
+# detection_summary.csv.gz replaces them as the versioned record. It is the same
+# numbers every table actually reads, one row per (checkpoint, placement, rate
+# rule), 3.6 MB compressed, and it is what makes a reported number traceable to
+# a commit. Regenerate with `scripts/detection_summary.py`.
 #
 # Git cannot re-include a file whose parent directory is excluded, so the
-# directories are deliberately left un-ignored (line 2) purely so the negation
-# on line 3 can be reached. Only the metrics files come back.
+# directories are deliberately left un-ignored purely so the negations below can
+# be reached.
 results/**
 !results/**/
-!results/**/psbd_metrics.json
+!results/detection_summary.csv.gz
+!results/cache_integrity.json
+!results/gaussian_batch_coupling.json
 !results/**/direction_layers_*.json
 !results/**/dropout_direction_survival.json
 !results/**/backdoor_neurons.json
@@ -40,3 +49,15 @@ results/**
 !results/backdoor_neuron_stability.json
 !results/backdoor_neuron_ablation.json
 !results/psu_vs_confidence.json
+
+# Teaching notes: a local reading guide to this codebase, regenerable and not
+# part of the published record.
+teaching/
+
+# Generated PBS job scripts. There are several hundred and they are all
+# reproducible from pbs/generate_*.py, so the generators are versioned and their
+# output is not.
+pbs/psbd_*/
+pbs/swin_*/
+pbs/vit_*/
+pbs/eval/

@@ -1,0 +1,344 @@
+"""Poison a dataset and train a backdoored ViT-B/16 or Swin-S.
+
+The BackdoorBench-style flow: load clean data, poison a fraction of the training
+set, train, evaluate ASR and clean accuracy, then save in the attack_result.pt
+format the sweep reads.
+
+Attacks that use cover samples (adaptive_blend, tact) are detected from their
+config and routed through the cover-sample dataset. Everything else uses the plain
+poisoning path. The training loop itself is the same in both cases.
+
+Example
+    python -m cli.train_backdoor --dataset cifar10 --attack badnet_a2a \
+        --poison-rate 0.1 --architecture vit --epochs 15 \
+        --output checkpoints/vit_cifar10_badnet_a2a_0_1/attack_result.pt
+"""
+
+import argparse
+import time
+
+import torch
+import torchvision.transforms.v2 as transforms_v2
+from lightning import seed_everything
+from torch.utils.data import DataLoader, Dataset
+
+from psbd.attacks import ATTACK_NAMES, build_attack, default_config
+from psbd.attacks.generated import GeneratedConfig
+from psbd.config import DATASET_REGISTRY
+from psbd.data import (
+    base_image_transform,
+    extract_labels,
+    limit_dataset,
+    load_clean_datasets,
+)
+from psbd.eval_loaders import build_clean_loader
+from psbd.evaluation import evaluate_attack
+from psbd.evasion import FlaggedPoisonedSet, calibrate_probe_rate
+from psbd.poisoning import (
+    Attack,
+    CoverPoisonedTrainingSet,
+    PoisonedTrainingSet,
+    choose_indices_with_cover,
+    choose_poison_indices,
+)
+from psbd.training import (
+    build_model,
+    checkpoint_metadata,
+    save_checkpoint,
+    train_classifier,
+    utc_timestamp,
+)
+
+
+def resolve_config(attack_name: str, poisoned_dir: str):
+    """The attack's config, with the generated adapter pointed at its trigger folder."""
+    if attack_name == "generated":
+        return GeneratedConfig(poisoned_dir=poisoned_dir)
+
+    config = default_config(attack_name)
+    return config
+
+
+def build_training_set(
+    train_clean: Dataset,
+    attack: Attack,
+    config,
+    poison_rate: float,
+    seed: int,
+    normalize,
+    num_classes: int,
+) -> tuple[Dataset, float]:
+    """The poisoned training set and the poison rate it actually realized.
+
+    Routes to the cover-sample dataset when the attack config asks for it.
+    """
+    labels = extract_labels(train_clean)
+    cover_rate = getattr(config, "cover_rate", 0.0)
+    source_classes = getattr(config, "source_classes", None)
+
+    if cover_rate > 0.0 or source_classes is not None:
+        poison_indices, cover_indices = choose_indices_with_cover(
+            labels, attack, poison_rate, cover_rate, source_classes, seed
+        )
+        dataset = CoverPoisonedTrainingSet(
+            train_clean, attack, poison_indices, cover_indices, normalize, num_classes
+        )
+    else:
+        poison_indices = choose_poison_indices(labels, attack, poison_rate, seed)
+        dataset = PoisonedTrainingSet(
+            train_clean, attack, poison_indices, normalize, num_classes
+        )
+
+    # The requested rate is capped at the eligible pool, so it is not always what
+    # was applied. Measuring it here is the only place both numbers exist at once.
+    realized_poison_rate = len(poison_indices) / max(len(labels), 1)
+    if abs(realized_poison_rate - poison_rate) > 1e-9:
+        print(
+            f"poison rate requested {poison_rate:.4f}, realized "
+            f"{realized_poison_rate:.4f} ({len(poison_indices)} of {len(labels)} "
+            "samples), capped by the eligible pool"
+        )
+
+    return dataset, realized_poison_rate
+
+
+def build_training_loader(
+    args: argparse.Namespace, image_size: int
+) -> tuple[DataLoader, int, Attack, object, float]:
+    """The poisoned training loader, plus the attack record it was built from.
+
+    Evaluation is handled separately by psbd.evaluation and psbd.eval_loaders, so
+    this has no eval-loader concerns at all.
+    """
+    spec = DATASET_REGISTRY[args.dataset]
+    transform = base_image_transform(image_size)
+    train_clean, _ = load_clean_datasets(args.dataset, transform, args.raw_data_dir)
+    # Subset before poison-index selection so poison_rate is measured against the
+    # truncated pool, mirroring the eval-side subset in psbd.eval_loaders.
+    train_clean = limit_dataset(train_clean, args.max_samples, args.seed)
+    normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
+
+    config = resolve_config(args.attack, args.poisoned_dir)
+    attack = build_attack(args.attack, config, image_size, args.target_label)
+
+    poisoned_train, realized_poison_rate = build_training_set(
+        train_clean,
+        attack,
+        config,
+        args.poison_rate,
+        args.seed,
+        normalize,
+        spec.num_classes,
+    )
+    if getattr(args, "evade_psbd", False):
+        # The attacker knows which samples it poisoned. This flag never reaches
+        # the defender's side of any evaluation.
+        poisoned_train = FlaggedPoisonedSet(poisoned_train)
+
+    train_loader = DataLoader(
+        poisoned_train,
+        batch_size=args.batch_size,
+        shuffle=True,
+        num_workers=args.num_workers,
+    )
+    return train_loader, spec.num_classes, attack, config, realized_poison_rate
+
+
+def resolve_evasion(
+    args: argparse.Namespace,
+    num_classes: int,
+    val_loader: DataLoader,
+    device: torch.device,
+) -> tuple[dict | None, float]:
+    """The adaptive attacker's probe config, and the rate it will run at.
+
+    Returns (None, requested rate) when --evade-psbd is off. A requested rate of
+    0.0 means "calibrate", so a throwaway model is built to find the rate whose
+    clean-validation shift ratio matches the defender's own sigma target, and the
+    RNG is restored afterwards so training starts from the same state either way.
+    """
+    if not args.evade_psbd:
+        return None, args.evade_rate
+
+    probe = {
+        "position": args.evade_position,
+        "operator": args.evade_operator,
+        "architecture": args.architecture,
+    }
+
+    evade_rate = args.evade_rate
+    if evade_rate == 0.0:
+        calibration_model = build_model(args.architecture, num_classes).to(device)
+        evade_rate = calibrate_probe_rate(calibration_model, val_loader, probe, device)
+        del calibration_model
+        torch.cuda.empty_cache()
+        seed_everything(args.seed)
+
+    evasion = {
+        "probe": {**probe, "rate": evade_rate},
+        "weight": args.evade_weight,
+        "passes": args.evade_passes,
+    }
+    return evasion, evade_rate
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Train a backdoored ViT or Swin")
+    parser.add_argument("--dataset", choices=tuple(DATASET_REGISTRY), required=True)
+    parser.add_argument("--attack", choices=ATTACK_NAMES, required=True)
+    parser.add_argument("--poison-rate", type=float, required=True)
+    parser.add_argument("--target-label", type=int, default=0)
+    parser.add_argument("--architecture", choices=("vit", "swin"), default="vit")
+    parser.add_argument("--epochs", type=int, default=15)
+    parser.add_argument("--batch-size", type=int, default=128)
+    parser.add_argument(
+        "--evade-psbd",
+        action="store_true",
+        help=(
+            "adaptive attacker: add a hinge penalty that raises poisoned samples' "
+            "prediction shift onto the clean distribution, removing the statistic "
+            "PSBD reads while keeping the backdoor"
+        ),
+    )
+    parser.add_argument("--evade-weight", type=float, default=1.0)
+    parser.add_argument("--evade-position", default="before_attention_norm")
+    parser.add_argument("--evade-operator", default="dropout")
+    parser.add_argument(
+        "--evade-rate",
+        type=float,
+        default=0.0,
+        help="perturbation rate for the evasion probe. 0 (default) auto-calibrates "
+        "to the sigma=0.6 matched rate on the validation set before training.",
+    )
+    parser.add_argument("--evade-passes", type=int, default=3)
+    parser.add_argument(
+        "--model-dropout-train",
+        type=float,
+        default=0.0,
+        help=(
+            "train WITH dropout at this rate. PSBD requires a dropout-free model. "
+            "This exists to test that requirement, not to change the default"
+        ),
+    )
+    parser.add_argument("--use-sam", action="store_true")
+    parser.add_argument("--rho", type=float, default=0.1)
+    parser.add_argument(
+        "--poisoned-dir", default="", help="required only for the generated attack"
+    )
+    parser.add_argument("--raw-data-dir", default="raw_data")
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--num-workers", type=int, default=8)
+    parser.add_argument(
+        "--max-samples",
+        type=int,
+        default=-1,
+        help="Truncate each dataset to this many samples, reproducibly, for a fast "
+        "smoke run (combine with --epochs 1). -1 (default) uses the whole dataset. "
+        "This alone does not imply smoke semantics, and --epochs is independent.",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    # -1 is a CLI-only sentinel for "no limit". Normalize it to None immediately so
+    # no subsetting code ever sees it, since -1 would slice off one sample instead.
+    args.max_samples = None if args.max_samples == -1 else args.max_samples
+    seed_everything(args.seed)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    started = time.time()
+    started_at = utc_timestamp()
+    image_size = DATASET_REGISTRY[args.dataset].image_size
+
+    train_loader, num_classes, attack, config, realized_poison_rate = (
+        build_training_loader(args, image_size)
+    )
+    val_loader = build_clean_loader(
+        args.dataset,
+        args.raw_data_dir,
+        args.batch_size,
+        args.num_workers,
+        max_samples=args.max_samples,
+        seed=args.seed,
+    )
+
+    # Reseed right before the regular workflow so model init and training start from
+    # an identical RNG state whether or not --max-samples triggered any subsetting.
+    seed_everything(args.seed)
+
+    evasion, evade_rate = resolve_evasion(args, num_classes, val_loader, device)
+
+    model = train_classifier(
+        args.architecture,
+        num_classes,
+        train_loader,
+        val_loader,
+        device,
+        epochs=args.epochs,
+        use_sam=args.use_sam,
+        rho=args.rho,
+        model_dropout=args.model_dropout_train,
+        evasion=evasion,
+    )
+    ended_at = utc_timestamp()
+
+    metrics = evaluate_attack(
+        model,
+        args.dataset,
+        args.attack,
+        config,
+        args.target_label,
+        device,
+        args.raw_data_dir,
+        args.batch_size,
+        max_samples=args.max_samples,
+        seed=args.seed,
+    )
+    print(f"final ASR={metrics['asr']:.4f} CA={metrics['clean_accuracy']:.4f}")
+
+    save_checkpoint(
+        model,
+        num_classes,
+        args.output,
+        metadata=checkpoint_metadata(
+            dataset=args.dataset,
+            attack=args.attack,
+            label_mode=attack.label_mode,
+            target_label=args.target_label,
+            poison_rate=args.poison_rate,
+            realized_poison_rate=realized_poison_rate,
+            cover_rate=getattr(config, "cover_rate", 0.0),
+            architecture=args.architecture,
+            use_sam=args.use_sam,
+            rho=args.rho,
+            epochs=args.epochs,
+            seed=args.seed,
+            max_samples=args.max_samples,
+            clean_accuracy=metrics["clean_accuracy"],
+            asr=metrics["asr"],
+            started_at=started_at,
+            ended_at=ended_at,
+            evasion={
+                "weight": args.evade_weight,
+                "position": args.evade_position,
+                "operator": args.evade_operator,
+                "rate": evade_rate,
+                "rate_requested": args.evade_rate,
+                "passes": args.evade_passes,
+            }
+            if args.evade_psbd
+            else None,
+            model_dropout=args.model_dropout_train,
+        ),
+    )
+    print(f"saved {args.output}")
+    print(
+        f"time taken: {args.dataset} {args.attack} rate {args.poison_rate} took "
+        f"{(time.time() - started) / 60:.1f} min"
+    )
+
+
+if __name__ == "__main__":
+    main()
