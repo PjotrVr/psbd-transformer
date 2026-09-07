@@ -69,3 +69,5 @@ pbs/eval/
 # `python -m cli.summary --operating-points`. The compact summary is the tracked
 # artifact; this one regenerates from the same psbd_metrics.json files.
 results/operating_points.csv
+results/best_results.csv
+results/complete_grid.csv
