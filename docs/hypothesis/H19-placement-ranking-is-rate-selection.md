@@ -258,7 +258,7 @@ sweep will supply `badnet_a2o`, `blend`, `bpp` and `lf` matched cells, and
 
 ## Answered: how widespread the imbalance is
 
-`scripts/balanced_panels/audit.py` run over every comparison this ledger makes.
+`experiments/balanced_panels/audit.py` run over every comparison this ledger makes.
 "Disagrees" means the naive winner and the balanced winner are different groups.
 
 | architecture | comparison | metric | coverage imbalance | verdict |
@@ -305,4 +305,4 @@ draws the conclusion that survives both panels.
    supplies `badnet_a2o`, `blend`, `bpp` and `lf` at both Adam and SAM. The current
    matched evidence is 13/18 `badnet_a2a` and cannot carry the question.
 3. **Answered above: 4 of 6.** Every remaining table in this ledger should be run
-   through `scripts/balanced_panels/audit.py` before it is quoted.
+   through `experiments/balanced_panels/audit.py` before it is quoted.

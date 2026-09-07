@@ -206,7 +206,7 @@ perturbation, not which attacks it detects, consistent with the Jacobian account
 
 Feature extraction across 0.5%, 1%, 5%, 10% checkpoints submitted for
 badnet_a2o and blend on CIFAR-100 and Tiny (16 checkpoints total).
-`scratch/direction_norm_analysis.py` computes the backdoor direction norm at
+`experiments/backdoor_direction/direction_norm_analysis.py` computes the backdoor direction norm at
 all 13 layers (embedding + 12 blocks) using CLS-token features. The test is
 whether norm rises monotonically with poison rate.
 

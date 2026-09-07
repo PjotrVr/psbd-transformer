@@ -43,7 +43,7 @@ passes only: no retraining, no new statistic, no new hyperparameter to tune.
 
 ## Result of the free half
 
-`scratch/k_sweep.py`, fractional PSU at `before_attention_norm`, rate matched at
+`experiments/monte_carlo_passes/k_sweep.py`, fractional PSU at `before_attention_norm`, rate matched at
 clean-validation sigma >= 0.6, all-to-all excluded. k = 1 and k = 2 are subsets of
 the cached k = 3 passes, so this cost no GPU time.
 
@@ -158,7 +158,7 @@ operating point, which keeps it to roughly 2 jobs.
 ## Reproduce
 
     # free half, from existing caches
-    PYTHONPATH=. .venv/bin/python scratch/k_sweep.py
+    PYTHONPATH=. .venv/bin/python experiments/monte_carlo_passes/k_sweep.py
 
     # paid half, gated on the free half showing a trend
     python pbs/generate_perturbation_jobs.py --forward-passes 20 --stage pilot \

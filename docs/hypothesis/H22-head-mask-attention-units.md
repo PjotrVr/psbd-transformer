@@ -115,5 +115,5 @@ run the pilot, not a result.
     python pbs/generate_perturbation_jobs.py --stage pilot --operator head_mask
     python psbd_analyze.py --all
 
-Folder `attention_heads_head_mask`. `scratch/test_perturbations.py` covers the
+Folder `attention_heads_head_mask`. `tests/test_perturbations.py` covers the
 operator's mechanics and must stay at ALL PASS.

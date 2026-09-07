@@ -35,7 +35,7 @@ Three separable claims, tested together because they need the same measurement:
 
 ## Method
 
-`scripts/backdoor_neurons/measure.py` over 18 checkpoints (5 attacks + benign) ×
+`experiments/backdoor_neurons/measure.py` over 18 checkpoints (5 attacks + benign) ×
 (Adam, SAM rho 0.1, SAM rho 0.2), ViT-B/16 CIFAR-10 at 10% poisoning, 600 paired
 clean/triggered samples, fp32, seed 0. Per layer it computes TAC, the relative
 backdoor-direction norm (direction norm divided by the mean clean CLS norm, so
@@ -45,7 +45,7 @@ std. It also runs the 2 data-free channels (per-channel Lipschitz of each block'
 MLP output projection, and the head-alignment Z rule) and PCA/UMAP separability
 scored by silhouette and 10-NN purity rather than by eye.
 
-`scripts/backdoor_neurons/stability.py` supplies the 2 reference points without
+`experiments/backdoor_neurons/stability.py` supplies the 2 reference points without
 which no Jaccard is interpretable.
 
 ## Evidence
@@ -232,7 +232,7 @@ nothing to a clean model's representation.
 ### 8. The causal test, which overturns the "neurons" reading
 
 Everything above is correlational. TAC is a *difference*: it says a dimension moves
-when the trigger appears, not that the model reads it. `scripts/backdoor_neurons/
+when the trigger appears, not that the model reads it. `experiments/backdoor_neurons/
 ablate.py` deletes things and re-measures ASR and clean accuracy, at each
 checkpoint's own peak layer, as a forward hook so no weight changes.
 
@@ -332,7 +332,7 @@ every row. The SAM checkpoints are now the *easiest* to clean, not the hardest, 
 the monotone trend in rho is gone.
 
 **An independent measurement predicted this before the corrected ablation was run,**
-which is why the artifact was caught. `scripts/backdoor_neurons/logit_decomposition.py`
+which is why the artifact was caught. `experiments/backdoor_neurons/logit_decomposition.py`
 decomposes the trigger's push on the target logit, post-LayerNorm where the head is
 exactly linear, into the part along the mean shift and the rest:
 
@@ -388,7 +388,7 @@ better ablation.
 geometry (TAC, direction norm, CKA, separability), which is an honest statement
 about that layer whatever the next LayerNorm does. The 1 script whose conclusion
 genuinely depended on crossing the LayerNorm is
-`scripts/dropout_kills_direction/`, which claims to measure PSU's mechanism "one
+`experiments/dropout_kills_direction/`, which claims to measure PSU's mechanism "one
 step upstream". Re-run with `--post-ln`, its numbers are unchanged: pre_residual
 0.696 / 0.253 / 0.065 becomes 0.778 / 0.297 / 0.064, post_residual stays 0.015 /
 0.000 / 0.000.

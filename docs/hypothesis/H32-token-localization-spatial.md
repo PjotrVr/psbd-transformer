@@ -4,7 +4,7 @@
 localized triggers without knowing the attack. BadNet's trigger patches are the
 highest-norm tokens. Blend and WaNet produce diffuse, low-concentration patterns.
 
-Evidence: `scratch/token_localization.py`, results in
+Evidence: `experiments/token_structure/token_localization.py`, results in
 `results/token_localization.json`.
 
 ## Claim

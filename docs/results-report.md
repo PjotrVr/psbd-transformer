@@ -1,9 +1,11 @@
 # PSBD on Vision Transformers: Complete Results
 
 Prediction Shift Backdoor Detection (PSBD) adapted from ConvNets to ViT-B/16
-and Swin-T. The published ConvNet recipe (dropout after the residual add)
+and Swin-S. The published ConvNet recipe (dropout after the residual add)
 transfers to ViT but is far from optimal. Searching over 27 operator/position
-combinations recovers +0.258 mean AUROC at 1% poison rate on CIFAR-100, the
+combinations recovers +0.166 mean AUROC at matched shift ratio at 1% poison rate
+on CIFAR-100 (token_mask at before_attention_norm, n=4), and +0.089 over the full
+48-cell panel. The
 hardest setting. The method works because backdoored predictions have larger
 decision margin under any perturbation, not because dropout removes specific
 neurons (gaussian noise with no removal matches or beats all structured masks).
@@ -32,7 +34,11 @@ The hardest setting on the hardest dataset. Three configurations:
 | token_mask @ before_attention_norm | 0.960 | 0.945 | 0.786 | 0.706 | **0.849** |
 | gain_scale @ mlp_norm_out | 0.999 | 0.992 | 0.935 | 0.854 | **0.945** |
 
-- gain_scale gains **+0.258** over the published position at 1%
+- gain_scale's **+0.258** at 1% is WITHDRAWN, see the audit: it is read at shift
+  ratio 0.95 to 0.98 against a baseline at 0.65 to 0.76, and at matched shift ratio
+  over the full panel it gains **-0.007**
+- token_mask gains **+0.166** at 1% on CIFAR-100 and **+0.089** over the full panel,
+  both at matched shift ratio
 - token_mask gains **+0.162** and has zero inversions across all 48 cells
 - Source: H17
 
@@ -102,14 +108,14 @@ token_mask @ before_attention_norm:
 | 10% | wanet | 0.975 | 0.955 | 0.397 | 0.803 | 0.923 | 0.975 |
 | 10% | lc (w) | 0.623 | 0.729 | 0.069 | 0.087 | 0.230 | 0.668 |
 
-### 1.5 Swin-T: same operator ranking
+### 1.5 Swin-S: same operator ranking
 
 Tested on CIFAR-100 with 3 operators. The ranking transfers across architectures:
 
 | Architecture | Best operator | Position | Mean AUROC | Inversions |
 |---|---|---|---:|---:|
 | ViT-B/16 | token_mask | before_attention_norm | 0.911 | 0 |
-| Swin-T | token_mask | before_attention_norm | 0.913 | 0 |
+| Swin-S | token_mask | before_attention_norm | 0.913 | 0 |
 
 Swin head-to-head (CIFAR-100):
 
@@ -420,17 +426,33 @@ direction. The readout weight adaptation is itself attack-specific.
   top-20 TAC dimensions is 0.00 to 0.08, against a chance floor of 0.014 and a
   split-half ceiling of 0.87. Attacks share no coordinate-level structure.
 
-### 4.7 SAM effects (H6, H16)
+### 4.7 SAM, dropped as a line of enquiry
 
-Sharpness-aware minimization:
-- **Relocates** the backdoor: peak layer moves earlier (12 to 10 at rho=0.2),
-  dimensions change (Jaccard 0.03 to 0.08 with Adam, vs split-half ceiling 0.87)
-- **Does NOT remove** the backdoor: ASR stays 0.96 to 1.00
-- **Does NOT resist direction removal:** post-LayerNorm rank-1 ablation drops
-  ASR to 0.000 on every SAM checkpoint. The apparent SAM resistance was a
-  LayerNorm artifact of ablating before (not after) the final normalization.
-- **Detection effect:** mean +0.009 AUROC (negligible). SAM adds variance to
-  weak attacks but no consistent advantage for either side.
+Sharpness-aware minimization is **out of scope for this paper** and no claim rests
+on it. Its entire measured effect on detection is +0.009 mean AUROC. Establishing
+an effect that size against plausible seed to seed variance needs 10 to 89 training
+seeds per cell (`seed-replication-plan.md`), which is an unaffordable amount of
+compute spent to confirm that something does not matter.
+
+The cost of carrying it was concrete rather than theoretical: SAM checkpoints are
+69 percent of the trained set and 75 percent of all analysis rows, so every panel
+that included them spent most of its coverage on the arm with no effect, and
+unequal coverage across arms is the failure mode that inverted 4 conclusions
+elsewhere in this project. Excluding SAM cut a re-sweep from 326 to 74.5 GPU-hours
+with no loss to any reported result.
+
+The SAM checkpoints and their caches stay on disk and the raw record keeps them.
+Every reporting path excludes them by default, behind an explicit `--include-sam`
+flag, so nothing is deleted and nothing is claimed.
+
+Two observations from the earlier SAM work are retained because they are about the
+backdoor rather than about SAM, and they cost nothing to keep:
+- SAM does **not** remove the backdoor. ASR stays 0.96 to 1.00.
+- SAM does **not** resist direction removal. Post-LayerNorm rank-1 ablation drops
+  ASR to 0.000 on every SAM checkpoint. The apparent resistance reported earlier
+  was a LayerNorm artifact of ablating before rather than after the final
+  normalization, and that correction is a methodological finding worth keeping
+  (section 7.1, item 3).
 
 ---
 
@@ -614,7 +636,7 @@ and are invisible without an explicitly constructed comparison.
 | H3 | **REFUTED** | Post-residual does not fail by saturating |
 | H4 | **SUPPORTED** | Best placement tracks where the direction enters CLS |
 | H5 | **SUPPORTED** | All-to-all breaks PSBD (reversed sign, not detectable) |
-| H6 | **REFUTED** | SAM does not improve detectability (+0.009) |
+| H6 | **DROPPED** | SAM effect is +0.009 AUROC, too small to establish. Out of scope, see 4.7 |
 | H7 | **PARTIALLY REFUTED** | Clean samples do NOT shift to target class where PSBD works best |
 | H8 | INCONCLUSIVE | Detection vs poison rate relationship unclear |
 | H9 | **SUPPORTED** | Pre/post gap is a strength artifact, not a placement effect (3/4 attacks) |
@@ -625,7 +647,7 @@ and are invisible without an explicitly constructed comparison.
 | H14 | **SUPPORTED** | PSBD+STRIP fusion: 0.614 TPR at 1% FPR |
 | H15 | **RETIRED** | One-sided rules are a principle, not a detection method |
 | H16 | **SUPPORTED** | Backdoor is one rank-1 direction (post-LN removal: ASR 1.00 to 0.00). "Neurons" framing REFUTED. SAM sub-claim REFUTED (LayerNorm artifact) |
-| H17 | **SUPPORTED** | Low-rate failure is a placement artifact (+0.258 at 1%) |
+| H17 | **SUPPORTED, restated** | Low-rate failure is a placement artifact (+0.166 at 1% at matched shift ratio, not the withdrawn +0.258) |
 | H18 | **REFUTED** | 144-head sensitivity profile carries no signal |
 | H19 | **INCONCLUSIVE** | Swin placement ranking vs rate selection (CI contains 0) |
 | H20 | **SUPPORTED** | Input-side beats residual-adjacent by +0.054, CI [+0.031, +0.080] |

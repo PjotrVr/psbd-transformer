@@ -7,7 +7,7 @@ crystallizes at layer 8.2 (mean across 8 checkpoints), badnet at layer 10.4
 be tested because no per-block-band PSBD sweep data exists in the expected
 directory structure.
 
-Evidence: `scratch/crystallization_vs_placement.py`, results in
+Evidence: `experiments/backdoor_direction/crystallization_vs_placement.py`, results in
 `results/crystallization_vs_placement.json`. Cross-references H30's direction
 persistence data (`results/direction_persistence.json`).
 

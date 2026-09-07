@@ -3,7 +3,7 @@
 **Status: REFUTED.** Off-diagonal cosine similarity is near zero across all
 settings. Each attack creates its own direction.
 
-Evidence: `scratch/direction_universality.py`, results in
+Evidence: `experiments/backdoor_direction/direction_universality.py`, results in
 `results/direction_universality.json`.
 
 ## Claim

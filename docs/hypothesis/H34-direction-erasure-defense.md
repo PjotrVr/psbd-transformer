@@ -5,7 +5,7 @@ attacks (LC, adaptive_blend) but fails completely on strong attacks (badnet,
 blend). The discrepancy with H16's inference-time direction removal reveals the
 residual stream persistence mechanism.
 
-Evidence: `scratch/direction_erasure.py`, results in
+Evidence: `experiments/removal_defences/direction_erasure.py`, results in
 `results/direction_erasure.json`.
 
 ## Claim

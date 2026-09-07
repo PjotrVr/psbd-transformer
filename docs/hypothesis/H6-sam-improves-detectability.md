@@ -75,7 +75,7 @@ The four normal attacks are in the queue.
 ## The positive control, run on our own checkpoints with their metrics
 
 CIFAR-10 ViT at 10% poisoning, final block, 500 paired eligible samples, fp32.
-`scripts/sam_backdoor_effect/`. SAM minus Adam, averaged over rho in
+`experiments/sam_backdoor_effect/`. SAM minus Adam, averaged over rho in
 {0.05, 0.1, 0.15, 0.2}:
 
 | attack | d top-2 TAC | d silhouette | d clean intra-class variance |
@@ -148,3 +148,32 @@ python psbd_report.py
    mechanism acting in opposite directions.
 3. Does SAM change the *placement* ranking, or only the level? If blocks 5-8 stays
    best under SAM, the placement result is optimizer-independent and more useful.
+
+---
+
+## Status change, 2026-09-07: DROPPED rather than refuted
+
+This hypothesis is no longer an open question in this project and no claim rests
+on it.
+
+The measured effect is +0.009 mean AUROC. Detecting an effect that size against
+plausible seed to seed variance requires 10 to 89 training seeds per cell, by
+`n >= 8 * (sigma_seed / effect)^2` at 80 percent power. Every checkpoint here is
+seed 0, so the variance is unmeasured, and buying enough seeds to conclude that a
+0.009 effect is really 0 is not a defensible use of compute.
+
+The decision is therefore to stop measuring it rather than to keep refining the
+refutation. SAM checkpoints are 69 percent of the trained set and 75 percent of
+all analysis rows, so carrying them also diluted every panel they appeared in,
+which is the same unequal-coverage failure mode recorded in the ledger's own
+"failure mode" section.
+
+What changed in the code: `scripts/detection_summary.py`, `defence_tables.py` and
+`pbs/generate_gaussian_rerun_jobs.py` exclude SAM by default behind an explicit
+`--include-sam` flag. The checkpoints and their caches remain on disk. Nothing is
+deleted, nothing is claimed.
+
+The 2 observations worth keeping are recorded in `docs/results-report.md` section
+4.7, and both are about the backdoor rather than about SAM: SAM does not remove
+the backdoor, and it does not resist rank-1 direction removal once the ablation is
+done after the final LayerNorm rather than before it.

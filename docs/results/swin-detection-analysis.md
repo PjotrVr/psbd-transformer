@@ -1,6 +1,6 @@
 # Swin Transformer Detection Analysis
 
-How well do the ViT findings transfer to Swin-T? Tested on CIFAR-100 with 3
+How well do the ViT findings transfer to Swin-S? Tested on CIFAR-100 with 3
 operators and 6 dropout positions. All numbers: fractional PSU, sigma-matched
 (sigma >= 0.6), one-sided (low PSU = poisoned).
 

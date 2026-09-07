@@ -7,7 +7,7 @@ ASR 0.007 at alpha=0.1). WaNet and LC die at alpha=0.3 to 0.5. BadNet survives
 even alpha=0.0 at 5% poison rate (ASR=0.995), because the branch computations
 alone regenerate the direction. No single alpha works universally.
 
-Evidence: `scratch/skip_scaling.py`, results in `results/skip_scaling.json`.
+Evidence: `experiments/removal_defences/skip_scaling.py`, results in `results/skip_scaling.json`.
 
 ## Claim
 

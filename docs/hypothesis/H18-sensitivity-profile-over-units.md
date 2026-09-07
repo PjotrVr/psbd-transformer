@@ -118,9 +118,11 @@ advance.**
 That is a unified answer to "where to perturb" that requires no localization: do
 not choose, perturb in several places and keep the strongest response.
 
-Note this is exactly where rank-*averaging* failed. `scratch/ensemble.py` scores
-0.475 on `badnet_a2o` 1% because averaging pulls an inverted member into the
-pool, while the minimum is unaffected by members that carry no signal.
+Note this is exactly where rank-*averaging* failed. `experiments/detector_ensemble/ensemble.py` scores
+0.480 on `badnet_a2o` 1% because averaging pulls an inverted member into the
+pool, while the minimum is unaffected by members that carry no signal. The 0.480
+supersedes an earlier 0.475, which ranked against a pool containing the backdoor
+split, see `audit-2026-09-07.md`.
 
 **Caveat.** The placement set and the matching target were chosen by inspecting
 CIFAR-10 results, so these numbers are optimistic. GTSRB and Tiny are in flight

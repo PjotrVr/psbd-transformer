@@ -6,7 +6,7 @@ badnet_a2o aligns (33 to 43 degrees). The earlier H16 readout alignment finding
 (cosine 0.87 to 0.89) was measured per-model; the directions align with their
 OWN model's readout weight, not with a shared reference.
 
-Evidence: `scratch/cone_geometry.py`, results in `results/cone_geometry.json`.
+Evidence: `experiments/backdoor_direction/cone_geometry.py`, results in `results/cone_geometry.json`.
 
 ## Claim
 

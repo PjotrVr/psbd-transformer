@@ -286,7 +286,7 @@ The evasion penalty does not help or hurt these attacks; they fail for the same 
 
 ## Source
 
-- Analysis script: `scratch/analyze_adaptive.py`
+- Analysis script: `experiments/adaptive_attack/analyze.py`
 - Raw data: `results/adaptive_attacker_analysis.json` (120 rows)
 - Evasive checkpoints: `checkpoints/*_evade_l1/` (120 folders)
 - Baseline PSBD sweeps: `results/*/psbd/` (65 of 120 have baselines)

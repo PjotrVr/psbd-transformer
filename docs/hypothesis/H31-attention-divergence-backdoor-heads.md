@@ -6,7 +6,7 @@ attention patterns across ALL tested attacks and datasets. BadNet additionally
 recruits late-layer heads (layer 9 head 7, layer 10 head 9) that are specific
 to localized triggers.
 
-Evidence: `scratch/attention_divergence.py`, results in
+Evidence: `experiments/attention_heads/attention_divergence.py`, results in
 `results/attention_divergence.json`.
 
 ## Claim

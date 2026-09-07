@@ -4,7 +4,7 @@
 persistent. It crystallizes around layers 8 to 10, with a clear S-curve in
 alignment to the final layer.
 
-Evidence: `scratch/direction_persistence.py`, results in
+Evidence: `experiments/backdoor_direction/direction_persistence.py`, results in
 `results/direction_persistence.json`.
 
 ## Claim

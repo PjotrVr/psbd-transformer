@@ -6,7 +6,7 @@ separation gap (-0.98). adaptive_blend and lf have high concentration despite
 being global attacks, breaking the assumed correspondence between trigger
 locality and direction concentration.
 
-Evidence: `scratch/token_concentration_classifier.py`, results in
+Evidence: `experiments/token_structure/token_concentration_classifier.py`, results in
 `results/token_concentration_classifier.json`. Uses H32's token localization
 data (`results/token_localization.json`).
 

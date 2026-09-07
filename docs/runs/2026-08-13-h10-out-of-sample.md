@@ -11,7 +11,7 @@ because PSU works by destroying clean evidence while sparing the trigger path.
 
 ## The prediction
 
-Onsets measured first, with `scripts/backdoor_direction_layers/measure.py`, 400
+Onsets measured first, with `experiments/backdoor_direction_layers/measure.py`, 400
 paired samples, fp32, half-of-final-magnitude definition:
 
 | checkpoint | ASR | onset layer | **predicted best band** |

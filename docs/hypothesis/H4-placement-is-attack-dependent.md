@@ -38,7 +38,7 @@ who does not know the attack, and that tension is itself worth reporting.
 
 ## Evidence
 
-**The layer half is confirmed.** `scripts/backdoor_direction_layers/` measured the
+**The layer half is confirmed.** `experiments/backdoor_direction_layers/` measured the
 relative direction norm in `[CLS]` at every layer, CIFAR-10 ViT at 10% poisoning,
 400 paired eligible samples, fp32. Layer at which the direction reaches half its
 final magnitude:

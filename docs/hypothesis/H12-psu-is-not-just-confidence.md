@@ -91,7 +91,7 @@ reports it.
 ## Reproduce
 
 ```bash
-PYTHONPATH=. python scripts/psu_vs_confidence/measure.py
+PYTHONPATH=. python experiments/psu_vs_confidence/measure.py
 ```
 
 ## Subquestions

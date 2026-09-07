@@ -101,4 +101,4 @@ perturbation-based detection to exploit.
 ## Data
 
 Raw data: `results/direction_norm_analysis.json` (16 entries, 13 layers each).
-Script: `scratch/direction_norm_analysis.py`.
+Script: `experiments/backdoor_direction/direction_norm_analysis.py`.

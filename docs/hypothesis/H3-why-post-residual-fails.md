@@ -31,7 +31,7 @@ uses as its *operating point* (0.8), and never moves. Pre-residual traverses 0.0
 0.92. So on the standard grid, post-residual genuinely has no low-disturbance regime.
 
 **Refuted: "no small enough p exists" is false.** Measuring how much of the backdoor
-direction survives (`scripts/dropout_kills_direction/`, `badnet_a2o`, layer 12,
+direction survives (`experiments/dropout_kills_direction/`, `badnet_a2o`, layer 12,
 separation normalized by its unperturbed value):
 
 | post-residual rate | direction separation retained |
@@ -67,7 +67,7 @@ jobs (0.005 to 0.09) are running to fix that.
 ## Reproduce
 
 ```bash
-PYTHONPATH=. python scripts/dropout_kills_direction/measure.py \
+PYTHONPATH=. python experiments/dropout_kills_direction/measure.py \
     --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
     --placement post_residual --rates 0.005 0.01 0.02 0.03 0.05 0.08
 ```

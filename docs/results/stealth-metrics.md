@@ -148,5 +148,5 @@ SSIM: Wang et al. 2004 with 11x11 Gaussian window (sigma=1.5),
 K1=0.01, K2=0.03, computed per-channel and averaged. Implemented
 in PyTorch without external dependencies.
 
-Script: `scratch/stealth_metrics.py` (git-ignored).
+Script: `experiments/stealth/stealth_metrics.py`.
 Raw data: `scratch/stealth_metrics_results.json` (git-ignored).

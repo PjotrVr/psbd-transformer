@@ -4,7 +4,7 @@
 is NOT low-rank in encoder layers. The backdoor perturbation is distributed
 across many dimensions.
 
-Evidence: `scratch/weight_spectral_signature.py`, results in
+Evidence: `experiments/weight_structure/weight_spectral_signature.py`, results in
 `results/weight_spectral_signature.json`.
 
 ## Claim

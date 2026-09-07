@@ -114,7 +114,7 @@ suspicious pool against the clean validation split:
     low_deviation  = quantile(validation, q) - quantile(pool, q)
     high_deviation = quantile(pool, 1-q)     - quantile(validation, 1-q)
 
-whichever is larger names the tail. `scripts/tail_selection/` implements and tests it.
+whichever is larger names the tail. `experiments/tail_selection/` implements and tests it.
 
 **On the split as it stands, agreement with the oracle tail is 24/24 and it captures
 100% of the available gain.** That number is not usable as reported, because this

@@ -143,8 +143,11 @@ like the obvious defender-legal answer. It is not:
 | `lc` 10% | 0.894 | 0.696 |
 | `wanet` 10% | 0.970 | 0.940 |
 
-Mean 0.900 for the ensemble against 0.892 for a fixed `before_attention_norm`, so
-it is a wash overall, and it **destroys the case this file is about**. The reason
+Mean 0.897 for the ensemble against 0.892 for a fixed `before_attention_norm`, so
+it is a wash overall, and it **destroys the case this file is about**. The 0.897
+supersedes an earlier 0.900, which was computed with clean and backdoor scores
+ranked against a pool containing the backdoor split. The leak inflated the
+ensemble by 0.003 and the conclusion is unchanged, see `audit-2026-09-07.md`. The reason
 is structural: at 1% three of the four members are inverted or near chance
 (`post_residual` 0.194), and rank-averaging an inverted member actively poisons the
 pool. Ensembling assumes members are at worst uninformative; here they are
@@ -177,10 +180,10 @@ covers.
 
 ## Reproduce
 
-    PYTHONPATH=. .venv/bin/python scratch/build_surface.py <folders>   # 2591 cells
-    PYTHONPATH=. .venv/bin/python scratch/analyze_surface.py
-    PYTHONPATH=. .venv/bin/python scratch/head_to_head.py
-    PYTHONPATH=. .venv/bin/python scratch/ensemble.py
+    PYTHONPATH=. .venv/bin/python experiments/operator_ranking/build_surface.py <folders>   # 2591 cells
+    PYTHONPATH=. .venv/bin/python experiments/operator_ranking/analyze_surface.py
+    PYTHONPATH=. .venv/bin/python experiments/operator_ranking/head_to_head.py
+    PYTHONPATH=. .venv/bin/python experiments/detector_ensemble/ensemble.py
 
 ## Subquestions
 

@@ -7,7 +7,7 @@ or gaussian noise (0.950). Adding the 2 badnet-specific late heads brings the
 5-head mean to 0.60 with high variance across attacks (0.46 to 0.75). Targeted
 head masking is not a viable PSBD operator.
 
-Evidence: `scratch/targeted_head_psbd.py`, results in
+Evidence: `experiments/head_profile/targeted_head_psbd.py`, results in
 `results/targeted_head_psbd.json`.
 
 ## Claim

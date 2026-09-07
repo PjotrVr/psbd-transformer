@@ -71,5 +71,5 @@ wrong operator. The gap between all-operators and oracle-exclude is 0.006,
 which is the maximum value of correct identification. The cost of trying and
 failing is 0.104 (from 0.951 to 0.847).
 
-Analysis script: `scratch/adaptive_defender_analysis.py`
+Analysis script: `experiments/adaptive_defender/analyze.py`
 Full protocol: `docs/results/adaptive-defender-protocol.md`

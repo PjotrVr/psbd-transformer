@@ -88,7 +88,7 @@ written.
 | [H3](H3-why-post-residual-fails.md) | Post-residual fails by saturating | **REFUTED** as stated |
 | [H4](H4-placement-is-attack-dependent.md) | The best placement tracks where the backdoor direction enters `[CLS]` | **SUPPORTED** |
 | [H5](H5-all-to-all-breaks-psbd.md) | PSBD degrades on all-to-all, which has no single target class | **SUPPORTED**: PSBD does not cover all-to-all. The signal is present with the sign reversed, recorded as a diagnostic only, never as detection |
-| [H6](H6-sam-improves-detectability.md) | SAM makes backdoors more detectable | **REFUTED** for prediction-space detection; control explains why |
+| [H6](H6-sam-improves-detectability.md) | SAM makes backdoors more detectable | **DROPPED**, out of scope. The effect is +0.009 AUROC, which needs 10 to 89 seeds per cell to establish. SAM checkpoints are excluded from every reporting path by default |
 | [H7](H7-clean-shifts-to-target.md) | Clean samples under dropout shift specifically to the target class | **PARTIALLY REFUTED** |
 | [H8](H8-detection-scales-with-poison-rate.md) | Detection improves with poison rate | INCONCLUSIVE |
 | [H9](H9-strength-not-position.md) | The pre/post gap is a perturbation-strength artifact, not a placement effect | **SUPPORTED** for 3 of 4 attacks |
@@ -99,7 +99,7 @@ written.
 | [H14](H14-fusion.md) | PSBD and STRIP fuse into something better than either | **SUPPORTED**: 0.614 TPR at 1% FPR, 93% of oracle-max |
 | [H15](H15-one-sided-rules-are-the-common-weakness.md) | One-sided decision rules are a systematic weakness across detectors | **RETIRED as a method**, kept as a recorded negative result. Inversion is a symptom of a broken assumption, never a decision rule; nothing downstream uses it |
 | [H16](H16-where-the-backdoor-neurons-are.md) | The backdoor is one late-layer linear direction, not a set of neurons | **SUPPORTED**: post-LayerNorm rank-1 removal takes ASR 1.00 to 0.00 on every checkpoint; "neurons" framing **REFUTED** (300 of 768 coords does nothing); SAM sub-claim **REFUTED** as a LayerNorm artifact |
-| [H17](H17-low-poison-rate-is-a-placement-artifact.md) | PSBD's low-poison-rate failure is a placement artifact, not a limit of the method | **SUPPORTED** (full panel, 48/48): position/operator search gains +0.162 to +0.258 AUROC at 1% on CIFAR-100 over the published configuration |
+| [H17](H17-low-poison-rate-is-a-placement-artifact.md) | PSBD's low-poison-rate failure is a placement artifact, not a limit of the method | **SUPPORTED** (full panel, 48/48): position/operator search gains **+0.166** AUROC at matched shift ratio at 1% on CIFAR-100 over the published configuration (the +0.258 gain_scale figure is withdrawn as unmatched, see the audit) |
 | [H18](H18-sensitivity-profile-over-units.md) | The shape of a per-unit sensitivity profile beats its mean | **REFUTED**: 144-head leave-one-out carries no signal (mean 0.28-0.61, concentration 0.12-0.44, benign clean at 0.497). Third failed attempt to exploit *where* the backdoor sits |
 | [H19](H19-placement-ranking-is-rate-selection.md) | The placement ranking is mostly about which placement the adaptive rate rule can aim at | **Swin half INCONCLUSIVE** (point estimate 0.110 to 0.015 to 0.045 as n grew 6 to 11 to 16; CI contains zero throughout); holds weakly on ViT. `blocks_9_12` still has the project's best oracle AUROC and **0/20 deployable operating points** |
 | [H20](H20-input-side-beats-residual-adjacent.md) | What matters is sub-layer input versus residual stream, not pre- versus post-residual | **SUPPORTED**, stress-tested: **+0.054**, bootstrap CI [+0.031, +0.080], positive on every leave-one-out and leave-one-attack-out refit. Pre-versus-post, the founding question, is **+0.002** |
@@ -191,7 +191,7 @@ Three distinct versions of one mistake, each of which inverted a conclusion:
    matching on clean-validation shift ratio, never on rate.
 2. **Averaging over unequal coverage** (H19, H20). Different groups were swept over
    different checkpoints, so the means compared different problems. Run through
-   `scripts/balanced_panels/audit.py`, **4 of 6 comparisons here invert**, the worst
+   `experiments/balanced_panels/audit.py`, **4 of 6 comparisons here invert**, the worst
    at 45x imbalance. The 2 that survive are the 2 with imbalance under 1.5x.
 3. **Measuring across a normalization layer with a scale-dependent statistic**
    (H16 sections 9 and 10). A pre-LayerNorm ablation produced a clean, monotone,

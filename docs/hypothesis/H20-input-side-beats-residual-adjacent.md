@@ -85,7 +85,7 @@ placements read as:
 The placements with the most coverage look worst, because the extra checkpoints they
 were run on are the hard ones (low poison rate, weak attacks). Averaging over
 whatever cells exist punishes exactly the placements that were tested most
-thoroughly. `scripts/balanced_panels/audit.py` exists to make this failure
+thoroughly. `experiments/balanced_panels/audit.py` exists to make this failure
 mechanical to catch rather than a matter of remembering.
 
 ## Mechanistic reading
@@ -104,7 +104,7 @@ clean evidence destroyed while the trigger path survives. So the winning family
 should **retain more** separation along the backdoor direction at matched clean
 shift ratio, not less.
 
-Tested on `vit_cifar10_badnet_a2o_0_1` with `scripts/dropout_kills_direction/`, now
+Tested on `vit_cifar10_badnet_a2o_0_1` with `experiments/dropout_kills_direction/`, now
 recording the clean shift ratio at every rate so placements are compared on that
 axis rather than on rate (the [H9](H9-strength-not-position.md) rule). Separation
 retained as a fraction of unperturbed, interpolated to matched sigma:

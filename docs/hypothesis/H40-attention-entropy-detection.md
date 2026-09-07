@@ -7,7 +7,7 @@ which shows a strong INVERTED signal: backdoor samples have HIGHER entropy
 (AUROC 0.000 to 0.006 under the "lower entropy = backdoor" convention), meaning
 the triggered inputs produce more diffuse, not more focused, attention patterns.
 
-Evidence: `scratch/attention_entropy.py`, results in
+Evidence: `experiments/attention_heads/attention_entropy.py`, results in
 `results/attention_entropy.json`.
 
 ## Claim

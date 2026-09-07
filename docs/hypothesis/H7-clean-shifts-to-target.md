@@ -68,7 +68,7 @@ like 0.75 and inflated the whole effect.
 Everything above is prediction-space: it counts which class *label* the model outputs.
 That is one technique, and the neuron-bias claim is really about representations, so it
 was checked again with a different measurement entirely
-(`scripts/shift_in_latent_space/`).
+(`experiments/shift_in_latent_space/`).
 
 For clean samples whose prediction shifts under dropout, measure where the CLS feature
 actually *moves*: the cosine between the dropout-induced displacement and the direction
@@ -118,7 +118,7 @@ design rather than on this claim.
 # shift_target_histogram.clean, per rate
 
 # latent space
-PYTHONPATH=. python scripts/shift_in_latent_space/measure.py \
+PYTHONPATH=. python experiments/shift_in_latent_space/measure.py \
     --checkpoint-folder vit_cifar10_blend_0_1 --samples 800 --rate 0.5
 ```
 
