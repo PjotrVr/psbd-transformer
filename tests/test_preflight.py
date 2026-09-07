@@ -109,3 +109,65 @@ def test_the_gate_catches_a_deliberate_inversion(name, synthetic_case):
     assert inverted <= 0.40, (
         f"{name} inverted still scored {inverted:.3f}; the check cannot see the bug"
     )
+
+
+class TestSummaryLoaderFiltersUnsafeRows:
+    """The A19 fix added 2 columns. Nothing read them, so it changed no number.
+
+    A filter that exists and is not applied is worse than no filter, because it
+    reads as handled. These pin that the safe path is the default path.
+    """
+
+    def test_the_default_drops_variant_rows(self, tmp_path):
+        import pandas as pd
+
+        from psbd.summary import load_detection_summary
+
+        path = tmp_path / "summary.csv"
+        pd.DataFrame(
+            {
+                "folder": ["a", "b", "c"],
+                "operator": ["dropout", "dropout", "gaussian"],
+                "auroc": [0.7, 0.9, 0.9],
+                "variant": [None, "passes_20", "batch_coupled_superseded"],
+                "cache_backed": [True, True, False],
+            }
+        ).to_csv(path, index=False)
+
+        kept = load_detection_summary(str(path), verbose=False)
+        assert len(kept) == 1, "only the plain, cache-backed row may survive"
+        assert kept.iloc[0]["folder"] == "a"
+
+    def test_the_unsafe_rows_are_reachable_but_only_on_request(self, tmp_path):
+        import pandas as pd
+
+        from psbd.summary import load_detection_summary
+
+        path = tmp_path / "summary.csv"
+        pd.DataFrame(
+            {
+                "folder": ["a", "b"],
+                "operator": ["dropout", "gaussian"],
+                "auroc": [0.7, 0.9],
+                "variant": [None, "batch_coupled_superseded"],
+                "cache_backed": [True, False],
+            }
+        ).to_csv(path, index=False)
+
+        everything = load_detection_summary(
+            str(path), plain_only=False, require_cache_backed=False, verbose=False
+        )
+        assert len(everything) == 2, "the rows must still be reachable deliberately"
+
+    def test_a_file_without_the_columns_still_loads(self, tmp_path):
+        """An older summary predates both columns and must not raise."""
+        import pandas as pd
+
+        from psbd.summary import load_detection_summary
+
+        path = tmp_path / "old.csv"
+        pd.DataFrame({"folder": ["a"], "operator": ["dropout"], "auroc": [0.7]}).to_csv(
+            path, index=False
+        )
+
+        assert len(load_detection_summary(str(path), verbose=False)) == 1
