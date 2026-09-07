@@ -19,7 +19,7 @@ import argparse
 import json
 import os
 
-from defences.dropout import DROPOUT_CONFIGS, SINGLE_POSITION_NAMES
+from psbd.positions import DROPOUT_CONFIGS, SINGLE_POSITION_NAMES
 
 BASE = "/lustre/home/pstika/projects/PSBD-ViT"
 
@@ -73,7 +73,7 @@ BASE={base}
 cd $BASE
 source .venv/bin/activate
 
-python psbd_dropout_sweep.py \\
+python -m cli.sweep \\
     --checkpoint-folder {checkpoint} \\
     --position-config {position}{extra}{band}{rates}
 

@@ -102,7 +102,7 @@ exit 0
 # One command per placement group, each covering every checkpoint in the batch. Split
 # this way rather than one command per checkpoint because --position-config takes a
 # list and the rate grid differs between post_residual and the rest.
-COMMAND = """python psbd_dropout_sweep.py \\
+COMMAND = """python -m cli.sweep \\
     --checkpoint-folder {folders} \\
     --position-config {positions}{band}{rates} \\
     --skip-existing

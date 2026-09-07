@@ -174,7 +174,7 @@ echo "Finished: $(date)"
 exit 0
 """
 
-COMMAND = """python psbd_dropout_sweep.py \\
+COMMAND = """python -m cli.sweep \\
     --checkpoint-folder {folders} \\
     --position-config {positions} \\
     --perturbation {operator} \\

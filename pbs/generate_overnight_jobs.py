@@ -94,7 +94,7 @@ BASE={base}
 cd $BASE
 source .venv/bin/activate
 
-python psbd_dropout_sweep.py \\
+python -m cli.sweep \\
     --checkpoint-folder {checkpoint} \\
     --position-config {position}{extra}{band}{rates}
 

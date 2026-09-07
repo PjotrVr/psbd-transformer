@@ -55,7 +55,7 @@ echo "Finished: $(date)"
 exit 0
 """
 
-COMMAND = """python baseline_detect.py \\
+COMMAND = """python -m cli.baselines \\
     --checkpoint-folder {folders}{probe} \\
     --skip-existing
 """
