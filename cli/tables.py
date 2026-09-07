@@ -59,8 +59,11 @@ from psbd.cache import (
     read_split_manifest,
 )
 from psbd.decision import (
+    ADAPTIVE_SHIFT_TARGET,
+    PLACEMENT_MATCH_TARGET,
     complete_rates,
     pair_clean_to_backdoor,
+    select_rate_adaptively,
     select_rate_at_matched_shift,
     threshold_at_quantile,
 )
@@ -72,6 +75,36 @@ PANEL = ("badnet_a2o", "blend", "wanet", "lc", "adaptive_blend")
 
 DEFAULT_FPRS = (0.01, 0.05, 0.10, 0.25)
 
+# Which rate a cell is read at. These are 2 different protocols and the choice
+# moves the numbers a long way: on CIFAR-100 badnet at 5%, "matched" reads
+# TPR@1%FPR of 0.000 and "deployable" reads 0.882, because the nearest rate to a
+# mid-ladder sigma can sit well below the rate that actually separates.
+#
+#   deployable  PSBD's own rule: the SMALLEST rate REACHING the target. This is
+#               what a defender executes and what a detection number must be read
+#               at. Returns None when the grid never reaches the target, which is
+#               a real answer and not a gap to be filled by the nearest rate.
+#
+#   matched     the NEAREST rate to the target, for comparing one placement
+#               against another at equal disturbance. It always returns something,
+#               so it can silently report a cell that was never matched, which is
+#               what --sigma-tolerance marks.
+#
+# This script emits DETECTION tables, so it defaults to deployable. Pass
+# --rate-rule matched only when the table's question is about placement.
+RATE_RULES = {
+    "deployable": select_rate_adaptively,
+    "matched": select_rate_at_matched_shift,
+}
+DEFAULT_RATE_RULE = "deployable"
+
+# Each rule has its own target, and pairing a rule with the other's target is the
+# specific mistake this mapping exists to prevent.
+DEFAULT_SIGMA = {
+    "deployable": ADAPTIVE_SHIFT_TARGET,
+    "matched": PLACEMENT_MATCH_TARGET,
+}
+
 # Appended to the achieved sigma of any cell the rate grid could not match. A
 # marked cell is still printed, because dropping it would hide that the grid is
 # too coarse for this operator, but it must never be read as strength-matched.
@@ -82,6 +115,19 @@ SIGMA_MISMATCH_MARKER = "*"
 WEAK_ASR = 0.8
 
 MAX_MISSING_SHOWN = 12
+
+
+def is_mismatched(result: dict, args) -> bool:
+    """Whether a cell's achieved sigma disqualifies it from a matched comparison.
+
+    Only the "matched" rule can produce such a cell. The "deployable" rule selects
+    on sigma >= target and returns None when nothing qualifies, so every cell it
+    does return satisfies the constraint by construction and overshoot is the rule
+    working as specified. Marking those would flag every correct cell.
+    """
+    if args.rate_rule != "matched":
+        return False
+    return abs(result["achieved_sigma"] - args.sigma) > args.sigma_tolerance
 
 
 def read_asr(checkpoints_dir: str, folder: str) -> float | None:
@@ -126,6 +172,7 @@ def cell_score(
     kind: str,
     sigma_target: float,
     target_fprs: list[float],
+    rate_rule: str = DEFAULT_RATE_RULE,
 ) -> dict | None:
     """One-sided AUROC and both TPRs per target FPR, at the sigma-matched rate.
 
@@ -134,9 +181,12 @@ def cell_score(
     actually achieved, the one-sided AUROC, and one operating point per entry of
     target_fprs in the order given.
 
-    achieved_sigma is part of the contract because the rate selector returns the
+    achieved_sigma is part of the contract because the "matched" rule returns the
     nearest rate unconditionally: it never fails, so the caller, not this
     function, has to decide whether the match was close enough to report as one.
+    The "deployable" rule returns None instead when the grid never reaches the
+    target, so a None here means 2 different things depending on the rule and the
+    caller has to know which one it asked for.
     """
     manifest = read_split_manifest(psbd_dir)
 
@@ -153,7 +203,7 @@ def cell_score(
         )
         shift_by_rate[rate] = shift_ratio(validation_labels, argmax)
 
-    chosen = select_rate_at_matched_shift(shift_by_rate, sigma_target)
+    chosen = RATE_RULES[rate_rule](shift_by_rate, sigma_target)
     if chosen is None:
         return None
     achieved_sigma = shift_by_rate[chosen]
@@ -223,7 +273,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--score", default="fractional", choices=("fractional", "absolute")
     )
-    parser.add_argument("--sigma", type=float, default=0.6)
+    parser.add_argument(
+        "--rate-rule",
+        default=DEFAULT_RATE_RULE,
+        choices=tuple(RATE_RULES),
+        help="deployable (PSBD's own: smallest rate reaching --sigma) or matched "
+        "(nearest rate to --sigma, for placement comparison only).",
+    )
+    parser.add_argument(
+        "--sigma",
+        type=float,
+        default=None,
+        help="target clean-validation shift ratio. Defaults to the target that "
+        f"belongs to --rate-rule: {DEFAULT_SIGMA}.",
+    )
     parser.add_argument(
         "--sigma-tolerance",
         type=float,
@@ -260,6 +323,8 @@ def parse_args() -> argparse.Namespace:
             parser.error(f"--fpr values must lie in (0, 1), got {target}")
     if args.sigma_tolerance < 0.0:
         parser.error("--sigma-tolerance must not be negative")
+    if args.sigma is None:
+        args.sigma = DEFAULT_SIGMA[args.rate_rule]
     return args
 
 
@@ -295,7 +360,7 @@ def score_every_cell(
     for dataset, label, attack, folder, asr in required:
         psbd_dir = os.path.join(args.results_dir, folder, "psbd")
         result = (
-            cell_score(psbd_dir, name, args.score, args.sigma, args.fpr)
+            cell_score(psbd_dir, name, args.score, args.sigma, args.fpr, args.rate_rule)
             if os.path.isdir(os.path.join(psbd_dir, name))
             else None
         )
@@ -335,9 +400,7 @@ def print_coverage(
     )
 
     unmatched = [
-        key
-        for key, (result, _asr) in have.items()
-        if abs(result["achieved_sigma"] - args.sigma) > args.sigma_tolerance
+        key for key, (result, _asr) in have.items() if is_mismatched(result, args)
     ]
     if unmatched:
         print(
@@ -391,13 +454,18 @@ def print_dataset_table(
     if not rows:
         return
 
-    print(f"\n### {dataset}   (one-sided, {args.score} PSU, sigma~{args.sigma})\n")
+    rule_note = (
+        f"smallest rate reaching sigma {args.sigma}"
+        if args.rate_rule == "deployable"
+        else f"nearest rate to sigma {args.sigma}"
+    )
+    print(f"\n### {dataset}   (one-sided, {args.score} PSU, {rule_note})\n")
     print("| " + " | ".join(columns) + " |")
     print("|" + "|".join("---" for _ in columns) + "|")
 
     marked_any = False
     for label, attack, (result, asr) in rows:
-        mismatched = abs(result["achieved_sigma"] - args.sigma) > args.sigma_tolerance
+        mismatched = is_mismatched(result, args)
         marked_any = marked_any or mismatched
         marker = SIGMA_MISMATCH_MARKER if mismatched else ""
         print(render_row(label, attack, result, asr, marker))

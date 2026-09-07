@@ -52,6 +52,14 @@ ADAPTIVE_SHIFT_TARGET = 0.8
 # placement is compared at matched sigma, and this is the ladder.
 SHIFT_MATCH_TARGETS: tuple[float, ...] = (0.2, 0.4, 0.6, 0.8)
 
+# The rung of that ladder the placement comparison reports from. It is deliberately
+# NOT ADAPTIVE_SHIFT_TARGET: at 0.8 the destructive placements have already
+# saturated, so the ranking compresses and the comparison loses the resolution it
+# exists for. It is also not a detection target, and using it as one costs 0.126
+# TPR at 1% FPR. Both numbers are real protocol constants that differ, which is
+# why neither is ever written as a bare literal outside this module.
+PLACEMENT_MATCH_TARGET = 0.6
+
 
 def threshold_at_quantile(validation_psu: torch.Tensor, quantile: float) -> float:
     """The detection threshold: a low quantile of clean validation PSU.
