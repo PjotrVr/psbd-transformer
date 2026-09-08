@@ -70,12 +70,55 @@ threat model already grants, and applies 1 fixed rule everywhere: far from clean
 either direction is suspicious. The threshold stays a quantile of the validation
 deviation, so the false-positive budget is set exactly as before.
 
-## Known limitation
+## The panel verdict: it does not beat PSBD
 
-On CIFAR-100 the raw agreement fractions are ~0.01, which is chance for 100 classes, so
-individual patch tokens rarely resolve the true class through the lens at all. Whether
-the statistic degenerates as the class count grows is open, and Tiny (200 classes) is the
-test.
+The CIFAR-10 cell above is not representative, and GTSRB (43 classes) shows why. Same
+protocol, 10% poisoning, `token_agreement` read in the direction its own mechanism
+predicts for that class count:
+
+| GTSRB group | n | token agreement | PSBD |
+|---|---|---|---|
+| dirty-label (`all_to_one`) | 6 | 0.948 | **0.974** |
+| clean-label (`sig`, `lc`) | 2 | 0.496 | 0.487 |
+| all-to-all | 1 | 0.449 | 0.306 |
+| benign control | 1 | **0.503** | 0.500 |
+
+Per cell on the dirty-label group: blend 0.987, bpp 0.983, adaptive_blend 0.975, lf 0.956,
+wanet 0.947, badnet 0.838. Real signal, clean benign control, and still **below PSBD**,
+whose TPR at 1% FPR on those same cells is 0.966 to 1.000.
+
+It also fails exactly where PSBD fails: the 2 clean-label attacks and all-to-all. A
+clean-label trigger reinforces the true class rather than overriding it, so the agreement
+never jumps, which is the mechanism working as stated and predicting its own failure.
+
+**And the sign is not stable.** It depends on the class count, not only on the trigger's
+spatial extent:
+
+| cell | raw AUROC | clean -> backdoor agreement |
+|---|---|---|
+| cifar10 badnet_a2o | 0.982 | 0.429 -> 0.064 |
+| gtsrb badnet_a2o | 0.162 | 0.071 -> 0.033 |
+
+With 10 classes a clean patch token often resolves the true class (agreement 0.429), so a
+local trigger LOWERS agreement. With 43 classes clean agreement is already near chance
+(1/43), so the confident trigger patches RAISE it. The same attack inverts between
+datasets. A sign router built on the suspect-pool-minus-validation deviation recovers 7 of
+9 cells (0.423 raw, 0.577 flipped, 0.731 routed) but fails wherever that deviation is
+near zero, which is exactly the GTSRB badnet case.
+
+## Where it does win
+
+Only where PSBD has a low-FPR collapse. On `vit_cifar10_badnet_a2o_0_1`, PSBD reads AUROC
+0.961 with TPR **0.000** at 1% FPR, and token agreement reads 0.982 with **0.287**. That
+is 1 of the 6 cells identified this session where PSBD has AUROC >= 0.85 and TPR@1%FPR
+< 0.05. Whether the per-token reading is systematically strong on exactly those cells is
+the one open question worth the GPU time, and the 217-cell panel answers it.
+
+## Methodological note
+
+Pilot on GTSRB, not CIFAR-10. The 10-class result was flattering by a wide margin, and the
+statistic's chance level is 1/K, so a class-count-sensitive statistic looks far stronger
+there than it is.
 
 ## Running it
 
