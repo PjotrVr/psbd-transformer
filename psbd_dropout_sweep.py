@@ -29,7 +29,12 @@ from defences.checkpoint_eval import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.perturbations import PERTURBATIONS, build_perturbation, scale_up
+from defences.perturbations import (
+    PERTURBATIONS,
+    build_perturbation,
+    effective_forward_passes,
+    scale_up,
+)
 from utils.config import DATASET_REGISTRY
 from defences.dropout import (
     DROPOUT_CONFIGS,
@@ -292,6 +297,11 @@ def sweep_rates(
     """
     position_names = DROPOUT_CONFIGS.get(position_config, (position_config,))
     cache_name = cache_name or position_config
+    # A deterministic operator returns the same value on every pass, so PSU's
+    # expectation over k is exact at 1 pass and a k > 1 sweep would write k
+    # identical rows. The cache folder name still carries the REQUESTED k, so
+    # naming and --skip-existing keep working against caches written before this.
+    passes = effective_forward_passes(perturbation, forward_passes)
     if perturbation == "scale_up":
         # SCALE-UP works in pixel space, so it needs the dataset's normalization
         # constants to undo and redo the transform around the clip. They are not
@@ -314,7 +324,7 @@ def sweep_rates(
                 cache_name,
                 rate,
                 device,
-                forward_passes,
+                passes,
                 use_bfloat16,
                 model_dropout,
             )
@@ -338,6 +348,9 @@ def write_run_provenance(
         "block_range": list(args.block_range) if args.block_range else None,
         "dropout_rates": list(args.rates) if args.rates else list(DROPOUT_RATES),
         "forward_passes": args.forward_passes,
+        "effective_forward_passes": effective_forward_passes(
+            args.perturbation, args.forward_passes
+        ),
         "mask_seed": PSBD_MASK_SEED,
         "split_seed": PSBD_SPLIT_SEED,
         "batch_size": args.batch_size,

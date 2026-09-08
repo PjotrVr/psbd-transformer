@@ -160,6 +160,14 @@ class GaussianNoise(nn.Module):
     magnitude tracks the layer's own scale and one rate means the same relative
     disturbance everywhere.
 
+    The standard deviation is computed per sample, over every axis except the
+    batch. A batch-wide reduction would make one sample's noise level depend on
+    which other samples happened to share its batch, and the validation, clean
+    and backdoor splits hold different image populations, so the three would sit
+    at three different noise levels while the comparison between them assumes
+    one. Every other operator in this file already draws per sample; this is the
+    only one where the coupling was possible.
+
     No inverted scaling, because additive zero-mean noise already leaves the
     expected activation unchanged.
     """
@@ -171,7 +179,8 @@ class GaussianNoise(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if not self.training or self.rate == 0.0:
             return x
-        scale = x.detach().std()
+        non_batch_axes = tuple(range(1, x.dim()))
+        scale = x.detach().std(dim=non_batch_axes, keepdim=True)
         return x + torch.randn_like(x) * (self.rate * scale)
 
 
@@ -392,6 +401,20 @@ PERTURBATIONS: dict[str, type[nn.Module]] = {
     # and so cannot be built from a rate alone; see scale_up().
     "gain_scale": GainScale,
 }
+
+# Operators whose output is a deterministic function of their input, so every
+# Monte Carlo pass returns the same value. PSU is an expectation over k passes, so
+# for these it is exact at k = 1 and a k > 1 sweep writes k identical rows. Their
+# shift ratio is also a per-sample flip indicator rather than a fraction of
+# passes, which is worth stating wherever sigma is compared across operators.
+DETERMINISTIC_PERTURBATIONS: frozenset[str] = frozenset({"gain_scale", "scale_up"})
+
+
+def effective_forward_passes(perturbation: str, forward_passes: int) -> int:
+    """Passes actually needed: 1 for a deterministic operator, k otherwise."""
+    needed = 1 if perturbation in DETERMINISTIC_PERTURBATIONS else forward_passes
+    return needed
+
 
 # Which perturbations are meaningful at which positions. head_mask is the
 # constrained one: it is only a head mask on the concatenated per-head outputs,
