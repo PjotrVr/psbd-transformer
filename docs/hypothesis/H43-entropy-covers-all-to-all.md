@@ -77,6 +77,23 @@ Nothing in the rule needs the poison rate, the target class, or any poison label
 suspect pool is what the defender was handed; the rate appears only in the script that
 simulates such a pool from cached splits.
 
+## It is not an artifact of one placement
+
+The rule was derived at `token_mask @ before_attention_norm`. Re-derived independently at
+3 other placements, including the one the PSBD paper publishes, each read at the rate
+whose clean-validation shift ratio is nearest 0.6:
+
+| placement | always PSU | routed | delta | cells hurt |
+|---|---|---|---|---|
+| `token_mask @ before_attention_norm` | 0.814 | 0.864 | **+0.049** | 0 |
+| `before_attention_norm` (dropout) | 0.736 | 0.789 | **+0.053** | 2 |
+| **`pre_residual`, the published placement** | 0.788 | 0.832 | **+0.044** | 0 |
+| `post_residual` | 0.761 | 0.820 | **+0.059** | 2 |
+
+The gain is +0.044 to +0.059 everywhere, and the sign is read correctly on 5 to 8 of the
+7 to 10 all-to-all cells each placement has cached. So this improves PSBD **as published**
+rather than only the configuration this project prefers.
+
 ## What this still does not establish
 
 - The gain rests on **9 all-to-all cells**. It is a large effect on a small subpanel.
