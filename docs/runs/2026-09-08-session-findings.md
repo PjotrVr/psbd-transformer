@@ -38,6 +38,38 @@ clean-validation mean PSU; use PSU if `d < 0`, else entropy. Threshold 0 is fixe
 mechanism. Over 64 cells: 0.819 to **0.865**, CI [+0.017, +0.079], **98% of oracle-max**,
 hurting **0** cells, and +0.044 to +0.059 at all 4 placements including the published one.
 
+## The strongest result: continuous prediction depth
+
+A logit lens reads every encoder block through the network's OWN final LayerNorm and head,
+so a per-sample statistic can ask WHEN the answer was decided rather than how far it moves
+under perturbation. That is algebraically independent of the whole PSBD family, which H28
+shows all read one magnitude.
+
+`depth_cls` takes 12 integer values, and that alone was hiding the result. A
+clean-validation quantile lands on a tie and the strict `<` test drops every sample sitting
+exactly on it. On `vit_gtsrb_badnet_a2o_0_1` that was the entire backdoor population: mean
+depth **exactly 5.000** against clean 7.292, AUROC 0.994, and TPR at 1% FPR reading
+**0.000** because the threshold IS 5.0. The same score gives TPR 1.000 at 5% FPR with an
+achieved FPR of 0.011.
+
+`depth_soft`, the mean over layers of the lens probability of the final answer, is the same
+mechanism made continuous:
+
+| cell | `depth_cls` | `depth_soft` |
+|---|---|---|
+| gtsrb badnet_a2o | 0.994, TPR@1% **0.000** | **1.000**, TPR@1% **1.000**, AUPRC 1.000 |
+| gtsrb wanet | 0.933, TPR@1% 0.000 | 0.946, TPR@1% **0.839** |
+| gtsrb benign | 0.499 | **0.501** |
+
+One forward pass against PSBD's 30, which on that badnet cell reads 0.999 AUROC and 0.981
+TPR at 1% FPR. Across the GTSRB dirty-label group `depth_cls` alone means **0.983** against
+PSBD's 0.974.
+
+**Novelty warning.** TED (S&P 2024) and TED++ do layer-wise trajectory analysis with
+clean-only calibration for backdoor input detection, above 0.95 AUROC, on ResNets. That is
+the closest prior art and the number to beat, not a related-work citation. Orion (IJCAI
+2023) also uses internal-readout-disagrees-with-final-answer as a per-input poisoned score.
+
 ## The per-token direction
 
 A logit lens reading every block through the network's own final LayerNorm and head. On
@@ -62,6 +94,30 @@ and the confident trigger patches raise it. The sign router recovers 7 of 9 cell
 
 **Consequence for methodology: pilot on GTSRB, not CIFAR-10.** CIFAR-10's 10 classes made a
 class-count-sensitive statistic look far stronger than it is.
+
+## Two probes outside the activation-noise family
+
+The user asked for a genuinely new perturbation paradigm rather than another operator.
+
+**Gradient-guided head-weight ablation, REFUTED.** For each sample, rank the head's weights
+by `|W_c . a|`, the exact gradient-times-weight attribution for the predicted logit, disable
+the top-k and ask whether the answer survives. The a priori sign came from H16: the backdoor
+is a rank-1 direction, so the answer should rest on few head weights and die early. It does
+not. AUROC **0.267**, backdoor survival 0.742 against clean 0.639, benign at 0.499. A
+rank-1 direction being sufficient to remove the backdoor when deleted from the activation
+stream does not imply the prediction rests on few head weights. Recorded, not flipped.
+
+**Weight interpolation toward the pretrained initialization, in flight.** The victim was
+finetuned from public ImageNet weights, so `tau = theta_ft - theta_pre` is computable with
+no poison label and `theta(a) = theta_pre + a * tau` walks the model back along it. The
+backdoor was written entirely during finetuning, so it should die as `a` shrinks while clean
+knowledge, partly inherited, survives.
+
+## The content-dependence law, first data point
+
+`vit_gtsrb_badnet_a2m2_0_1`: **ASR 0.989, CA 0.992**. So m = 2 costs essentially no attack
+success, against all-to-all's 0.947 on the same dataset. The ASR side of the law behaves as
+predicted; 33 more cells are training.
 
 ## Built
 
