@@ -1,3 +1,4 @@
+import re
 import os
 from dataclasses import dataclass, field
 
@@ -29,10 +30,13 @@ DATASET_REGISTRY: dict[str, DatasetSpec] = {
 }
 
 
-# pre_residual toggles the Dropout modules torchvision already builds into the
-# transformer, all of which sit on a block's branch before the residual add.
-# post_residual inserts fresh Dropout after each residual add, mirroring the
-# ConvNet placement in the original PSBD paper.
+# Both placements insert FRESH perturbation modules through the position registry
+# in defences.dropout. Neither reuses a Dropout torchvision already builds into
+# the transformer, because a trained dropout's inverted-scaling factor was
+# calibrated against the next layer's weights, so reusing it would conflate the
+# model's own regularization with PSBD's probe. pre_residual perturbs each
+# branch's output just before its residual add, post_residual perturbs the stream
+# just after each add, which is the ConvNet placement of the original PSBD paper.
 DROPOUT_PLACEMENTS = ("pre_residual", "post_residual")
 
 ARCHITECTURES = ("vit", "swin")
@@ -90,7 +94,7 @@ CLEAN_LABEL_ATTACK_TOKENS = ("sig", "lc")
 def label_mode_from_folder(folder_name: str) -> str:
     """BackdoorBench folder names encode dataset_attack_rate.
 
-    "a2a" selects all_to_all. A clean-label attack token (sig, lc) selects
+    "a2a" selects all_to_all and an "a2m<m>" token selects all_to_m. A clean-label attack token (sig, lc) selects
     clean_label, for example cifar10_sig_0_01 or cifar10_lc_0_01 under
     backdoor_bench_checkpoints/. Everything else defaults to all_to_one,
     BackdoorBench's standard dirty-label convention.
@@ -98,4 +102,6 @@ def label_mode_from_folder(folder_name: str) -> str:
     tokens = folder_name.split("_")
     if any(token in CLEAN_LABEL_ATTACK_TOKENS for token in tokens):
         return "clean_label"
+    if any(re.fullmatch(r"a2m\d+", token) for token in tokens):
+        return "all_to_m"
     return "all_to_all" if "a2a" in folder_name else "all_to_one"

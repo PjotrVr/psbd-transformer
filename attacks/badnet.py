@@ -15,6 +15,9 @@ from poison import Attack
 class BadNetConfig:
     patch_size: int = 3
     label_mode: str = "all_to_one"  # use "all_to_all" for the BadNets-A2A variant
+    # all_to_m only: the number of distinct target classes, m. Ignored by every
+    # other label mode.
+    num_targets: int | None = None
 
 
 def _checkerboard(patch_size: int) -> torch.Tensor:
@@ -34,4 +37,10 @@ def build(config: BadNetConfig, image_size: int, target_label: int) -> Attack:
         stamped[:, image_size - size :, image_size - size :] = patch
         return stamped
 
-    return Attack("badnet", apply_trigger, config.label_mode, target_label)
+    return Attack(
+        "badnet",
+        apply_trigger,
+        config.label_mode,
+        target_label,
+        num_targets=config.num_targets,
+    )

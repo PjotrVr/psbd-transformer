@@ -337,17 +337,34 @@ def test_every_attack_success_set_matches_its_label_mode(name):
         8, SIZE
     )  # matches the image_size _built configured the attack for
     labels = [item[1] for item in base]
-    dataset = AttackSuccessSet(base, labels, attack, IDENTITY, num_classes=4)
+    # all_to_m maps onto (y + 1) mod m, so the class count has to cover m or the
+    # label map runs off the end of the logits. Every other attack keeps 4.
+    num_classes = max(4, attack.num_targets or 0)
+    dataset = AttackSuccessSet(base, labels, attack, IDENTITY, num_classes=num_classes)
 
     expected_positions = [
         position
         for position, label in enumerate(labels)
-        if is_eval_poisonable(attack.label_mode, label, attack.target_label)
+        if is_eval_poisonable(
+            attack.label_mode, label, attack.target_label, attack.num_targets
+        )
     ]
+    if attack.source_classes is not None:
+        # A source-specific attack only claims to flip its source classes, so the
+        # success set is the intersection, not the whole eval-poisonable pool.
+        # Measuring over the pool divides the true ASR by the class count.
+        sources = set(attack.source_classes)
+        expected_positions = [
+            position for position in expected_positions if labels[position] in sources
+        ]
     assert len(dataset) == len(expected_positions)
     for index, position in enumerate(expected_positions):
         _, target = dataset[index]
         expected = attack_success_label(
-            attack.label_mode, labels[position], attack.target_label, num_classes=4
+            attack.label_mode,
+            labels[position],
+            attack.target_label,
+            num_classes,
+            attack.num_targets,
         )
         assert target == expected

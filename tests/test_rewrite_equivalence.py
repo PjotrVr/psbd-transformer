@@ -109,32 +109,59 @@ def test_label_mode_functions_agree_over_exhaustive_sweep():
     """All 4 label-policy functions, every (mode, original, target) triple."""
     checked = 0
     for label_mode in old_poison.LABEL_MODES:
-        for original_label in range(SWEEP_CLASS_COUNT):
-            for target_label in range(SWEEP_CLASS_COUNT):
-                assert new_poisoning.is_poisonable(
-                    label_mode, original_label, target_label
-                ) == old_poison.is_poisonable(label_mode, original_label, target_label)
+        # all_to_m is the 1 mode whose behaviour depends on a 5th argument, so the
+        # sweep varies it rather than pinning it: m = 1 must reproduce all_to_one and
+        # m = SWEEP_CLASS_COUNT must reproduce all_to_all, and both are covered here.
+        targets = (
+            range(1, SWEEP_CLASS_COUNT + 1) if label_mode == "all_to_m" else (None,)
+        )
+        for num_targets in targets:
+            for original_label in range(SWEEP_CLASS_COUNT):
+                for target_label in range(SWEEP_CLASS_COUNT):
+                    assert new_poisoning.is_poisonable(
+                        label_mode, original_label, target_label, num_targets
+                    ) == old_poison.is_poisonable(
+                        label_mode, original_label, target_label, num_targets
+                    )
 
-                assert new_poisoning.poisoned_label(
-                    label_mode, original_label, target_label, SWEEP_CLASS_COUNT
-                ) == old_poison.poisoned_label(
-                    label_mode, original_label, target_label, SWEEP_CLASS_COUNT
-                )
+                    assert new_poisoning.poisoned_label(
+                        label_mode,
+                        original_label,
+                        target_label,
+                        SWEEP_CLASS_COUNT,
+                        num_targets,
+                    ) == old_poison.poisoned_label(
+                        label_mode,
+                        original_label,
+                        target_label,
+                        SWEEP_CLASS_COUNT,
+                        num_targets,
+                    )
 
-                assert new_poisoning.is_eval_poisonable(
-                    label_mode, original_label, target_label
-                ) == old_poison.is_eval_poisonable(
-                    label_mode, original_label, target_label
-                )
+                    assert new_poisoning.is_eval_poisonable(
+                        label_mode, original_label, target_label, num_targets
+                    ) == old_poison.is_eval_poisonable(
+                        label_mode, original_label, target_label, num_targets
+                    )
 
-                assert new_poisoning.attack_success_label(
-                    label_mode, original_label, target_label, SWEEP_CLASS_COUNT
-                ) == old_poison.attack_success_label(
-                    label_mode, original_label, target_label, SWEEP_CLASS_COUNT
-                )
-                checked += 1
+                    assert new_poisoning.attack_success_label(
+                        label_mode,
+                        original_label,
+                        target_label,
+                        SWEEP_CLASS_COUNT,
+                        num_targets,
+                    ) == old_poison.attack_success_label(
+                        label_mode,
+                        original_label,
+                        target_label,
+                        SWEEP_CLASS_COUNT,
+                        num_targets,
+                    )
+                    checked += 1
 
-    assert checked == len(old_poison.LABEL_MODES) * SWEEP_CLASS_COUNT**2
+    non_m = len(old_poison.LABEL_MODES) - 1
+    expected = (non_m + SWEEP_CLASS_COUNT) * SWEEP_CLASS_COUNT**2
+    assert checked == expected
 
 
 def test_clean_label_eval_eligibility_is_the_opposite_of_training():
@@ -254,8 +281,14 @@ def test_dataset_wrappers_serve_identical_rows():
         return image * 2.0
 
     for label_mode in old_poison.LABEL_MODES:
-        old_attack = old_poison.Attack("stub", add_one, label_mode, 2)
-        new_attack = new_poisoning.Attack("stub", add_one, label_mode, 2)
+        # all_to_m carries m on the Attack; every other mode ignores it.
+        num_targets = SWEEP_CLASS_COUNT if label_mode == "all_to_m" else None
+        old_attack = old_poison.Attack(
+            "stub", add_one, label_mode, 2, num_targets=num_targets
+        )
+        new_attack = new_poisoning.Attack(
+            "stub", add_one, label_mode, 2, num_targets=num_targets
+        )
 
         old_train = old_poison.PoisonedTrainingSet(
             base, old_attack, poison_indices, normalize, SWEEP_CLASS_COUNT

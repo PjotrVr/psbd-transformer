@@ -12,6 +12,8 @@ is a genuine dispatcher: a caller writes build_attack("wanet", ...) and never ha
 to know which file wanet lives in.
 """
 
+from typing import Callable
+
 from psbd.poisoning import Attack
 
 from . import (
@@ -36,12 +38,33 @@ def _badnet_all_to_all() -> badnet.BadNetConfig:
     return badnet.BadNetConfig(label_mode="all_to_all")
 
 
+# The all_to_m family, the interpolation between the 2 poles PSBD's premise sits
+# between. m is the number of distinct classes the trigger maps onto, so the
+# backdoor map must encode log2(m) bits about the image. m = 1 is exactly
+# all_to_one on target 0 and m = num_classes is exactly all_to_all, so those 2
+# poles stay served by badnet_a2o and badnet_a2a rather than being duplicated
+# here. Powers of 2 because the axis that matters is log2(m), not m. An m above a
+# dataset's class count is rejected at build time rather than silently degenerating.
+def _badnet_all_to_m(num_targets: int) -> Callable[[], badnet.BadNetConfig]:
+    def factory() -> badnet.BadNetConfig:
+        return badnet.BadNetConfig(label_mode="all_to_m", num_targets=num_targets)
+
+    return factory
+
+
 # name maps to (builder, config factory). A factory of None means the attack needs
 # arguments with no sensible default, so its config must be built directly.
 _ATTACKS = {
     "badnet": (badnet.build, _badnet_all_to_one),
     "badnet_a2o": (badnet.build, _badnet_all_to_one),
     "badnet_a2a": (badnet.build, _badnet_all_to_all),
+    "badnet_a2m2": (badnet.build, _badnet_all_to_m(2)),
+    "badnet_a2m4": (badnet.build, _badnet_all_to_m(4)),
+    "badnet_a2m8": (badnet.build, _badnet_all_to_m(8)),
+    "badnet_a2m16": (badnet.build, _badnet_all_to_m(16)),
+    "badnet_a2m32": (badnet.build, _badnet_all_to_m(32)),
+    "badnet_a2m64": (badnet.build, _badnet_all_to_m(64)),
+    "badnet_a2m128": (badnet.build, _badnet_all_to_m(128)),
     "blend": (blend.build, blend.BlendConfig),
     "sig": (sig.build, sig.SigConfig),
     "wanet": (wanet.build, wanet.WaNetConfig),

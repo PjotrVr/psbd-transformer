@@ -29,7 +29,7 @@ from torch.utils.data import Dataset
 # index. Sample-specific attacks use it to look up a pregenerated perturbation.
 ApplyTrigger = Callable[[torch.Tensor, int], torch.Tensor]
 
-LABEL_MODES = ("all_to_one", "all_to_all", "clean_label")
+LABEL_MODES = ("all_to_one", "all_to_all", "all_to_m", "clean_label")
 
 
 @dataclass(frozen=True)
@@ -40,9 +40,71 @@ class Attack:
     apply_trigger: ApplyTrigger
     label_mode: str
     target_label: int
+    # Source-specific attacks (TaCT) flip only these classes. Carried on the Attack
+    # rather than left on the config so it reaches evaluation, where measuring ASR
+    # over every non-target class instead understates it by the class count.
+    source_classes: tuple[int, ...] | None = None
+    # Cover samples normally carry the same trigger with their label kept, which is
+    # what Adaptive-Blend and TaCT do. WaNet's noise mode is different: its cover
+    # samples get a RANDOM warp, not the trigger warp, and that difference is the
+    # whole point, since it stops the warping itself from becoming the cue. An
+    # attack that needs its own cover transform supplies it here.
+    apply_cover: ApplyTrigger | None = None
+    # all_to_m only: how many distinct target classes the trigger maps onto. It is
+    # the one knob that interpolates between the 2 poles PSBD's premise sits
+    # between, so it is carried rather than derived: m = 1 reproduces all_to_one on
+    # target 0 exactly, m = num_classes reproduces all_to_all exactly.
+    num_targets: int | None = None
 
 
-def is_poisonable(label_mode: str, original_label: int, target_label: int) -> bool:
+def _grouped_target(
+    original_label: int, num_targets: int | None, num_classes: int | None = None
+) -> int:
+    """The all_to_m target class: (y + 1) mod m.
+
+        original form
+            y_poisoned = (y + 1) mod m
+        descriptive form
+            the next class, wrapping within the first m classes only
+
+    m is the number of distinct classes the trigger maps onto, and it is the whole
+    point of this label mode. PSBD's premise is that the trigger is a CONSTANT,
+    content-independent shortcut: the perturbed prediction stays pinned because the
+    shortcut never has to read the image. all_to_one satisfies that exactly, and
+    all_to_all violates it exactly, because (y + 1) mod K forces the model to
+    recognise the source class before it can increment. m interpolates between them
+    and is the only thing that varies, so the amount of content the backdoor map
+    must encode is log2(m) bits.
+
+    The 2 poles are reproduced exactly rather than approximately:
+      m = 1            (y + 1) mod 1 = 0, so every poisoned sample takes class 0,
+                       which is all_to_one on target 0.
+      m = num_classes  (y + 1) mod K, which is all_to_all.
+    """
+    if not num_targets or num_targets < 1:
+        raise ValueError(
+            f"all_to_m needs a positive num_targets, got {num_targets!r}. It is "
+            "carried on the Attack and must be set by the attack's config."
+        )
+    # m > num_classes does not degenerate gracefully, it emits an out-of-range
+    # label: at m = 16 on a 10-class dataset the modulus never wraps, so class 9
+    # maps to label 10 and the loss indexes past the end of the logits. Rejected
+    # here rather than at the loss, where it surfaces as a CUDA assert with no
+    # mention of the label map.
+    if num_classes is not None and num_targets > num_classes:
+        raise ValueError(
+            f"all_to_m needs num_targets <= num_classes, got m={num_targets} for "
+            f"{num_classes} classes. m = num_classes is already all_to_all."
+        )
+    return (original_label + 1) % num_targets
+
+
+def is_poisonable(
+    label_mode: str,
+    original_label: int,
+    target_label: int,
+    num_targets: int | None = None,
+) -> bool:
     """Which samples an attack is allowed to poison at TRAINING time.
 
     all_to_one poisons any sample not already the target class. all_to_all
@@ -53,13 +115,19 @@ def is_poisonable(label_mode: str, original_label: int, target_label: int) -> bo
         return original_label != target_label
     if label_mode == "all_to_all":
         return True
+    if label_mode == "all_to_m":
+        return _grouped_target(original_label, num_targets) != original_label
     if label_mode == "clean_label":
         return original_label == target_label
     raise ValueError(f"Unknown label mode: {label_mode}")
 
 
 def poisoned_label(
-    label_mode: str, original_label: int, target_label: int, num_classes: int
+    label_mode: str,
+    original_label: int,
+    target_label: int,
+    num_classes: int,
+    num_targets: int | None = None,
 ) -> int:
     """The label a poisoned sample is given at TRAINING time.
 
@@ -72,12 +140,19 @@ def poisoned_label(
         return target_label
     if label_mode == "all_to_all":
         return (original_label + 1) % num_classes
+    if label_mode == "all_to_m":
+        return _grouped_target(original_label, num_targets, num_classes)
     if label_mode == "clean_label":
         return original_label
     raise ValueError(f"Unknown label mode: {label_mode}")
 
 
-def is_eval_poisonable(label_mode: str, original_label: int, target_label: int) -> bool:
+def is_eval_poisonable(
+    label_mode: str,
+    original_label: int,
+    target_label: int,
+    num_targets: int | None = None,
+) -> bool:
     """Which samples belong in an attack-success EVAL set.
 
     Identical to is_poisonable except for clean_label. Training poisons only
@@ -91,13 +166,19 @@ def is_eval_poisonable(label_mode: str, original_label: int, target_label: int) 
         return original_label != target_label
     if label_mode == "all_to_all":
         return True
+    if label_mode == "all_to_m":
+        return _grouped_target(original_label, num_targets) != original_label
     if label_mode == "clean_label":
         return original_label != target_label
     raise ValueError(f"Unknown label mode: {label_mode}")
 
 
 def attack_success_label(
-    label_mode: str, original_label: int, target_label: int, num_classes: int
+    label_mode: str,
+    original_label: int,
+    target_label: int,
+    num_classes: int,
+    num_targets: int | None = None,
 ) -> int:
     """The label an attack-success EVAL sample is compared against.
 
@@ -113,7 +194,7 @@ def attack_success_label(
         return target_label
 
     training_label = poisoned_label(
-        label_mode, original_label, target_label, num_classes
+        label_mode, original_label, target_label, num_classes, num_targets
     )
     return training_label
 
@@ -130,7 +211,9 @@ def choose_poison_indices(
     eligible = [
         i
         for i, y in enumerate(labels)
-        if is_poisonable(attack.label_mode, int(y), attack.target_label)
+        if is_poisonable(
+            attack.label_mode, int(y), attack.target_label, attack.num_targets
+        )
     ]
     requested_count = int(round(poison_rate * len(labels)))
     poison_count = min(requested_count, len(eligible))
@@ -169,7 +252,9 @@ def choose_indices_with_cover(
         label = int(labels[index])
         if source_classes is not None and label not in source_classes:
             return False
-        return is_poisonable(attack.label_mode, label, attack.target_label)
+        return is_poisonable(
+            attack.label_mode, label, attack.target_label, attack.num_targets
+        )
 
     poison_pool = [i for i in range(dataset_size) if is_poison_eligible(i)]
     poison_count = min(int(round(poison_rate * dataset_size)), len(poison_pool))
@@ -231,6 +316,7 @@ class PoisonedTrainingSet(Dataset):
                 int(label),
                 self.attack.target_label,
                 self.num_classes,
+                self.attack.num_targets,
             )
 
         return self.normalize(image), label
@@ -256,17 +342,31 @@ class AttackSuccessSet(Dataset):
         attack: Attack,
         normalize: Callable[[torch.Tensor], torch.Tensor],
         num_classes: int,
+        source_only: bool = True,
     ):
         self.base_dataset = base_dataset
         self.labels = labels
         self.attack = attack
         self.normalize = normalize
         self.num_classes = num_classes
-        self.indices = [
+        eligible = [
             i
             for i, y in enumerate(labels)
-            if is_eval_poisonable(attack.label_mode, int(y), attack.target_label)
+            if is_eval_poisonable(
+                attack.label_mode, int(y), attack.target_label, attack.num_targets
+            )
         ]
+        # A source-specific attack only claims to flip its source classes. Measuring
+        # over the whole eval-poisonable pool divides the true rate by the class count:
+        # TaCT on CIFAR-10 reads 0.171 that way against 1.000 on its source class.
+        # source_only=False builds the complement, whose success rate is the
+        # false-trigger rate on classes the attack never claimed.
+        if attack.source_classes is not None:
+            sources = set(attack.source_classes)
+            eligible = [
+                i for i in eligible if (int(labels[i]) in sources) == source_only
+            ]
+        self.indices = eligible
 
     def __len__(self) -> int:
         return len(self.indices)
@@ -281,6 +381,7 @@ class AttackSuccessSet(Dataset):
             int(self.labels[index]),
             self.attack.target_label,
             self.num_classes,
+            self.attack.num_targets,
         )
 
         return self.normalize(poisoned), target
@@ -322,8 +423,10 @@ class CoverPoisonedTrainingSet(Dataset):
                 int(label),
                 self.attack.target_label,
                 self.num_classes,
+                self.attack.num_targets,
             )
         elif index in self.cover_indices:
-            image = self.attack.apply_trigger(image, index)
+            cover = self.attack.apply_cover or self.attack.apply_trigger
+            image = cover(image, index)
 
         return self.normalize(image), label
