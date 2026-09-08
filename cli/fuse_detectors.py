@@ -54,6 +54,7 @@ from psbd.cache import (
 from psbd.decision import complete_rates, pair_clean_to_backdoor
 from psbd.models import load_checkpoint
 from psbd.scores import psu_ratio_from_cache, shift_ratio, to_rank
+from psbd.config import DATASET_REGISTRY
 from psbd.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
@@ -133,10 +134,19 @@ def strip_scores_per_split(
     overlays = collect_overlay_batch(
         loaders["validation"], STRIP_OVERLAYS, PSBD_SPLIT_SEED
     )
+    spec = DATASET_REGISTRY[metadata["dataset"]]
 
     scores = {
         split: strip_scores(
-            model, loader, overlays, device, True, PSBD_SPLIT_SEED, STRIP_OVERLAYS
+            model,
+            loader,
+            overlays,
+            spec.mean,
+            spec.std,
+            device,
+            True,
+            PSBD_SPLIT_SEED,
+            STRIP_OVERLAYS,
         )
         for split, loader in loaders.items()
     }

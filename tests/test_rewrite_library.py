@@ -447,11 +447,27 @@ def test_baseline_detectors_match(synthetic_classifier, synthetic_loader):
     old_overlays = old_baselines.collect_overlay_batch(synthetic_loader, 8, seed=0)
     assert torch.equal(new_overlays, old_overlays)
 
+    mean = (0.5, 0.5, 0.5)
+    std = (0.25, 0.25, 0.25)
     new_strip = new_baselines.strip_scores(
-        synthetic_classifier, synthetic_loader, new_overlays, device, False, seed=0
+        synthetic_classifier,
+        synthetic_loader,
+        new_overlays,
+        mean,
+        std,
+        device,
+        False,
+        seed=0,
     )
     old_strip = old_baselines.strip_scores(
-        synthetic_classifier, synthetic_loader, old_overlays, device, False, seed=0
+        synthetic_classifier,
+        synthetic_loader,
+        old_overlays,
+        mean,
+        std,
+        device,
+        False,
+        seed=0,
     )
     assert torch.equal(new_strip, old_strip)
 

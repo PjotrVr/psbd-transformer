@@ -42,11 +42,16 @@ Deviations from the paper, all stated rather than silently absorbed:
   1. Entropy in nats, not bits. Eq. (2) uses log2 and this uses the natural log.
      The 2 differ by the constant factor log(2), so no ranking, no AUROC, and no
      quantile position changes. Only the printed threshold value is scaled.
-  2. Superimposition is a plain sum. The paper says it uses cv2.addWeighted, and
-     the authors' released code calls it as addWeighted(background, 1, overlay,
-     1, 0), both weights 1, which is exactly addition. The out-of-range pixel
-     values that follow are part of why clean predictions become unstable, so
-     nothing is clipped.
+  2. Superimposition is a sum in [0, 1] PIXEL space, then saturated, matching
+     cv2.addWeighted(background, 1, overlay, 1, 0) on uint8 arrays: both weights
+     1, and OpenCV saturating-casts the result at 255. An earlier version of this
+     port summed the 2 already-normalized tensors instead. That is not the same
+     operation: adding in normalized space gives
+     (p1 - m)/s + (p2 - m)/s = (p1 + p2 - 2m)/s, which is the pixel-space sum
+     displaced by a further -m/s per channel (2.43 units on CIFAR-10 channel 0),
+     and it also skipped the saturation the reference performs. The loader
+     delivers normalized tensors, so the round trip is denormalize, add,
+     saturate, renormalize.
   3. The overlay set is fixed across all scored inputs rather than resampled per
      input. Every input then faces the same perturbation set, which removes
      overlay choice as a source of per-sample variance in the comparison.
@@ -80,12 +85,26 @@ def blend_entropy(probs: torch.Tensor) -> torch.Tensor:
     return entropy
 
 
+def _normalization_buffers(
+    mean: tuple[float, ...],
+    std: tuple[float, ...],
+    device: torch.device,
+    dtype: torch.dtype,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """The dataset statistics shaped to broadcast over (batch, C, H, W)."""
+    mean_tensor = torch.tensor(mean, device=device, dtype=dtype).view(1, -1, 1, 1)
+    std_tensor = torch.tensor(std, device=device, dtype=dtype).view(1, -1, 1, 1)
+    return mean_tensor, std_tensor
+
+
 @torch.inference_mode()
 def strip_scores(
     model: nn.Module,
     loader: DataLoader,
     device: torch.device,
     overlay_images: torch.Tensor,
+    mean: tuple[float, ...],
+    std: tuple[float, ...],
     use_bfloat16: bool = True,
     seed: int = 0,
     num_overlays: int = DEFAULT_NUM_OVERLAYS,
@@ -109,9 +128,15 @@ def strip_scores(
     batch_scores = []
     for images, _ in loader:
         images = images.to(device)  # (batch, C, H, W)
+        mean_tensor, std_tensor = _normalization_buffers(
+            mean, std, images.device, images.dtype
+        )
+        pixels = (images * std_tensor + mean_tensor).clamp(0.0, 1.0)
+        overlay_pixels = (overlays * std_tensor + mean_tensor).clamp(0.0, 1.0)
         summed_entropy = torch.zeros(images.size(0), device=device)  # (batch,)
-        for overlay in overlays:
-            blended = images + overlay.unsqueeze(0)  # (batch, C, H, W)
+        for overlay in overlay_pixels:
+            superimposed = (pixels + overlay.unsqueeze(0)).clamp(0.0, 1.0)
+            blended = (superimposed - mean_tensor) / std_tensor
             probs = forward_probs(model, blended, device, use_bfloat16)
             summed_entropy += blend_entropy(probs)
         batch_scores.append((summed_entropy / len(overlays)).cpu())  # Eq. (4)

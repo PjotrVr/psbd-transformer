@@ -116,8 +116,8 @@ class DetectorContext:
     scale_up_data_limited, and unused by the rest.
 
     mean and std are the dataset's normalization statistics from
-    psbd.config.DATASET_REGISTRY. SCALE-UP and TeCo both operate in [0, 1] pixel
-    space and need them to undo what the loader did.
+    psbd.config.DATASET_REGISTRY. SCALE-UP, TeCo and STRIP all operate in [0, 1]
+    pixel space and need them to undo what the loader did.
 
     teco_corruptions names which of TeCo's corruption types to use. It defaults
     to all 14 available, which is the setting every reported number should use.
@@ -185,6 +185,8 @@ def _build_strip(context: DetectorContext) -> Detector:
             loader,
             device,
             overlays,
+            context.mean,
+            context.std,
             context.use_bfloat16,
             context.seed,
             STRIP_OVERLAYS,

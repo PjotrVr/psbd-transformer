@@ -36,6 +36,7 @@ from defences.psbd_metrics import (
     pair_clean_to_backdoor,
 )
 from models import load_checkpoint
+from utils.config import DATASET_REGISTRY
 
 STRIP_OVERLAYS = 8
 
@@ -96,6 +97,7 @@ def score_checkpoint(folder: str, args: argparse.Namespace, device) -> dict:
     overlays = collect_overlay_batch(
         loaders["validation"], STRIP_OVERLAYS, PSBD_SPLIT_SEED
     )
+    spec = DATASET_REGISTRY[metadata["dataset"]]
 
     detectors = {}
     for name, build in (
@@ -109,6 +111,8 @@ def score_checkpoint(folder: str, args: argparse.Namespace, device) -> dict:
                 model,
                 loader,
                 overlays,
+                spec.mean,
+                spec.std,
                 device,
                 use_bfloat16,
                 PSBD_SPLIT_SEED,

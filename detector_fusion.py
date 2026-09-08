@@ -53,6 +53,7 @@ from defences.psbd_metrics import (
     shift_ratio,
 )
 from models import load_checkpoint
+from utils.config import DATASET_REGISTRY
 
 STRIP_OVERLAYS = 8
 
@@ -171,9 +172,18 @@ def main() -> None:
         overlays = collect_overlay_batch(
             loaders["validation"], STRIP_OVERLAYS, PSBD_SPLIT_SEED
         )
+        spec = DATASET_REGISTRY[metadata["dataset"]]
         strip = {
             split: strip_scores(
-                model, loader, overlays, device, True, PSBD_SPLIT_SEED, STRIP_OVERLAYS
+                model,
+                loader,
+                overlays,
+                spec.mean,
+                spec.std,
+                device,
+                True,
+                PSBD_SPLIT_SEED,
+                STRIP_OVERLAYS,
             )
             for split, loader in loaders.items()
         }

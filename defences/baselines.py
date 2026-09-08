@@ -69,6 +69,8 @@ def strip_scores(
     model: nn.Module,
     loader: DataLoader,
     overlay_images: torch.Tensor,
+    mean: tuple[float, ...],
+    std: tuple[float, ...],
     device: torch.device,
     use_bfloat16: bool,
     seed: int,
@@ -82,9 +84,13 @@ def strip_scores(
     predictions scatter and entropy is high. A trigger survives blending and keeps
     pulling the prediction to the target class, so entropy stays low.
 
-    Superimposition is a plain sum, as in the original: the paper perturbs by adding a
-    second image rather than by alpha-blending, and the resulting out-of-range pixel
-    values are part of why clean predictions become unstable.
+    Superimposition is a sum in [0, 1] pixel space followed by saturation, matching
+    cv2.addWeighted(background, 1, overlay, 1, 0) on uint8 arrays, which is what the
+    released reference calls: both weights 1, and OpenCV saturating-casts at 255. The
+    loader delivers normalized tensors, so the round trip is denormalize, add,
+    saturate, renormalize. Summing the normalized tensors directly is a different
+    operation, (p1 + p2 - 2m)/s rather than (p1 + p2)/s, i.e. displaced by a further
+    -m/s per channel, 2.43 units on CIFAR-10 channel 0.
 
     overlay_images is a [num_overlays, C, H, W] batch taken from the clean validation
     split, i.e. data a defender is already assumed to hold. Reseeding here makes the
@@ -106,9 +112,18 @@ def strip_scores(
     scores = []
     for images, _ in loader:
         images = images.to(device)
+        mean_tensor = torch.tensor(
+            mean, device=images.device, dtype=images.dtype
+        ).view(1, -1, 1, 1)
+        std_tensor = torch.tensor(
+            std, device=images.device, dtype=images.dtype
+        ).view(1, -1, 1, 1)
+        pixels = (images * std_tensor + mean_tensor).clamp(0.0, 1.0)
+        overlay_pixels = (overlays * std_tensor + mean_tensor).clamp(0.0, 1.0)
         total = torch.zeros(images.size(0), device=device)
-        for overlay in overlays:
-            blended = images + overlay.unsqueeze(0)
+        for overlay in overlay_pixels:
+            superimposed = (pixels + overlay.unsqueeze(0)).clamp(0.0, 1.0)
+            blended = (superimposed - mean_tensor) / std_tensor
             probs = forward_probs(model, blended, device, use_bfloat16)
             total += _entropy(probs)
         scores.append((total / len(overlays)).cpu())
