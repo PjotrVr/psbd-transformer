@@ -94,6 +94,16 @@ def logit_lens_statistics(
                          which is already the low-means-poisoned convention. Not
                          negated: an earlier version negated it and so scored against
                          its own stated prediction.
+      depth_soft         the mean over layers of the lens probability of the final
+                         answer, negated. Same mechanism as depth_cls but continuous.
+                         depth_cls takes 12 integer values, so a clean-quantile threshold
+                         lands on a tie and the strict < test drops every sample sitting
+                         exactly on it. On vit_gtsrb_badnet_a2o_0_1 that is the whole
+                         backdoor population: mean depth is exactly 5.000 against clean
+                         7.292, AUROC 0.994, and TPR at 1% FPR reads 0.000 because the
+                         threshold IS 5.0. At 5% FPR the same score reads TPR 1.000 at an
+                         achieved FPR of 0.011. The detector was never the problem; the
+                         integer tie was.
       token_max_prob     the largest final-class probability any single patch token
                          assigns. On a clean image the winning class is supported by
                          many patches and at least one is nearly saturated; a trigger
@@ -113,6 +123,7 @@ def logit_lens_statistics(
         name: []
         for name in (
             "depth_cls",
+            "depth_soft",
             "depth_token_min",
             "token_agreement",
             "token_max_prob",
@@ -134,11 +145,17 @@ def logit_lens_statistics(
                 )
                 return kept.shape[0] - kept.sum(dim=0)
 
-            cls_layers = torch.stack(
-                [vit.heads(vit.encoder.ln(h[:, 0])).argmax(dim=1) for h in captured]
-            )  # (layers, batch)
+            cls_logits = torch.stack(
+                [vit.heads(vit.encoder.ln(h[:, 0])) for h in captured]
+            )  # (layers, batch, classes)
             collected["depth_cls"].append(
-                settle_depth(cls_layers == final.view(1, -1)).cpu()
+                settle_depth(cls_logits.argmax(dim=-1) == final.view(1, -1)).cpu()
+            )
+            lens_probability = torch.softmax(cls_logits, dim=-1).gather(
+                2, final.view(1, -1, 1).expand(cls_logits.shape[0], -1, 1)
+            )
+            collected["depth_soft"].append(
+                -lens_probability.squeeze(2).mean(dim=0).cpu()
             )
 
             # (layers, batch, tokens): the lens prediction of every patch at every depth
