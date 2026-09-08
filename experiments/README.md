@@ -49,6 +49,7 @@ only measure which operator perturbs hardest.
 | `dropout_kills_direction/` | does dropout at each placement destroy the backdoor direction or spare it? | H3, H20 | `docs/hypothesis/H3-*.md` |
 | `gaussian_batch_coupling/` | did the batch-wide std in GaussianNoise bias the split comparison? | audit A2 | `docs/audit-2026-09-07.md` |
 | `head_profile/` | does the shape of a per-unit sensitivity profile detect what its mean cannot? | H18, H35 | `docs/hypothesis/H18-*.md`, `docs/hypothesis/H35-*.md` |
+| `low_fpr_audit/` | what does PSBD deliver at a false-positive budget a defender would run? | audit | `experiments/low_fpr_audit/README.md` |
 | `monte_carlo_passes/` | is the 1% failure estimator noise, fixable by raising k? | H24 | `docs/hypothesis/H24-*.md` |
 | `multi_probe/` | can a min-rank rule over several operators recover detection after evasion? | H41 | `docs/hypothesis/H41-*.md` |
 | `operator_ranking/` | is the low-poison-rate failure a bad operating point rather than a limit? | H17 | `docs/results/operator-position-ranking.md`, `docs/results/detection-operating-points.md` |
