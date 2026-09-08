@@ -70,7 +70,46 @@ threat model already grants, and applies 1 fixed rule everywhere: far from clean
 either direction is suspicious. The threshold stays a quantile of the validation
 deviation, so the false-positive budget is set exactly as before.
 
-## The panel verdict: it does not beat PSBD
+## The verdict on HARD attacks: it loses to PSBD
+
+BadNet is the wrong thing to judge this on. It implants at ASR 0.997 to 1.000 everywhere
+and the ledger already records that "its detection behaviour is least like the others".
+Restricted to the attacks that are actually hard (adaptive_blend, WaNet, LC, SIG, LF, Bpp,
+TaCT), over 41 cells at every poison rate:
+
+| | mean AUROC | inversions |
+|---|---|---|
+| `depth_cls` | **0.720** | 10/41 |
+| PSBD | **0.796** | |
+
+So the earlier "0.983 against PSBD's 0.974 on GTSRB" was GTSRB **including BadNet and
+Blend at 10%**, and it does not survive the cut. The single worst case is the attack
+designed to defeat detectors:
+
+| cell | `depth_cls` | PSBD |
+|---|---|---|
+| `vit_gtsrb_adaptive_blend_0_05` | 0.695 | **0.986** |
+| `vit_cifar10_adaptive_blend_0_1` | 0.643 | **0.924** |
+| `vit_gtsrb_lc_0_1` | 0.421 | 0.522 |
+| `vit_gtsrb_sig_0_1` | 0.427 | 0.451 |
+| `vit_cifar10_tact_0_05` | 0.034 | - |
+
+**Where it genuinely wins is WaNet**, and only WaNet:
+
+| cell | `depth_cls` | PSBD |
+|---|---|---|
+| `vit_cifar10_wanet_0_1` | **0.848** | 0.408 |
+| `vit_cifar100_wanet_0_1` | **0.817** | 0.702 |
+| `vit_gtsrb_wanet_0_1` | **0.933** | 0.854 |
+
+WaNet is a warp, and H27 already recorded that `token_mask` is worst on exactly that
+attack (0.747 against 0.985 on the patch trigger). A depth statistic reading the residual
+stream appears to catch what a token-space perturbation misses. That is a narrow, specific
+and checkable claim, and it is the only one this experiment currently supports.
+
+## The earlier CIFAR-10 result, retained as a caution
+
+## The panel verdict on the token statistic
 
 The CIFAR-10 cell above is not representative, and GTSRB (43 classes) shows why. Same
 protocol, 10% poisoning, `token_agreement` read in the direction its own mechanism
