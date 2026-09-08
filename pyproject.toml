@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-analysis = ["umap-learn"]
+analysis = ["umap-learn", "pandas"]
 dev = ["ruff", "ipython", "jupyter", "ipykernel", "pytest>=9.1.1", "scikit-image"]
 
 [tool.pytest.ini_options]

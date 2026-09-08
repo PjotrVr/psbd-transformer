@@ -1,7 +1,7 @@
 # PSBD-ViT
 
 Prediction Shift Backdoor Detection adapted from ConvNets to Vision
-Transformers (ViT-B/16 and Swin-T). Evaluated on CIFAR-10, CIFAR-100,
+Transformers (ViT-B/16 and Swin-S). Evaluated on CIFAR-10, CIFAR-100,
 GTSRB, and Tiny ImageNet against 10 backdoor attacks, including an
 adaptive attacker that knows the defence.
 
@@ -12,19 +12,39 @@ AUROC 0.911 on CIFAR-100 across all attacks and poison rates, with zero
 inversions and worst-case floor 0.632. Position matters more than operator
 choice (position variance 1.43x operator variance).
 
-**PSBD measures decision margin, not neuron bias.** Gaussian noise (an
-unstructured perturbation with no neuron-dropping semantics) matches the best
-structured masks at AUROC 0.950. The mechanism is perturbation of the
-decision boundary, not selective disruption of backdoor neurons.
+**PSBD measures decision margin.** An unstructured perturbation with no
+neuron-dropping semantics matches the best structured masks, so removing capacity
+is not what carries the method. A second order expansion says why: the prediction
+shift is a curvature measurement, the perturbation site sets the curvature and the
+operator sets only the noise covariance, and softmax curvature falls as the
+decision margin grows. Four independent negative results on structured masking
+follow from the same expression. See `docs/theory-perturbation-consistency.md`.
 
-**Adaptive attacker.** A hinge penalty that matches poisoned PSU onto the
-clean distribution collapses the probed operator's AUROC from 0.952 to 0.322,
-while preserving ASR (delta -0.004) at a cost of 4.8 points CA.
+The headline Gaussian number is being re-measured. It was produced by an operator
+whose noise was scaled by a batch wide statistic, and the position it most
+affected is the one the previous figure came from.
 
-**Multi-probe defence.** Min-rank union of k independent perturbation
-operators recovers AUROC to 0.951 on evasive checkpoints. Evasion is
-probe-specific: different operators produce different Jacobians, so the
-attacker cannot evade all simultaneously without prohibitive memory cost.
+**Adaptive attacker.** A hinge penalty that matches poisoned PSU onto the clean
+distribution collapses the probed operator's AUROC from 0.952 to 0.322 while
+preserving ASR, delta -0.004. It costs 4.8 points of clean accuracy, which is
+**above the 2 point budget this project's own threat model set** as the line
+between evasion and simply damaging the model. It is reported as a partial
+evasion, and tuning the penalty weight down is the obvious next step.
+
+**Multi-probe defence.** The min-rank union of k independent perturbation
+operators recovers detection on evasive checkpoints, where a single probed
+operator collapses to 0.322. Evasion is probe specific, and the reason is
+structural: a perturbation operator sets the covariance of the noise, an attacker
+minimising the gap for 1 operator constrains only the curvature it can see, and a
+second operator reads a projection that was never constrained. See
+`docs/theory-perturbation-consistency.md`.
+
+The exact AUROC is being re-measured. The published 0.951 included a Gaussian
+probe whose noise was scaled by a batch wide statistic, which ran the backdoor
+split 13 to 32 percent hotter than the clean split it was compared against. The
+operator is fixed and the re-sweep is queued. Correcting the threshold rule at the
+same time raised the defence's TPR from 0.877 to 0.979 at a correctly calibrated
+25 percent false positive budget, with AUROC unmoved.
 
 ## Installation
 
@@ -45,27 +65,41 @@ pip install -r requirements.txt
 
 ### 1. Train a backdoored model
 
+The label mode is part of the attack name (`badnet_a2o` is all-to-one,
+`badnet_a2a` is all-to-all), and `--output` is the path to the checkpoint
+file, whose parent directory is the folder name every later stage refers to.
+
 ```bash
 python train_backdoor.py \
     --architecture vit \
     --dataset cifar100 \
-    --attack badnet \
-    --label_mode all_to_one \
-    --poison_rate 0.1
+    --attack badnet_a2o \
+    --poison-rate 0.1 \
+    --epochs 15 \
+    --output checkpoints/vit_cifar100_badnet_a2o_0_1/attack_result.pt
 ```
 
 ### 2. Run the PSBD sweep
 
+Stage 1 on GPU. Position and operator are separate axes: `--position-config`
+is where the perturbation is injected, `--perturbation` is what is injected.
+`--checkpoint-folder` takes bare folder names, resolved under
+`--checkpoints-dir` (default `checkpoints`).
+
 ```bash
 python psbd_dropout_sweep.py \
-    --checkpoint checkpoints/vit_cifar100_badnet_a2o_0_1 \
-    --positions before_attention_norm_token_mask
+    --checkpoint-folder vit_cifar100_badnet_a2o_0_1 \
+    --position-config before_attention_norm \
+    --perturbation token_mask
 ```
 
 ### 3. Analyze detection metrics
 
+Stage 2 on CPU. `--all` covers every folder under `results/` that already has
+a stage-1 cache.
+
 ```bash
-python psbd_analyze.py --checkpoint checkpoints/vit_cifar100_badnet_a2o_0_1
+python psbd_analyze.py --checkpoint-folder vit_cifar100_badnet_a2o_0_1
 python psbd_report.py
 ```
 
@@ -76,7 +110,8 @@ attacks/             10 attack implementations + registry
 analysis/            Latent-space analysis: TAC, CKA, PCA, UMAP, Lipschitz
 defences/            PSBD detection: dropout hooks, inference, metrics, cache
 utils/               Dataset specs, data loading, transforms
-scripts/             Hypothesis-driven experiments (one per subdirectory)
+experiments/         Hypothesis-driven experiments (one per subdirectory, each with a README)
+scripts/             Repo-level tools: detection_summary, verify_results, backfill_metadata
 tests/               Test suite (200+ tests)
 docs/hypothesis/     42 pre-registered hypotheses with verdicts
 docs/results/        Detection tables, analysis reports, protocol docs
@@ -117,10 +152,12 @@ produce per-checkpoint job scripts. The two-stage pipeline:
 
 Results are tracked in `results/<checkpoint>/psbd_metrics.json` (versioned).
 
-For the adaptive attacker experiments, `train_backdoor.py --adaptive` trains
-evasive models. Analysis scripts in `scripts/adaptive_attack/`,
-`scripts/multi_probe/`, and `scripts/adaptive_defender/` produce the
-transfer, multi-probe, and forensic identification results.
+For the adaptive attacker experiments, `train_backdoor.py --evade-psbd` trains
+evasive models, with `--evade-position`, `--evade-operator` and
+`--evade-weight` selecting the probe it trains against. Analysis scripts in
+`experiments/adaptive_attack/`, `experiments/multi_probe/`, and
+`experiments/adaptive_defender/` produce the transfer, multi-probe, and forensic
+identification results.
 
 ## Hypothesis register
 
