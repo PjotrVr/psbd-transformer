@@ -1,11 +1,40 @@
 # H44 — PSBD's failure is a continuous law in content dependence, and it is a free attack
 
-**Status: SUPPORTED, and it is the strongest attack result in this project.** On GTSRB at
+**Status: SUPPORTED as a measurement, but the FRAMING IS ANTICIPATED by A2X (AAAI 2026),
+which sweeps the same knob. See the prior-art section immediately below before citing any
+of this as novel.** On GTSRB at
 10% poisoning, sending the trigger to **8 distinct target classes instead of 1** drives
 PSBD's AUROC from **0.999 to 0.491** and its TPR at 1% FPR from **0.981 to 0.007**, for an
 ASR cost of **1.3 percentage points** (1.000 to 0.987) and a clean accuracy that actually
 *improves* (0.972 to 0.991). No dropout rate rescues the defender: over the whole 10-rate
 surface the best cell an oracle could pick is **0.532**.
+
+## PRIOR ART: the law itself is substantially anticipated
+
+**A2X, "Enhancing All-to-X Backdoor Attacks with Optimized Target Class Mapping"** (Wang,
+Tian, Han, Xu; arXiv 2511.13356, 17 Nov 2025; AAAI 2026) sweeps the target count over
+X in {1, 2, 5, 8, 10}, which is the same knob as `all_to_m`, and reports that
+representative state-of-the-art defences are ineffective against A2X attacks. The framing
+"detectability falls as the number of target classes rises" is therefore **theirs, not
+ours**, and must be cited as the primary reference rather than as related work.
+
+Verified directly (2026-09-08) rather than taken from a survey: the arXiv entry exists and
+the AAAI proceedings version is public.
+
+What is left after that citation is narrower and has to be stated as such:
+
+1. **The decoupling, with numbers.** A2X optimises the target MAPPING to raise ASR. This
+   measures the opposite margin: how much detectability an attacker can destroy at a fixed,
+   essentially zero ASR cost. On GTSRB at 10%, AUROC 0.999 to 0.491 for 1.3 ASR points.
+2. **The whole-rate-surface control.** The defender has a free parameter, and showing the
+   collapse at one matched rate proves nothing. Every rate from 0.05 to 0.90 is reported, and
+   the best cell an oracle could pick at m = 8 is 0.532. This project has inverted 4 of its
+   own conclusions by omitting exactly this control.
+3. **Against PSBD specifically**, which is CVPR 2025 and does not appear in A2X's defence set.
+4. **On ViT-B/16**, where A2X's evaluation is CNN-centric.
+
+A "continuous law in log2(m)" is not a contribution on top of A2X. The free-evasion point
+and the rate-surface control may be.
 
 ## Claim
 
