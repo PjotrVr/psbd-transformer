@@ -24,7 +24,7 @@ from defences.inference import forward_probs
 from defences.perturbations import masked_attention_forward
 from models import load_checkpoint, network_core
 from utils.config import DATASET_REGISTRY
-from utils.datasets import extract_labels, load_clean_datasets
+from utils.datasets import extract_labels, limit_dataset, load_clean_datasets
 from poison import AttackSuccessSet, PoisonedTrainingSet
 from torchvision.transforms import v2 as transforms_v2
 
@@ -82,9 +82,10 @@ def load_eval_sets(dataset_name, attack_name, target_label):
         ]
     )
     _, test_base = load_clean_datasets(dataset_name, base_transform, "raw_data")
-    test_base = torch.utils.data.Subset(
-        test_base, range(min(MAX_SAMPLES, len(test_base)))
-    )
+    # A random subset, never a first-N slice. The ImageFolder-backed loaders list
+    # samples sorted by class, so on Tiny a first-500 slice covers 10 of 200 classes
+    # and on GTSRB it is similarly degenerate. Measured, not assumed.
+    test_base = limit_dataset(test_base, MAX_SAMPLES, seed=0)
 
     normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
     labels = extract_labels(test_base)
@@ -195,6 +196,12 @@ def evaluate_targeted_heads(model, dataset_name, attack_name, target_label, head
 
     clean_psu = ((clean_base - clean_perturbed) / clean_base.clamp(min=1e-8)).numpy()
     bd_psu = ((bd_base - bd_perturbed) / bd_base.clamp(min=1e-8)).numpy()
+
+    # AttackSuccessSet drops the ineligible rows, so the 2 loaders serve different
+    # populations and comparing them as served measures which classes were dropped as
+    # well as the defence. indices are positions into the same base, so they pair the
+    # clean rows back onto their own counterparts.
+    clean_psu = clean_psu[np.asarray(backdoor_loader.dataset.indices, dtype=int)]
 
     scores = np.concatenate([clean_psu, bd_psu])
     labels = np.concatenate([np.zeros(len(clean_psu)), np.ones(len(bd_psu))])

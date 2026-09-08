@@ -18,12 +18,18 @@ Run:
 
 import argparse
 import glob
+import json
 import os
 
 import pandas as pd
 
 from psbd.cache import load_baseline, load_dropout_pass_probs
-from psbd.decision import HEADLINE_QUANTILE, detection_report, multi_probe_detection
+from psbd.decision import (
+    HEADLINE_QUANTILE,
+    detection_report,
+    multi_probe_detection,
+    pair_clean_to_backdoor,
+)
 from psbd.scores import psu_from_cache, shift_ratio
 
 # The shift ratio every probe is read at, so probes are compared at a matched
@@ -103,6 +109,16 @@ def measure_checkpoint(folder, results_dir):
     probes = [p for p in probes if p is not None]
     if len(probes) < 3:
         return None
+
+    with open(os.path.join(psbd_dir, "split_manifest.json")) as handle:
+        manifest = json.load(handle)
+
+    # The clean split covers the whole analysis pool and the backdoor split only the
+    # eligible subset, so comparing them as served contrasts different populations and
+    # measures which classes were dropped as much as it measures the defence. Every
+    # other consumer in the tree pairs by original index; this one did not.
+    for probe in probes:
+        probe["psu"]["clean"] = pair_clean_to_backdoor(probe["psu"]["clean"], manifest)
 
     singles = [
         detection_report(
