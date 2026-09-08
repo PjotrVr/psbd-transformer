@@ -70,7 +70,58 @@ threat model already grants, and applies 1 fixed rule everywhere: far from clean
 either direction is suspicious. The threshold stays a quantile of the validation
 deviation, so the false-positive budget is set exactly as before.
 
-## The verdict on HARD attacks: it loses to PSBD
+## The headline: same AUROC, but it works at a budget PSBD cannot
+
+Judged the way it should be judged. BadNet and Blend excluded, because BadNet implants at
+ASR 0.997 to 1.000 everywhere and the ledger already records that "its detection behaviour
+is least like the others". Poison rates 1% and 5% only. Attacks that actually implanted
+(ASR >= 0.5) only. Paired against PSBD on the same cells, same splits, same pairing.
+
+**n = 31 (adaptive_blend, WaNet, LC, SIG, LF, Bpp), 1% and 5%:**
+
+| | AUROC | **TPR at 1% FPR** | forward passes |
+|---|---|---|---|
+| `depth_soft` | 0.845 | **0.697** | **1** |
+| PSBD | 0.835 | **0.412** | 30 |
+| delta | +0.010, CI [-0.030, +0.046] | **+0.284, CI [+0.119, +0.445]** | |
+
+**AUROC is a tie and the confidence interval says so.** The result is entirely at the
+operating point: at a 1% false-positive budget it catches 70% where PSBD catches 41%,
+winning 23 of 31 cells, from a thirtieth of the compute.
+
+That is not a coincidence. `experiments/low_fpr_audit/` measured that 13 of 56 cells have
+AUROC >= 0.85 with TPR@1%FPR < 0.05, i.e. PSBD's binding failure is the extreme tail rather
+than the average. This lands exactly there.
+
+By attack, TPR at 1% FPR:
+
+| attack | n | `depth_soft` | PSBD |
+|---|---|---|---|
+| LF | 8 | **0.884** | 0.507 |
+| Bpp | 8 | **0.859** | 0.460 |
+| WaNet | 4 | **0.769** | 0.157 |
+| adaptive_blend | 7 | 0.531 | 0.529 |
+| LC | 3 | **0.269** | 0.145 |
+| SIG | 1 | 0.062 | **0.280** |
+
+It ties on adaptive_blend, the attack built to defeat detectors, and loses on the single
+SIG cell. The large wins are WaNet, Bpp and LF.
+
+**Benign controls, all 4 datasets:** 0.481, 0.481, 0.501, 0.498, mean **0.491**, with TPR
+at the 1% budget reading 0.010 to 0.012, i.e. exactly nominal. The signal is not an
+artifact of applying a trigger.
+
+### What has to be settled before this is a claim
+
+- **Prior art.** TED (S&P 2024) and TED++ do layer-wise trajectory analysis with clean-only
+  calibration for backdoor input detection, above 0.95 AUROC, on ResNets. That is the number
+  to beat, not a citation. Orion (IJCAI 2023) uses internal-readout-disagrees-with-final-
+  answer as a per-input poisoned score.
+- The AUROC delta is not significant. The claim is a low-FPR claim and must be stated as one.
+- Mostly single seed. A few cells have `_seed_1` and `_seed_2` replicates and those should
+  set the pre-registered n.
+
+## The earlier verdict, retained: on AUROC alone it loses
 
 BadNet is the wrong thing to judge this on. It implants at ASR 0.997 to 1.000 everywhere
 and the ledger already records that "its detection behaviour is least like the others".
