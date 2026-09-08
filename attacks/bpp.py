@@ -23,6 +23,11 @@ class BppConfig:
     bit_depth: int = 3  # bits per channel, giving 2 to the power bit_depth levels
     dither: bool = False
     label_mode: str = "all_to_one"
+    # Negative samples: images quantized to a DIFFERENT depth with their label kept,
+    # so the network cannot learn "quantized" as the cue and has to learn this
+    # specific depth. BackdoorBench calls this neg_ratio and sets it to 0.1. Without
+    # it the trigger is a generic quantization artefact and easier to detect.
+    cover_rate: float = 0.0
 
 
 def _quantize(image: torch.Tensor, levels: int) -> torch.Tensor:
@@ -62,4 +67,21 @@ def build(config: BppConfig, image_size: int, target_label: int) -> Attack:
         channels = [_floyd_steinberg(image[c], levels) for c in range(image.shape[0])]
         return torch.stack(channels)
 
-    return Attack("bpp", apply_trigger, config.label_mode, target_label)
+    def apply_cover(image: torch.Tensor, index: int) -> torch.Tensor:
+        """A negative sample: quantized to some OTHER depth, label kept.
+
+        The depth is drawn from the sample index, excluding the trigger's own, so a
+        run is reproducible and no negative sample accidentally carries the trigger.
+        """
+        generator = torch.Generator().manual_seed(index)
+        choices = [d for d in (1, 2, 4, 5, 6) if d != config.bit_depth]
+        depth = choices[int(torch.randint(len(choices), (1,), generator=generator))]
+        return _quantize(image, 2**depth)
+
+    return Attack(
+        "bpp",
+        apply_trigger,
+        config.label_mode,
+        target_label,
+        apply_cover=apply_cover,
+    )

@@ -15,12 +15,15 @@ Example
 """
 
 import argparse
+import os
 import time
+from dataclasses import replace
+
 
 import torch
 import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, Subset
 
 from psbd.attacks import ATTACK_NAMES, build_attack, default_config
 from psbd.attacks.generated import GeneratedConfig
@@ -32,7 +35,7 @@ from psbd.data import (
     load_clean_datasets,
 )
 from psbd.eval_loaders import build_clean_loader
-from psbd.evaluation import evaluate_attack
+from psbd.evaluation import clean_accuracy, evaluate_attack
 from psbd.evasion import FlaggedPoisonedSet, calibrate_probe_rate
 from psbd.poisoning import (
     Attack,
@@ -49,6 +52,10 @@ from psbd.training import (
     utc_timestamp,
 )
 
+# Interpolation is measured on a fixed subsample; the trajectory, not the exact
+# value, is what the snapshot sweep reads.
+TRAIN_EVAL_SAMPLES = 10000
+
 
 def resolve_config(attack_name: str, poisoned_dir: str):
     """The attack's config, with the generated adapter pointed at its trigger folder."""
@@ -57,6 +64,30 @@ def resolve_config(attack_name: str, poisoned_dir: str):
 
     config = default_config(attack_name)
     return config
+
+
+# Cover-sample rates the papers specify, as a multiple of the poisoning rate.
+# WaNet's noise mode and Adaptive-Blend's cover both scale with the poison rate, so a
+# fixed constant is 10x too small at 10% poisoning and the attack loses the stealth
+# the mechanism exists to provide. TaCT's reference selects cover by CLASS rather than
+# by rate, so its config constant stands and it is deliberately absent here.
+COVER_RATE_MULTIPLES = {
+    "wanet": 2.0,  # BackdoorBench cross_ratio 2; PSBD "twice the poisoning ratio"
+    "adaptive_blend": 1.0,  # Qi et al. and PSBD: cover ratio equal to the poisoning ratio
+    "bpp": 1.0,  # BackdoorBench neg_ratio 0.1 against pratio 0.1
+}
+
+
+def resolve_cover_rate(attack_name: str, poison_rate: float, override):
+    """The cover rate to use: an explicit override, else the attack's paper value.
+
+    Returns None when the attack defines no cover mechanism, leaving the config's own
+    value in place.
+    """
+    if override is not None:
+        return override
+    multiple = COVER_RATE_MULTIPLES.get(attack_name)
+    return None if multiple is None else multiple * poison_rate
 
 
 def build_training_set(
@@ -119,6 +150,12 @@ def build_training_loader(
     normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
 
     config = resolve_config(args.attack, args.poisoned_dir)
+    cover_rate = resolve_cover_rate(
+        args.attack, args.poison_rate, getattr(args, "cover_rate", None)
+    )
+    if cover_rate is not None:
+        config = replace(config, cover_rate=cover_rate)
+        print(f"cover rate for {args.attack}: {cover_rate:.4f}")
     attack = build_attack(args.attack, config, image_size, args.target_label)
 
     poisoned_train, realized_poison_rate = build_training_set(
@@ -230,6 +267,31 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", required=True)
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument(
+        "--cover-rate",
+        type=float,
+        default=None,
+        help="Cover-sample rate. Default None resolves the value the attack's paper "
+        "specifies as a multiple of the poisoning rate: 2x for wanet's noise mode, "
+        "1x for adaptive_blend and bpp. TaCT keeps its config constant because its "
+        "reference selects cover by class, not by rate.",
+    )
+    parser.add_argument(
+        "--checkpoint-freq",
+        type=int,
+        default=0,
+        help="Snapshot every Nth epoch into its own checkpoint folder. 0 (default) "
+        "disables snapshotting entirely, so existing runs are unaffected.",
+    )
+    parser.add_argument(
+        "--checkpoint-dense-until",
+        type=int,
+        default=0,
+        help="Snapshot EVERY epoch up to and including this one, then fall back to "
+        "--checkpoint-freq. Detection quality moves while the model is still "
+        "fitting the training set and stops moving once it interpolates, so a flat "
+        "interval spends most of its snapshots in the flat region.",
+    )
+    parser.add_argument(
         "--max-samples",
         type=int,
         default=-1,
@@ -238,6 +300,123 @@ def parse_args() -> argparse.Namespace:
         "This alone does not imply smoke semantics, and --epochs is independent.",
     )
     return parser.parse_args()
+
+
+def snapshot_epochs(total: int, dense_until: int, freq: int) -> set[int]:
+    """Which epochs to snapshot: every one through dense_until, then every freq-th.
+
+    Two phases because the interesting part of the trajectory is the approach to
+    training-set interpolation, which is early; once the model interpolates the
+    detection metrics stop moving, so the tail only needs sampling.
+    """
+    if dense_until <= 0 and freq <= 0:
+        return set()
+    chosen = set(range(1, min(dense_until, total) + 1))
+    if freq > 0:
+        chosen |= {e for e in range(1, total + 1) if e % freq == 0 and e > dense_until}
+    return chosen
+
+
+def build_train_eval_loader(train_loader: DataLoader, args) -> DataLoader:
+    """The poisoned training set the model actually saw, unshuffled, for train accuracy.
+
+    Measuring interpolation on the CLEAN split is wrong for a clean-label attack. The
+    eligible pool there is one class, so at a high enough rate every target-class image
+    is poisoned and the model never saw a clean one: SIG at 10% on CIFAR-10 reads 0.0016
+    on the target class and 0.98 to 1.00 on the rest, which looks like a model that never
+    fits its training data when in fact it fits what it was given to ~0.99.
+
+    Capped at 10000 samples because this runs at every snapshot and the question is when
+    the model interpolates, which a fixed subsample tracks as well as the full set.
+    """
+    dataset = train_loader.dataset
+    if len(dataset) > TRAIN_EVAL_SAMPLES:
+        generator = torch.Generator().manual_seed(args.seed)
+        picked = torch.randperm(len(dataset), generator=generator)[:TRAIN_EVAL_SAMPLES]
+        dataset = Subset(dataset, picked.tolist())
+    return DataLoader(
+        dataset,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
+    )
+
+
+def build_snapshot_hook(
+    args,
+    num_classes,
+    attack,
+    config,
+    realized_poison_rate,
+    started_at,
+    device,
+    train_loader,
+):
+    """Write each chosen epoch as a full checkpoint folder, or None if disabled.
+
+    Each snapshot is a complete, self-describing checkpoint directory rather than
+    a bare state dict, so psbd_dropout_sweep.py --checkpoint-folder, psbd_analyze
+    and the table generator all read it with no changes. That is the whole reason
+    for the naming: `<base>_ep07` sits beside `<base>` and looks like any other run.
+
+    ASR is deliberately left None. Evaluating it costs a full poisoned pass and the
+    sweep backfills it into args.json from the PSBD baseline cache anyway, so paying
+    for it at every snapshot would be waste.
+    """
+    chosen = snapshot_epochs(
+        args.epochs, args.checkpoint_dense_until, args.checkpoint_freq
+    )
+    if not chosen:
+        return None
+
+    train_eval_loader = build_train_eval_loader(train_loader, args)
+    base_dir = os.path.dirname(args.output)
+    filename = os.path.basename(args.output)
+    print(f"snapshotting {len(chosen)} epochs: {sorted(chosen)}")
+
+    def hook(model, epoch: int, validation_accuracy: float) -> None:
+        if epoch not in chosen:
+            return
+        was_training = model.training
+        train_accuracy = clean_accuracy(model, train_eval_loader, device, True)
+        metadata = checkpoint_metadata(
+            dataset=args.dataset,
+            attack=args.attack,
+            label_mode=attack.label_mode,
+            target_label=args.target_label,
+            poison_rate=args.poison_rate,
+            realized_poison_rate=realized_poison_rate,
+            cover_rate=getattr(config, "cover_rate", 0.0),
+            architecture=args.architecture,
+            use_sam=args.use_sam,
+            rho=args.rho,
+            epochs=epoch,
+            seed=args.seed,
+            max_samples=args.max_samples,
+            clean_accuracy=validation_accuracy,
+            asr=None,
+            started_at=started_at,
+            ended_at=utc_timestamp(),
+            model_dropout=args.model_dropout_train,
+        )
+        # The trajectory fields the interpolation question turns on. Kept out of
+        # checkpoint_metadata so its key set stays identical across entrypoints.
+        metadata["epoch"] = epoch
+        metadata["train_accuracy"] = train_accuracy
+        metadata["snapshot_of"] = os.path.basename(base_dir)
+        save_checkpoint(
+            model,
+            num_classes,
+            os.path.join(f"{base_dir}_ep{epoch:02d}", filename),
+            metadata=metadata,
+        )
+        print(
+            f"  snapshot epoch {epoch}: train_acc={train_accuracy:.4f} "
+            f"val_acc={validation_accuracy:.4f}"
+        )
+        model.train(was_training)
+
+    return hook
 
 
 def main() -> None:
@@ -281,6 +460,16 @@ def main() -> None:
         rho=args.rho,
         model_dropout=args.model_dropout_train,
         evasion=evasion,
+        on_epoch_end=build_snapshot_hook(
+            args,
+            num_classes,
+            attack,
+            config,
+            realized_poison_rate,
+            started_at,
+            device,
+            train_loader,
+        ),
     )
     ended_at = utc_timestamp()
 
@@ -298,41 +487,43 @@ def main() -> None:
     )
     print(f"final ASR={metrics['asr']:.4f} CA={metrics['clean_accuracy']:.4f}")
 
-    save_checkpoint(
-        model,
-        num_classes,
-        args.output,
-        metadata=checkpoint_metadata(
-            dataset=args.dataset,
-            attack=args.attack,
-            label_mode=attack.label_mode,
-            target_label=args.target_label,
-            poison_rate=args.poison_rate,
-            realized_poison_rate=realized_poison_rate,
-            cover_rate=getattr(config, "cover_rate", 0.0),
-            architecture=args.architecture,
-            use_sam=args.use_sam,
-            rho=args.rho,
-            epochs=args.epochs,
-            seed=args.seed,
-            max_samples=args.max_samples,
-            clean_accuracy=metrics["clean_accuracy"],
-            asr=metrics["asr"],
-            started_at=started_at,
-            ended_at=ended_at,
-            evasion={
-                "weight": args.evade_weight,
-                "position": args.evade_position,
-                "operator": args.evade_operator,
-                "rate": evade_rate,
-                "rate_requested": args.evade_rate,
-                "passes": args.evade_passes,
-            }
-            if args.evade_psbd
-            else None,
-            model_dropout=args.model_dropout_train,
-        ),
+    # The cover count, not just the requested rate. A cover mechanism that silently
+    # produced zero samples looks identical to a successful run in every other field.
+    n_cover = len(getattr(train_loader.dataset, "cover_indices", ()) or ())
+    print(f"cover samples: {n_cover}")
+
+    metadata = checkpoint_metadata(
+        dataset=args.dataset,
+        attack=args.attack,
+        label_mode=attack.label_mode,
+        target_label=args.target_label,
+        poison_rate=args.poison_rate,
+        realized_poison_rate=realized_poison_rate,
+        cover_rate=getattr(config, "cover_rate", 0.0),
+        architecture=args.architecture,
+        use_sam=args.use_sam,
+        rho=args.rho,
+        epochs=args.epochs,
+        seed=args.seed,
+        max_samples=args.max_samples,
+        clean_accuracy=metrics["clean_accuracy"],
+        asr=metrics["asr"],
+        started_at=started_at,
+        ended_at=ended_at,
+        evasion={
+            "weight": args.evade_weight,
+            "position": args.evade_position,
+            "operator": args.evade_operator,
+            "rate": evade_rate,
+            "rate_requested": args.evade_rate,
+            "passes": args.evade_passes,
+        }
+        if args.evade_psbd
+        else None,
+        model_dropout=args.model_dropout_train,
     )
+    metadata["n_cover"] = n_cover
+    save_checkpoint(model, num_classes, args.output, metadata=metadata)
     print(f"saved {args.output}")
     print(
         f"time taken: {args.dataset} {args.attack} rate {args.poison_rate} took "

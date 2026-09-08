@@ -14,6 +14,7 @@ attack produced it.
 import json
 import os
 import subprocess
+from collections.abc import Callable
 from datetime import datetime, timezone
 
 import torch
@@ -122,6 +123,7 @@ def checkpoint_metadata(
     target_label: int,
     poison_rate: float,
     cover_rate: float,
+    realized_poison_rate: float | None,
     architecture: str,
     use_sam: bool,
     rho: float,
@@ -146,6 +148,11 @@ def checkpoint_metadata(
         "label_mode": label_mode,
         "target_label": target_label,
         "poison_rate": poison_rate,
+        # The rate actually achieved. choose_poison_indices caps the count at the
+        # eligible pool, and a clean-label attack is eligible only on the target
+        # class, so 1%, 5% and 10% can all resolve to the same poisoned set. Any
+        # poison-rate trend has to be read against this, never against the request.
+        "realized_poison_rate": realized_poison_rate,
         "cover_rate": cover_rate,
         "architecture": architecture,
         "optimizer": "sam" if use_sam else "adam",
@@ -204,6 +211,7 @@ def train_classifier(
     use_bfloat16: bool = True,
     evasion: dict | None = None,
     model_dropout: float = 0.0,
+    on_epoch_end: Callable[[nn.Module, int, float], None] | None = None,
 ) -> nn.Module:
     """Train a fresh model and report validation accuracy each epoch.
 
@@ -211,6 +219,11 @@ def train_classifier(
     (adaptive_evasion). It is the attacker's knob, not the defender's, and is
     recorded in the checkpoint metadata so a run can never be mistaken for a
     normally trained one.
+
+    on_epoch_end, when set, is called with (model, epoch, validation_accuracy)
+    after each epoch's validation. It exists so a caller can snapshot the
+    trajectory without this function learning about checkpoint paths; every write
+    stays on the caller's side. Left None, the loop is exactly what it was.
     """
     model = build_model(architecture, num_classes, model_dropout).to(device)
     criterion = nn.CrossEntropyLoss()
@@ -243,5 +256,7 @@ def train_classifier(
             f"epoch {epoch}: loss={average_loss:.4f} "
             f"val_acc={validation_accuracy:.4f}{extra}"
         )
+        if on_epoch_end is not None:
+            on_epoch_end(model, epoch, validation_accuracy)
 
     return model

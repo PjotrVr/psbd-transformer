@@ -23,6 +23,11 @@ class WaNetConfig:
     strength: float = 0.5
     field_seed: int = 0
     label_mode: str = "all_to_one"
+    # Noise mode. The paper trains on cover samples warped by a RANDOM field with
+    # their label kept, at twice the poisoning rate, so the network cannot learn
+    # "warped" as the cue and has to learn this specific warp. Without it the attack
+    # is materially easier to detect. BackdoorBench calls this cross_ratio 2.
+    cover_rate: float = 0.0
 
 
 def _identity_grid(image_size: int) -> torch.Tensor:
@@ -58,4 +63,25 @@ def build(config: WaNetConfig, image_size: int, target_label: int) -> Attack:
         )
         return warped.squeeze(0)
 
-    return Attack("wanet", apply_trigger, config.label_mode, target_label)
+    def apply_cover(image: torch.Tensor, index: int) -> torch.Tensor:
+        """Noise mode: the same image warped by a random field instead of the trigger.
+
+        original: grid_noise = grid_temps + ins / image_size,  ins ~ U(-1, 1)
+        The offset is drawn from the sample index so a run is reproducible.
+        """
+        size = image.shape[-1]
+        generator = torch.Generator().manual_seed(config.field_seed * 1_000_003 + index)
+        offsets = (torch.rand(1, size, size, 2, generator=generator) * 2.0 - 1.0) / size
+        noisy = (grid + offsets).clamp(-1.0, 1.0)
+        warped = F.grid_sample(
+            image.unsqueeze(0), noisy, align_corners=True, padding_mode="border"
+        )
+        return warped.squeeze(0)
+
+    return Attack(
+        "wanet",
+        apply_trigger,
+        config.label_mode,
+        target_label,
+        apply_cover=apply_cover,
+    )

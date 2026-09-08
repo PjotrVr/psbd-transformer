@@ -123,6 +123,7 @@ def train_one_benign(
             label_mode=None,
             target_label=0,
             poison_rate=0.0,
+            realized_poison_rate=0.0,
             cover_rate=0.0,
             architecture=args.architecture,
             use_sam=args.use_sam,

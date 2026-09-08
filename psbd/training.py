@@ -12,6 +12,7 @@ attack produced it.
 """
 
 import json
+from collections.abc import Callable
 import os
 import subprocess
 from datetime import datetime, timezone
@@ -250,6 +251,7 @@ def train_classifier(
     use_bfloat16: bool = True,
     evasion: dict | None = None,
     model_dropout: float = 0.0,
+    on_epoch_end: Callable[[nn.Module, int, float], None] | None = None,
 ) -> nn.Module:
     """Train a fresh model and report validation accuracy each epoch.
 
@@ -290,5 +292,9 @@ def train_classifier(
             f"epoch {epoch}: loss={average_loss:.4f} "
             f"val_acc={validation_accuracy:.4f}{extra}"
         )
+        # Lets a caller snapshot the trajectory without this function learning about
+        # checkpoint paths; every write stays on the caller's side.
+        if on_epoch_end is not None:
+            on_epoch_end(model, epoch, validation_accuracy)
 
     return model
