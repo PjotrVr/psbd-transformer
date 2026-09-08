@@ -34,6 +34,9 @@ only measure which operator perturbs hardest.
 | directory | question | hypothesis | cited by |
 | --- | --- | --- | --- |
 | `adaptive_attack/` | does evasion trained against 1 operator transfer to others? | H25 | `docs/results/adaptive-attacker-analysis.md` |
+| `all_to_all_entropy/` | is PSBD's uncovered case covered by a tensor its own cache already holds? | H43 | `docs/hypothesis/H43-*.md` |
+| `all_to_all_occlusion/` | can a spatially selective probe detect an all-to-all backdoor? | H5 follow-up | not yet validated, see its README |
+| `prediction_depth/` | when and from which tokens is the answer already decided? | new | `experiments/prediction_depth/README.md` |
 | `adaptive_defender/` | which operator was evaded, and what protocol should the defender run? | H42 | `docs/results/adaptive-defender-protocol.md` |
 | `attack_viability/` | which (attack, dataset, rate) combinations produced a backdoor that actually fires? | gate for every sweep | `pbs/generate_psbd_jobs.py` |
 | `attention_heads/` | do a few heads route the trigger, and does their entropy detect it? | H31, H40 | `docs/hypothesis/H31-*.md`, `docs/hypothesis/H40-*.md` |

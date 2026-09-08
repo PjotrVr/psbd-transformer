@@ -7,16 +7,26 @@ panel, switching from the published position (dropout @ pre_residual) to either
 token_mask @ before_attention_norm or gain_scale @ mlp_norm_out recovers
 detection at 1%.
 
-On CIFAR-100 at 1% (the hardest setting on the hardest dataset):
+On CIFAR-100 at 1% (the hardest setting on the hardest dataset), **at matched
+clean-validation shift ratio**:
 
-| Config | badnet | blend | lc | adaptive_blend | Mean |
-|---|---:|---:|---:|---:|---:|
-| dropout @ pre_residual (published) | 0.847 | 0.655 | 0.599 | 0.645 | 0.687 |
-| token_mask @ before_attention_norm | 0.960 | 0.945 | 0.786 | 0.706 | 0.849 |
-| gain_scale @ mlp_norm_out | 0.999 | 0.992 | 0.935 | 0.854 | 0.945 |
+| Config | Mean AUROC at 1% |
+|---|---:|
+| dropout @ pre_residual (published) | 0.687 |
+| **token_mask @ before_attention_norm** | **+0.166 over published** |
+| gain_scale @ mlp_norm_out | **+0.087** by the nearest-rate estimator |
 
-The position/operator search gains +0.162 (token_mask) to +0.258 (gain_scale)
-mean AUROC at 1% on CIFAR-100 over the published configuration.
+> **The earlier version of this table is WITHDRAWN** (audit A16). It printed
+> 0.847 / 0.960 / 0.999 with a 0.945 mean and claimed +0.162 to **+0.258**, but it read
+> the winner at shift ratio 0.95 to 0.98 against a baseline at 0.65 to 0.76, a
+> disturbance gap the same size as the reported effect. Over the full panel at matched
+> strength that `gain_scale` arm gains **-0.007**, not +0.258. It is also deterministic,
+> so it pays no Monte Carlo penalty the stochastic baseline pays, worth about 0.03.
+> `docs/results-report.md` carries the replacement numbers; this file previously kept the
+> withdrawn ones without saying so.
+
+The surviving claim is the `token_mask` one: **+0.166** mean AUROC at 1% on CIFAR-100
+over the published configuration, at matched shift ratio.
 
 Full detection tables: [cifar100-detection-tables.md](../results/cifar100-detection-tables.md),
 [tiny-detection-tables.md](../results/tiny-detection-tables.md).
