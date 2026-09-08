@@ -1,0 +1,164 @@
+[
+  {
+    "folder": "vit_cifar10_badnet_a2o_0_1",
+    "attack": "badnet_a2o",
+    "positions": {
+      "before_mlp": {
+        "splits": {
+          "validation": {
+            "batch_std_mean": 0.4986722607087965,
+            "sample_std_mean": 0.4986570968714853,
+            "n_batches": 384,
+            "n_samples": 24000
+          },
+          "clean": {
+            "batch_std_mean": 0.4988202581492563,
+            "sample_std_mean": 0.49876165137975476,
+            "n_batches": 480,
+            "n_samples": 30720
+          },
+          "backdoor": {
+            "batch_std_mean": 0.49509231668586534,
+            "sample_std_mean": 0.4950471537949246,
+            "n_batches": 480,
+            "n_samples": 30720
+          }
+        },
+        "backdoor_vs_clean_pct": -0.7473516567315275,
+        "validation_vs_clean_pct": -0.02966949277659589
+      },
+      "before_attention_norm": {
+        "splits": {
+          "validation": {
+            "batch_std_mean": 0.498283847157533,
+            "sample_std_mean": 0.497028844641832,
+            "n_batches": 384,
+            "n_samples": 24000
+          },
+          "clean": {
+            "batch_std_mean": 0.4973121968097985,
+            "sample_std_mean": 0.4961031083936784,
+            "n_batches": 480,
+            "n_samples": 30720
+          },
+          "backdoor": {
+            "batch_std_mean": 0.5627768087821702,
+            "sample_std_mean": 0.5619305727093888,
+            "n_batches": 480,
+            "n_samples": 30720
+          }
+        },
+        "backdoor_vs_clean_pct": 13.163685184541977,
+        "validation_vs_clean_pct": 0.19538035744297558
+      }
+    }
+  },
+  {
+    "folder": "vit_cifar100_badnet_a2o_0_1",
+    "attack": "badnet_a2o",
+    "positions": {
+      "before_mlp": {
+        "splits": {
+          "validation": {
+            "batch_std_mean": 0.5233154088103523,
+            "sample_std_mean": 0.5232622272322576,
+            "n_batches": 384,
+            "n_samples": 24000
+          },
+          "clean": {
+            "batch_std_mean": 0.5235882370732725,
+            "sample_std_mean": 0.5235086176418311,
+            "n_batches": 480,
+            "n_samples": 30720
+          },
+          "backdoor": {
+            "batch_std_mean": 0.5178516993920008,
+            "sample_std_mean": 0.5177824212684451,
+            "n_batches": 480,
+            "n_samples": 30720
+          }
+        },
+        "backdoor_vs_clean_pct": -1.0956200455032192,
+        "validation_vs_clean_pct": -0.05210740876174572
+      },
+      "before_attention_norm": {
+        "splits": {
+          "validation": {
+            "batch_std_mean": 0.5128874921550354,
+            "sample_std_mean": 0.5107489292537793,
+            "n_batches": 384,
+            "n_samples": 24000
+          },
+          "clean": {
+            "batch_std_mean": 0.5129423873499036,
+            "sample_std_mean": 0.5108193003671961,
+            "n_batches": 480,
+            "n_samples": 30720
+          },
+          "backdoor": {
+            "batch_std_mean": 0.6786174338931839,
+            "sample_std_mean": 0.6775361877810308,
+            "n_batches": 480,
+            "n_samples": 30720
+          }
+        },
+        "backdoor_vs_clean_pct": 32.29895805632944,
+        "validation_vs_clean_pct": -0.010702019607279045
+      }
+    }
+  },
+  {
+    "folder": "vit_cifar100_blend_0_1",
+    "attack": "blend",
+    "positions": {
+      "before_mlp": {
+        "splits": {
+          "validation": {
+            "batch_std_mean": 0.5219627307572713,
+            "sample_std_mean": 0.5219148457199335,
+            "n_batches": 384,
+            "n_samples": 24000
+          },
+          "clean": {
+            "batch_std_mean": 0.5222618533298373,
+            "sample_std_mean": 0.5221798496456661,
+            "n_batches": 480,
+            "n_samples": 30720
+          },
+          "backdoor": {
+            "batch_std_mean": 0.534119201079011,
+            "sample_std_mean": 0.5341013192436852,
+            "n_batches": 480,
+            "n_samples": 30720
+          }
+        },
+        "backdoor_vs_clean_pct": 2.270383654018306,
+        "validation_vs_clean_pct": -0.057274443970757066
+      },
+      "before_attention_norm": {
+        "splits": {
+          "validation": {
+            "batch_std_mean": 0.5209887132126217,
+            "sample_std_mean": 0.5190942173699538,
+            "n_batches": 384,
+            "n_samples": 24000
+          },
+          "clean": {
+            "batch_std_mean": 0.5206211729596059,
+            "sample_std_mean": 0.5187045584149018,
+            "n_batches": 480,
+            "n_samples": 30720
+          },
+          "backdoor": {
+            "batch_std_mean": 0.6009325000457466,
+            "sample_std_mean": 0.6001087755384409,
+            "n_batches": 480,
+            "n_samples": 30720
+          }
+        },
+        "backdoor_vs_clean_pct": 15.426058573374997,
+        "validation_vs_clean_pct": 0.07059648591057252
+      }
+    }
+  }
+]
