@@ -125,7 +125,7 @@ written.
 | [H40](H40-attention-entropy-detection.md) | Per-sample attention entropy in backdoor heads detects backdoor samples | **REFUTED**: AUROC 0.48 to 0.54 for most attacks (random). Blend shows strong inverted signal (higher entropy, AUROC 0.000 under one-sided convention) |
 | [H41](H41-multi-probe-defence.md) | Multi-probe PSBD defeats the adaptive attacker | **SUPPORTED**: min-rank union of k probes recovers AUROC 0.951 from single-probed 0.322. 48/56 above 0.90 |
 | [H42](H42-evasion-identification.md) | The evaded operator can be identified without poison labels | **REFUTED**: 8.9% accuracy by val PSU std, below 25% chance. Inherent operator differences dominate. Identification not needed: multi-probe works without it |
-| [H43](H43-entropy-covers-all-to-all.md) | The case PSBD cannot cover is covered by its own discarded tensor | **SUPPORTED** for the measurement (entropy 0.761 against PSBD's 0.411 on all-to-all, benign at chance, 1 cached forward pass), **OPEN** for the defence: selecting between the 2 without poison labels is unsolved and 2 routers are refuted |
+| [H43](H43-entropy-covers-all-to-all.md) | The case PSBD cannot cover is covered by its own discarded tensor | **SUPPORTED**: entropy 0.761 against PSBD's 0.411 on all-to-all, benign at chance, from 1 cached forward pass. A label-free sign rule (mean PSU of the suspect pool minus clean validation) selects between them for **+0.045**, CI [+0.017, +0.079], 98% of oracle-max, hurting 0 of 64 cells. Rests on 9 all-to-all cells and is 0.000 at 1% poisoning |
 
 ## Where this stands after phases 3a and 3b
 
