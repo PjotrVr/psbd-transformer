@@ -379,6 +379,78 @@ def load_critical_rate_from_disk(
     return critical_rate(baseline_labels, rates, argmax_by_rate, flip_fraction)
 
 
+def bracket_target_shift(
+    shift_by_rate: dict[float, float | None], target: float
+) -> tuple[float, float] | None:
+    """The 2 swept rates whose clean-validation shift ratio brackets the target.
+
+    Returns (lower_rate, upper_rate) with sigma(lower) <= target <= sigma(upper),
+    or None when the grid never crosses the target from both sides.
+
+    This exists because neither single-rate rule is a match on a coarse grid. On
+    vit_tiny_badnet_a2o_0_01 at token_mask before_attention_norm, the swept rates
+    give sigma 0.523 at 0.3 and 0.751 at 0.4, so a target of 0.6 has no rate near
+    it. Selecting the nearest rate scores that cell at sigma 0.523 while selecting
+    the smallest rate reaching the target scores it at 0.751, and those 2 readings
+    differ by 0.117 AUROC. That is more than twice the size of the largest
+    placement effect this project reports, so the choice of rule cannot be left
+    implicit.
+    """
+    usable = sorted(
+        (rate, sigma) for rate, sigma in shift_by_rate.items() if sigma is not None
+    )
+    if not usable:
+        return None
+
+    below = [rate for rate, sigma in usable if sigma <= target]
+    above = [rate for rate, sigma in usable if sigma >= target]
+    if not below or not above:
+        return None
+
+    bracket = (max(below), min(above))
+    return bracket
+
+
+def interpolate_at_target_shift(
+    shift_by_rate: dict[float, float | None],
+    value_by_rate: dict[float, float],
+    target: float,
+) -> float | None:
+    """A metric read at exactly the target shift ratio, linear between neighbours.
+
+        original form
+            f(sigma*) = f(sigma_lo) + (f(sigma_hi) - f(sigma_lo))
+                        * (sigma* - sigma_lo) / (sigma_hi - sigma_lo)
+
+        descriptive form
+            value_at_target = value_below + (value_above - value_below)
+                              * (target - sigma_below) / (sigma_above - sigma_below)
+
+    Every placement is then read at the SAME effective disturbance rather than at
+    whichever grid point happened to land closest, which is the comparison that
+    matching on shift ratio was introduced to make.
+
+    Returns None when the grid does not bracket the target, which is a real
+    limitation of that operator's rate grid and is reported rather than papered
+    over by falling back to the nearest rate.
+    """
+    bracket = bracket_target_shift(shift_by_rate, target)
+    if bracket is None:
+        return None
+
+    lower_rate, upper_rate = bracket
+    lower_sigma, upper_sigma = shift_by_rate[lower_rate], shift_by_rate[upper_rate]
+    if lower_rate not in value_by_rate or upper_rate not in value_by_rate:
+        return None
+    if upper_sigma == lower_sigma:
+        return float(value_by_rate[lower_rate])
+
+    span = (target - lower_sigma) / (upper_sigma - lower_sigma)
+    lower_value, upper_value = value_by_rate[lower_rate], value_by_rate[upper_rate]
+    interpolated = lower_value + (upper_value - lower_value) * span
+    return float(interpolated)
+
+
 def select_rate_by_oracle(auroc_by_rate: dict[float, float]) -> float | None:
     """The rate with the best AUROC. An ORACLE: it reads the backdoor labels.
 
@@ -451,12 +523,35 @@ def multi_probe_detection(
     clean_psu_per_probe: list[torch.Tensor],
     backdoor_psu_per_probe: list[torch.Tensor],
     target_fpr: float = HEADLINE_QUANTILE,
+    rule: str = "calibrated",
 ) -> dict:
     """TPR, FPR, and AUROC of the multi-probe union defence.
 
-    The threshold is the Bonferroni-corrected quantile of the combined clean-
-    validation score: per-probe quantile = target_fpr / k.
+    Two thresholding rules, both reading clean validation data only, so both stay
+    defender-legal:
+
+      calibrated  the target_fpr quantile of the combined validation score. That
+                  score is already a minimum over k probes, so its own quantile
+                  absorbs however correlated the probes happen to be and lands on
+                  target_fpr by construction. This is the default.
+      bonferroni  the literal value target_fpr / k on the rank scale, which flags
+                  a sample when ANY single probe ranks it below that. The union
+                  bound makes it conservative, so its achieved FPR is at most
+                  target_fpr and usually well under.
+
+    The earlier version applied the Bonferroni quantile target_fpr / k to the
+    COMBINED score rather than to a single probe's rank, which corrects twice.
+    The minimum of k ranks reaching its own target_fpr / k quantile is a much
+    rarer event than any one probe reaching target_fpr / k, so the achieved FPR
+    came out near target_fpr / k and TPR was understated by the same margin.
+    AUROC never depended on the threshold and is unchanged.
+
+    Both rules are reported. The top-level tpr, fpr and threshold keys follow the
+    rule argument.
     """
+    if rule not in ("calibrated", "bonferroni"):
+        raise ValueError(f"unknown rule {rule!r}, expected calibrated or bonferroni")
+
     k = len(val_psu_per_probe)
     bonferroni_q = target_fpr / k
 
@@ -464,19 +559,31 @@ def multi_probe_detection(
     clean_score = multi_probe_score(clean_psu_per_probe, val_psu_per_probe)
     backdoor_score = multi_probe_score(backdoor_psu_per_probe, val_psu_per_probe)
 
-    threshold = float(np.quantile(val_score.numpy(), bonferroni_q))
-    tpr = float((backdoor_score < threshold).float().mean())
-    fpr = float((clean_score < threshold).float().mean())
+    def rates_at(threshold: float) -> dict:
+        return {
+            "threshold": threshold,
+            "tpr": float((backdoor_score < threshold).float().mean()),
+            "fpr": float((clean_score < threshold).float().mean()),
+        }
+
+    by_rule = {
+        "calibrated": rates_at(float(np.quantile(val_score.numpy(), target_fpr))),
+        "bonferroni": rates_at(bonferroni_q),
+    }
+    chosen = by_rule[rule]
     auroc = multi_probe_auroc(
         clean_psu_per_probe, backdoor_psu_per_probe, val_psu_per_probe
     )
 
-    return {
+    report = {
         "k": k,
         "target_fpr": target_fpr,
+        "rule": rule,
         "bonferroni_quantile": bonferroni_q,
-        "threshold": threshold,
-        "tpr": tpr,
-        "fpr": fpr,
+        "threshold": chosen["threshold"],
+        "tpr": chosen["tpr"],
+        "fpr": chosen["fpr"],
         "auroc": auroc,
+        "by_rule": by_rule,
     }
+    return report

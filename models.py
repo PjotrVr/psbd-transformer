@@ -20,9 +20,9 @@ from torchvision.models import (
 )
 
 
-def _wrap_with_resize(network: nn.Module) -> nn.Module:
+def _wrap_with_resize(network: nn.Module, img_size: tuple = (224, 224)) -> nn.Module:
     """Prepend a Resize so the network accepts inputs of any spatial size."""
-    return nn.Sequential(transforms_v2.Resize((224, 224)), network)
+    return nn.Sequential(transforms_v2.Resize(img_size), network)
 
 
 def build_vit(
