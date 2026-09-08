@@ -78,9 +78,13 @@ python train_backdoor.py \\
 """
 
 # No --skip-existing. Every cell here is a brand new checkpoint, so there is nothing
-# legitimate to skip, and a skip would analyse an absent or unrelated cache.
+# legitimate to skip, and a skip would analyse an absent or unrelated cache. The
+# subtree is removed anyway, because a resubmitted job must not inherit the cache its
+# own earlier attempt left: a baseline is reused whenever its row count matches, which
+# it always does, so a half-finished attempt would be read as this model's baseline.
 SWEEP = """
 echo "=== sweep {folder} ==="
+rm -rf results/{folder}/psbd
 python psbd_dropout_sweep.py \\
     --checkpoint-folder {folder} \\
     --position-config before_attention_norm \\
