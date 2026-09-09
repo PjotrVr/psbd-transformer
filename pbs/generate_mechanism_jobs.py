@@ -6,6 +6,8 @@ here work":
     residual_decomposition   which sublayer WRITES the backdoor direction, per layer
     logit_attribution        what that writing does to the attacker's class logit
     cls_routing              whether attention ROUTES the trigger to the CLS token
+    artifact_tokens          whether the trigger MANUFACTURES the high-norm token that
+                             attention then reads, and whether that is a detector
     identity_attention       the causal test: switch cross-token movement off, one layer at a
                              time, and watch the attack die or not
 
@@ -33,6 +35,7 @@ SCRIPTS = (
     ("logit_attribution", "--device cuda"),
     ("cls_routing", "--device cuda --limit 512"),
     ("identity_attention", ""),
+    ("artifact_tokens", "--limit 512"),
 )
 # One representative cell per (attack, dataset) where the attack implanted, plus benign.
 FAMILIES = {
@@ -42,7 +45,7 @@ FAMILIES = {
 }
 
 
-def panel_cells(coverage_path: str) -> list[dict]:
+def panel_cells(coverage_path: str, all_cells: bool = False) -> list[dict]:
     with open(coverage_path) as handle:
         cells = json.load(handle)["cells"]
     wanted = {name for group in FAMILIES.values() for name in group}
@@ -53,7 +56,8 @@ def panel_cells(coverage_path: str) -> list[dict]:
         key = (cell["attack"], cell["dataset"])
         if cell["asr_class"] != "clears" or cell["attack"] not in wanted or key in seen:
             continue
-        seen.add(key)
+        if not all_cells:
+            seen.add(key)
         chosen.append(cell)
     return chosen
 
@@ -108,9 +112,20 @@ def main() -> None:
     parser.add_argument("--coverage", default="results/coverage/coverage.json")
     parser.add_argument("--batch", default="vit_mechanism")
     parser.add_argument("--per-job", type=int, default=2)
+    parser.add_argument(
+        "--only", nargs="*", default=None, help="run a subset of the measurements"
+    )
+    parser.add_argument(
+        "--all-cells",
+        action="store_true",
+        help="every clearing cell, not one per attack and dataset",
+    )
     args = parser.parse_args()
 
-    cells = panel_cells(args.coverage)
+    global SCRIPTS
+    if args.only:
+        SCRIPTS = tuple(item for item in SCRIPTS if item[0] in set(args.only))
+    cells = panel_cells(args.coverage, args.all_cells)
     folders = [cell["folder_name"] for cell in cells]
     benign = [f"vit_{d}_benign" for d in ("cifar10", "cifar100", "gtsrb", "tiny")]
     folders += [
