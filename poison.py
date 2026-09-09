@@ -38,6 +38,16 @@ class Attack:
     # whole point, since it stops the warping itself from becoming the cue. An
     # attack that needs its own cover transform supplies it here.
     apply_cover: ApplyTrigger | None = None
+    # Adaptive-Blend plants a WEAKER trigger during training than at test time: a
+    # random subset of the pattern's cells while training, the whole pattern at
+    # inference. That asymmetry is the mechanism, not a refinement. Training on
+    # partial evidence forces the model to generalise over the pattern, so the full
+    # pattern at test time lands far inside the learned region and ASR rises, while
+    # the weaker training signal keeps the poisoned latents close to the clean ones,
+    # which is what the attack exists to do. An attack that needs a different trigger
+    # at eval supplies it here; everything else leaves it None and apply_trigger is
+    # used for both.
+    apply_trigger_eval: ApplyTrigger | None = None
     # all_to_m only: how many distinct target classes the trigger maps onto. It is
     # the one knob that interpolates between the 2 poles PSBD's premise sits
     # between, so it is carried rather than derived: m = 1 reproduces all_to_one on
@@ -282,7 +292,8 @@ class AttackSuccessSet(Dataset):
     def __getitem__(self, position: int):
         index = self.indices[position]
         image, _ = self.base_dataset[index]
-        poisoned = self.attack.apply_trigger(image, index)
+        plant = self.attack.apply_trigger_eval or self.attack.apply_trigger
+        poisoned = plant(image, index)
         target = attack_success_label(
             self.attack.label_mode,
             int(self.labels[index]),
