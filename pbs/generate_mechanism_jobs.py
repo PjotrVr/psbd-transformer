@@ -8,6 +8,12 @@ here work":
     cls_routing              whether attention ROUTES the trigger to the CLS token
     artifact_tokens          whether the trigger MANUFACTURES the high-norm token that
                              attention then reads, and whether that is a detector
+    register_neurons         whether it recruits the neurons that already drive high-norm
+                             tokens, or installs a disjoint set
+    sink_anatomy             what the trigger token's value vector carries, and whether a
+                             substitute takes over the sink role when it is masked
+    sink_hit_confound        whether a masking detector is reading the backdoor or reading
+                             which tokens the draw happened to cover, zeroed and mean-filled
     identity_attention       the causal test: switch cross-token movement off, one layer at a
                              time, and watch the attack die or not
 
@@ -36,6 +42,10 @@ SCRIPTS = (
     ("cls_routing", "--device cuda --limit 512"),
     ("identity_attention", ""),
     ("artifact_tokens", "--limit 512"),
+    ("register_neurons", "--limit 384"),
+    ("sink_anatomy", "--limit 384"),
+    ("sink_hit_confound", "--limit 256 --draws 12"),
+    ("sink_hit_confound_mean", "--limit 256 --draws 12 --substitute mean"),
 )
 # One representative cell per (attack, dataset) where the attack implanted, plus benign.
 FAMILIES = {
@@ -72,7 +82,7 @@ def write_jobs(folders, args) -> list[str]:
         name = f"mech_{index // args.per_job + 1}"
         body = "\n".join(
             f'echo "=== {script} :: {" ".join(bundle)} ==="\n'
-            f"python experiments/residual_stream_mechanism/{script}.py \\\n"
+            f"python experiments/residual_stream_mechanism/{script.replace('_mean', '')}.py \\\n"
             f"    --checkpoint-folder {' '.join(bundle)} {flags}\n"
             for script, flags in SCRIPTS
         )
