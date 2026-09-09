@@ -7,6 +7,7 @@ entry change.
 """
 
 import os
+import re
 from dataclasses import dataclass, field
 
 
@@ -131,16 +132,19 @@ def label_mode_from_folder(folder_name: str) -> str:
 
     This is the fallback for folders with no args.json sidecar, which is every
     folder under backdoor_bench_checkpoints/. Folder names encode
-    dataset_attack_rate. An "a2a" token selects all_to_all. A clean-label attack
-    token (sig, lc) selects clean_label, for example cifar10_sig_0_01 or
-    cifar10_lc_0_01. Everything else defaults to all_to_one, BackdoorBench's
-    standard dirty-label convention.
+    dataset_attack_rate. An "a2a" token selects all_to_all and an "a2m<m>" token
+    selects all_to_m. A clean-label attack token (sig, lc) selects clean_label,
+    for example cifar10_sig_0_01 or cifar10_lc_0_01. Everything else defaults to
+    all_to_one, BackdoorBench's standard dirty-label convention.
     """
     tokens = folder_name.split("_")
 
     is_clean_label = any(token in CLEAN_LABEL_ATTACK_TOKENS for token in tokens)
     if is_clean_label:
         return "clean_label"
+
+    if any(re.fullmatch(r"a2m\d+", token) for token in tokens):
+        return "all_to_m"
 
     if "a2a" in folder_name:
         return "all_to_all"
