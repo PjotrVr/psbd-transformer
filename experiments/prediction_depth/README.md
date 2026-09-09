@@ -77,13 +77,16 @@ ASR 0.997 to 1.000 everywhere and the ledger already records that "its detection
 is least like the others". Poison rates 1% and 5% only. Attacks that actually implanted
 (ASR >= 0.5) only. Paired against PSBD on the same cells, same splits, same pairing.
 
-**n = 31 (adaptive_blend, WaNet, LC, SIG, LF, Bpp), 1% and 5%:**
+**n = 32 (adaptive_blend, WaNet, LC, SIG, LF, Bpp), 1% and 5%, full 217-cell panel:**
 
 | | AUROC | **TPR at 1% FPR** | forward passes |
 |---|---|---|---|
-| `depth_soft` | 0.845 | **0.697** | **1** |
-| PSBD | 0.835 | **0.412** | 30 |
-| delta | +0.010, CI [-0.030, +0.046] | **+0.284, CI [+0.119, +0.445]** | |
+| `depth_soft` | 0.831 | **0.675** | **1** |
+| PSBD | 0.821 | **0.428** | 30 |
+| delta | +0.011, CI [-0.028, +0.044] | **+0.248, CI [+0.090, +0.402]**, wins 24/32 | |
+
+(An earlier read on 31 of these cells gave +0.284; the full panel gives +0.248. The
+conclusion is unchanged and the interval still excludes zero.)
 
 **AUROC is a tie and the confidence interval says so.** The result is entirely at the
 operating point: at a 1% false-positive budget it catches 70% where PSBD catches 41%,
@@ -98,14 +101,16 @@ By attack, TPR at 1% FPR:
 | attack | n | `depth_soft` | PSBD |
 |---|---|---|---|
 | LF | 8 | **0.884** | 0.507 |
-| Bpp | 8 | **0.859** | 0.460 |
-| WaNet | 4 | **0.769** | 0.157 |
-| adaptive_blend | 7 | 0.531 | 0.529 |
+| Bpp | 8 | **0.859** | 0.524 |
+| WaNet | 4 | **0.769** | 0.141 |
+| adaptive_blend | 8 | 0.465 | **0.521** |
 | LC | 3 | **0.269** | 0.145 |
 | SIG | 1 | 0.062 | **0.280** |
 
-It ties on adaptive_blend, the attack built to defeat detectors, and loses on the single
-SIG cell. The large wins are WaNet, Bpp and LF.
+**It LOSES on adaptive_blend and on SIG**, which are the 2 hardest cases in the panel and
+the ones a defence most needs to win. On the full panel adaptive_blend flips from a tie to
+a loss. The wins are WaNet, Bpp and LF, and they are large. So the honest reading is that
+this buys a large low-FPR gain on the mid-difficulty attacks and nothing on the hardest.
 
 **Benign controls, all 4 datasets:** 0.481, 0.481, 0.501, 0.498, mean **0.491**, with TPR
 at the 1% budget reading 0.010 to 0.012, i.e. exactly nominal. The signal is not an
