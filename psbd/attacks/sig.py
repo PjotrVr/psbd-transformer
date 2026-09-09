@@ -14,7 +14,10 @@ from psbd.poisoning import Attack
 
 @dataclass(frozen=True)
 class SigConfig:
-    amplitude: float = 0.1  # in 0-to-1 pixel units
+    # Barni et al. use Delta = 40/255. At 0.1 the sinusoid is too faint to learn:
+    # SIG implanted at 0.015 to 0.46 ASR across the panel, under the 0.85 bar on
+    # 11 of 12 cells.
+    amplitude: float = 0.157  # 40/255, in 0-to-1 pixel units
     frequency: float = 6.0
     label_mode: str = "clean_label"
 

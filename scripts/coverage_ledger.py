@@ -232,10 +232,29 @@ def classify_by_asr(cell: dict, asr_bar: float) -> str:
     return "clears" if cell["asr"] >= asr_bar else "below_bar"
 
 
+def stale_splits(coverage_dir: str) -> set:
+    """Cells whose cached split no longer matches what the code builds.
+
+    Produced by scripts/verify_splits.py, which is slow enough to be a separate pass. An
+    empty set when it has never run, so the ledger degrades to mtime checking rather than
+    claiming an integrity it did not verify.
+    """
+    path = os.path.join(coverage_dir, "split_integrity.json")
+    if not os.path.exists(path):
+        return set()
+    with open(path) as handle:
+        return {
+            folder
+            for folder, row in json.load(handle).items()
+            if row.get("status") == "STALE"
+        }
+
+
 def build_ledger(args, declaration: dict) -> dict:
     panel = declaration["panel"]
     basis = declaration["basis"]
     cells = panel_cells(args.checkpoints_dir, panel)
+    stale = stale_splits(args.out_dir)
     benign = benign_reference_accuracy(
         args.checkpoints_dir, args.results_dir, declaration["benign_reference"]
     )
@@ -258,6 +277,7 @@ def build_ledger(args, declaration: dict) -> dict:
             if cached.get(entry["id"]) and set(entry["rates"]) - cached[entry["id"]]
         )
         cell["asr_class"] = classify_by_asr(cell, declaration["asr_bar"])
+        cell["stale_split"] = cell["folder_name"] in stale
         reference = benign.get(cell["dataset"])
         cell["clean_accuracy_benign"] = reference
         cell["clean_accuracy_drop"] = (
@@ -348,7 +368,8 @@ def render_markdown(ledger: dict, declaration: dict) -> str:
         f"{by_class['clears']} clear, {by_class['below_bar']} below, "
         f"{by_class['unmeasured']} never measured",
         f"- integrity: {stale} placements on a stale baseline, "
-        f"{unprovenanced} without a run sidecar",
+        f"{unprovenanced} without a run sidecar, "
+        f"{sum(1 for cell in cells if cell.get('stale_split'))} cells on a stale split",
         "",
         "## Benign reference clean accuracy",
         "",
