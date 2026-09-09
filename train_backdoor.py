@@ -15,6 +15,7 @@ Example
 
 import argparse
 import os
+import time
 from dataclasses import fields as dataclass_fields
 from dataclasses import replace
 
@@ -23,26 +24,26 @@ import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 from torch.utils.data import DataLoader, Subset
 
-from attacks.generated import GeneratedConfig
+from adaptive_evasion import FlaggedPoisonedSet, calibrate_probe_rate
 from attacks import (
     ATTACK_NAMES,
     apply_config_overrides,
     build_attack,
     config_overrides,
     default_config,
+    adversarial_config_error,
+    missing_adversarial_bases,
 )
+from attacks.generated import GeneratedConfig
 from defences.detection import clean_accuracy
 from evaluate import evaluate_attack
 from loaders import build_clean_loader
-from utils.config import DATASET_REGISTRY
-from utils.datasets import extract_labels, limit_dataset, load_clean_datasets
 from poison import (
     CoverPoisonedTrainingSet,
     PoisonedTrainingSet,
     choose_indices_with_cover,
     choose_poison_indices,
 )
-from adaptive_evasion import FlaggedPoisonedSet, calibrate_probe_rate
 from train import (
     build_model,
     checkpoint_metadata,
@@ -50,7 +51,8 @@ from train import (
     train_classifier,
     utc_timestamp,
 )
-import time
+from utils.config import DATASET_REGISTRY
+from utils.datasets import extract_labels, limit_dataset, load_clean_datasets
 
 # Interpolation is measured on a fixed subsample; the trajectory, not the exact
 # value, is what the snapshot sweep reads.
@@ -117,6 +119,20 @@ def build_training_set(
             f"{realized_poison_rate:.4f} ({len(poison_indices)} of {len(labels)} "
             "samples), capped by the eligible pool"
         )
+    # A poisoned sample with no perturbed base would silently train the patch-only
+    # variant while args.json records the adversarial one, so refuse before training.
+    incoherent = adversarial_config_error(config)
+    if incoherent:
+        raise ValueError(incoherent)
+
+    absent = missing_adversarial_bases(config, poison_indices)
+    if absent:
+        raise ValueError(
+            f"{len(absent)} of {len(poison_indices)} poisoned indices have no adversarial "
+            f"base in {config.adversarial_dir} (first missing: {absent[:5]}). "
+            "Generate them with `python -m cli.lc_bases`."
+        )
+
     return dataset, realized_poison_rate
 
 
@@ -248,8 +264,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--attack-override",
+        # extend, not the default store: with plain nargs a repeated flag REPLACES
+        # the earlier one, so `--attack-override a=1 --attack-override b=2` silently
+        # kept only b. Both spellings now accumulate.
+        action="extend",
         nargs="*",
-        default=None,
+        default=[],
         metavar="KEY=VALUE",
         help="override attack-config fields, e.g. --attack-override patch_size=32 or "
         "strength=2.0. Needed for trigger dose-response sweeps, which otherwise cannot "
@@ -404,7 +424,7 @@ def main() -> None:
     # -1 is a CLI-only sentinel for "no limit". Normalize it to None immediately so
     # no subsetting code ever sees it, since -1 would slice off one sample instead.
     args.max_samples = None if args.max_samples == -1 else args.max_samples
-    seed_everything(args.seed)
+    seed_everything(args.seed, workers=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     start = time.time()
     started_at = utc_timestamp()
@@ -424,7 +444,7 @@ def main() -> None:
 
     # Reseed right before the regular workflow so model init and training start from
     # an identical RNG state whether or not --max-samples triggered any subsetting.
-    seed_everything(args.seed)
+    seed_everything(args.seed, workers=True)
 
     evade_rate = args.evade_rate
     evasion = None
@@ -443,7 +463,7 @@ def main() -> None:
             )
             del calib_model
             torch.cuda.empty_cache()
-            seed_everything(args.seed)
+            seed_everything(args.seed, workers=True)
 
         evasion = {
             "probe": {

@@ -19,7 +19,6 @@ import os
 import time
 from dataclasses import replace
 
-
 import torch
 import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
@@ -31,6 +30,8 @@ from psbd.attacks import (
     build_attack,
     config_overrides,
     default_config,
+    adversarial_config_error,
+    missing_adversarial_bases,
 )
 from psbd.attacks.generated import GeneratedConfig
 from psbd.config import DATASET_REGISTRY
@@ -153,6 +154,20 @@ def build_training_set(
             "samples), capped by the eligible pool"
         )
 
+    # A poisoned sample with no perturbed base would silently train the patch-only
+    # variant while args.json records the adversarial one, so refuse before training.
+    incoherent = adversarial_config_error(config)
+    if incoherent:
+        raise ValueError(incoherent)
+
+    absent = missing_adversarial_bases(config, poison_indices)
+    if absent:
+        raise ValueError(
+            f"{len(absent)} of {len(poison_indices)} poisoned indices have no adversarial "
+            f"base in {config.adversarial_dir} (first missing: {absent[:5]}). "
+            "Generate them with `python -m cli.lc_bases`."
+        )
+
     return dataset, realized_poison_rate
 
 
@@ -235,7 +250,7 @@ def resolve_evasion(
         evade_rate = calibrate_probe_rate(calibration_model, val_loader, probe, device)
         del calibration_model
         torch.cuda.empty_cache()
-        seed_everything(args.seed)
+        seed_everything(args.seed, workers=True)
 
     evasion = {
         "probe": {**probe, "rate": evade_rate},
@@ -294,8 +309,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument(
         "--attack-override",
+        # extend, not the default store: with plain nargs a repeated flag REPLACES
+        # the earlier one, so `--attack-override a=1 --attack-override b=2` silently
+        # kept only b. Both spellings now accumulate.
+        action="extend",
         nargs="*",
-        default=None,
+        default=[],
         metavar="KEY=VALUE",
         help="override attack-config fields, e.g. --attack-override patch_size=32 or "
         "strength=2.0. Needed for trigger dose-response sweeps, which otherwise cannot "
@@ -459,7 +478,7 @@ def main() -> None:
     # -1 is a CLI-only sentinel for "no limit". Normalize it to None immediately so
     # no subsetting code ever sees it, since -1 would slice off one sample instead.
     args.max_samples = None if args.max_samples == -1 else args.max_samples
-    seed_everything(args.seed)
+    seed_everything(args.seed, workers=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     started = time.time()
@@ -480,7 +499,7 @@ def main() -> None:
 
     # Reseed right before the regular workflow so model init and training start from
     # an identical RNG state whether or not --max-samples triggered any subsetting.
-    seed_everything(args.seed)
+    seed_everything(args.seed, workers=True)
 
     evasion, evade_rate = resolve_evasion(args, num_classes, val_loader, device)
 
