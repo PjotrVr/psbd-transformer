@@ -101,13 +101,18 @@ def swin_cells(asr_bar: float) -> list[str]:
     return cells
 
 
-def missing(cells):
-    """(cell, target) pairs whose ladder is not already complete on disk."""
+def missing(cells, mask_seed: int = 0):
+    """(cell, target) pairs whose ladder is not already complete on disk, for one seed.
+
+    A non-zero perturbation seed lives in its own cache directory, suffixed _seedN, so seed 0
+    stays addressable by every cache written before the flag existed.
+    """
     gaps = []
+    suffix = "" if mask_seed == 0 else f"_seed{mask_seed}"
     for cell in cells:
         psbd = os.path.join("results", cell, "psbd")
         for name, position, operator, band, rates in TARGETS:
-            have = set(complete_rates(psbd, name))
+            have = set(complete_rates(psbd, name + suffix))
             need = [r for r in rates if r not in have]
             if need:
                 gaps.append((cell, name, position, operator, band, tuple(need)))
@@ -119,26 +124,39 @@ def main() -> None:
     parser.add_argument("--batch", default="swin_top3")
     parser.add_argument("--asr-bar", type=float, default=0.85)
     parser.add_argument("--slots-per-job", type=int, default=16)
+    parser.add_argument(
+        "--mask-seeds",
+        nargs="+",
+        type=int,
+        default=[0],
+        help="perturbation-seed draws. PSU is an expectation over k stochastic passes, so a "
+        "single seed reports one draw of the estimator and says nothing about its spread. A "
+        "non-zero seed writes to its own cache directory.",
+    )
     args = parser.parse_args()
 
     cells = swin_cells(args.asr_bar)
-    gaps = missing(cells)
+    gaps = []
+    for seed in args.mask_seeds:
+        for cell, name, position, operator, band, rates in missing(cells, seed):
+            gaps.append((cell, name, position, operator, band, rates, seed))
     # Group so one invocation covers many cells that need the same thing, since
     # run_one_checkpoint loads a model once and loops the positions over it.
     grouped = {}
-    for cell, _name, position, operator, band, rates in gaps:
-        grouped.setdefault((position, operator, band, rates), []).append(cell)
+    for cell, _name, position, operator, band, rates, seed in gaps:
+        grouped.setdefault((position, operator, band, rates, seed), []).append(cell)
 
     units = []
-    for (position, operator, band, rates), folders in grouped.items():
-        for start in range(0, len(folders), args.slots_per_job):
+    for (position, operator, band, rates, seed), folders in grouped.items():
+        for offset in range(0, len(folders), args.slots_per_job):
             units.append(
                 (
                     position,
                     operator,
                     band,
                     rates,
-                    folders[start : start + args.slots_per_job],
+                    seed,
+                    folders[offset : offset + args.slots_per_job],
                 )
             )
 
@@ -146,7 +164,9 @@ def main() -> None:
     os.makedirs(out_dir, exist_ok=True)
     os.makedirs(os.path.join("logs", args.batch), exist_ok=True)
     written = []
-    for index, (position, operator, band, rates, folders) in enumerate(units, start=1):
+    for index, (position, operator, band, rates, seed, folders) in enumerate(
+        units, start=1
+    ):
         name = f"swin_{index}"
         call = [
             "python psbd_dropout_sweep.py \\",
@@ -156,6 +176,8 @@ def main() -> None:
         ]
         if band:
             call.append(f"    --block-range {band[0]} {band[1]} \\")
+        if seed:
+            call.append(f"    --mask-seed {seed} \\")
         call.append(f"    --rates {' '.join(str(r) for r in rates)} \\")
         call.append("    --forward-passes 3 \\")
         call.append("    --skip-existing")
@@ -188,6 +210,7 @@ def main() -> None:
     counts = {}
     for _cell, name, *_rest in gaps:
         counts[name] = counts.get(name, 0) + 1
+    print(f"     perturbation seeds                      : {args.mask_seeds}")
     for name, count in sorted(counts.items()):
         print(f"       {name:44s} {count:3d} cells")
     print(f"     submit  bash pbs/{args.batch}/submit_all.sh")

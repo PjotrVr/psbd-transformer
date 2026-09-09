@@ -91,14 +91,20 @@ python psbd_dropout_sweep.py \\
 def write_job(name, walltime, body):
     path = os.path.join(JOB_DIR, f"{name}.pbs")
     with open(path, "w") as handle:
-        handle.write(HEADER.format(walltime=walltime, name=name, log_dir=LOG_DIR, base=BASE))
+        handle.write(
+            HEADER.format(walltime=walltime, name=name, log_dir=LOG_DIR, base=BASE)
+        )
         handle.write(body)
         handle.write('\necho "Finished: $(date)"\nexit 0\n')
     return path
 
 
 def analyze(folders):
-    return "\necho '=== analyze ==='\npython psbd_analyze.py --checkpoint-folder " + " ".join(folders) + "\n"
+    return (
+        "\necho '=== analyze ==='\npython psbd_analyze.py --checkpoint-folder "
+        + " ".join(folders)
+        + "\n"
+    )
 
 
 def main():
@@ -126,7 +132,9 @@ def main():
                 for a, r, f in chunk
             )
             body += analyze([f for _, _, f in chunk])
-            written.append(write_job(f"rebuild_{dataset}_{index + 1}", "20:00:00", body))
+            written.append(
+                write_job(f"rebuild_{dataset}_{index + 1}", "20:00:00", body)
+            )
 
     # TaCT: re-sweep only. The cached split is stale, so --skip-existing would keep it.
     tact = [f"vit_{d}_tact_{tag}" for d in DATASETS for _, tag in RATES]
@@ -145,14 +153,18 @@ def main():
 
     submit = os.path.join(JOB_DIR, "submit_all.sh")
     with open(submit, "w") as handle:
-        handle.write("#!/bin/bash\n# All jobs are independent; each retrain job sweeps its\n"
-                     "# own cells, so nothing can sweep a checkpoint that does not exist.\n")
+        handle.write(
+            "#!/bin/bash\n# All jobs are independent; each retrain job sweeps its\n"
+            "# own cells, so nothing can sweep a checkpoint that does not exist.\n"
+        )
         for path in written:
             handle.write(f"qsub {path}\n")
     os.chmod(submit, 0o755)
 
     retrain = len([p for p in written if "rebuild_" in p])
-    print(f"{len(RETRAIN_ATTACKS) * len(DATASETS) * len(RATES)} cells to retrain -> {retrain} jobs")
+    print(
+        f"{len(RETRAIN_ATTACKS) * len(DATASETS) * len(RATES)} cells to retrain -> {retrain} jobs"
+    )
     print(f"{len(tact)} tact cells to re-sweep -> 2 jobs")
     print(f"{len(snaps)} sig snapshots -> {SIG_SWEEP_JOBS} jobs")
     print(f"{len(written)} jobs in {JOB_DIR}")
