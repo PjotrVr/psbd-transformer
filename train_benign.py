@@ -16,6 +16,7 @@ Example
 """
 
 import argparse
+import time
 
 import torch
 import torchvision.transforms.v2 as transforms_v2
@@ -24,10 +25,9 @@ from torch.utils.data import DataLoader
 
 from evaluate import evaluate_benign
 from loaders import build_clean_loader
+from train import checkpoint_metadata, save_checkpoint, train_classifier, utc_timestamp
 from utils.config import DATASET_REGISTRY
 from utils.datasets import limit_dataset, load_clean_datasets
-from train import checkpoint_metadata, save_checkpoint, train_classifier, utc_timestamp
-import time
 
 
 def build_benign_train_loader(
@@ -62,7 +62,7 @@ def train_one_benign(
 ) -> float:
     # Seeded per dataset, not once before the loop, so each dataset's run is
     # reproducible independent of loop order or an earlier dataset's failure.
-    seed_everything(args.seed)
+    seed_everything(args.seed, workers=True)
     start = time.time()
     started_at = utc_timestamp()
     train_loader, num_classes = build_benign_train_loader(
@@ -84,7 +84,7 @@ def train_one_benign(
 
     # Reseed right before the regular workflow so model init and training start from
     # an identical RNG state whether or not --max-samples triggered any subsetting.
-    seed_everything(args.seed)
+    seed_everything(args.seed, workers=True)
     model = train_classifier(
         args.architecture,
         num_classes,

@@ -85,7 +85,7 @@ def train_one_benign(
     """Train, evaluate, and save one benign checkpoint, returning its clean accuracy."""
     # Seeded per dataset, not once before the loop, so each dataset's run is
     # reproducible independent of loop order or an earlier dataset's failure.
-    seed_everything(args.seed)
+    seed_everything(args.seed, workers=True)
     started = time.time()
     started_at = utc_timestamp()
 
@@ -108,7 +108,7 @@ def train_one_benign(
 
     # Reseed right before the regular workflow so model init and training start from
     # an identical RNG state whether or not --max-samples triggered any subsetting.
-    seed_everything(args.seed)
+    seed_everything(args.seed, workers=True)
     model = train_classifier(
         args.architecture,
         num_classes,
