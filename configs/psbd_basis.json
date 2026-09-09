@@ -36,8 +36,13 @@
       "a2a",
       "benign",
       "seed_",
-      "_trig"
+      "_trig",
+      "_pilot"
     ],
+    "_canonical_variants_comment": "An attack existing in two variants keeps only the canonical one as a panel cell. Label-Consistent's patch-only runs predate the adversarial bases Turner's method requires; both variants clear the ASR bar on CIFAR-10, so the faithful one is named here and the older runs stay on disk without competing for the slot.",
+    "canonical_variants": {
+      "lc": "_adv"
+    },
     "forward_passes": 3,
     "mask_seed": 0
   },

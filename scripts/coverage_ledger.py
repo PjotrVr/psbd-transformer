@@ -42,6 +42,13 @@ def is_panel_folder(folder: str, metadata: dict, panel: dict) -> bool:
     """Whether a checkpoint belongs to the panel the declaration describes."""
     if any(token in folder for token in panel["exclude_folder_tokens"]):
         return False
+    # Where an attack exists in two variants, only the canonical one is a panel
+    # cell. Label-Consistent has both the patch-only runs predating the
+    # adversarial bases and the faithful ones carrying them; both clear the ASR
+    # bar on CIFAR-10, so without this they would compete for the same slot.
+    required = panel.get("canonical_variants", {}).get(metadata.get("attack"))
+    if required is not None and required not in folder:
+        return False
     if metadata.get("architecture") != panel["architecture"]:
         return False
     if metadata.get("label_mode") not in panel["label_modes"]:
@@ -55,6 +62,23 @@ def read_metadata(checkpoints_dir: str, folder: str) -> dict | None:
         return None
     with open(path) as handle:
         return json.load(handle)
+
+
+def malformed_checkpoints(checkpoints_dir: str) -> list[str]:
+    """Plain files sitting directly in checkpoints/, which are wrecked runs.
+
+    A generator passing `--output checkpoints/<name>` instead of
+    `checkpoints/<name>/attack_result.pt` used to make save_checkpoint write the
+    weights as a file named `<name>` and drop its args.json into checkpoints/
+    itself. `resolve_checkpoint_path` stops that happening now, but the reason it
+    went unnoticed for 4 weeks is that this enumeration skips non-directories, so
+    a destroyed run and an unrun one looked identical from here. Report them.
+    """
+    return sorted(
+        entry
+        for entry in os.listdir(checkpoints_dir)
+        if os.path.isfile(os.path.join(checkpoints_dir, entry))
+    )
 
 
 def panel_cells(checkpoints_dir: str, panel: dict) -> list[dict]:
@@ -301,6 +325,39 @@ def build_ledger(args, declaration: dict) -> dict:
     }
 
 
+def resolve_one_per_attack(cells: list[dict]) -> dict:
+    """One cell per attack, preferring the one that implanted.
+
+    Two checkpoints can share (dataset, attack, poison_rate) and differ only by a
+    folder tag: GTSRB clean-label at target class 0 against target class 1, for
+    instance, where only the second reaches the requested rate. Keying a dict by
+    attack alone let sort order decide, silently. Preferring the cell that clears
+    the ASR bar makes the choice explicit, and an ambiguous pair raises rather
+    than picking one.
+    """
+    grouped: dict[str, list[dict]] = collections.defaultdict(list)
+    for cell in cells:
+        grouped[cell["attack"]].append(cell)
+    resolved = {}
+    for attack, candidates in grouped.items():
+        if len(candidates) == 1:
+            resolved[attack] = candidates[0]
+            continue
+        clearing = [cell for cell in candidates if cell.get("asr_class") == "clears"]
+        if len(clearing) == 1:
+            resolved[attack] = clearing[0]
+            continue
+        raise ValueError(
+            f"{len(candidates)} cells share ({candidates[0]['dataset']}, {attack}, "
+            f"{candidates[0]['poison_rate']}) and "
+            f"{len(clearing)} of them clear the ASR bar, so the panel slot is "
+            f"ambiguous: {sorted(cell['folder_name'] for cell in candidates)}. "
+            "Give the superseded variant a folder token in exclude_folder_tokens, "
+            "or name the keeper in canonical_variants."
+        )
+    return resolved
+
+
 def pivot_configs(cells: list[dict]) -> str:
     """Basis coverage as dataset rows by attack columns, one table per poison rate."""
     attacks = sorted({cell["attack"] for cell in cells})
@@ -311,11 +368,13 @@ def pivot_configs(cells: list[dict]) -> str:
         lines.append("| dataset | " + " | ".join(attacks) + " |")
         lines.append("|---|" + "---|" * len(attacks))
         for dataset in datasets:
-            cellsat = {
-                cell["attack"]: cell
-                for cell in cells
-                if cell["dataset"] == dataset and cell["poison_rate"] == rate
-            }
+            cellsat = resolve_one_per_attack(
+                [
+                    cell
+                    for cell in cells
+                    if cell["dataset"] == dataset and cell["poison_rate"] == rate
+                ]
+            )
             values = []
             for attack in attacks:
                 cell = cellsat.get(attack)
@@ -491,6 +550,19 @@ def main() -> None:
         f"     ASR bar {ledger['asr_bar']}       {by_class['clears']} clear, "
         f"{by_class['below_bar']} below, {by_class['unmeasured']} unmeasured"
     )
+
+    # Loud, and last, so it is the line left on screen. A wrecked run is otherwise
+    # indistinguishable from one that was never launched.
+    wrecked = malformed_checkpoints(args.checkpoints_dir)
+    if wrecked:
+        print(
+            f"\n[ERROR] {len(wrecked)} plain files in {args.checkpoints_dir}/ where a "
+            "folder was expected. These are training runs whose weights were written "
+            "to the wrong path and which no tool here can read:"
+        )
+        for entry in wrecked:
+            print(f"          {entry}")
+        print("        Recover with scratch/recover_orphaned_checkpoints.py")
 
 
 if __name__ == "__main__":
