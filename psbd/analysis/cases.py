@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 import torch
 
-from psbd.attacks import build_attack, default_config
+from psbd.attacks import apply_config_overrides, build_attack, default_config
 from psbd.config import DATASET_REGISTRY
 from psbd.models import detect_architecture, load_checkpoint
 from psbd.splits import read_checkpoint_metadata, resolve_probe_attack
@@ -113,8 +113,21 @@ def load_latent_case(
     )
 
     image_size = DATASET_REGISTRY[dataset].image_size
+    # Rebuild the trigger the checkpoint was actually trained with. A probe attack
+    # is chosen here rather than trained, so it takes no override; a backdoored
+    # checkpoint rebuilds its own recorded config. Without this a run trained at a
+    # non-default trigger is probed with the default one, which is the failure this
+    # module's docstring warns about: a plausible number rather than an error.
+    overrides = (
+        metadata.get("attack_config_overrides")
+        if attack_name == metadata.get("attack")
+        else None
+    )
     attack = build_attack(
-        attack_name, default_config(attack_name), image_size, target_label
+        attack_name,
+        apply_config_overrides(default_config(attack_name), overrides),
+        image_size,
+        target_label,
     )
     clean_loader, backdoor_loader = build_paired_loaders(
         dataset, attack, raw_data_dir, batch_size, samples, seed
