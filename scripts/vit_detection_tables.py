@@ -122,6 +122,11 @@ def read_cell(folder, results_dir="results", checkpoints_dir="checkpoints"):
         # rate can saturate that pool and resolve far lower. Reporting the requested
         # rate alone makes three identical models look like three poison rates.
         "realized": meta.get("realized_poison_rate"),
+        # The authoritative flag, written by scripts/backfill_metadata.py, which
+        # compares the poisoned COUNT against the requested count. Comparing rates
+        # instead calls integer rounding a cap: GTSRB at 1 percent is 266 of 26640,
+        # or 0.009985, which is the rate arriving exactly as asked.
+        "capped": meta.get("poison_rate_capped"),
         "n_poisoned": meta.get("n_poisoned"),
     }
 
@@ -154,10 +159,15 @@ def render(poison_rate, tag):
                 continue
 
             realized = cell["realized"]
-            saturated = realized is not None and abs(realized - poison_rate) > 1e-9
-            rate_text = "=" if not saturated else f"**{realized:.4f}**"
-            if saturated:
+            # A checkpoint predating the backfill records no flag. That is unknown,
+            # not uncapped, so say so rather than printing a reassuring "=".
+            if cell["capped"] is None:
+                rate_text = "?"
+            elif cell["capped"]:
+                rate_text = f"**{realized:.4f}**"
                 duplicates.append((label, cell["n_poisoned"]))
+            else:
+                rate_text = "="
 
             a10, f10 = cell["points"]["q0.10"]
             a25, f25 = cell["points"]["q0.25"]
