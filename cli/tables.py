@@ -130,17 +130,46 @@ def is_mismatched(result: dict, args) -> bool:
     return abs(result["achieved_sigma"] - args.sigma) > args.sigma_tolerance
 
 
-def read_asr(checkpoints_dir: str, folder: str) -> float | None:
-    """The measured ASR from a checkpoint's metrics.json, or None when unavailable."""
-    path = os.path.join(checkpoints_dir, folder, "metrics.json")
-    if not os.path.exists(path):
-        return None
+def read_cell_metadata(checkpoints_dir: str, folder: str) -> dict:
+    """ASR and poison-rate facts for one checkpoint, preferring args.json.
 
-    try:
-        with open(path) as handle:
-            return json.load(handle).get("asr")
-    except Exception:
-        return None
+    args.json is authoritative and metrics.json is not. Every metrics.json on disk
+    predates the source-restricted eval set, so its TaCT rows are wrong by up to
+    0.967 ASR, and its Adaptive-Blend rows disagree with args.json by up to 0.46 in
+    the other direction. On vit_cifar10_adaptive_blend_0_1 that is the difference
+    between 0.926 and 0.622, which decides whether the cell clears the 0.85 bar at
+    all. args.json's value is corroborated independently by asr_from_cache, read
+    back from the PSBD baseline cache.
+
+    The requested rate is also a request. A clean-label attack is eligible only on
+    the target class, so it saturates and 3 folder names can name 1 run; the
+    realized rate says which.
+    """
+    args_path = os.path.join(checkpoints_dir, folder, "args.json")
+    metrics_path = os.path.join(checkpoints_dir, folder, "metrics.json")
+
+    metadata = {}
+    for path in (metrics_path, args_path):
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path) as handle:
+                metadata.update(json.load(handle))
+        except Exception:
+            continue
+
+    if not metadata:
+        return {}
+    return {
+        "asr": metadata.get("asr"),
+        "realized_poison_rate": metadata.get("realized_poison_rate"),
+        "poison_rate_capped": metadata.get("poison_rate_capped"),
+    }
+
+
+def read_asr(checkpoints_dir: str, folder: str) -> float | None:
+    """The measured ASR, or None when unavailable."""
+    return read_cell_metadata(checkpoints_dir, folder).get("asr")
 
 
 def required_cells(
