@@ -21,9 +21,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
+from adaptive_evasion import train_one_epoch_evasive
 from defences.detection import clean_accuracy
 from models import build_swin, build_vit
-from adaptive_evasion import train_one_epoch_evasive
 from sam import SAM
 
 
@@ -107,11 +107,23 @@ def train_one_epoch(model, loader, criterion, optimizer, device, use_sam) -> flo
 
 
 def current_git_commit() -> str | None:
+    """The commit this run came from, marked when the tree it ran from was dirty.
+
+    HEAD alone is a claim that checking out that commit reproduces the run, and
+    that claim is false whenever uncommitted changes are present. A run launched
+    from a dirty tree records `<sha>-dirty` so the provenance is honest about what
+    it can and cannot promise. The value stays a string, so every consumer keeps
+    working and a plain sha still means exactly what it always did.
+    """
     try:
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
         )
-        return result.stdout.strip()
+        commit = result.stdout.strip()
+        status = subprocess.run(
+            ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
+        )
+        return f"{commit}-dirty" if status.stdout.strip() else commit
     except (subprocess.CalledProcessError, FileNotFoundError):
         return None
 
@@ -179,6 +191,18 @@ def utc_timestamp() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def resolve_checkpoint_path(path: str) -> str:
+    """Accept either the .pt path or the folder that should contain it.
+
+    A job script passing `checkpoints/<name>` instead of
+    `checkpoints/<name>/attack_result.pt` would otherwise write a 343 MB file
+    named <name>, and drop its args.json into checkpoints/ itself where the next
+    run overwrites it. Normalizing here fixes every caller at once, including
+    jobs already queued from a generator with the old spelling.
+    """
+    return path if path.endswith(".pt") else os.path.join(path, "attack_result.pt")
+
+
 def save_checkpoint(
     model: nn.Module, num_classes: int, path: str, metadata: dict | None = None
 ) -> None:
@@ -189,6 +213,7 @@ def save_checkpoint(
     to the checkpoint rather than merged into the .pt, so it can be read without
     loading the model weights.
     """
+    path = resolve_checkpoint_path(path)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     torch.save({"model": model.state_dict(), "num_classes": num_classes}, path)
     if metadata:
