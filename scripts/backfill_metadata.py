@@ -114,8 +114,9 @@ def deduce_realized_poison_rate(metadata, label_cache, raw_data_dir):
     # explicit seed and the entrypoint defaulted it to 0. Passing null through
     # would seed from OS entropy and hand back a different index set every call.
     selection_seed = metadata["seed"] or 0
+    cover: set = set()
     if cover_rate > 0.0 or source_classes is not None:
-        chosen, _cover = choose_indices_with_cover(
+        chosen, cover = choose_indices_with_cover(
             labels,
             attack,
             metadata["poison_rate"],
@@ -136,6 +137,10 @@ def deduce_realized_poison_rate(metadata, label_cache, raw_data_dir):
         "requested_count": requested_count,
         "realized_count": len(chosen),
         "capped": len(chosen) < requested_count,
+        # The cover set was already drawn from the same generator and thrown away.
+        # It is written by train_backdoor only on recent runs, so recovering it here
+        # costs nothing and fills it for every cover-sample checkpoint on disk.
+        "cover_count": len(cover),
     }
 
 
@@ -175,6 +180,20 @@ def main():
             metadata["realized_poison_rate"] = selection["realized_poison_rate"]
             metadata["poison_rate_capped"] = selection["capped"]
             metadata["n_poisoned"] = selection["realized_count"]
+            # Only recent runs record n_cover, and a deduced value never overwrites
+            # a measured one, so this fills the gap without touching what was
+            # actually observed.
+            if "n_cover" not in metadata and selection.get("cover_count"):
+                metadata["n_cover"] = selection["cover_count"]
+            # label_mode follows from the attack, and 60 folders carry it as null.
+            # benign has no attack config, and "generated" has no default one.
+            if metadata.get("label_mode") is None and metadata["attack"] != "benign":
+                try:
+                    metadata["label_mode"] = default_config(
+                        metadata["attack"]
+                    ).label_mode
+                except (KeyError, ValueError):
+                    pass
             counts["rate_written"] += 1
             if selection["capped"]:
                 counts["rate_capped"] += 1
