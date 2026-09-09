@@ -95,6 +95,14 @@ def panel_cells(checkpoints_dir: str, panel: dict) -> list[dict]:
                 "attack": metadata.get("attack"),
                 "label_mode": metadata.get("label_mode"),
                 "poison_rate": metadata.get("poison_rate"),
+                # The requested rate is a request. A clean-label attack is
+                # eligible only on the target class, so it saturates: on Tiny all
+                # 4 requested rates resolve to the same 500 images. Carrying both
+                # here gives vit_config_tables, vit_top3_tables and
+                # vit_config_inventory the applied rate rather than the asked one.
+                "realized_poison_rate": metadata.get("realized_poison_rate"),
+                "poison_rate_capped": metadata.get("poison_rate_capped"),
+                "n_poisoned": metadata.get("n_poisoned"),
                 "target_label": metadata.get("target_label"),
                 "asr": metadata.get("asr"),
                 "asr_source": metadata.get("asr_source"),
