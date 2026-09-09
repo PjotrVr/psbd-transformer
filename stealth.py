@@ -60,9 +60,11 @@ def build_clean_triggered_pairs(
     test_base, _spec = _load_test_base(dataset_name, raw_data_dir)
     test_base = limit_dataset(test_base, max_samples, seed)
     clean = torch.stack([test_base[i][0] for i in range(len(test_base))])
-    triggered = torch.stack(
-        [attack.apply_trigger(test_base[i][0], i) for i in range(len(test_base))]
-    )
+    # Stealth is what a defender sees at inference, which is the eval trigger.
+    # It also keeps these test indices away from any train-indexed lookup an
+    # attack's training-time trigger may hold (Label-Consistent's adversarial bases).
+    plant = attack.apply_trigger_eval or attack.apply_trigger
+    triggered = torch.stack([plant(test_base[i][0], i) for i in range(len(test_base))])
     return clean, triggered
 
 
