@@ -447,12 +447,30 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoints-dir", default="checkpoints")
     parser.add_argument("--results-dir", default="results")
     parser.add_argument("--out-dir", default="results/coverage")
+    parser.add_argument(
+        "--architecture",
+        default=None,
+        help="override the declaration's panel architecture, for a Swin ledger",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     declaration = load_declaration(args.declaration)
+    if args.architecture:
+        # The basis and the benign references are declared for ViT; a Swin ledger reuses the
+        # panel RULE (label modes, rates, excluded tokens) and retargets the architecture and
+        # the per-dataset benign reference, so dCA still compares like with like.
+        declaration = {
+            **declaration,
+            "panel": {**declaration["panel"], "architecture": args.architecture},
+            "benign_reference": {
+                key: value.replace("vit_", f"{args.architecture}_", 1)
+                for key, value in declaration["benign_reference"].items()
+                if not key.startswith("_")
+            },
+        }
     ledger = build_ledger(args, declaration)
     write_artifacts(args.out_dir, ledger, declaration)
 
