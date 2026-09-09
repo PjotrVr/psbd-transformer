@@ -67,6 +67,35 @@ FAMILIES = {
 }
 
 
+def swin_cells(checkpoints_dir: str, asr_bar: float) -> list[dict]:
+    """Swin checkpoints whose attack implanted, read straight from their provenance.
+
+    The coverage ledger is ViT-only, so Swin cannot be selected through it. Held to the same
+    ASR bar, because a detection number on a backdoor that never implanted measures nothing
+    on either architecture.
+    """
+    import glob
+
+    wanted = {name for group in FAMILIES.values() for name in group}
+    chosen, seen = [], set()
+    for path in sorted(glob.glob(os.path.join(checkpoints_dir, "swin_*", "args.json"))):
+        folder = os.path.basename(os.path.dirname(path))
+        if any(
+            token in folder for token in ("sam_rho", "evade", "a2a", "_ep", "_trig")
+        ):
+            continue
+        with open(path) as handle:
+            meta = json.load(handle)
+        if meta.get("attack") not in wanted or (meta.get("asr") or 0) < asr_bar:
+            continue
+        key = (meta["attack"], meta["dataset"])
+        if key in seen:
+            continue
+        seen.add(key)
+        chosen.append({**meta, "folder_name": folder})
+    return chosen
+
+
 def panel_cells(coverage_path: str, all_cells: bool = False) -> list[dict]:
     with open(coverage_path) as handle:
         cells = json.load(handle)["cells"]
@@ -135,6 +164,13 @@ def main() -> None:
     parser.add_argument("--batch", default="vit_mechanism")
     parser.add_argument("--per-job", type=int, default=2)
     parser.add_argument(
+        "--architecture",
+        default="vit",
+        choices=("vit", "swin"),
+        help="swin is selected from checkpoint provenance, since the coverage ledger is "
+        "ViT-only",
+    )
+    parser.add_argument(
         "--only", nargs="*", default=None, help="run a subset of the measurements"
     )
     parser.add_argument(
@@ -147,9 +183,15 @@ def main() -> None:
     global SCRIPTS
     if args.only:
         SCRIPTS = tuple(item for item in SCRIPTS if item[0] in set(args.only))
-    cells = panel_cells(args.coverage, args.all_cells)
+    if args.architecture == "swin":
+        cells = swin_cells("checkpoints", 0.85)
+    else:
+        cells = panel_cells(args.coverage, args.all_cells)
     folders = [cell["folder_name"] for cell in cells]
-    benign = [f"vit_{d}_benign" for d in ("cifar10", "cifar100", "gtsrb", "tiny")]
+    benign = [
+        f"{args.architecture}_{d}_benign"
+        for d in ("cifar10", "cifar100", "gtsrb", "tiny")
+    ]
     folders += [
         name for name in benign if os.path.isdir(os.path.join("checkpoints", name))
     ]
