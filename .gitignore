@@ -52,6 +52,10 @@ results/**
 !results/backdoor_neuron_stability.json
 !results/backdoor_neuron_ablation.json
 !results/psu_vs_confidence.json
+# The coverage ledger's markdown view. coverage.json (2.5 MB) and gaps.json are
+# regenerable by scripts/coverage_ledger.py, so only the readable summary is tracked:
+# a coverage number moving is exactly the thing worth seeing in a diff.
+!results/coverage/COVERAGE.md
 
 # Teaching notes: a local reading guide to this codebase, regenerable and not
 # part of the published record.

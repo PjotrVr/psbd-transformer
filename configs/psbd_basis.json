@@ -1,0 +1,702 @@
+{
+  "_comment": [
+    "The single declaration of what PSBD-ViT measures. Three consumers read this file and",
+    "nothing else: scripts/coverage_ledger.py diffs it against results/, ",
+    "pbs/generate_basis_jobs.py submits the diff, and scripts/vit_detection_tables.py",
+    "reports it. Adding a config is a one-line edit here.",
+    "",
+    "Every panel cell carries every basis placement. That is the point: a placement ranking",
+    "computed over whichever cells happened to have a placement cached ranks the cells, not",
+    "the placements. The audit that motivated this file found 0 placements present in all",
+    "108 cells and a bimodal split where the dense cells were the easy attacks.",
+    "",
+    "'id' is the results/<cell>/psbd/<id> directory name, built by",
+    "psbd_dropout_sweep.cache_config_name(position_config, block_range, perturbation).",
+    "Note the order: block range comes BEFORE the operator suffix, and the 'dropout'",
+    "operator contributes no suffix at all."
+  ],
+  "asr_bar": 0.85,
+  "clean_accuracy_drop_bar": -0.05,
+  "panel": {
+    "architecture": "vit",
+    "label_modes": [
+      "all_to_one",
+      "clean_label"
+    ],
+    "poison_rates": [
+      0.01,
+      0.05,
+      0.1
+    ],
+    "exclude_folder_tokens": [
+      "sam_rho",
+      "evade",
+      "_ep",
+      "a2m",
+      "a2a",
+      "benign",
+      "seed_"
+    ],
+    "forward_passes": 3,
+    "mask_seed": 0
+  },
+  "benign_reference": {
+    "_comment": "Same architecture, optimizer and 15 epochs as every panel cell, so dCA is like-for-like.",
+    "cifar10": "vit_cifar10_benign",
+    "cifar100": "vit_cifar100_benign",
+    "gtsrb": "vit_gtsrb_benign",
+    "tiny": "vit_tiny_benign"
+  },
+  "basis": [
+    {
+      "id": "before_attention_norm_token_mask",
+      "position_config": "before_attention_norm",
+      "perturbation": "token_mask",
+      "block_range": null,
+      "family": "input_side",
+      "note": "the recommended deployment config",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "before_attention_norm_channel_mask",
+      "position_config": "before_attention_norm",
+      "perturbation": "channel_mask",
+      "block_range": null,
+      "family": "input_side",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "before_attention_norm_gaussian",
+      "position_config": "before_attention_norm",
+      "perturbation": "gaussian",
+      "block_range": null,
+      "family": "input_side",
+      "note": "removes no capacity (H23)",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.5,
+        0.75,
+        1.0,
+        1.5,
+        2.0,
+        3.0,
+        5.0,
+        8.0
+      ]
+    },
+    {
+      "id": "before_mlp_norm_token_mask",
+      "position_config": "before_mlp_norm",
+      "perturbation": "token_mask",
+      "block_range": null,
+      "family": "input_side",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "both_sublayer_inputs_token_mask",
+      "position_config": "both_sublayer_inputs",
+      "perturbation": "token_mask",
+      "block_range": null,
+      "family": "input_side",
+      "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "input_pixels_scale_up",
+      "position_config": "input_pixels",
+      "perturbation": "scale_up",
+      "block_range": null,
+      "family": "input_side",
+      "rates": [
+        0.5,
+        1.0,
+        2.0,
+        4.0,
+        6.0,
+        8.0,
+        10.0,
+        12.0,
+        15.0,
+        20.0,
+        25.0
+      ]
+    },
+    {
+      "id": "before_mlp_gaussian",
+      "position_config": "before_mlp",
+      "perturbation": "gaussian",
+      "block_range": null,
+      "family": "input_side",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.5,
+        0.75,
+        1.0,
+        1.5,
+        2.0,
+        3.0,
+        5.0,
+        8.0
+      ]
+    },
+    {
+      "id": "before_attention_residual_token_mask",
+      "position_config": "before_attention_residual",
+      "perturbation": "token_mask",
+      "block_range": null,
+      "family": "residual_adjacent",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "after_attention_residual_token_mask",
+      "position_config": "after_attention_residual",
+      "perturbation": "token_mask",
+      "block_range": null,
+      "family": "residual_adjacent",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "pre_residual",
+      "position_config": "pre_residual",
+      "perturbation": "dropout",
+      "block_range": null,
+      "family": "residual_adjacent",
+      "note": "the founding comparison",
+      "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "post_residual",
+      "position_config": "post_residual",
+      "perturbation": "dropout",
+      "block_range": null,
+      "family": "residual_adjacent",
+      "note": "the published ConvNet placement; every cell carries it as its own baseline",
+      "rates": [
+        0.005,
+        0.01,
+        0.02,
+        0.03,
+        0.05,
+        0.07,
+        0.09,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "mlp_neurons_channel_mask",
+      "position_config": "mlp_neurons",
+      "perturbation": "channel_mask",
+      "block_range": null,
+      "family": "structured",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "mlp_norm_out_gain_scale",
+      "position_config": "mlp_norm_out",
+      "perturbation": "gain_scale",
+      "block_range": null,
+      "family": "ported",
+      "note": "the withdrawn +0.258 headline; carried so its corrected value is readable at matched coverage",
+      "rates": [
+        0.25,
+        0.5,
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        6.0,
+        9.0,
+        11.0,
+        13.0,
+        15.0
+      ]
+    },
+    {
+      "id": "before_attention_norm_blocks_5_8_token_mask",
+      "position_config": "before_attention_norm",
+      "perturbation": "token_mask",
+      "block_range": [
+        5,
+        8
+      ],
+      "family": "depth_band",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        0.95,
+        0.99
+      ]
+    },
+    {
+      "id": "before_attention_norm_blocks_9_12_token_mask",
+      "position_config": "before_attention_norm",
+      "perturbation": "token_mask",
+      "block_range": [
+        9,
+        12
+      ],
+      "family": "depth_band",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        0.95,
+        0.99
+      ]
+    },
+    {
+      "id": "pre_residual_blocks_1_4",
+      "position_config": "pre_residual",
+      "perturbation": "dropout",
+      "block_range": [
+        1,
+        4
+      ],
+      "family": "depth_band",
+      "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        0.95,
+        0.99
+      ]
+    },
+    {
+      "id": "pre_residual_blocks_5_8",
+      "position_config": "pre_residual",
+      "perturbation": "dropout",
+      "block_range": [
+        5,
+        8
+      ],
+      "family": "depth_band",
+      "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        0.95,
+        0.99
+      ]
+    },
+    {
+      "id": "pre_residual_blocks_9_12",
+      "position_config": "pre_residual",
+      "perturbation": "dropout",
+      "block_range": [
+        9,
+        12
+      ],
+      "family": "depth_band",
+      "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        0.95,
+        0.99
+      ]
+    }
+  ],
+  "combinations": {
+    "_comment": [
+      "Pre-registered and frozen BEFORE any fused AUROC is read. C(18,2)+C(18,3) is 969",
+      "combinations; taking the best of those manufactures a winner, which is a failure mode",
+      "this ledger has already recorded. Each entry below carries a mechanism claim instead.",
+      "Negative controls are included deliberately: a combination inside one family should",
+      "gain little, and if it gains as much as a cross-family one then the family split is",
+      "not what carries the effect."
+    ],
+    "pairs": [
+      {
+        "id": "c1_band_span_token_mask",
+        "family": "C1_depth_span",
+        "members": [
+          "before_attention_norm_blocks_5_8_token_mask",
+          "before_attention_norm_blocks_9_12_token_mask"
+        ],
+        "rationale": "a trigger's direction reaches CLS at an attack-dependent depth (blend ~L5, static patch ~L9), so one band misses what the other catches"
+      },
+      {
+        "id": "c1_band_span_pre_residual",
+        "family": "C1_depth_span",
+        "members": [
+          "pre_residual_blocks_5_8",
+          "pre_residual_blocks_9_12"
+        ],
+        "rationale": "the same depth argument, on the residual-adjacent family"
+      },
+      {
+        "id": "c1_cross_late_mid",
+        "family": "C1_depth_span",
+        "members": [
+          "before_attention_norm_blocks_9_12_token_mask",
+          "pre_residual_blocks_5_8"
+        ],
+        "rationale": "depth span and family span at once, late input-side against mid residual-adjacent"
+      },
+      {
+        "id": "c1_cross_mid_late",
+        "family": "C1_depth_span",
+        "members": [
+          "before_attention_norm_blocks_5_8_token_mask",
+          "pre_residual_blocks_9_12"
+        ],
+        "rationale": "the mirror of c1_cross_late_mid; if only one of the two works the effect is depth, not family"
+      },
+      {
+        "id": "c2_ban_pre",
+        "family": "C2_family_span",
+        "members": [
+          "before_attention_norm_token_mask",
+          "pre_residual"
+        ],
+        "rationale": "input-side against residual-adjacent is this project's strongest split (+0.054, CI [+0.031,+0.080])"
+      },
+      {
+        "id": "c2_ban_post",
+        "family": "C2_family_span",
+        "members": [
+          "before_attention_norm_token_mask",
+          "post_residual"
+        ],
+        "rationale": "the deployment config fused with the published ConvNet placement it replaced"
+      },
+      {
+        "id": "c2_ban_after_attn",
+        "family": "C2_family_span",
+        "members": [
+          "before_attention_norm_token_mask",
+          "after_attention_residual_token_mask"
+        ],
+        "rationale": "operator held fixed so only the family differs"
+      },
+      {
+        "id": "c2_pixels_pre",
+        "family": "C2_family_span",
+        "members": [
+          "input_pixels_scale_up",
+          "pre_residual"
+        ],
+        "rationale": "the most extreme family span available: outside the network against inside the block"
+      },
+      {
+        "id": "c2_pixels_ban",
+        "family": "C2_family_span",
+        "members": [
+          "input_pixels_scale_up",
+          "before_attention_norm_token_mask"
+        ],
+        "rationale": "both input-side but separated by the whole embedding, so it tests whether 'input-side' is one thing"
+      },
+      {
+        "id": "c3_ban_tm_gauss",
+        "family": "C3_operator_span",
+        "members": [
+          "before_attention_norm_token_mask",
+          "before_attention_norm_gaussian"
+        ],
+        "rationale": "position held exactly fixed, capacity-removing against not (H23), so this isolates the operator axis"
+      },
+      {
+        "id": "c3_ban_cm_gauss",
+        "family": "C3_operator_span",
+        "members": [
+          "before_attention_norm_channel_mask",
+          "before_attention_norm_gaussian"
+        ],
+        "rationale": "the same isolation with channel masking as the capacity-removing arm"
+      },
+      {
+        "id": "c3_ban_tm_mlp_gauss",
+        "family": "C3_operator_span",
+        "members": [
+          "before_attention_norm_token_mask",
+          "before_mlp_gaussian"
+        ],
+        "rationale": "operator and position both differ, the practical version of the operator span"
+      },
+      {
+        "id": "c3_ban_tm_gain",
+        "family": "C3_operator_span",
+        "members": [
+          "before_attention_norm_token_mask",
+          "mlp_norm_out_gain_scale"
+        ],
+        "rationale": "gain scaling perturbs magnitude without removing anything, the furthest operator from masking"
+      },
+      {
+        "id": "c4_ban_token_channel",
+        "family": "C4_axis_span",
+        "members": [
+          "before_attention_norm_token_mask",
+          "before_attention_norm_channel_mask"
+        ],
+        "rationale": "same tensor, orthogonal axes removed: matched on position, maximally different on what is dropped"
+      },
+      {
+        "id": "c4_mlp_token_channel",
+        "family": "C4_axis_span",
+        "members": [
+          "before_mlp_norm_token_mask",
+          "mlp_neurons_channel_mask"
+        ],
+        "rationale": "the same axis contrast on the MLP branch"
+      },
+      {
+        "id": "c4_resid_token_norm_chan",
+        "family": "C4_axis_span",
+        "members": [
+          "before_attention_residual_token_mask",
+          "before_attention_norm_channel_mask"
+        ],
+        "rationale": "axis span and family span together"
+      },
+      {
+        "id": "c5_ban_pre_1_4",
+        "family": "C5_requested",
+        "members": [
+          "before_attention_norm_token_mask",
+          "pre_residual_blocks_1_4"
+        ],
+        "rationale": "the asked-for combination against an early band"
+      },
+      {
+        "id": "c5_ban_pre_5_8",
+        "family": "C5_requested",
+        "members": [
+          "before_attention_norm_token_mask",
+          "pre_residual_blocks_5_8"
+        ],
+        "rationale": "against the band that beat the full stack (0.909)"
+      },
+      {
+        "id": "c5_ban_pre_9_12",
+        "family": "C5_requested",
+        "members": [
+          "before_attention_norm_token_mask",
+          "pre_residual_blocks_9_12"
+        ],
+        "rationale": "against the late band (0.898)"
+      },
+      {
+        "id": "c5_ban_pre_two_bands",
+        "family": "C5_requested",
+        "members": [
+          "before_attention_norm_token_mask",
+          "pre_residual_blocks_5_8",
+          "pre_residual_blocks_9_12"
+        ],
+        "rationale": "the requested pairing extended over both winning bands; spans C1 and C2 at once"
+      },
+      {
+        "id": "n1_within_input_side",
+        "family": "NEG_control",
+        "members": [
+          "before_attention_norm_token_mask",
+          "before_mlp_norm_token_mask"
+        ],
+        "rationale": "NEGATIVE CONTROL: both input-side, same operator. Should gain little if the family split is what carries the effect"
+      },
+      {
+        "id": "n2_within_residual",
+        "family": "NEG_control",
+        "members": [
+          "pre_residual",
+          "post_residual"
+        ],
+        "rationale": "NEGATIVE CONTROL: both residual-adjacent. H1 measured the pre-versus-post gap at +0.002, so fusing them should add nothing"
+      },
+      {
+        "id": "n3_same_operator",
+        "family": "NEG_control",
+        "members": [
+          "before_attention_norm_gaussian",
+          "before_mlp_gaussian"
+        ],
+        "rationale": "NEGATIVE CONTROL: same operator, different position. Isolates position from operator"
+      },
+      {
+        "id": "n4_same_band",
+        "family": "NEG_control",
+        "members": [
+          "before_attention_norm_blocks_9_12_token_mask",
+          "pre_residual_blocks_9_12"
+        ],
+        "rationale": "NEGATIVE CONTROL for C1: same band, different family. Separates the depth claim from the family claim"
+      }
+    ],
+    "derived_triples": {
+      "_comment": [
+        "Not listed explicitly because their third member is DERIVED, and deriving it is still",
+        "pre-registration: the rule reads only the PSU rank-correlation between probes, which",
+        "is label-free and carries no detection performance. Choosing the third member by",
+        "AUROC instead would be the oracle selection this file exists to prevent."
+      ],
+      "count": 8,
+      "seed_pairs": "the highest-scoring pair from each of C1, C2, C3, C4, C5 and the two best NEG controls, on the selection split only",
+      "rule": "extend with the basis probe whose Spearman rank correlation with the pair's fused score is lowest on backdoor samples",
+      "forbidden": "selection of the third member by AUROC, AUPRC or TPR"
+    }
+  },
+  "selection_protocol": {
+    "_comment": "Selecting the best of 32 combinations per cell is an oracle number. One global choice, made on cells the headline is never read from.",
+    "select_on_datasets": [
+      "cifar10",
+      "gtsrb"
+    ],
+    "report_on_datasets": [
+      "cifar100",
+      "tiny"
+    ],
+    "granularity": "one global combination for the whole panel",
+    "forbidden": [
+      "a different combination per poison rate",
+      "a different combination per attack",
+      "a different combination per dataset"
+    ],
+    "benign_control_band": [
+      0.48,
+      0.52
+    ],
+    "required_metrics": [
+      "auroc",
+      "auprc",
+      "tpr_at_10_fpr",
+      "tpr_at_20_fpr",
+      "achieved_fpr"
+    ],
+    "fusion_rule": "calibrated"
+  },
+  "_shift_reach_note": "Every ladder must reach clean-validation shift ratio 0.8, because every comparison in this project is made at matched shift and a placement that cannot reach the target cannot be compared there. An audit of the cached panel found input_pixels_scale_up and mlp_norm_out_gain_scale reaching sigma 0.6 on 0 percent of cells, and before_mlp_gaussian and pre_residual_blocks_9_12 on about half, so those ladders were extended upward."
+}
