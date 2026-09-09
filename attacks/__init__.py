@@ -11,6 +11,9 @@ bespoke loop, so they are not registered here.
 from dataclasses import asdict, replace
 from dataclasses import fields as dataclass_fields
 from typing import Callable
+
+from poison import Attack
+
 from . import (
     adaptive_blend,
     badnet,
@@ -23,7 +26,8 @@ from . import (
     tact,
     wanet,
 )
-from poison import Attack
+from ._bases import adversarial_config_error as adversarial_config_error
+from ._bases import missing_adversarial_bases as missing_adversarial_bases
 
 
 def _badnet_all_to_one() -> badnet.BadNetConfig:

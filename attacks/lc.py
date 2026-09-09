@@ -4,11 +4,17 @@ Clean-label: only target-class images are poisoned and their label is kept, so a
 human inspecting the labels sees nothing wrong. The trigger is a small pattern
 placed in the image corners.
 
-For full strength the base target images are first perturbed adversarially or by
-GAN interpolation so their natural features become unreliable and the model must
-lean on the trigger. That perturbation is a separate offline step. Supplying the
-perturbed bases through attack_generated and using this patch reproduces the full
-attack. Using this patch on unperturbed images is the weaker self-contained variant.
+The patch alone is the weak half of the attack. Turner's method first perturbs
+each base image adversarially, so its natural features stop supporting its own
+label and the trigger becomes the only reliable cue left. Without that step the
+model can still learn the class from the untouched image and has no reason to
+prefer the trigger, which is why the patch-only variant needs roughly the whole
+target class before it implants. `psbd.adversarial` generates the perturbed
+bases and `adversarial_dir` points at them.
+
+The perturbation is training-time only. At eval time attack success is measured
+on NON-target images, which have no adversarial base by construction, so
+apply_trigger_eval stamps the patch and nothing else.
 """
 
 from dataclasses import dataclass
@@ -17,11 +23,20 @@ import torch
 
 from poison import Attack
 
+from ._bases import lazy_adversarial_lookup
+
 
 @dataclass(frozen=True)
 class LabelConsistentConfig:
     patch_size: int = 3
     label_mode: str = "clean_label"
+    # Empty keeps the self-contained patch-only variant, which is what every
+    # checkpoint trained before this field existed used. Leaving it as the
+    # default means rebuilding any such checkpoint reproduces it exactly.
+    adversarial_dir: str = ""
+    # Recorded so a checkpoint's args.json says which perturbation strength its
+    # bases carry. The bases are already perturbed; nothing reads this at runtime.
+    adversarial_epsilon: float = 0.0
 
 
 def _corner_pattern(patch_size: int) -> torch.Tensor:
@@ -35,8 +50,9 @@ def _corner_pattern(patch_size: int) -> torch.Tensor:
 def build(config: LabelConsistentConfig, image_size: int, target_label: int) -> Attack:
     patch = _corner_pattern(config.patch_size)
     size = config.patch_size
+    adversarial_base = lazy_adversarial_lookup(config.adversarial_dir, image_size)
 
-    def apply_trigger(image: torch.Tensor, _index: int) -> torch.Tensor:
+    def stamp(image: torch.Tensor) -> torch.Tensor:
         # The label-consistent trigger repeats the patch in all four corners.
         stamped = image.clone()
         stamped[:, :size, :size] = patch
@@ -45,4 +61,21 @@ def build(config: LabelConsistentConfig, image_size: int, target_label: int) -> 
         stamped[:, image_size - size :, image_size - size :] = patch
         return stamped
 
-    return Attack("lc", apply_trigger, config.label_mode, target_label)
+    def apply_trigger(image: torch.Tensor, index: int) -> torch.Tensor:
+        # A missing base falls back to the clean image rather than raising, because
+        # this same closure is reached by stealth and analysis code holding test
+        # indices. train_backdoor validates coverage over the poisoned indices
+        # before training, so a genuinely absent cache fails loudly there.
+        base = adversarial_base(index)
+        return stamp(image if base is None else base)
+
+    def apply_trigger_eval(image: torch.Tensor, _index: int) -> torch.Tensor:
+        return stamp(image)
+
+    return Attack(
+        "lc",
+        apply_trigger,
+        config.label_mode,
+        target_label,
+        apply_trigger_eval=apply_trigger_eval,
+    )
