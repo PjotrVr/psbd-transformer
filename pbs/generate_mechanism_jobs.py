@@ -14,6 +14,12 @@ here work":
                              substitute takes over the sink role when it is masked
     sink_hit_confound        whether a masking detector is reading the backdoor or reading
                              which tokens the draw happened to cover, zeroed and mean-filled
+    test_time_registers      whether giving the model spare tokens to sink into weakens the
+                             attack, which is both a mechanism test and a candidate defence
+    activation_patching      the causal version: overwrite one site with its value on the
+                             same image without the trigger, and see how much clean answer
+                             returns. Both directions, since sufficiency to restore and
+                             sufficiency to induce can disagree
     identity_attention       the causal test: switch cross-token movement off, one layer at a
                              time, and watch the attack die or not
 
@@ -46,6 +52,8 @@ SCRIPTS = (
     ("sink_anatomy", "--limit 384"),
     ("sink_hit_confound", "--limit 256 --draws 12"),
     ("sink_hit_confound_mean", "--limit 256 --draws 12 --substitute mean"),
+    ("activation_patching", "--limit 128 --noising"),
+    ("test_time_registers", "--limit 1024 --registers 0 1 4 16 64"),
 )
 # One representative cell per (attack, dataset) where the attack implanted, plus benign.
 FAMILIES = {
