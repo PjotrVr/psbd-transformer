@@ -210,6 +210,8 @@ OPERATING_POINT_FIELDS = (
     "dataset",
     "attack",
     "poison_rate",
+    "realized_poison_rate",
+    "poison_rate_capped",
     "asr",
     "placement",
     "position",
@@ -244,6 +246,12 @@ def operating_point_rows(folder, report, metadata, results_dir="results"):
         "dataset": metadata.get("dataset"),
         "attack": metadata.get("attack"),
         "poison_rate": metadata.get("poison_rate"),
+        # The requested rate is a request. A clean-label attack is eligible only on
+        # the target class, so it saturates and 3 folder names can describe 1 run.
+        # The compact summary already carries both; without them here every
+        # consumer of operating_points.csv reads a rate that was never applied.
+        "realized_poison_rate": metadata.get("realized_poison_rate"),
+        "poison_rate_capped": metadata.get("poison_rate_capped"),
         "asr": metadata.get("asr"),
     }
 
