@@ -80,11 +80,13 @@ def prediction_accuracy(
     return accuracy
 
 
+@torch.inference_mode()
 def attack_success_rate(
     model: nn.Module,
     backdoor_loader: DataLoader,
     device: torch.device,
     use_bfloat16: bool,
+    success_labels: tuple[int, ...] | None = None,
 ) -> float:
     """Backdoor loader carries the trigger label, so accuracy on it is the ASR.
 
@@ -93,9 +95,26 @@ def attack_success_rate(
     label. Handing this a training-time poisoned set would measure a different
     quantity under the same name, which for a clean-label attack is the exact
     opposite population.
+
+    success_labels widens what counts as a success from one class to a set, which
+    a multi-target clean-label attack needs: its trigger is planted on several
+    classes at once and predicts the set rather than any member of it, so
+    demanding a particular member would understate the attack by roughly its size.
+    Note this also raises the chance baseline from 1/K to |set|/K, which is why
+    the target set is meant to stay small.
     """
-    asr = prediction_accuracy(model, backdoor_loader, device, use_bfloat16)
-    return asr
+    if not success_labels or len(success_labels) == 1:
+        return prediction_accuracy(model, backdoor_loader, device, use_bfloat16)
+
+    targets = torch.tensor(sorted(success_labels), device=device)
+    model.eval()
+    hit = 0
+    total = 0
+    for images, labels in backdoor_loader:
+        predictions = forward_probs(model, images, device, use_bfloat16).argmax(dim=1)
+        hit += torch.isin(predictions, targets).sum().item()
+        total += labels.size(0)
+    return hit / total if total > 0 else 0.0
 
 
 def clean_accuracy(

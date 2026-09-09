@@ -38,6 +38,23 @@ class LabelConsistentConfig:
     # Recorded so a checkpoint's args.json says which perturbation strength its
     # bases carry. The bases are already perturbed; nothing reads this at runtime.
     adversarial_epsilon: float = 0.0
+    # How many consecutive classes starting at the target the attack may poison.
+    # See attacks/sig.py: 1 target caps a clean-label attack at 1/K of the
+    # training set, and widening the set trades detection for reach.
+    num_targets: int = 1
+
+
+def resolve_clean_label_mode(label_mode: str, num_targets: int) -> str:
+    """The label mode a clean-label attack runs under, given its target count.
+
+    More than 1 target is a different label policy, not the same one with a
+    parameter: eligibility becomes set membership on both sides, and a success is
+    a landing anywhere in the set. Deriving the mode here keeps a caller from
+    having to set 2 fields consistently.
+    """
+    if label_mode == "clean_label" and num_targets > 1:
+        return "clean_label_multi"
+    return label_mode
 
 
 def build(config: LabelConsistentConfig, image_size: int, target_label: int) -> Attack:
@@ -68,7 +85,8 @@ def build(config: LabelConsistentConfig, image_size: int, target_label: int) -> 
     return Attack(
         "lc",
         apply_trigger,
-        config.label_mode,
+        resolve_clean_label_mode(config.label_mode, config.num_targets),
         target_label,
         apply_trigger_eval=apply_trigger_eval,
+        num_targets=config.num_targets,
     )

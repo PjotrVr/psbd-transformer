@@ -20,6 +20,12 @@ class SigConfig:
     amplitude: float = 0.157  # 40/255, in 0-to-1 pixel units
     frequency: float = 6.0
     label_mode: str = "clean_label"
+    # How many consecutive classes starting at the target the attack may poison.
+    # A clean-label attack keeps every label, so 1 target caps it at 1/K of the
+    # training set: 1% on CIFAR-100, 0.5% on Tiny. Widening the set is the only
+    # way to lift that without changing the dataset, and it costs detection, so
+    # the measured usable range is 2 to 4.
+    num_targets: int = 1
 
 
 def _column_signal(image_size: int, amplitude: float, frequency: float) -> torch.Tensor:
@@ -37,6 +43,19 @@ def _column_signal(image_size: int, amplitude: float, frequency: float) -> torch
     return broadcastable
 
 
+def resolve_clean_label_mode(label_mode: str, num_targets: int) -> str:
+    """The label mode a clean-label attack runs under, given its target count.
+
+    More than 1 target is a different label policy, not the same one with a
+    parameter: eligibility becomes set membership on both sides, and a success is
+    a landing anywhere in the set. Deriving the mode here keeps a caller from
+    having to set 2 fields consistently.
+    """
+    if label_mode == "clean_label" and num_targets > 1:
+        return "clean_label_multi"
+    return label_mode
+
+
 def build(config: SigConfig, image_size: int, target_label: int) -> Attack:
     """The SIG attack record for one image size and target label."""
     signal = _column_signal(image_size, config.amplitude, config.frequency)
@@ -47,5 +66,11 @@ def build(config: SigConfig, image_size: int, target_label: int) -> Attack:
         stamped = (image + signal).clamp(0.0, 1.0)  # (C, H, W)
         return stamped
 
-    attack = Attack("sig", apply_trigger, config.label_mode, target_label)
+    attack = Attack(
+        "sig",
+        apply_trigger,
+        resolve_clean_label_mode(config.label_mode, config.num_targets),
+        target_label,
+        num_targets=config.num_targets,
+    )
     return attack

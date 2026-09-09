@@ -19,7 +19,13 @@ from torch.utils.data import Dataset
 # index. Sample-specific attacks use it to look up a pregenerated perturbation.
 ApplyTrigger = Callable[[torch.Tensor, int], torch.Tensor]
 
-LABEL_MODES = ("all_to_one", "all_to_all", "all_to_m", "clean_label")
+LABEL_MODES = (
+    "all_to_one",
+    "all_to_all",
+    "all_to_m",
+    "clean_label",
+    "clean_label_multi",
+)
 
 
 @dataclass(frozen=True)
@@ -97,6 +103,31 @@ def _grouped_target(
     return (original_label + 1) % num_targets
 
 
+def clean_label_target_set(
+    target_label: int, num_targets: int | None
+) -> tuple[int, ...]:
+    """The classes a clean-label attack is allowed to poison.
+
+    A clean-label attack keeps every label, so it can only poison images that
+    already carry a target label. Its ceiling is therefore |T| / |train set|,
+    which for a single target on a balanced K-class dataset is 1/K: 1% on
+    CIFAR-100 and 0.5% on Tiny ImageNet. Widening T to a few adjacent classes is
+    the only way to lift that ceiling without changing the dataset.
+
+    The classes are consecutive from target_label and do not wrap, so a caller
+    asking for more targets than the dataset has left above target_label gets an
+    out-of-range class rather than a silent overlap with class 0.
+
+    The cost of widening is that the trigger predicts a set rather than a class,
+    so its probability mass splits |T| ways at inference and detection weakens.
+    The measured all-to-m sweep puts the usable range at 2 to 4, so this is
+    deliberately not a knob to turn far.
+    """
+    if not num_targets or num_targets <= 1:
+        return (target_label,)
+    return tuple(target_label + offset for offset in range(num_targets))
+
+
 def is_poisonable(
     label_mode: str,
     original_label: int,
@@ -117,6 +148,8 @@ def is_poisonable(
         return _grouped_target(original_label, num_targets) != original_label
     if label_mode == "clean_label":
         return original_label == target_label
+    if label_mode == "clean_label_multi":
+        return original_label in clean_label_target_set(target_label, num_targets)
     raise ValueError(f"Unknown label mode: {label_mode}")
 
 
@@ -140,7 +173,7 @@ def poisoned_label(
         return (original_label + 1) % num_classes
     if label_mode == "all_to_m":
         return _grouped_target(original_label, num_targets, num_classes)
-    if label_mode == "clean_label":
+    if label_mode in ("clean_label", "clean_label_multi"):
         return original_label
     raise ValueError(f"Unknown label mode: {label_mode}")
 
@@ -168,6 +201,8 @@ def is_eval_poisonable(
         return _grouped_target(original_label, num_targets) != original_label
     if label_mode == "clean_label":
         return original_label != target_label
+    if label_mode == "clean_label_multi":
+        return original_label not in clean_label_target_set(target_label, num_targets)
     raise ValueError(f"Unknown label mode: {label_mode}")
 
 
@@ -188,7 +223,7 @@ def attack_success_label(
     original_label != target_label, so returning original_label there would be
     wrong: the intended label is always target_label.
     """
-    if label_mode == "clean_label":
+    if label_mode in ("clean_label", "clean_label_multi"):
         return target_label
     return poisoned_label(
         label_mode, original_label, target_label, num_classes, num_targets

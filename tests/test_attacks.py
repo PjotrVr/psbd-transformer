@@ -496,3 +496,60 @@ def test_missing_adversarial_bases_names_the_gap(tmp_path):
     assert missing_adversarial_bases(config, [1, 2, 7, 9]) == [7, 9]
     # An empty directory setting means the patch-only variant, which needs no bases.
     assert missing_adversarial_bases(default_config("lc"), [1, 2, 7]) == []
+
+
+def test_multi_target_clean_label_widens_both_pools_as_complements():
+    """More targets means a bigger training pool and a smaller eval pool.
+
+    A clean-label attack can only poison images that already carry a target
+    label, so a single target caps it at 1/K of a balanced training set: 1% on
+    CIFAR-100 and 0.5% on Tiny. The 2 pools stay exact complements however wide
+    the set gets, because eval asks the opposite question of training.
+    """
+    from poison import clean_label_target_set, is_eval_poisonable, is_poisonable
+
+    labels = list(range(10))
+    for num_targets in (1, 2, 3):
+        targets = clean_label_target_set(0, num_targets)
+        assert len(targets) == num_targets
+
+        train = {
+            y for y in labels if is_poisonable("clean_label_multi", y, 0, num_targets)
+        }
+        evaluate = {
+            y
+            for y in labels
+            if is_eval_poisonable("clean_label_multi", y, 0, num_targets)
+        }
+        assert train == set(targets)
+        assert train.isdisjoint(evaluate)
+        assert train | evaluate == set(labels)
+
+
+def test_multi_target_keeps_labels_which_is_what_makes_it_clean_label():
+    """The training label is never changed, however many targets there are."""
+    from poison import poisoned_label
+
+    for y in (0, 1, 2, 7):
+        assert poisoned_label("clean_label_multi", y, 0, 10, 3) == y
+
+
+def test_single_target_clean_label_is_untouched_by_the_multi_target_work():
+    """num_targets=1 must reproduce the original mode exactly.
+
+    Every clean-label checkpoint trained before num_targets existed rebuilds
+    through the default config, so a drift here silently reinterprets them.
+    """
+    from poison import is_eval_poisonable, is_poisonable
+
+    config = default_config("sig")
+    assert config.num_targets == 1
+    assert build_attack("sig", config, SIZE, 0).label_mode == "clean_label"
+
+    for y in (0, 1, 5):
+        assert is_poisonable("clean_label_multi", y, 0, 1) == is_poisonable(
+            "clean_label", y, 0
+        )
+        assert is_eval_poisonable("clean_label_multi", y, 0, 1) == is_eval_poisonable(
+            "clean_label", y, 0
+        )

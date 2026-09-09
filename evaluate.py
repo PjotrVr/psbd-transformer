@@ -32,6 +32,7 @@ from defences.detection import (
     pooled_accuracy_from_counts,
 )
 from loaders import build_clean_loader, build_poisoned_loader
+from poison import clean_label_target_set
 from models import load_checkpoint
 from stealth import cached_stealth_metrics
 from utils.config import DATASET_REGISTRY
@@ -96,8 +97,22 @@ def evaluate_attack(
         seed=seed,
     )
 
+    # A multi-target clean-label attack succeeds by landing anywhere in its target
+    # set, so the ASR reader is told the set rather than a single class.
+    success_labels = (
+        clean_label_target_set(attack.target_label, attack.num_targets)
+        if attack.label_mode == "clean_label_multi"
+        else None
+    )
+
     return {
-        "asr": attack_success_rate(model, poisoned_loader, device, use_bfloat16=True),
+        "asr": attack_success_rate(
+            model,
+            poisoned_loader,
+            device,
+            use_bfloat16=True,
+            success_labels=success_labels,
+        ),
         "clean_accuracy": clean_accuracy(
             model, clean_loader, device, use_bfloat16=True
         ),
