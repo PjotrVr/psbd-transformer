@@ -25,6 +25,7 @@ from .data import (
     limit_dataset,
     load_clean_datasets,
 )
+from .backdoorbench import balance_by_class, split_validation_and_eval
 from .poisoning import Attack, AttackSuccessSet, PoisonedTrainingSet
 
 
@@ -105,3 +106,63 @@ def build_poisoned_loader(
         poisoned_set, batch_size=batch_size, shuffle=False, num_workers=num_workers
     )
     return loader
+
+
+def build_balanced_eval_loaders(
+    dataset_name: str,
+    attack: Attack,
+    image_size: int,
+    clean_val_size: int,
+    examples_per_class: int,
+    raw_data_dir: str = "raw_data",
+    batch_size: int = 64,
+    seed: int = 0,
+) -> tuple[DataLoader, DataLoader, DataLoader]:
+    """The validation, clean and backdoor loaders, class-balanced, built in memory.
+
+    A third split policy, distinct from the 2 above and from psbd.splits: it holds
+    out a validation slice and then balances the clean and backdoor evaluation sets
+    to the same count per class. Use it when a comparison across classes has to be
+    free of the test set's own class imbalance.
+
+    The split and the balancing both run on the 0-to-1 base test set, where labels
+    are cheap to read, and the same base object is passed as clean and backdoor so
+    the 2 eval sets stay index-aligned. Wrapping comes last: the clean sets only
+    normalize, the backdoor set triggers every sample and then normalizes.
+    """
+    spec = DATASET_REGISTRY[dataset_name]
+    base_transform = base_image_transform(image_size)
+    _, test_base = load_clean_datasets(dataset_name, base_transform, raw_data_dir)
+    normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
+
+    clean_val_base, clean_eval_base, backdoor_eval_base = split_validation_and_eval(
+        test_base, test_base, clean_val_size, seed
+    )
+    clean_eval_base, backdoor_eval_base = balance_by_class(
+        clean_eval_base, backdoor_eval_base, examples_per_class, seed
+    )
+
+    def loader(dataset):
+        return DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
+    return (
+        loader(
+            PoisonedTrainingSet(
+                clean_val_base, attack, set(), normalize, spec.num_classes
+            )
+        ),
+        loader(
+            PoisonedTrainingSet(
+                clean_eval_base, attack, set(), normalize, spec.num_classes
+            )
+        ),
+        loader(
+            AttackSuccessSet(
+                backdoor_eval_base,
+                extract_labels(backdoor_eval_base),
+                attack,
+                normalize,
+                spec.num_classes,
+            )
+        ),
+    )
