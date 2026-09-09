@@ -9,6 +9,8 @@ the right samples.
 Run with pytest from the repo root: pytest tests/test_attacks.py.
 """
 
+from dataclasses import replace
+
 import pytest
 import torch
 
@@ -142,7 +144,9 @@ def test_lc_four_corners_clean_label():
     attack = _built("lc")
     assert attack.label_mode == "clean_label"
     image = _gradient()
-    poisoned = attack.apply_trigger(image, 0)
+    # The eval trigger is the patch alone by definition; apply_trigger additionally
+    # substitutes an adversarial base when one was generated, which is covered below.
+    poisoned = attack.apply_trigger_eval(image, 0)
     size = default_config("lc").patch_size
 
     corners = [
@@ -159,6 +163,59 @@ def test_lc_four_corners_clean_label():
     assert torch.equal(poisoned[:, center, center], image[:, center, center]), (
         "lc changed the center"
     )
+
+
+def test_lc_adversarial_base_is_training_only(tmp_path):
+    """Turner's attack perturbs the base image before stamping, at TRAIN time only.
+
+    Without that step the model can still read the class off the untouched image and
+    never has to use the trigger, which is why the patch-only variant needs nearly the
+    whole target class to implant. At eval time attack success is measured on non-target
+    images, which have no adversarial base by construction, so only the patch applies.
+    """
+    directory = tmp_path / "bases"
+    directory.mkdir()
+    base = torch.zeros(3, SIZE, SIZE)
+    torch.save(
+        {"indices": torch.tensor([7]), "images": base.unsqueeze(0)},
+        directory / "bases.pt",
+    )
+    config = replace(default_config("lc"), adversarial_dir=str(directory))
+    attack = build_attack("lc", config, SIZE, 0)
+    image = _gradient()
+
+    with_base = attack.apply_trigger(image, 7)
+    without_base = attack.apply_trigger(image, 8)
+    eval_only = attack.apply_trigger_eval(image, 7)
+    size = config.patch_size
+    center = slice(size, SIZE - size)
+
+    assert not torch.equal(with_base[:, center, center], image[:, center, center]), (
+        "the adversarial base must replace the image the patch is stamped on"
+    )
+    assert torch.equal(with_base[:, center, center], base[:, center, center]), (
+        "the stamped image should be the stored base outside the corners"
+    )
+    assert torch.equal(eval_only[:, center, center], image[:, center, center]), (
+        "the eval trigger must be the patch alone"
+    )
+    assert torch.equal(without_base, eval_only), (
+        "an index with no base falls back to the clean image, matching the eval trigger"
+    )
+
+
+def test_lc_default_config_is_the_patch_only_variant():
+    """No adversarial_dir means byte-identical behaviour to before the field existed.
+
+    Every checkpoint trained before this change rebuilds through default_config, so a
+    drift here would silently re-interpret them.
+    """
+    attack = build_attack("lc", default_config("lc"), SIZE, 0)
+    image = _gradient()
+    assert torch.equal(
+        attack.apply_trigger(image, 3), attack.apply_trigger_eval(image, 3)
+    )
+    assert torch.equal(attack.apply_trigger(image, 3), attack.apply_trigger(image, 99))
 
 
 def test_bpp_quantizes_to_grid():
@@ -401,3 +458,41 @@ def test_every_attack_success_set_matches_its_label_mode(name):
             attack.num_targets,
         )
         assert target == expected
+
+
+def test_adversarial_config_without_bases_is_refused():
+    """An epsilon with no directory is incoherent and must be caught before training.
+
+    This is the state a dropped `--attack-override` produced: nothing is out of
+    range and no type is violated, so the attack silently reverts to its patch-only
+    variant while the recorded metadata claims the adversarial one.
+    """
+    from attacks import adversarial_config_error
+
+    default = default_config("lc")
+    assert adversarial_config_error(default) is None, "the patch-only default is valid"
+
+    both_set = replace(default, adversarial_dir="bases/", adversarial_epsilon=0.0627)
+    assert adversarial_config_error(both_set) is None, "a complete config is valid"
+
+    epsilon_only = replace(default, adversarial_epsilon=0.0627)
+    message = adversarial_config_error(epsilon_only)
+    assert message is not None and "adversarial_dir" in message
+
+
+def test_missing_adversarial_bases_names_the_gap(tmp_path):
+    """Training must refuse when a poisoned index has no perturbed base."""
+    from attacks import missing_adversarial_bases
+
+    directory = tmp_path / "bases"
+    directory.mkdir()
+    torch.save(
+        {"indices": torch.tensor([1, 2]), "images": torch.zeros(2, 3, SIZE, SIZE)},
+        directory / "bases.pt",
+    )
+    config = replace(default_config("lc"), adversarial_dir=str(directory))
+
+    assert missing_adversarial_bases(config, [1, 2]) == []
+    assert missing_adversarial_bases(config, [1, 2, 7, 9]) == [7, 9]
+    # An empty directory setting means the patch-only variant, which needs no bases.
+    assert missing_adversarial_bases(default_config("lc"), [1, 2, 7]) == []

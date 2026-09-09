@@ -418,3 +418,40 @@ def test_tables_coverage_only_reports_the_bar() -> None:
     assert "coverage:" in output
     assert "per dataset:" in output
     assert "| poison |" not in output, "--coverage-only must not print a table"
+
+
+@pytest.mark.parametrize("module_name", ["train_backdoor", "cli.train_backdoor"])
+def test_repeated_attack_override_accumulates(module_name: str) -> None:
+    """A repeated --attack-override must keep every key, not just the last one.
+
+    Declared `nargs="*"` this silently kept only the final occurrence, so
+    `--attack-override adversarial_dir=... --attack-override adversarial_epsilon=...`
+    dropped the directory and turned Label-Consistent back into its patch-only
+    variant while args.json advertised the adversarial one. Nothing was out of
+    range, so nothing complained.
+    """
+    module = importlib.import_module(module_name)
+    argv = [
+        "--dataset",
+        "cifar100",
+        "--attack",
+        "lc",
+        "--poison-rate",
+        "0.01",
+        "--output",
+        "unused",
+        "--attack-override",
+        "adversarial_dir=bases/",
+        "--attack-override",
+        "adversarial_epsilon=0.0627",
+    ]
+    old_argv = sys.argv
+    try:
+        sys.argv = [module_name, *argv]
+        args = module.parse_args()
+    finally:
+        sys.argv = old_argv
+    assert module.parse_attack_overrides(args.attack_override) == {
+        "adversarial_dir": "bases/",
+        "adversarial_epsilon": "0.0627",
+    }
