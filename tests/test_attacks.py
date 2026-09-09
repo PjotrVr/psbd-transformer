@@ -9,7 +9,7 @@ the right samples.
 Run with pytest from the repo root: pytest tests/test_attacks.py.
 """
 
-from dataclasses import replace
+from dataclasses import fields, replace
 
 import pytest
 import torch
@@ -552,4 +552,28 @@ def test_single_target_clean_label_is_untouched_by_the_multi_target_work():
         )
         assert is_eval_poisonable("clean_label_multi", y, 0, 1) == is_eval_poisonable(
             "clean_label", y, 0
+        )
+
+
+@pytest.mark.parametrize("name", TESTABLE_ATTACK_NAMES)
+def test_builder_propagates_every_config_field_the_attack_record_also_carries(name):
+    """A builder must not silently drop a config field that Attack can hold.
+
+    TaCT's source_classes is the case that motivated this. A builder that forgets
+    it still returns a working Attack, and the trigger pixels stay bit-identical,
+    so a test comparing only name, label mode, target and pixels passes while ASR
+    is quietly measured over every non-target class instead of the source classes.
+    Comparing the fields the two dataclasses share catches the whole family.
+    """
+    config = default_config(name)
+    attack = build_attack(name, config, 32, 0)
+
+    shared = {field.name for field in fields(type(config))} & {
+        field.name for field in fields(Attack)
+    }
+    assert shared, f"{name}: no shared fields, so this test would be vacuous"
+
+    for field_name in sorted(shared):
+        assert getattr(attack, field_name) == getattr(config, field_name), (
+            f"{name}: build() dropped {field_name}"
         )

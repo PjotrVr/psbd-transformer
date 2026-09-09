@@ -6,9 +6,10 @@ being learned as a generic target cue. source_classes selects the sources and
 cover_rate sets the cover count. The training entrypoint reads both from this
 config.
 
-ASR for a source-specific attack is conventionally measured on source-class images
-only. The general AttackSuccessSet measures over all non-target images, so read
-the ASR with that in mind or filter the test set to the source classes.
+ASR for a source-specific attack is measured on source-class images only, because
+those are the only images the attack claims to flip. source_classes travels on the
+Attack so AttackSuccessSet can restrict the eval set itself, rather than leaving
+the caller to remember to filter it.
 """
 
 from dataclasses import dataclass
@@ -38,5 +39,10 @@ def build(config: TactConfig, image_size: int, target_label: int) -> Attack:
         stamped[:, image_size - size :, image_size - size :] = patch
         return stamped
 
-    attack = Attack("tact", apply_trigger, config.label_mode, target_label)
-    return attack
+    return Attack(
+        "tact",
+        apply_trigger,
+        config.label_mode,
+        target_label,
+        source_classes=config.source_classes,
+    )

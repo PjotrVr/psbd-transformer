@@ -195,9 +195,16 @@ def test_trigger_is_bit_identical_to_the_original(attack_name, image_size):
         attack_name, old_attacks.default_config(attack_name), image_size, target_label=3
     )
 
-    assert new_attack.name == old_attack.name
-    assert new_attack.label_mode == old_attack.label_mode
-    assert new_attack.target_label == old_attack.target_label
+    # Compare every non-callable field, not a hand-picked few. Checking only name,
+    # label mode and target let the rewrite drop TaCT's source_classes while the
+    # trigger pixels stayed bit-identical and this test stayed green. Callables are
+    # 2 distinct closure objects that never compare equal, so they are compared by
+    # the output they produce instead, which is what the rest of this test does.
+    for field in dataclasses.fields(old_attack):
+        old_value = getattr(old_attack, field.name)
+        if callable(old_value):
+            continue
+        assert getattr(new_attack, field.name) == old_value, (attack_name, field.name)
 
     for seed, index in enumerate(TRIGGER_INDICES):
         image = _images(image_size, seed)
