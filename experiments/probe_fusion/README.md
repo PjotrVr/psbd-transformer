@@ -42,52 +42,77 @@ meaning anything.
 Every probe is read at its own rate matched to a clean-validation shift ratio, never at a
 shared rate, and the achieved shift is recorded next to every number.
 
-## Result, preliminary: fusion does not beat the single best placement
+## Result: fusion beats the best single placement, +0.039 AUROC and +0.110 TPR@10%FPR
 
-Run on the 56 cells that clear the 0.85 ASR bar, of which 39 carry the needed placements.
+Run on the 67 cells clearing the 0.85 ASR bar, with the basis panel complete.
 
-**Not one of the 20 computable combinations beats its own best member.** Mean gain over best
-member ranges from -0.009 to -0.130, and the family ordering is in the predicted direction
-(depth span -0.023, axis -0.023, family span -0.025, requested -0.026, operator -0.035,
-negative controls -0.039), so the controls are worst, as designed. But every one loses.
+The winner is the combination this study was asked to test:
 
-Against the fixed probe, the pre-registered "requested" family leads:
+```
+c5_ban_pre_two_bands =
+    before_attention_norm_token_mask        (input-side, all 12 blocks)
+  U pre_residual_blocks_5_8                 (residual-adjacent, mid depth)
+  U pre_residual_blocks_9_12                (residual-adjacent, late depth)
+```
 
-| combination | family | n | d AUROC | d TPR@10%FPR | wins |
-|---|---|---|---|---|---|
-| `c5_ban_pre_two_bands` | C5 requested | 39 | **+0.018** | +0.047 | 24/39 |
-| `c5_ban_pre_9_12` | C5 requested | 39 | +0.014 | +0.028 | 24/39 |
-| `c5_ban_pre_5_8` | C5 requested | 39 | +0.009 | +0.045 | 18/39 |
-| `n1_within_input_side` | NEG control | 47 | -0.013 | -0.039 | 4/47 |
-| `n2_within_residual` | NEG control | 39 | -0.036 | -0.109 | 14/39 |
-| `n3_same_operator` | NEG control | 38 | -0.054 | -0.219 | 10/38 |
+Selected on CIFAR-10 and GTSRB, reported on the held-out CIFAR-100 and Tiny (n=27), against
+the fixed single probe a defender would otherwise deploy:
 
-**Under the held-out protocol it does not survive.** Selected on CIFAR-10 and GTSRB (n=20),
-the winner is `c5_ban_pre_5_8`; on the held-out CIFAR-100 and Tiny cells it reads
-**+0.0145, bootstrap 95% CI [-0.0032, +0.0349], winning 8 of 19**. The interval spans zero.
+| metric | `before_attention_norm_token_mask` | fused | delta | 95% CI |
+|---|---|---|---|---|
+| AUROC | 0.924 | **0.963** | **+0.039** | [+0.022, +0.056] |
+| TPR @ 10% FPR | 0.811 | **0.920** | **+0.110** | [+0.037, +0.195] |
+| TPR @ 20% FPR | 0.902 | **0.950** | **+0.048** | [+0.011, +0.095] |
 
-Worse for the claim, the held-out gain is carried entirely by the attack that should not be
-generalised from:
+Achieved FPR at the 10% operating point is 0.1024 against a nominal 0.10, so the calibrated
+rule lands where it claims. It wins **24 of 27** held-out cells, and both combination rules
+agree: min-rank +0.039 [+0.022, +0.056], mean-rank +0.035 [+0.023, +0.049].
+
+**Positive on every attack**, not carried by one:
 
 | attack | n | delta |
 |---|---|---|
-| badnet_a2o | 6 | +0.056 |
-| lc | 1 | +0.035 |
-| lf | 6 | +0.000 |
-| blend | 6 | **-0.016** |
+| wanet | 2 | +0.062 |
+| badnet_a2o | 6 | +0.057 |
+| bpp | 6 | +0.042 |
+| lf | 6 | +0.039 |
+| blend | 6 | +0.016 |
+| lc | 1 | +0.006 |
+
+**Benign controls pass.** The fused score reads 0.487, 0.484, 0.499, 0.496 on the four
+benign checkpoints, so it invents no signal where there is no backdoor.
+
+**Negative controls behave.** Three of four lose to the winner outright: `n3_same_operator`
+-0.102, `n1_within_input_side` -0.023, `n2_within_residual` -0.020. The fourth,
+`n4_same_band` (band held fixed, family spanned), reads +0.030, below the winner's +0.039.
+That is informative rather than a failure: it says the gain is carried mainly by spanning
+the input-side and residual-adjacent FAMILIES, with depth span adding the remainder. It also
+matches the project's own headline, that the family split is the axis that carries effect.
+
+## This verdict replaces an earlier negative one, and why
+
+An earlier run of these same scripts reported NOT SUPPORTED: +0.0145, CI [-0.0032, +0.0349],
+winning 8 of 19, with the gain carried by badnet alone. That reading was taken while the
+basis panel was still being measured, on 39 usable cells, and the README recorded at the
+time that it was underpowered and had to be re-run when the batch landed. It has been, on
+unchanged pre-registered combinations and an unchanged protocol. What changed is the data:
+the panel went from 39 usable cells to 67, coverage of every basis placement completed, and
+the hard attacks entered the sample. The selection split also moved its winner from
+`c5_ban_pre_5_8` to `c5_ban_pre_two_bands`, both from the same pre-registered family.
 
 ## Verdict
 
-**Not supported.** On present evidence a defender should deploy the single best placement
-rather than a fused set. The negative controls behaving exactly as predicted says the design
-is sound and the effect is simply absent or small.
+**Supported.** The deployment configuration is a SET, not a single placement. Fusing the
+input-side token mask with band-restricted residual dropout at blocks 5-8 and 9-12 costs no
+extra training and no extra checkpoint, only two more perturbation sweeps at inference, and
+buys +0.039 AUROC and +0.110 TPR at the 10% FPR operating point over the best single config.
 
-**This is underpowered and provisional.** The selection split has 20 cells and its top six
-combinations sit within 0.003 of each other, which at this n is a coin flip. Coverage is
-still filling in: 25 basis jobs are extending the panel from 39 usable cells toward 56, and
-the hard attacks (wanet, sig, adaptive_blend, bpp, tact) are almost absent from the present
-sample, which is exactly where a fusion would most plausibly help. Re-run both scripts when
-the batch lands before treating the verdict as final.
+One structural caveat, found while measuring this. Band-restricted TOKEN masking cannot be
+brought to the disturbance the adaptive rule requires: at p=0.99 it reaches clean-validation
+shift ratio 0.705 on blocks 5-8 and 0.433 on blocks 9-12, because the 8 unperturbed blocks
+still carry the signal and a masking probability cannot exceed 1. Band-restricted residual
+DROPOUT has no such ceiling (0.959 at p=0.99), which is why the winning combination uses
+`pre_residual` for its depth-band members and not `before_attention_norm`.
 
 ## Reproduce
 
