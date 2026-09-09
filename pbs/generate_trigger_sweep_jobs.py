@@ -56,7 +56,7 @@ python train_backdoor.py \\
     --epochs 15 \\
     --seed 0 \\
     --attack-override {override} \\
-    --output checkpoints/{output}
+    --output checkpoints/{output}/attack_result.pt
 """
 
 

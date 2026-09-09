@@ -54,7 +54,7 @@ python train_backdoor.py \\
     --architecture vit \\
     --epochs 15 \\
     --seed 0 \\
-    --output checkpoints/{output}
+    --output checkpoints/{output}/attack_result.pt
 """
 
 
