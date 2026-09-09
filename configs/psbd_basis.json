@@ -35,7 +35,8 @@
       "a2m",
       "a2a",
       "benign",
-      "seed_"
+      "seed_",
+      "_trig"
     ],
     "forward_passes": 3,
     "mask_seed": 0

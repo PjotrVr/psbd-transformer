@@ -15,6 +15,7 @@ Example
 
 import argparse
 import os
+from dataclasses import fields as dataclass_fields
 from dataclasses import replace
 
 import torch
@@ -23,7 +24,13 @@ from lightning import seed_everything
 from torch.utils.data import DataLoader, Subset
 
 from attacks.generated import GeneratedConfig
-from attacks import ATTACK_NAMES, build_attack, default_config
+from attacks import (
+    ATTACK_NAMES,
+    apply_config_overrides,
+    build_attack,
+    config_overrides,
+    default_config,
+)
 from defences.detection import clean_accuracy
 from evaluate import evaluate_attack
 from loaders import build_clean_loader
@@ -61,6 +68,23 @@ def resolve_config(attack_name: str, poisoned_dir: str):
     if attack_name == "generated":
         return GeneratedConfig(poisoned_dir=poisoned_dir)
     return default_config(attack_name)
+
+
+def parse_attack_overrides(overrides: list[str] | None) -> dict:
+    """Turn `key=value` command-line strings into a mapping.
+
+    Casting is left to attacks.apply_config_overrides so training and evaluation agree on
+    the type of every field.
+    """
+    if not overrides:
+        return {}
+    parsed = {}
+    for item in overrides:
+        if "=" not in item:
+            raise ValueError(f"--attack-override needs key=value, got {item!r}")
+        key, raw = item.split("=", 1)
+        parsed[key] = raw
+    return parsed
 
 
 def build_training_set(
@@ -139,6 +163,9 @@ def build_training_loader(args, image_size: int):
     if cover_rate is not None:
         config = replace(config, cover_rate=cover_rate)
         print(f"cover rate for {args.attack}: {cover_rate:.4f}")
+    config = apply_config_overrides(
+        config, parse_attack_overrides(args.attack_override)
+    )
     attack = build_attack(args.attack, config, image_size, args.target_label)
 
     poisoned_train, realized_poison_rate = build_training_set(
@@ -218,6 +245,15 @@ def parse_args() -> argparse.Namespace:
         "specifies as a multiple of the poisoning rate: 2x for wanet's noise mode, "
         "1x for adaptive_blend and bpp. TaCT keeps its config constant because its "
         "reference selects cover by class, not by rate.",
+    )
+    parser.add_argument(
+        "--attack-override",
+        nargs="*",
+        default=None,
+        metavar="KEY=VALUE",
+        help="override attack-config fields, e.g. --attack-override patch_size=32 or "
+        "strength=2.0. Needed for trigger dose-response sweeps, which otherwise cannot "
+        "vary the trigger at all because resolve_config returns default_config().",
     )
     parser.add_argument(
         "--checkpoint-freq",
@@ -494,6 +530,9 @@ def main() -> None:
         model_dropout=args.model_dropout_train,
     )
     metadata["n_cover"] = n_cover
+    # Without this, evaluation rebuilds the attack from default_config() and a run
+    # trained with a modified trigger is scored against a trigger it never saw.
+    metadata["attack_config_overrides"] = config_overrides(config, args.attack)
     save_checkpoint(model, num_classes, args.output, metadata=metadata)
     print(f"saved {args.output}")
     print(

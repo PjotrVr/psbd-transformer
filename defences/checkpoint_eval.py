@@ -15,7 +15,7 @@ import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 from torch.utils.data import DataLoader, Subset
 
-from attacks import build_attack, default_config
+from attacks import apply_config_overrides, build_attack, default_config
 from backdoor_data import balance_by_class, split_validation_and_eval
 from utils.config import DATASET_REGISTRY, RunConfig
 from utils.datasets import extract_labels, load_clean_datasets
@@ -132,14 +132,18 @@ def build_eval_loaders_from_checkpoint(
     """Read the checkpoint metadata and rebuild the eval loaders for that attack.
 
     Uses the attack's default config, which matches how train_backdoor.py builds
-    it. A custom attack config would need to be recorded in the checkpoint too.
+    it. A custom attack config is recorded in the checkpoint as
+    attack_config_overrides and reapplied here.
     """
     metadata = read_checkpoint_metadata(checkpoint_path)
     dataset_name = metadata["dataset"]
     image_size = DATASET_REGISTRY[dataset_name].image_size
     attack = build_attack(
         metadata["attack"],
-        default_config(metadata["attack"]),
+        apply_config_overrides(
+            default_config(metadata["attack"]),
+            metadata.get("attack_config_overrides"),
+        ),
         image_size,
         metadata["target_label"],
     )
@@ -211,9 +215,16 @@ def build_psbd_loaders_from_checkpoint(
     attack_name, target_label = resolve_probe_attack(
         metadata, probe_attack, probe_target_label
     )
+    # A probe attack is chosen here rather than trained, so it takes no override; a
+    # backdoored checkpoint rebuilds the exact trigger it was trained with.
+    overrides = (
+        metadata.get("attack_config_overrides")
+        if attack_name == metadata.get("attack")
+        else None
+    )
     attack = build_attack(
         attack_name,
-        default_config(attack_name),
+        apply_config_overrides(default_config(attack_name), overrides),
         DATASET_REGISTRY[dataset_name].image_size,
         target_label,
     )

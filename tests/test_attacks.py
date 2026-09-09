@@ -57,17 +57,15 @@ def _built(name: str) -> Attack:
     return build_attack(name, default_config(name), SIZE, target_label=0)
 
 
+def _assert_static_trigger_fn(plant, name: str, image: torch.Tensor) -> None:
+    first = plant(image, 0)
+    assert torch.equal(first, plant(image, 0)), f"{name} is not deterministic"
+    assert torch.equal(first, plant(image, 5)), f"{name} depends on the index"
+    assert first.min() >= 0.0 and first.max() <= 1.0, f"{name} left the 0 to 1 range"
+
+
 def _assert_static_trigger(attack: Attack, image: torch.Tensor) -> None:
-    first = attack.apply_trigger(image, 0)
-    assert torch.equal(first, attack.apply_trigger(image, 0)), (
-        f"{attack.name} is not deterministic"
-    )
-    assert torch.equal(first, attack.apply_trigger(image, 5)), (
-        f"{attack.name} depends on the index"
-    )
-    assert first.min() >= 0.0 and first.max() <= 1.0, (
-        f"{attack.name} left the 0 to 1 range"
-    )
+    _assert_static_trigger_fn(attack.apply_trigger, attack.name, image)
 
 
 def test_badnet_patch_locality():
@@ -177,7 +175,36 @@ def test_bpp_quantizes_to_grid():
 def test_adaptive_blend_has_cover_rate():
     config = default_config("adaptive_blend")
     assert config.cover_rate > 0.0, "adaptive blend needs cover samples"
-    _assert_static_trigger(_built("adaptive_blend"), _mid_gray())
+
+
+def test_adaptive_blend_trigger_is_asymmetric():
+    """Train plants a per-sample SUBSET of the pattern; eval plants all of it.
+
+    This is the mechanism, not an implementation detail: training on a subset forces the
+    model to generalise over the pattern, so the full pattern at test time lands well
+    inside the learned region. So unlike every other attack here, the training trigger is
+    deliberately index-dependent, and only the eval trigger is static.
+    """
+    attack = _built("adaptive_blend")
+    image = _mid_gray()
+
+    _assert_static_trigger_fn(attack.apply_trigger_eval, "adaptive_blend eval", image)
+
+    first = attack.apply_trigger(image, 0)
+    assert torch.equal(first, attack.apply_trigger(image, 0)), (
+        "the training trigger must be reproducible for a given sample"
+    )
+    assert not torch.equal(first, attack.apply_trigger(image, 5)), (
+        "the training trigger must vary by sample, which is the asymmetry"
+    )
+    assert first.min() >= 0.0 and first.max() <= 1.0
+
+    full = attack.apply_trigger_eval(image, 0)
+    changed_train = (first - image).abs().sum(0) > 1e-6
+    changed_eval = (full - image).abs().sum(0) > 1e-6
+    assert changed_eval.sum() > changed_train.sum(), (
+        "the eval trigger must cover more of the image than a training subset"
+    )
 
 
 def test_tact_has_sources_and_cover():
@@ -316,14 +343,20 @@ def test_attack_success_set_clean_label_selects_non_target_only():
 
 @pytest.mark.parametrize("name", TESTABLE_ATTACK_NAMES)
 def test_every_attack_trigger_is_deterministic_and_bounded(name):
+    """The trigger a sample is SCORED with must be static and reproducible.
+
+    Read through apply_trigger_eval, because that is what AttackSuccessSet plants and it
+    defaults to apply_trigger for every attack that does not distinguish the two.
+    Adaptive-Blend does distinguish them on purpose: its training trigger is a per-sample
+    subset of the pattern, which is the asymmetry the attack depends on, so requiring
+    index-independence of apply_trigger would forbid a correct implementation.
+    See test_adaptive_blend_trigger_is_asymmetric.
+    """
     attack = _built(name)
-    first = attack.apply_trigger(_gradient(), 0)
-    assert torch.equal(first, attack.apply_trigger(_gradient(), 0)), (
-        f"{name} is not deterministic"
-    )
-    assert torch.equal(first, attack.apply_trigger(_gradient(), 5)), (
-        f"{name} depends on the index"
-    )
+    plant = attack.apply_trigger_eval or attack.apply_trigger
+    first = plant(_gradient(), 0)
+    assert torch.equal(first, plant(_gradient(), 0)), f"{name} is not deterministic"
+    assert torch.equal(first, plant(_gradient(), 5)), f"{name} depends on the index"
     assert first.min() >= 0.0 and first.max() <= 1.0, f"{name} left the 0 to 1 range"
 
 

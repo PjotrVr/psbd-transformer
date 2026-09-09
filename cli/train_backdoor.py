@@ -25,7 +25,13 @@ import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 from torch.utils.data import DataLoader, Dataset, Subset
 
-from psbd.attacks import ATTACK_NAMES, build_attack, default_config
+from psbd.attacks import (
+    ATTACK_NAMES,
+    apply_config_overrides,
+    build_attack,
+    config_overrides,
+    default_config,
+)
 from psbd.attacks.generated import GeneratedConfig
 from psbd.config import DATASET_REGISTRY
 from psbd.data import (
@@ -55,6 +61,23 @@ from psbd.training import (
 # Interpolation is measured on a fixed subsample; the trajectory, not the exact
 # value, is what the snapshot sweep reads.
 TRAIN_EVAL_SAMPLES = 10000
+
+
+def parse_attack_overrides(overrides: list[str] | None) -> dict:
+    """Turn `key=value` command-line strings into a mapping.
+
+    Casting is left to psbd.attacks.apply_config_overrides so training and evaluation agree
+    on the type of every field.
+    """
+    if not overrides:
+        return {}
+    parsed = {}
+    for item in overrides:
+        if "=" not in item:
+            raise ValueError(f"--attack-override needs key=value, got {item!r}")
+        key, raw = item.split("=", 1)
+        parsed[key] = raw
+    return parsed
 
 
 def resolve_config(attack_name: str, poisoned_dir: str):
@@ -156,6 +179,9 @@ def build_training_loader(
     if cover_rate is not None:
         config = replace(config, cover_rate=cover_rate)
         print(f"cover rate for {args.attack}: {cover_rate:.4f}")
+    config = apply_config_overrides(
+        config, parse_attack_overrides(args.attack_override)
+    )
     attack = build_attack(args.attack, config, image_size, args.target_label)
 
     poisoned_train, realized_poison_rate = build_training_set(
@@ -266,6 +292,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--output", required=True)
     parser.add_argument("--num-workers", type=int, default=8)
+    parser.add_argument(
+        "--attack-override",
+        nargs="*",
+        default=None,
+        metavar="KEY=VALUE",
+        help="override attack-config fields, e.g. --attack-override patch_size=32 or "
+        "strength=2.0. Needed for trigger dose-response sweeps, which otherwise cannot "
+        "vary the trigger at all because resolve_config returns default_config().",
+    )
     parser.add_argument(
         "--cover-rate",
         type=float,
@@ -523,6 +558,9 @@ def main() -> None:
         model_dropout=args.model_dropout_train,
     )
     metadata["n_cover"] = n_cover
+    # Without this, evaluation rebuilds the attack from default_config() and a run
+    # trained with a modified trigger is scored against a trigger it never saw.
+    metadata["attack_config_overrides"] = config_overrides(config, args.attack)
     save_checkpoint(model, num_classes, args.output, metadata=metadata)
     print(f"saved {args.output}")
     print(

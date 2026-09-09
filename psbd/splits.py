@@ -23,7 +23,7 @@ from torch.utils.data import DataLoader, Dataset, Subset
 # The registry returns an attack record with .name, .apply_trigger, .label_mode,
 # and .target_label. The dataset wrappers below read only those 4 fields and do
 # no isinstance check, so the record's defining module does not matter.
-from .attacks import build_attack, default_config
+from .attacks import apply_config_overrides, build_attack, default_config
 
 from .config import DATASET_REGISTRY
 from .data import base_image_transform, extract_labels, load_clean_datasets
@@ -183,8 +183,18 @@ def build_psbd_loaders_from_checkpoint(
     attack_name, target_label = resolve_probe_attack(
         metadata, probe_attack, probe_target_label
     )
+    # A probe attack is chosen here rather than trained, so it takes no override; a
+    # backdoored checkpoint rebuilds the exact trigger it was trained with.
+    overrides = (
+        metadata.get("attack_config_overrides")
+        if attack_name == metadata.get("attack")
+        else None
+    )
     attack = build_attack(
-        attack_name, default_config(attack_name), spec.image_size, target_label
+        attack_name,
+        apply_config_overrides(default_config(attack_name), overrides),
+        spec.image_size,
+        target_label,
     )
     check_label_mode_agrees(checkpoint_path, metadata, attack_name, attack.label_mode)
 

@@ -12,6 +12,8 @@ is a genuine dispatcher: a caller writes build_attack("wanet", ...) and never ha
 to know which file wanet lives in.
 """
 
+from dataclasses import asdict, replace
+from dataclasses import fields as dataclass_fields
 from typing import Callable
 
 from psbd.poisoning import Attack
@@ -89,6 +91,53 @@ def default_config(attack_name: str):
 
     config = factory()
     return config
+
+
+def apply_config_overrides(config, overrides: dict | None):
+    """Set attack-config fields from a mapping, casting to each field's declared type.
+
+    Shared by training and by evaluation so a checkpoint is always ABLE to be evaluated
+    with the trigger it was trained with. Without this, a run trained at patch_size=16 is
+    rebuilt at eval time from default_config() with patch_size=3, the attack-success set
+    carries a trigger the model never saw, and its ASR reads near zero for a reason that
+    has nothing to do with the attack.
+
+    JSON round-trips a tuple to a list, so a tuple-valued field is restored as a tuple.
+    """
+    if not overrides:
+        return config
+    declared = {field.name: field for field in dataclass_fields(config)}
+    updates = {}
+    for key, value in overrides.items():
+        if key not in declared:
+            raise ValueError(
+                f"{type(config).__name__} has no field {key!r}; "
+                f"available: {sorted(declared)}"
+            )
+        annotation = declared[key].type
+        if annotation is float:
+            updates[key] = float(value)
+        elif annotation is int:
+            updates[key] = int(value)
+        elif isinstance(value, list):
+            updates[key] = tuple(value)
+        else:
+            updates[key] = value
+    return replace(config, **updates)
+
+
+def config_overrides(config, attack_name: str) -> dict:
+    """The fields of `config` that differ from the attack's default.
+
+    Only the difference is recorded, so a checkpoint's provenance stays small and a field
+    nobody touched cannot be corrupted by a JSON type round-trip.
+    """
+    try:
+        default = default_config(attack_name)
+    except ValueError:
+        return {}
+    current, baseline = asdict(config), asdict(default)
+    return {key: value for key, value in current.items() if baseline.get(key) != value}
 
 
 def build_attack(
