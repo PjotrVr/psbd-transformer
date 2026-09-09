@@ -55,6 +55,24 @@ def denormalize(image: torch.Tensor, dataset_name: str) -> torch.Tensor:
     return original_range
 
 
+# EuroSAT ships as one folder of 27000 images with no train and test split, so
+# this project defines one. A fixed permutation keeps it identical across every
+# run and every process, which matters because a checkpoint trained on one split
+# and evaluated on another would silently score itself on its own training data.
+EUROSAT_SPLIT_SEED = 0
+EUROSAT_TEST_FRACTION = 0.2
+
+
+def split_eurosat(root: str, transform) -> tuple[Dataset, Dataset]:
+    """EuroSAT cut into (train, test) by a fixed permutation."""
+    full = tv_datasets.EuroSAT(root=root, download=True, transform=transform)
+    order = torch.randperm(
+        len(full), generator=torch.Generator().manual_seed(EUROSAT_SPLIT_SEED)
+    ).tolist()
+    cut = int(len(full) * EUROSAT_TEST_FRACTION)
+    return Subset(full, order[cut:]), Subset(full, order[:cut])
+
+
 def load_clean_datasets(
     dataset_name: str,
     transform: transforms_v2.Compose,
@@ -68,6 +86,18 @@ def load_clean_datasets(
     """
     spec: DatasetSpec = DATASET_REGISTRY[dataset_name]
     root = os.path.join(raw_data_dir, dataset_name)
+
+    if spec.loader_kind == "svhn":
+        train_ds = tv_datasets.SVHN(
+            root=root, split="train", download=True, transform=transform
+        )
+        test_ds = tv_datasets.SVHN(
+            root=root, split="test", download=True, transform=transform
+        )
+        return train_ds, test_ds
+
+    if spec.loader_kind == "eurosat":
+        return split_eurosat(root, transform)
 
     if spec.loader_kind == "gtsrb":
         train_ds = tv_datasets.GTSRB(

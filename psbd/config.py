@@ -30,6 +30,14 @@ class DatasetSpec:
 
 # GTSRB uses identity normalization because BackdoorBench trains its GTSRB
 # models on unnormalized inputs, so matching that avoids a train/eval mismatch.
+# SVHN and EuroSAT exist in the panel for one reason: a clean-label attack can
+# only poison its target class, so the highest rate it can reach is
+# |target class| / |train set|, which for a balanced K-class dataset is exactly
+# 1/K. CIFAR-100 therefore caps at 1% and Tiny at 0.5% whatever class is chosen,
+# and no amount of compute changes that. Reaching 10% needs 10 classes or fewer.
+# SVHN is imbalanced, so its largest digit class is 18.9% of the training set,
+# and EuroSAT is near-balanced at roughly 11%. Both clear 1%, 5% and 10%.
+# Statistics below are measured on the training split, not copied from a paper.
 DATASET_REGISTRY: dict[str, DatasetSpec] = {
     "cifar10": DatasetSpec(
         num_classes=10,
@@ -57,6 +65,20 @@ DATASET_REGISTRY: dict[str, DatasetSpec] = {
         mean=(0.4802, 0.4481, 0.3975),
         std=(0.2302, 0.2265, 0.2262),
         loader_kind="image_folder",
+        image_size=64,
+    ),
+    "svhn": DatasetSpec(
+        num_classes=10,
+        mean=(0.4377, 0.4438, 0.4728),
+        std=(0.1980, 0.2010, 0.1970),
+        loader_kind="svhn",
+        image_size=32,
+    ),
+    "eurosat": DatasetSpec(
+        num_classes=10,
+        mean=(0.3444, 0.3803, 0.4078),
+        std=(0.2027, 0.1369, 0.1156),
+        loader_kind="eurosat",
         image_size=64,
     ),
 }
