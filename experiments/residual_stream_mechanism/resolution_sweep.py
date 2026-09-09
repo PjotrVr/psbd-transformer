@@ -41,6 +41,7 @@ from defences.checkpoint_eval import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
+from utils.numerics import safe_ratio, safe_ratio_positive
 from models import build_vit, load_checkpoint, network_core
 from utils.config import DATASET_REGISTRY
 
@@ -131,7 +132,9 @@ def measure(model, core, loader, device, tokens, limit):
             ) + share.get(index, 0.0)
             n = norms[index]
             ratio[index] = float(
-                (n.max(dim=-1).values / n.median(dim=-1).values).sum()
+                safe_ratio_positive(
+                    n.max(dim=-1).values, n.median(dim=-1).values
+                ).nansum()
             ) + ratio.get(index, 0.0)
         seen += images.shape[0]
         if seen >= limit:
@@ -196,7 +199,7 @@ def analyse(folder, args) -> dict:
                 "clean_accuracy": accuracy(model, loaders["clean"], device, args.limit),
                 "trigger_share": {k + 1: v for k, v in share.items()},
                 "trigger_share_normalised": {
-                    k + 1: v / uniform for k, v in share.items()
+                    k + 1: safe_ratio_positive(v, uniform) for k, v in share.items()
                 },
                 "max_norm_ratio": {k + 1: v for k, v in ratio.items()},
                 "n_samples": n,

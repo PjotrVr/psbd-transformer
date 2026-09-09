@@ -46,6 +46,7 @@ from defences.checkpoint_eval import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
+from utils.numerics import safe_ratio, safe_ratio_positive
 from models import load_checkpoint, network_core
 from utils.config import DATASET_REGISTRY
 
@@ -186,12 +187,14 @@ def analyse(folder, args) -> dict:
                 "value_norm_trigger": triggered[index]["v_trigger"],
                 "value_norm_topattn": triggered[index]["v_topattn"],
                 "value_norm_other": triggered[index]["v_other"],
-                "value_ratio": triggered[index]["v_trigger"]
-                / max(triggered[index]["v_other"], 1e-9),
+                "value_ratio": safe_ratio_positive(
+                    triggered[index]["v_trigger"], triggered[index]["v_other"]
+                ),
                 "cls_mass_before": triggered[index]["mass_before"],
                 "cls_mass_after": triggered[index]["mass_after"],
-                "takeover_fraction": triggered[index]["mass_after"]
-                / max(triggered[index]["mass_before"], 1e-9),
+                "takeover_fraction": safe_ratio_positive(
+                    triggered[index]["mass_after"], triggered[index]["mass_before"]
+                ),
                 "cls_mass_clean": clean[index]["mass_before"],
             }
             for index in sorted(triggered)

@@ -38,6 +38,7 @@ from defences.checkpoint_eval import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
+from utils.numerics import safe_ratio_positive
 from models import load_checkpoint, network_core
 from utils.config import DATASET_REGISTRY
 
@@ -104,13 +105,18 @@ def neuron_scores(model, core, loader, device, limit, top_k, fixed_tokens=None):
                 chosen = norms.topk(top_k, dim=-1).indices
                 mask = torch.zeros_like(norms, dtype=torch.bool)
                 mask.scatter_(1, chosen, True)
-            selected = (activation * mask.unsqueeze(-1)).sum(dim=1) / mask.sum(
-                dim=1, keepdim=True
+            # Both counts can be zero: a trigger set can be empty, and top_k could in
+            # principle cover every patch. safe_ratio_positive yields NaN there rather than
+            # an inf that would poison the running total.
+            selected = safe_ratio_positive(
+                (activation * mask.unsqueeze(-1)).sum(dim=1),
+                mask.sum(dim=1, keepdim=True),
             )
-            other = (activation * (~mask).unsqueeze(-1)).sum(dim=1) / (~mask).sum(
-                dim=1, keepdim=True
+            other = safe_ratio_positive(
+                (activation * (~mask).unsqueeze(-1)).sum(dim=1),
+                (~mask).sum(dim=1, keepdim=True),
             )
-            delta = (selected - other).sum(dim=0)
+            delta = torch.nan_to_num(selected - other, nan=0.0).sum(dim=0)
             totals[index] = delta if totals[index] is None else totals[index] + delta
         seen += images.shape[0]
         if seen >= limit:

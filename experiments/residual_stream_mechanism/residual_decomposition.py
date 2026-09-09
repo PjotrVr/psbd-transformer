@@ -59,6 +59,7 @@ from defences.checkpoint_eval import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
+from utils.numerics import safe_ratio, safe_ratio_positive
 from models import load_checkpoint, network_core
 
 TAPS = ("stream_in", "attention_write", "mlp_write")
@@ -147,13 +148,15 @@ def summarise(clean_means, backdoor_means, n_layers) -> list[dict]:
         stream = direction[("stream_in", layer)]
         stream_activation = clean_means[("stream_in", layer)]
         entry["stream_share"] = float(
-            stream.norm() / stream_activation.norm().clamp(min=1e-9)
+            safe_ratio_positive(stream.norm(), stream_activation.norm())
         )
-        entry["direction_norm_rel"] = float(stream.norm() / final_norm)
+        entry["direction_norm_rel"] = float(
+            safe_ratio_positive(stream.norm(), final_norm)
+        )
         for tap in ("attention_write", "mlp_write"):
             write = direction[(tap, layer)]
             flat = write.reshape(-1)
-            entry[f"{tap}_rel"] = float(flat.norm() / final_norm)
+            entry[f"{tap}_rel"] = float(safe_ratio_positive(flat.norm(), final_norm))
             entry[f"{tap}_cos_final"] = float(
                 torch.dot(flat, final_flat) / (flat.norm().clamp(min=1e-9) * final_norm)
             )

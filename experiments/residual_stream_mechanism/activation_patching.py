@@ -45,6 +45,7 @@ from defences.checkpoint_eval import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
+from utils.numerics import safe_ratio, safe_ratio_positive
 from models import load_checkpoint, network_core
 from utils.config import DATASET_REGISTRY
 
@@ -279,9 +280,10 @@ def analyse(folder, args) -> dict:
                 "site": site,
                 "layer": layer,
                 "group": group,
-                "recovery": entry["num"] / entry["den"]
-                if abs(entry["den"]) > 1e-6
-                else float("nan"),
+                # The denominator is M_clean - M_triggered, which is legitimately NEGATIVE, so it
+                # must be guarded on MAGNITUDE. Clamping it to a positive floor is what
+                # produced recoveries of -20,868,252 in the first version of this file.
+                "recovery": safe_ratio(entry["num"], entry["den"], floor=1e-6),
                 "n": entry["n"],
             }
             for (site, layer, group), entry in sorted(merged.items())
