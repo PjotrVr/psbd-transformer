@@ -81,3 +81,6 @@ pbs/psbd_saturation/
 # cli/lc_bases.py, the manifest is what ties a poisoned checkpoint to the exact
 # bases it trained on, so only the manifest is versioned.
 !results/lc_adversarial/**/manifest.json
+
+# Raw stealth measurements, regenerable by experiments/stealth/stealth_metrics.py.
+experiments/stealth/stealth_metrics_results.json

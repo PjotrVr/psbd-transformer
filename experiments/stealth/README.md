@@ -18,11 +18,16 @@ interpolation into the score.
 
 200 images per (attack, dataset) pair, drawn from the test split at seed 42, target
 label 0, every attack at its default configuration. Poison rate is not a parameter:
-each attack's `apply_trigger` is deterministic and rate independent, so the trigger
-is identical no matter how many training images were selected, and the metrics are
-computed once per (attack, dataset) pair.
+the metrics are computed once per (attack, dataset) pair.
 
-Raw output lands in `scratch/stealth_metrics_results.json`, which stays out of git
+That holds for the EVAL trigger, which is what this measures and what a defender
+faces at inference. It is no longer true of `apply_trigger`. Two attacks now vary
+their training trigger per sample, Adaptive-Blend by planting a subset of its
+pattern so the model must generalise over it, and Label-Consistent by substituting
+an adversarially perturbed base. Measuring those would make the result depend on
+which indices happened to be sampled.
+
+Raw output lands in `experiments/stealth/stealth_metrics_results.json`, which stays out of git
 because the published table in `docs/results/stealth-metrics.md` is the record.
 
 ## Finding

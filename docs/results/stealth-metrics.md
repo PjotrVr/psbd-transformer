@@ -14,6 +14,13 @@ regardless of how many training images are selected for poisoning.
 
 ## Summary (averaged across datasets)
 
+> **SIG's rows were regenerated on 2026-09-09.** Its amplitude was raised from
+> 0.1 to 40/255 to match Barni et al., which drops its PSNR from about 23.2 dB to
+> about 19.5 and its SSIM correspondingly. Adaptive-Blend is unchanged and still
+> matches Blend exactly, which is now a measured fact rather than a coincidence:
+> the generator reads each attack's EVAL trigger, and Adaptive-Blend's differs
+> from its training trigger since it began planting a per-sample subset.
+
 | Attack         | PSNR (dB) | SSIM   | Stealth |
 |----------------|-----------|--------|---------|
 | WaNet          | 32.01     | 0.9762 | high    |
@@ -21,7 +28,7 @@ regardless of how many training images are selected for poisoning.
 | BPP            | 27.83     | 0.8891 | medium  |
 | BadNet A2O     | 26.73     | 0.9850 | medium  |
 | TaCT           | 26.73     | 0.9850 | medium  |
-| SIG            | 23.24     | 0.7631 | low     |
+| SIG            | 19.47     | 0.6312 | low     |
 | Blend          | 22.00     | 0.7517 | low     |
 | Adaptive Blend | 22.00     | 0.7517 | low     |
 | LC             | 20.65     | 0.9402 | low     |
@@ -38,7 +45,7 @@ SSIM > 0.88, low = neither condition met.
 | BPP            | 27.74 +/- 0.72  | 0.9200 +/- 0.036 |
 | BadNet A2O     | 25.63 +/- 0.85  | 0.9846 +/- 0.007 |
 | TaCT           | 25.63 +/- 0.85  | 0.9846 +/- 0.007 |
-| SIG            | 23.17 +/- 0.29  | 0.7993 +/- 0.078 |
+| SIG            | 19.34 +/- 0.34  | 0.6695 +/- 0.094 |
 | Blend          | 22.49 +/- 0.89  | 0.8058 +/- 0.074 |
 | Adaptive Blend | 22.49 +/- 0.89  | 0.8058 +/- 0.074 |
 | LC             | 19.47 +/- 0.67  | 0.9386 +/- 0.020 |
@@ -52,7 +59,7 @@ SSIM > 0.88, low = neither condition met.
 | BPP            | 27.92 +/- 0.86  | 0.9128 +/- 0.046 |
 | BadNet A2O     | 25.33 +/- 0.91  | 0.9850 +/- 0.007 |
 | TaCT           | 25.33 +/- 0.91  | 0.9850 +/- 0.007 |
-| SIG            | 23.24 +/- 0.37  | 0.7902 +/- 0.087 |
+| SIG            | 19.44 +/- 0.41  | 0.6589 +/- 0.106 |
 | Blend          | 22.16 +/- 0.98  | 0.7915 +/- 0.088 |
 | Adaptive Blend | 22.16 +/- 0.98  | 0.7915 +/- 0.088 |
 | LC             | 19.21 +/- 0.76  | 0.9380 +/- 0.024 |
@@ -66,7 +73,7 @@ SSIM > 0.88, low = neither condition met.
 | BPP            | 27.78 +/- 1.19  | 0.8295 +/- 0.172 |
 | BadNet A2O     | 24.66 +/- 0.86  | 0.9747 +/- 0.010 |
 | TaCT           | 24.66 +/- 0.86  | 0.9747 +/- 0.010 |
-| SIG            | 23.27 +/- 0.35  | 0.6624 +/- 0.176 |
+| SIG            | 19.60 +/- 0.51  | 0.5191 +/- 0.191 |
 | Blend          | 21.46 +/- 0.99  | 0.6702 +/- 0.180 |
 | Adaptive Blend | 21.46 +/- 0.99  | 0.6702 +/- 0.180 |
 | LC             | 18.70 +/- 0.73  | 0.9009 +/- 0.038 |
@@ -88,7 +95,7 @@ in GTSRB.
 | WaNet          | 28.68 +/- 2.98  | 0.9573 +/- 0.016 |
 | BPP            | 27.89 +/- 0.53  | 0.8940 +/- 0.048 |
 | LC             | 25.22 +/- 0.71  | 0.9834 +/- 0.006 |
-| SIG            | 23.29 +/- 0.29  | 0.8006 +/- 0.090 |
+| SIG            | 19.50 +/- 0.35  | 0.6773 +/- 0.107 |
 | Blend          | 21.90 +/- 0.88  | 0.7393 +/- 0.101 |
 | Adaptive Blend | 21.90 +/- 0.88  | 0.7393 +/- 0.101 |
 

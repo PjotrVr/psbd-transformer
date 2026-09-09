@@ -6,15 +6,20 @@ measured before normalization (the range where pixel-space triggers are defined,
 well the trigger fools the model, but how hard it is for a human to notice, so
 they need no model and no checkpoint, only an attack and the raw test images.
 
-Stealth depends only on (dataset_name, attack_name) for the attacks in scope:
-every trigger closure is built purely from the attack config and image size, never
-from poison_rate, target_label, seed, architecture, or SAM/rho (checked against
-psbd/attacks/badnet.py and psbd/attacks/lc.py, the clean-label case being the one
-that could in principle depend on target_label but does not). So the same trigger
-stamped on the same images yields byte-identical numbers across all 8 to 16
-checkpoints that share a (dataset, attack) pair. cached_stealth_metrics computes
-each pair once per process rather than rerunning LPIPS's AlexNet forward pass once
-per checkpoint, which is where nearly all of the cost sits.
+Stealth depends only on (dataset_name, attack_name) for the attacks in scope,
+because this measures the EVAL trigger, which is built purely from the attack
+config and image size, never from poison_rate, target_label, seed, architecture,
+or SAM/rho. So the same trigger stamped on the same images yields byte-identical
+numbers across all 8 to 16 checkpoints that share a (dataset, attack) pair.
+cached_stealth_metrics computes each pair once per process rather than rerunning
+LPIPS's AlexNet forward pass once per checkpoint, which is where nearly all of the
+cost sits.
+
+The eval trigger is load-bearing here, not incidental. Adaptive-Blend plants a
+per-sample SUBSET of its pattern while training and the whole pattern at eval, and
+Label-Consistent substitutes an adversarial base only while training. Reading
+apply_trigger would make this cache key false for both, since the result would then
+depend on which sample indices were drawn.
 """
 
 import lpips

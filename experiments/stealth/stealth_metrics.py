@@ -3,6 +3,16 @@
 Measures trigger imperceptibility at native resolution (before the 224x224
 upscale the model sees). Poison rate does not affect the trigger itself, so
 metrics are computed once per (attack, dataset) pair.
+
+That holds because this measures the EVAL trigger. Two attacks now vary their
+training trigger per sample, Adaptive-Blend by planting a subset of its pattern
+and Label-Consistent by substituting an adversarial base, so measuring
+apply_trigger would make the result depend on which indices were sampled.
+
+This duplicates psbd/stealth.py's PSNR and SSIM rather than calling it, which is
+worth consolidating; the two are not folded together here because the library
+also computes LPIPS and samples differently, so switching would move these
+numbers for reasons unrelated to the trigger.
 """
 
 import json
@@ -147,12 +157,21 @@ def measure_attack(
     config = default_config(attack_name)
     attack = build_attack(attack_name, config, image_size, TARGET_LABEL)
 
+    # Stealth is what a defender sees at inference, so it is the eval trigger.
+    # It also keeps these TEST indices away from any train-indexed lookup a
+    # training-time trigger holds: Adaptive-Blend plants a per-sample subset of
+    # its pattern while training and the whole pattern at eval, and
+    # Label-Consistent substitutes an adversarial base only while training.
+    # Measuring apply_trigger here reported a different trigger from the one
+    # psbd/stealth.py reports, for the same attack.
+    plant = attack.apply_trigger_eval or attack.apply_trigger
+
     psnr_values = []
     ssim_values = []
 
     for idx in indices:
         clean_img, _ = dataset[idx]
-        poisoned_img = attack.apply_trigger(clean_img, idx)
+        poisoned_img = plant(clean_img, idx)
 
         psnr_values.append(compute_psnr(clean_img, poisoned_img))
         ssim_values.append(compute_ssim(clean_img, poisoned_img))
