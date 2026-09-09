@@ -100,6 +100,12 @@ MODEL_DROPOUT_SUFFIX = re.compile(r"_pmodel([0-9_.]+)$")
 # band sweep (H10) is entirely made of these.
 BLOCK_RANGE_SUFFIX = re.compile(r"_blocks_(\d+)_(\d+)$")
 
+# A trailing _seed<digits> is a different draw of the same stochastic estimator,
+# written by --mask-seed. Seed 0 keeps the bare name, so only replicates carry it.
+# Without this rule the 4 seeded placements parse as an unknown operator and their
+# rows leave the summary entirely.
+MASK_SEED_SUFFIX = re.compile(r"_seed(\d+)$")
+
 KNOWN_OPERATORS = (
     "channel_mask",
     "gain_scale",
@@ -153,6 +159,11 @@ def split_operator(
     if pass_count is not None:
         variant = f"passes_{pass_count.group(1)}"
         remaining = remaining[: pass_count.start()]
+
+    mask_seed = MASK_SEED_SUFFIX.search(remaining)
+    if mask_seed is not None:
+        variant = f"mask_seed_{mask_seed.group(1)}"
+        remaining = remaining[: mask_seed.start()]
 
     for operator in known_operators:
         if remaining.endswith(f"_{operator}"):

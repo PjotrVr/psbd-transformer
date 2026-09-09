@@ -74,12 +74,20 @@ def discover_folders(results_dir: str) -> list[str]:
     return folders
 
 
+# Subfolders of results/<cell>/psbd/ that hold a cache rather than a placement.
+# cli/head_profile.py writes head_profile/ beside the placement folders, and
+# treating every subfolder as a placement swept it into psbd_metrics.json, where
+# it parsed as an unknown operator and cost the summary a coverage check.
+NON_PLACEMENT_CACHES = ("head_profile",)
+
+
 def discover_position_configs(psbd_dir: str) -> list[str]:
     """The position-config subfolders stage 1 actually wrote, in sorted order."""
     configs = sorted(
         name
         for name in os.listdir(psbd_dir)
         if os.path.isdir(os.path.join(psbd_dir, name))
+        and name not in NON_PLACEMENT_CACHES
     )
     return configs
 
