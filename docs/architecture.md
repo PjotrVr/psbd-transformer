@@ -3136,6 +3136,14 @@ colliding with the `analysis/` source package.
 
 **`mirror_results_folders(results_dir, folder_names) -> None`**
 (`metrics.py:56-72`)
+
+> **Removed. This section describes a version of `metrics.py` that no longer
+> exists.** `metrics.py` is now 88 lines, writes each checkpoint's `metrics.json`
+> into `checkpoints/<folder_name>/` beside `attack_result.pt` and `args.json`
+> (`metrics.py:77`), and touches `results/` not at all. There is no `shutil.rmtree`
+> anywhere in the repo. `results/<folder_name>/` is created on demand by the sweep
+> instead, so an orphaned results directory is now inert rather than deleted. The
+> description below is kept only because later sections refer back to it.
 - `os.makedirs(results_dir, exist_ok=True)`; computes `existing` (current
   subfolders of `results_dir`) vs. `wanted` (`set(folder_names)`); for every
   `orphan in existing - wanted`, `shutil.rmtree(...)` — **deletes** any
@@ -3268,9 +3276,11 @@ shared packages, making `train_benign.py` a load-bearing dependency of
 
 ### Sharp edges
 
-- **`mirror_results_folders` deletes `results/<name>/` directories
+- ~~**`mirror_results_folders` deletes `results/<name>/` directories
   unconditionally for any name in `results/` that has no matching
-  `checkpoints/<name>/`, on every invocation, before any processing.** This
+  `checkpoints/<name>/`, on every invocation, before any processing.**~~
+  **No longer true: the function was removed and `metrics.py` never deletes
+  anything.** The rest of this bullet described that removed behaviour. This
   runs even when `--folder` restricts processing to a subset — the deletion
   pass is **not** scoped by `folder_filter`, only the subsequent processing
   loop is. Renaming or temporarily moving a `checkpoints/` folder (e.g.

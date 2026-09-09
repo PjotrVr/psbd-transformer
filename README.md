@@ -115,6 +115,7 @@ scripts/             Repo-level tools: detection_summary, verify_results, backfi
 tests/               Test suite (200+ tests)
 docs/hypothesis/     42 pre-registered hypotheses with verdicts
 docs/results/        Detection tables, analysis reports, protocol docs
+notebooks/           Executable documentation, committed with outputs (00 is the index)
 pbs/                 PBS job generators for cluster scheduling
 ```
 
@@ -160,6 +161,19 @@ evasive models, with `--evade-position`, `--evade-operator` and
 identification results.
 
 ## Hypothesis register
+
+### Findings and corrections
+
+Defects that changed how results must be read, each with its blast radius:
+
+| document | what it records |
+|---|---|
+| `docs/status-2026-09-09.md` | entry point for the 2026-09-09 work: 3 findings, the fixes, the queue, what is next |
+| `docs/clean-label-rate-caps.md` | which clean-label poison rates are reachable, the GTSRB target-class fix, and the missing Label-Consistent adversarial step |
+| `docs/attack-strength-and-implantation.md` | why attacks fail to implant, sorted into 4 causes, and the WaNet strength dose-response |
+| `docs/checkpoint-integrity-2026-09-09.md` | 21 training runs written as unreadable files, and the guard that now catches it |
+| `docs/audit-2026-09-07.md` | 21 audit findings, including the withdrawn +0.258 headline |
+| `docs/gtsrb-training-split-mismatch.md` | this repo's GTSRB split is not the one the literature uses |
 
 All 42 hypotheses are pre-registered in `docs/hypothesis/` with predictions,
 methodology, and verdicts. See `docs/hypothesis/README.md` for the full index
