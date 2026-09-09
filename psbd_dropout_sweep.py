@@ -117,6 +117,16 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--probe-target-label", type=int, default=None)
     parser.add_argument(
+        "--mask-seed",
+        type=int,
+        default=PSBD_MASK_SEED,
+        help=(
+            "seed for the dropout mask sequence. The estimator is stochastic, so a "
+            "single seed reports one draw and says nothing about its spread. A "
+            "non-default seed writes to its own cache directory."
+        ),
+    )
+    parser.add_argument(
         "--block-range",
         nargs=2,
         type=int,
@@ -151,8 +161,13 @@ def cache_config_name(
     perturbation: str = "dropout",
     forward_passes: int = DEFAULT_FORWARD_PASSES,
     model_dropout: float = 0.0,
+    mask_seed: int = PSBD_MASK_SEED,
 ) -> str:
     """The results/ subfolder name for one placement.
+
+    The mask seed works the same way. A different seed is a different draw of the
+    same estimator, so its cache must not collide with seed 0's; seed 0 keeps the
+    bare name so every cache written before the flag existed stays addressable.
 
     A band-restricted run is a different measurement from the same position applied
     to every block, so it needs its own folder. Without the suffix the two would
@@ -177,6 +192,8 @@ def cache_config_name(
         stem = f"{stem}_k{forward_passes}"
     if model_dropout:
         stem = f"{stem}_pmodel{model_dropout:g}".replace(".", "_")
+    if mask_seed != PSBD_MASK_SEED:
+        stem = f"{stem}_seed{mask_seed}"
     return stem
 
 
@@ -248,6 +265,7 @@ def run_one_rate(
     forward_passes: int,
     use_bfloat16: bool,
     model_dropout: float = 0.0,
+    mask_seed: int = PSBD_MASK_SEED,
 ) -> None:
     """Every split at one rate, with the position already plugged."""
     for split, loader in loaders.items():
@@ -259,7 +277,7 @@ def run_one_rate(
             device,
             forward_passes,
             use_bfloat16,
-            PSBD_MASK_SEED,
+            mask_seed,
             model_dropout,
         )
         save_dropout_pass_probs(
@@ -285,6 +303,7 @@ def sweep_rates(
     perturbation: str = "dropout",
     model_dropout: float = 0.0,
     dataset: str | None = None,
+    mask_seed: int = PSBD_MASK_SEED,
 ) -> None:
     """For each rate: plug the position, run every split, save, unplug.
 
@@ -327,6 +346,7 @@ def sweep_rates(
                 passes,
                 use_bfloat16,
                 model_dropout,
+                mask_seed,
             )
         finally:
             unplug_dropout(handles)
@@ -351,7 +371,7 @@ def write_run_provenance(
         "effective_forward_passes": effective_forward_passes(
             args.perturbation, args.forward_passes
         ),
-        "mask_seed": PSBD_MASK_SEED,
+        "mask_seed": args.mask_seed,
         "split_seed": PSBD_SPLIT_SEED,
         "batch_size": args.batch_size,
         "max_samples": args.max_samples,
@@ -362,7 +382,7 @@ def write_run_provenance(
     }
     path = os.path.join(
         psbd_dir,
-        f"run_{cache_config_name(position_config, tuple(args.block_range) if args.block_range else None, args.perturbation, args.forward_passes, args.model_dropout)}.json",
+        f"run_{cache_config_name(position_config, tuple(args.block_range) if args.block_range else None, args.perturbation, args.forward_passes, args.model_dropout, args.mask_seed)}.json",
     )
     os.makedirs(psbd_dir, exist_ok=True)
     with open(path, "w") as handle:
@@ -403,6 +423,7 @@ def run_one_checkpoint(
                     args.perturbation,
                     args.forward_passes,
                     args.model_dropout,
+                    args.mask_seed,
                 ),
                 rates,
             )
@@ -436,6 +457,7 @@ def run_one_checkpoint(
             args.forward_passes,
             use_bfloat16,
             rates=rates,
+            mask_seed=args.mask_seed,
             block_range=block_range,
             cache_name=cache_config_name(
                 position,
@@ -443,13 +465,14 @@ def run_one_checkpoint(
                 args.perturbation,
                 args.forward_passes,
                 args.model_dropout,
+                args.mask_seed,
             ),
             perturbation=args.perturbation,
             model_dropout=args.model_dropout,
             dataset=metadata["dataset"],
         )
         print(
-            f"[ok] {folder} {cache_config_name(position, block_range, args.perturbation, args.forward_passes, args.model_dropout)}",
+            f"[ok] {folder} {cache_config_name(position, block_range, args.perturbation, args.forward_passes, args.model_dropout, args.mask_seed)}",
             flush=True,
         )
 
