@@ -28,7 +28,7 @@ import os
 
 import torchvision.transforms.v2 as transforms_v2
 
-from utils.datasets import extract_labels, load_clean_datasets
+from data.loading import extract_labels, load_clean_datasets
 
 PROJECT_ROOT = "/lustre/home/pstika/projects/PSBD-ViT"
 
@@ -72,7 +72,7 @@ exit 0
 """
 
 TRAIN_CALL = """echo "=== {folder} ==="
-python train_backdoor.py \\
+python -m cli.train_backdoor \\
     --dataset {dataset} \\
     --attack {attack} \\
     --poison-rate {rate} \\

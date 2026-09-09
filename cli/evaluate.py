@@ -1,6 +1,6 @@
 """Baseline attack-success, clean-accuracy, and stealth metrics per checkpoint.
 
-psbd.evaluation stays atomic (one checkpoint path in, one metrics dict out) on
+evaluation.metrics stays atomic (one checkpoint path in, one metrics dict out) on
 purpose. Looping over the whole checkpoints/ directory is this file's job, not the
 library's. Each checkpoint's metrics.json is written into its own
 checkpoints/<folder>/ directory, next to attack_result.pt and args.json, so a
@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 
 import torch
 
-from psbd.evaluation import evaluate_checkpoint, read_args_json, save_metrics
+from evaluation.metrics import evaluate_checkpoint, read_args_json, save_metrics
 
 
 def list_checkpoint_folders(checkpoints_dir: str) -> list[str]:

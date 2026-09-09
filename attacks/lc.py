@@ -9,7 +9,7 @@ each base image adversarially, so its natural features stop supporting its own
 label and the trigger becomes the only reliable cue left. Without that step the
 model can still learn the class from the untouched image and has no reason to
 prefer the trigger, which is why the patch-only variant needs roughly the whole
-target class before it implants. `psbd.adversarial` generates the perturbed
+target class before it implants. `attacks.adversarial` generates the perturbed
 bases and `adversarial_dir` points at them.
 
 The perturbation is training-time only. At eval time attack success is measured
@@ -21,9 +21,10 @@ from dataclasses import dataclass
 
 import torch
 
-from poison import Attack
+from attacks.poisoning import Attack
 
-from ._bases import lazy_adversarial_lookup
+from .bases import lazy_adversarial_lookup
+from .patterns import checkerboard_patch
 
 
 @dataclass(frozen=True)
@@ -43,14 +44,6 @@ class LabelConsistentConfig:
     num_targets: int = 1
 
 
-def _corner_pattern(patch_size: int) -> torch.Tensor:
-    board = torch.zeros(3, patch_size, patch_size)
-    for row in range(patch_size):
-        for column in range(patch_size):
-            board[:, row, column] = 1.0 if (row + column) % 2 == 0 else 0.0
-    return board
-
-
 def resolve_clean_label_mode(label_mode: str, num_targets: int) -> str:
     """The label mode a clean-label attack runs under, given its target count.
 
@@ -65,7 +58,7 @@ def resolve_clean_label_mode(label_mode: str, num_targets: int) -> str:
 
 
 def build(config: LabelConsistentConfig, image_size: int, target_label: int) -> Attack:
-    patch = _corner_pattern(config.patch_size)
+    patch = checkerboard_patch(config.patch_size)  # (3, patch_size, patch_size)
     size = config.patch_size
     adversarial_base = lazy_adversarial_lookup(config.adversarial_dir, image_size)
 

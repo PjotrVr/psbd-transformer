@@ -17,10 +17,10 @@ import torch
 import torch.nn.functional as F
 
 from attacks import build_attack, default_config
-from models import load_checkpoint, network_core
-from utils.config import DATASET_REGISTRY
-from utils.datasets import extract_labels, load_clean_datasets
-from poison import AttackSuccessSet, PoisonedTrainingSet
+from models.backbones import load_checkpoint, network_core
+from data.registry import DATASET_REGISTRY
+from data.loading import extract_labels, load_clean_datasets
+from attacks.poisoning import AttackSuccessSet, PoisonedTrainingSet
 from torchvision.transforms import v2 as transforms_v2
 
 

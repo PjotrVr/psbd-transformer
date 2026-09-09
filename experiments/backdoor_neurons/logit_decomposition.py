@@ -53,10 +53,10 @@ from lightning import seed_everything
 
 from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
-from defences.checkpoint_eval import read_checkpoint_metadata, resolve_probe_attack
-from models import load_checkpoint, vit_core
+from data.splits import read_checkpoint_metadata, resolve_probe_attack
+from models.backbones import load_checkpoint, network_core
 from experiments.backdoor_direction_layers.measure import build_paired_loaders
-from utils.config import DATASET_REGISTRY
+from data.registry import DATASET_REGISTRY
 
 FINAL_BLOCK = 12
 
@@ -106,7 +106,7 @@ def measure(folder: str, args: argparse.Namespace, device) -> dict | None:
         args.seed,
     )
     model = load_checkpoint(metadata["architecture"], path, device)
-    core = vit_core(model)
+    core = network_core(model)
 
     seed_everything(args.seed)
     clean = extract_layer_features(model, clean_loader, device, False, "cls")[

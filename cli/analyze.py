@@ -17,15 +17,15 @@ import os
 
 import torch
 
-from psbd.cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from psbd.config import DATASET_REGISTRY
-from psbd.decision import (
+from data.registry import DATASET_REGISTRY
+from defences.decision import (
     shift_key,
     HEADLINE_QUANTILE,
     PSBD_QUANTILES,
@@ -38,13 +38,13 @@ from psbd.decision import (
     select_rate_at_matched_shift,
     select_rate_by_oracle,
 )
-from psbd.scores import (
+from defences.scores import (
     psu_from_cache,
     psu_ratio_from_cache,
     shift_ratio,
     shift_target_histogram,
 )
-from psbd.splits import read_checkpoint_metadata
+from data.splits import read_checkpoint_metadata
 
 SPLITS = ("validation", "clean", "backdoor")
 

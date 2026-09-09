@@ -31,7 +31,7 @@ import json
 import os
 import re
 
-from psbd.positions import DROPOUT_CONFIGS, POSITION_REGISTRY
+from models.positions import DROPOUT_CONFIGS, POSITION_REGISTRY
 
 SELECTION_RULES = ("adaptive", "oracle")
 

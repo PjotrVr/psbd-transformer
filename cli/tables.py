@@ -51,14 +51,14 @@ import os
 import numpy as np
 from sklearn.metrics import roc_auc_score, roc_curve
 
-from psbd.cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from psbd.decision import (
+from defences.decision import (
     ADAPTIVE_SHIFT_TARGET,
     PLACEMENT_MATCH_TARGET,
     complete_rates,
@@ -67,7 +67,7 @@ from psbd.decision import (
     select_rate_at_matched_shift,
     threshold_at_quantile,
 )
-from psbd.scores import psu_from_cache, psu_ratio_from_cache, shift_ratio
+from defences.scores import psu_from_cache, psu_ratio_from_cache, shift_ratio
 
 DATASETS = ("cifar10", "cifar100", "gtsrb", "tiny")
 POISON_TAGS = (("0_01", "1%"), ("0_05", "5%"), ("0_1", "10%"))

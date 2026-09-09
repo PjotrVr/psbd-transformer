@@ -41,13 +41,14 @@ import numpy as np
 import torch
 from sklearn.metrics import roc_auc_score
 
-from defences.psbd_cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
 )
-from defences.psbd_metrics import pair_clean_to_backdoor, psu_ratio_from_cache
+from defences.decision import pair_clean_to_backdoor
+from defences.scores import psu_ratio_from_cache
 
 PLACEMENT = "before_attention_norm_token_mask"
 TARGET_SIGMA = "sigma0.6"

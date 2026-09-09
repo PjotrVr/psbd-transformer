@@ -9,14 +9,14 @@ Every test here is written to fail under at least one specific wrong
 implementation, and the wrong implementation it targets is named in its
 docstring. A test that passes for the identity function is not a test.
 
-These target psbd.operators, the tree that survives the rewrite. The older
+These target defences.operators, the tree that survives the rewrite. The older
 tests/test_perturbations.py covers the same operators through defences.*.
 """
 
 import pytest
 import torch
 
-from psbd.operators import build_perturbation
+from defences.operators import build_perturbation
 
 # A batch large enough that a masking fraction is measurable rather than noise.
 BATCH = 64
@@ -58,7 +58,9 @@ def test_token_mask_removes_whole_tokens_and_nothing_partial(activation):
     fully_zeroed = zeroed_entries.all(dim=2)
     partially_zeroed = zeroed_entries.any(dim=2) & ~fully_zeroed
 
-    assert not partially_zeroed.any(), "a token was partly masked, so this is not a token mask"
+    assert not partially_zeroed.any(), (
+        "a token was partly masked, so this is not a token mask"
+    )
     assert fully_zeroed.any(), "no token was masked at all, so nothing was perturbed"
 
     # Token 0 is the class token and is never masked on a rank-3 activation.
@@ -102,7 +104,9 @@ def test_channel_masks_differ_between_samples(activation):
     channel_zeroed = (output == 0).all(dim=1)  # (batch, channels)
 
     distinct_masks = {tuple(row.tolist()) for row in channel_zeroed}
-    assert len(distinct_masks) > 1, "every sample got the same mask, so it is batch-shared"
+    assert len(distinct_masks) > 1, (
+        "every sample got the same mask, so it is batch-shared"
+    )
 
 
 def test_droppath_is_all_or_nothing_per_sample(activation):
@@ -144,9 +148,7 @@ def test_gain_scale_is_deterministic_across_passes(activation):
     assert torch.equal(module(activation), module(activation))
 
 
-@pytest.mark.parametrize(
-    "name", ["dropout", "token_mask", "channel_mask", "droppath"]
-)
+@pytest.mark.parametrize("name", ["dropout", "token_mask", "channel_mask", "droppath"])
 def test_inverted_scaling_preserves_the_mean_on_a_shifted_input(name, activation):
     """Fails when the 1 / (1 - rate) survivor scaling is removed.
 
@@ -181,7 +183,8 @@ def test_inverted_scaling_preserves_the_mean_on_a_shifted_input(name, activation
 
 
 @pytest.mark.parametrize(
-    "name", ["dropout", "token_mask", "channel_mask", "droppath", "gaussian", "rademacher"]
+    "name",
+    ["dropout", "token_mask", "channel_mask", "droppath", "gaussian", "rademacher"],
 )
 def test_every_stochastic_operator_is_inert_in_eval_mode(name, activation):
     """A probe that fires outside its sweep contaminates the baseline it is measured against."""
@@ -192,7 +195,15 @@ def test_every_stochastic_operator_is_inert_in_eval_mode(name, activation):
 
 @pytest.mark.parametrize(
     "name",
-    ["dropout", "token_mask", "channel_mask", "droppath", "gaussian", "rademacher", "gain_scale"],
+    [
+        "dropout",
+        "token_mask",
+        "channel_mask",
+        "droppath",
+        "gaussian",
+        "rademacher",
+        "gain_scale",
+    ],
 )
 def test_a_zero_rate_is_the_identity(name, activation):
     """Rate 0 is the no-perturbation control, and every sweep relies on it."""
@@ -209,13 +220,23 @@ def test_masking_more_removes_more(name, activation):
         for rate in (0.1, 0.5, 0.9)
     ]
 
-    assert fractions == sorted(fractions), f"{name} removed {fractions} at rates 0.1, 0.5, 0.9"
+    assert fractions == sorted(fractions), (
+        f"{name} removed {fractions} at rates 0.1, 0.5, 0.9"
+    )
     assert fractions[-1] > fractions[0] + 0.3, f"{name} barely responded to the rate"
 
 
 def test_the_shape_is_always_preserved(activation):
     """Every operator is a drop-in for nn.Dropout, so none may change the shape."""
-    for name in ("dropout", "token_mask", "channel_mask", "droppath", "gaussian", "rademacher", "gain_scale"):
+    for name in (
+        "dropout",
+        "token_mask",
+        "channel_mask",
+        "droppath",
+        "gaussian",
+        "rademacher",
+        "gain_scale",
+    ):
         assert perturb(name, activation).shape == activation.shape, name
 
 
@@ -242,7 +263,7 @@ class TestMultiProbeInversionFragility:
         return validation, clean, backdoor
 
     def test_a_union_of_healthy_probes_stays_healthy(self):
-        from psbd.decision import multi_probe_detection
+        from defences.decision import multi_probe_detection
 
         first = self._probe(0, 0.0, -2.0)
         second = self._probe(1, 0.0, -2.0)
@@ -254,7 +275,7 @@ class TestMultiProbeInversionFragility:
 
     def test_one_inverted_probe_drags_the_union_to_chance(self):
         """The finding: an inverted probe is worse than a useless one."""
-        from psbd.decision import detection_report, multi_probe_detection
+        from defences.decision import detection_report, multi_probe_detection
 
         healthy = self._probe(0, 0.0, -2.0)
         inverted = self._probe(1, -2.0, 0.0)
@@ -279,17 +300,23 @@ class TestMultiProbeInversionFragility:
 
     def test_a_useless_probe_costs_far_less_than_an_inverted_one(self):
         """Distinguishes 'carries no signal' from 'carries reversed signal'."""
-        from psbd.decision import multi_probe_detection
+        from defences.decision import multi_probe_detection
 
         healthy = self._probe(0, 0.0, -2.0)
         useless = self._probe(1, 0.0, 0.0)
         inverted = self._probe(2, -2.0, 0.0)
 
         with_useless = multi_probe_detection(
-            [healthy[0], useless[0]], [healthy[1], useless[1]], [healthy[2], useless[2]], 0.25
+            [healthy[0], useless[0]],
+            [healthy[1], useless[1]],
+            [healthy[2], useless[2]],
+            0.25,
         )["auroc"]
         with_inverted = multi_probe_detection(
-            [healthy[0], inverted[0]], [healthy[1], inverted[1]], [healthy[2], inverted[2]], 0.25
+            [healthy[0], inverted[0]],
+            [healthy[1], inverted[1]],
+            [healthy[2], inverted[2]],
+            0.25,
         )["auroc"]
 
         assert with_useless > with_inverted + 0.15, (
@@ -314,7 +341,7 @@ class TestMedianRankUnion:
         return validation, clean, backdoor
 
     def _union(self, probes, reduction):
-        from psbd.decision import multi_probe_detection
+        from defences.decision import multi_probe_detection
 
         return multi_probe_detection(
             [p[0] for p in probes],
@@ -351,7 +378,7 @@ class TestMedianRankUnion:
         )
 
     def test_an_unknown_reduction_is_refused(self):
-        from psbd.scores import multi_probe_score
+        from defences.scores import multi_probe_score
 
         probe = self._probe(0, 0.0, -2.0)
         with pytest.raises(ValueError, match="Unknown probe reduction"):
@@ -359,7 +386,7 @@ class TestMedianRankUnion:
 
     def test_auroc_is_reported_inside_every_rule_block(self):
         """A caller reading a rule block must not find None where the number is."""
-        from psbd.decision import multi_probe_detection
+        from defences.decision import multi_probe_detection
 
         probes = [self._probe(seed, 0.0, -2.0) for seed in range(3)]
         report = multi_probe_detection(

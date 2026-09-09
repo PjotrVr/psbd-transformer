@@ -21,11 +21,11 @@ import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 from torch.utils.data import DataLoader
 
-from psbd.config import DATASET_REGISTRY
-from psbd.data import limit_dataset, load_clean_datasets
-from psbd.eval_loaders import build_clean_loader
-from psbd.evaluation import evaluate_benign
-from psbd.training import (
+from data.registry import DATASET_REGISTRY
+from data.loading import limit_dataset, load_clean_datasets
+from evaluation.loaders import build_clean_loader
+from evaluation.metrics import evaluate_benign
+from training.loop import (
     checkpoint_metadata,
     save_checkpoint,
     train_classifier,
@@ -46,7 +46,7 @@ def build_benign_train_loader(
     Normalization is baked into the transform here, unlike the poisoned path,
     because nothing stamps a trigger on these images so there is no pixel-space
     step that has to happen first. Evaluation reuses
-    psbd.eval_loaders.build_clean_loader, the same function cli.evaluate and
+    evaluation.loaders.build_clean_loader, the same function cli.evaluate and
     cli.train_backdoor use for their clean loaders.
     """
     spec = DATASET_REGISTRY[dataset_name]

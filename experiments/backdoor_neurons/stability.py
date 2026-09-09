@@ -31,10 +31,10 @@ from lightning import seed_everything
 from analysis.direction import trigger_activated_change
 from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
-from defences.checkpoint_eval import read_checkpoint_metadata, resolve_probe_attack
-from models import load_checkpoint
+from data.splits import read_checkpoint_metadata, resolve_probe_attack
+from models.backbones import load_checkpoint
 from experiments.backdoor_direction_layers.measure import build_paired_loaders
-from utils.config import DATASET_REGISTRY
+from data.registry import DATASET_REGISTRY
 
 TOP_K = 20
 CHANCE_TRIALS = 20000

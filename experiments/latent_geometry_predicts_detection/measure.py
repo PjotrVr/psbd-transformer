@@ -28,7 +28,7 @@ import os
 import pandas as pd
 import torch
 
-from psbd.analysis.cases import case_distribution_table, load_latent_case
+from analysis.cases import case_distribution_table, load_latent_case
 
 # Probed on a benign checkpoint, which has no trigger of its own. Chance level
 # detection is the expected result and it is the control the correlation needs at

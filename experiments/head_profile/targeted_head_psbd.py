@@ -21,11 +21,11 @@ import numpy as np
 
 from attacks import build_attack, default_config
 from defences.inference import forward_probs
-from defences.perturbations import masked_attention_forward
-from models import load_checkpoint, network_core
-from utils.config import DATASET_REGISTRY
-from utils.datasets import extract_labels, limit_dataset, load_clean_datasets
-from poison import AttackSuccessSet, PoisonedTrainingSet
+from defences.operators import masked_attention_forward
+from models.backbones import load_checkpoint, network_core
+from data.registry import DATASET_REGISTRY
+from data.loading import extract_labels, limit_dataset, load_clean_datasets
+from attacks.poisoning import AttackSuccessSet, PoisonedTrainingSet
 from torchvision.transforms import v2 as transforms_v2
 
 

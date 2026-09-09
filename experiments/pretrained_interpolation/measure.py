@@ -51,14 +51,14 @@ import numpy as np
 import torch
 from sklearn.metrics import average_precision_score, roc_auc_score
 
-from defences.checkpoint_eval import (
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.psbd_metrics import pair_clean_to_backdoor
-from models import build_swin, build_vit, load_checkpoint
-from utils.config import DATASET_REGISTRY
+from defences.decision import pair_clean_to_backdoor
+from models.backbones import build_swin, build_vit, load_checkpoint
+from data.registry import DATASET_REGISTRY
 
 # 1.0 first so the reference prediction is the victim's own, then walked back.
 ALPHAS = (1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0)

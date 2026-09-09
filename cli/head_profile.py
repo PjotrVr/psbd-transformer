@@ -36,12 +36,12 @@ import os
 import torch
 from torch.utils.data import DataLoader
 
-from psbd.cache import load_or_build_baseline, write_split_manifest
-from psbd.inference import forward_probs
-from psbd.operators import fixed_head_mask
-from psbd.positions import plug_dropout, unplug_dropout
-from psbd.splits import PSBD_SPLIT_SEED
-from psbd.training import current_git_commit
+from defences.cache import load_or_build_baseline, write_split_manifest
+from defences.inference import forward_probs
+from defences.operators import fixed_head_mask
+from models.positions import plug_dropout, unplug_dropout
+from data.splits import PSBD_SPLIT_SEED
+from training.loop import current_git_commit
 
 from .sweep import load_model_and_loaders
 

@@ -51,7 +51,7 @@ source .venv/bin/activate
 
 {body}
 echo '=== analyze ==='
-python psbd_analyze.py --checkpoint-folder {folders}
+python -m cli.analyze --checkpoint-folder {folders}
 
 echo "Finished: $(date)"
 exit 0
@@ -152,7 +152,7 @@ def invocation_lines(cells: list[str], workload: dict) -> str:
             f'echo "=== {perturbation}{band} :: {len(folders)} cells x {len(positions)} positions ==="'
         )
         call = [
-            "python psbd_dropout_sweep.py \\",
+            "python -m cli.sweep \\",
             f"    --checkpoint-folder {' '.join(sorted(folders))} \\",
             f"    --position-config {' '.join(positions)} \\",
             f"    --perturbation {perturbation} \\",

@@ -15,9 +15,9 @@ import os
 import pytest
 import torch
 
-from defences.checkpoint_eval import read_checkpoint_metadata
-from models import build_vit, load_vit_checkpoint
-from train import save_checkpoint
+from data.splits import read_checkpoint_metadata
+from models.backbones import build_vit, load_checkpoint
+from training.loop import save_checkpoint
 
 
 def test_save_and_load_checkpoint_round_trip(tmp_path):
@@ -25,7 +25,7 @@ def test_save_and_load_checkpoint_round_trip(tmp_path):
     path = os.path.join(tmp_path, "attack_result.pt")
     save_checkpoint(model, num_classes=4, path=path)
 
-    reloaded = load_vit_checkpoint(path, device=torch.device("cpu"))
+    reloaded = load_checkpoint("vit", path, device=torch.device("cpu"))
     for original, restored in zip(
         model.state_dict().values(), reloaded.state_dict().values()
     ):

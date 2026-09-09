@@ -31,7 +31,7 @@ import json
 import os
 import sys
 
-from psbd.decision import SHIFT_MATCH_TARGETS, shift_key
+from defences.decision import SHIFT_MATCH_TARGETS, shift_key
 
 HEADLINE = "q0.25"
 

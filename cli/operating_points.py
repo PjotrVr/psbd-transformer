@@ -34,19 +34,19 @@ import os
 import numpy as np
 import torch
 
-from psbd.cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from psbd.decision import (
+from defences.decision import (
     attack_success_mask,
     complete_rates,
     pair_clean_to_backdoor,
 )
-from psbd.scores import psu_ratio_from_cache, shift_ratio
+from defences.scores import psu_ratio_from_cache, shift_ratio
 
 DEFAULT_FPRS = (0.01, 0.05, 0.10)
 

@@ -42,19 +42,19 @@ import os
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-from psbd.cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from psbd.decision import (
+from defences.decision import (
     complete_rates,
     pair_clean_to_backdoor,
     threshold_at_quantile,
 )
-from psbd.scores import psu_from_cache, psu_ratio_from_cache, shift_ratio
+from defences.scores import psu_from_cache, psu_ratio_from_cache, shift_ratio
 
 SPLITS = ("validation", "clean", "backdoor")
 QUANTILE = 0.25

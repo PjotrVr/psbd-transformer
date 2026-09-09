@@ -39,15 +39,15 @@ from lightning import seed_everything
 from analysis.direction import backdoor_direction, trigger_activated_change
 from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
-from defences.checkpoint_eval import (
+from data.splits import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
     resolve_probe_attack,
 )
-from defences.detection import attack_success_rate, clean_accuracy
-from models import load_checkpoint, vit_core
+from evaluation.metrics import attack_success_rate, clean_accuracy
+from models.backbones import load_checkpoint, network_core
 from experiments.backdoor_direction_layers.measure import build_paired_loaders
-from utils.config import DATASET_REGISTRY
+from data.registry import DATASET_REGISTRY
 
 PSBD_SPLIT_SEED = 0
 
@@ -184,7 +184,7 @@ def peak_layer_signals(model, metadata, attack, peak, args, device):
     # apply the final LayerNorm here too. It is per-token, so running it on the CLS
     # row alone matches running it on the full sequence.
     if args.post_ln:
-        layer_norm = vit_core(model).encoder.ln
+        layer_norm = network_core(model).encoder.ln
         with torch.inference_mode():
             clean = layer_norm(clean.to(device)).float()
             triggered = layer_norm(triggered.to(device)).float()
@@ -236,7 +236,7 @@ def ablate(folder: str, args: argparse.Namespace, device) -> dict | None:
         probe_target_label=0 if benign else None,
     )
     model = load_checkpoint(metadata["architecture"], path, device)
-    core = vit_core(model)
+    core = network_core(model)
     block = core.encoder.ln if args.post_ln else list(core.encoder.layers)[peak - 1]
 
     seed_everything(args.seed)

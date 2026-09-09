@@ -11,7 +11,7 @@ accuracies, since those differ on an imbalanced set.
 import pytest
 import torch
 
-from defences.detection import (
+from evaluation.metrics import (
     accuracy_by_class_from_counts,
     clean_accuracy_by_class,
     pooled_accuracy_from_counts,

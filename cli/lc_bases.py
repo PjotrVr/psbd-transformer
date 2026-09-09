@@ -18,11 +18,11 @@ import torch
 import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader, Subset
 
-from psbd.adversarial import accuracy_on, bases_directory, pgd_perturb, save_bases
-from psbd.config import DATASET_REGISTRY
-from psbd.data import base_image_transform, extract_labels, load_clean_datasets
-from psbd.models import load_checkpoint
-from psbd.training import current_git_commit
+from attacks.adversarial import accuracy_on, bases_directory, pgd_perturb, save_bases
+from data.registry import DATASET_REGISTRY
+from data.loading import base_image_transform, extract_labels, load_clean_datasets
+from models.backbones import load_checkpoint
+from training.loop import current_git_commit
 
 
 def target_class_indices(dataset, target_label: int) -> list[int]:

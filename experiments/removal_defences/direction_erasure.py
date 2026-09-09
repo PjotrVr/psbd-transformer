@@ -20,11 +20,11 @@ import torch
 from analysis.direction import backdoor_direction, orthogonalize_weight
 from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
-from evaluate import evaluate_attack
-from models import load_checkpoint, network_core
-from utils.config import DATASET_REGISTRY
-from utils.datasets import extract_labels, load_clean_datasets
-from poison import AttackSuccessSet, PoisonedTrainingSet
+from evaluation.metrics import evaluate_attack
+from models.backbones import load_checkpoint, network_core
+from data.registry import DATASET_REGISTRY
+from data.loading import extract_labels, load_clean_datasets
+from attacks.poisoning import AttackSuccessSet, PoisonedTrainingSet
 from torchvision.transforms import v2 as transforms_v2
 
 

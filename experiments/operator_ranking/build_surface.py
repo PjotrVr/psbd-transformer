@@ -11,20 +11,15 @@ import sys
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-from defences.psbd_cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.psbd_metrics import (
-    complete_rates,
-    pair_clean_to_backdoor,
-    psu_from_cache,
-    psu_ratio_from_cache,
-    shift_ratio,
-)
+from defences.decision import complete_rates, pair_clean_to_backdoor
+from defences.scores import psu_from_cache, psu_ratio_from_cache, shift_ratio
 
 OUT = "scratch/surface.json"
 

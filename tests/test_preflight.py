@@ -15,8 +15,8 @@ from experiments.preflight.synthetic import (
     build_splits,
     has_trigger,
 )
-from psbd.decision import HEADLINE_QUANTILE, detection_report
-from psbd.detectors import DETECTOR_NAMES, DetectorContext, build_detector
+from defences.decision import HEADLINE_QUANTILE, detection_report
+from detectors import DETECTOR_NAMES, DetectorContext, build_detector
 
 # The detectors this synthetic case can actually judge. SCALE-UP is excluded
 # because its statistic takes 6 values over 5 amplification scales and this model
@@ -121,7 +121,7 @@ class TestSummaryLoaderFiltersUnsafeRows:
     def test_the_default_drops_variant_rows(self, tmp_path):
         import pandas as pd
 
-        from psbd.summary import load_detection_summary
+        from evaluation.summary import load_detection_summary
 
         path = tmp_path / "summary.csv"
         pd.DataFrame(
@@ -141,7 +141,7 @@ class TestSummaryLoaderFiltersUnsafeRows:
     def test_the_unsafe_rows_are_reachable_but_only_on_request(self, tmp_path):
         import pandas as pd
 
-        from psbd.summary import load_detection_summary
+        from evaluation.summary import load_detection_summary
 
         path = tmp_path / "summary.csv"
         pd.DataFrame(
@@ -163,7 +163,7 @@ class TestSummaryLoaderFiltersUnsafeRows:
         """An older summary predates both columns and must not raise."""
         import pandas as pd
 
-        from psbd.summary import load_detection_summary
+        from evaluation.summary import load_detection_summary
 
         path = tmp_path / "old.csv"
         pd.DataFrame({"folder": ["a"], "operator": ["dropout"], "auroc": [0.7]}).to_csv(

@@ -23,7 +23,7 @@ import json
 import os
 from datetime import datetime, timezone
 
-from defences.psbd_metrics import complete_rates
+from defences.decision import complete_rates
 
 DECLARATION_PATH = "configs/psbd_basis.json"
 # Coverage is counted per rate, not per placement. A dir holding two rates cannot be read at

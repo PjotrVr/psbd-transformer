@@ -10,7 +10,7 @@ ImageFolder-backed dataset like Tiny ImageNet).
 from torch.utils.data import Subset, TensorDataset
 import torch
 
-from utils.datasets import limit_dataset
+from data.loading import limit_dataset
 
 
 def _dataset(n: int) -> TensorDataset:

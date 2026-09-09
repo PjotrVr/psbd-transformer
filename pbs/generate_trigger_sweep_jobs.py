@@ -48,7 +48,7 @@ exit 0
 """
 
 TRAIN_CALL = """echo "=== {output} ==="
-python train_backdoor.py \\
+python -m cli.train_backdoor \\
     --dataset {dataset} \\
     --attack {attack} \\
     --poison-rate {rate} \\

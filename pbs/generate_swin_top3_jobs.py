@@ -24,7 +24,7 @@ import glob
 import json
 import os
 
-from defences.psbd_metrics import complete_rates
+from defences.decision import complete_rates
 
 PROJECT_ROOT = "/lustre/home/pstika/projects/PSBD-ViT"
 PROBABILITY = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
@@ -74,7 +74,7 @@ source .venv/bin/activate
 
 {body}
 echo '=== analyze ==='
-python psbd_analyze.py --checkpoint-folder {folders}
+python -m cli.analyze --checkpoint-folder {folders}
 
 echo "Finished: $(date)"
 exit 0
@@ -169,7 +169,7 @@ def main() -> None:
     ):
         name = f"swin_{index}"
         call = [
-            "python psbd_dropout_sweep.py \\",
+            "python -m cli.sweep \\",
             f"    --checkpoint-folder {' '.join(folders)} \\",
             f"    --position-config {position} \\",
             f"    --perturbation {operator} \\",

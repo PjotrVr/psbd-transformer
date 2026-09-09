@@ -14,14 +14,14 @@ import torch
 import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 
-from defences.checkpoint_eval import (
+from data.splits import (
     PSBD_HELDOUT_SIZE,
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     psbd_split_permutation,
 )
-from utils.config import DATASET_REGISTRY
-from utils.datasets import denormalize, load_clean_datasets
+from data.registry import DATASET_REGISTRY
+from data.loading import denormalize, load_clean_datasets
 
 CIFAR100_TEST_SIZE = 10000
 CHECKPOINT = "checkpoints/vit_cifar100_wanet_0_1/attack_result.pt"

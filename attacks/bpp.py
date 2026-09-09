@@ -15,7 +15,7 @@ from dataclasses import dataclass
 
 import torch
 
-from poison import Attack
+from attacks.poisoning import Attack
 
 
 @dataclass(frozen=True)

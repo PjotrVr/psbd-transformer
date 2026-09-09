@@ -1,18 +1,22 @@
 """Registry mapping an attack name to its builder and default config.
 
 Deterministic pixel-space attacks are implemented from their papers. Learned or
-optimized attacks (SSBA, TrojanNN, ISSBA) are served through attack_generated from
-pregenerated triggers. Adaptive-Blend and TaCT are standard-training attacks whose
-specialization is cover samples, which train_backdoor reads from their config.
-Generator-coupled attacks (Input-aware, LIRA) need a co-trained generator and a
-bespoke loop, so they are not registered here.
+optimized attacks (SSBA, TrojanNN, ISSBA) are served through the generated
+adapter from pregenerated triggers. Adaptive-Blend and TaCT are standard-training
+attacks whose specialization is cover samples, which the training entrypoint reads
+from their config. Generator-coupled attacks (Input-aware, LIRA) need a co-trained
+generator and a bespoke loop, so they are not registered here.
+
+This is the one module in psbd that re-exports its submodules' names, because it
+is a genuine dispatcher: a caller writes build_attack("wanet", ...) and never has
+to know which file wanet lives in.
 """
 
 from dataclasses import asdict, replace
 from dataclasses import fields as dataclass_fields
 from typing import Callable
 
-from poison import Attack
+from attacks.poisoning import Attack
 
 from . import (
     adaptive_blend,
@@ -26,8 +30,8 @@ from . import (
     tact,
     wanet,
 )
-from ._bases import adversarial_config_error as adversarial_config_error
-from ._bases import missing_adversarial_bases as missing_adversarial_bases
+from .bases import adversarial_config_error as adversarial_config_error
+from .bases import missing_adversarial_bases as missing_adversarial_bases
 
 
 def _badnet_all_to_one() -> badnet.BadNetConfig:
@@ -80,12 +84,15 @@ ATTACK_NAMES = tuple(_ATTACKS)
 
 
 def default_config(attack_name: str):
+    """A fresh config dataclass carrying the attack's paper defaults."""
     factory = _ATTACKS[attack_name][1]
     if factory is None:
         raise ValueError(
             f"{attack_name} has no default config, build its config directly"
         )
-    return factory()
+
+    config = factory()
+    return config
 
 
 def apply_config_overrides(config, overrides: dict | None):
@@ -138,4 +145,8 @@ def config_overrides(config, attack_name: str) -> dict:
 def build_attack(
     attack_name: str, config, image_size: int, target_label: int
 ) -> Attack:
-    return _ATTACKS[attack_name][0](config, image_size, target_label)
+    """Dispatch to the named attack's builder and return its Attack record."""
+    builder = _ATTACKS[attack_name][0]
+
+    attack = builder(config, image_size, target_label)
+    return attack

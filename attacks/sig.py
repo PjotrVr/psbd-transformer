@@ -2,14 +2,14 @@
 
 Clean-label by design: it perturbs only target-class images and keeps the label,
 which is why the default label mode is clean_label. Some benchmarks run it
-dirty-label instead, which you can select by changing label_mode.
+dirty-label instead, which is selected by changing label_mode.
 """
 
 from dataclasses import dataclass
 
 import torch
 
-from poison import Attack
+from attacks.poisoning import Attack
 
 
 @dataclass(frozen=True)
@@ -29,11 +29,18 @@ class SigConfig:
 
 
 def _column_signal(image_size: int, amplitude: float, frequency: float) -> torch.Tensor:
-    # original: v(i, j) = amplitude * sin(2 * pi * frequency * j / width)
-    # simplified: one value per column j, broadcast over rows and channels
-    columns = torch.arange(image_size).float()
+    """One additive value per image column, shaped (1, 1, image_size) to broadcast.
+
+    original form
+        v(i, j) = amplitude * sin(2 * pi * frequency * j / width)
+    simplified form
+        one value per column j, broadcast over every row and channel
+    """
+    columns = torch.arange(image_size).float()  # (image_size,)
     signal = amplitude * torch.sin(2.0 * torch.pi * frequency * columns / image_size)
-    return signal.view(1, 1, image_size)
+
+    broadcastable = signal.view(1, 1, image_size)
+    return broadcastable
 
 
 def resolve_clean_label_mode(label_mode: str, num_targets: int) -> str:
@@ -50,15 +57,20 @@ def resolve_clean_label_mode(label_mode: str, num_targets: int) -> str:
 
 
 def build(config: SigConfig, image_size: int, target_label: int) -> Attack:
+    """The SIG attack record for one image size and target label."""
     signal = _column_signal(image_size, config.amplitude, config.frequency)
 
     def apply_trigger(image: torch.Tensor, _index: int) -> torch.Tensor:
-        return (image + signal).clamp(0.0, 1.0)
+        # Clamped because the signal is additive and would otherwise push bright
+        # columns outside the 0-to-1 pixel range the trigger is defined in.
+        stamped = (image + signal).clamp(0.0, 1.0)  # (C, H, W)
+        return stamped
 
-    return Attack(
+    attack = Attack(
         "sig",
         apply_trigger,
         resolve_clean_label_mode(config.label_mode, config.num_targets),
         target_label,
         num_targets=config.num_targets,
     )
+    return attack

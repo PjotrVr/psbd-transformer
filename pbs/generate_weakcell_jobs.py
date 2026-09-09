@@ -57,7 +57,7 @@ source .venv/bin/activate
 
 SWEEP = """
 echo "=== {folder} :: {cache} ==="
-python psbd_dropout_sweep.py \\
+python -m cli.sweep \\
     --checkpoint-folder {folder} \\
     --position-config {position} \\
     --perturbation {operator} \\
@@ -110,7 +110,7 @@ def main() -> None:
         )
         folders = sorted({f for f, _ in chunk})
         body += (
-            "\necho '=== analyze ==='\npython psbd_analyze.py --checkpoint-folder "
+            "\necho '=== analyze ==='\npython -m cli.analyze --checkpoint-folder "
             + " ".join(folders)
             + "\n"
         )

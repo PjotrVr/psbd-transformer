@@ -25,11 +25,11 @@ from torch.utils.data import DataLoader, Subset
 from torchvision.utils import save_image
 
 from attacks import build_attack, default_config
-from utils.config import DATASET_REGISTRY
-from utils.datasets import extract_labels, load_clean_datasets
-from defences.detection import attack_success_rate, clean_accuracy
-from models import build_vit
-from poison import (
+from data.registry import DATASET_REGISTRY
+from data.loading import extract_labels, load_clean_datasets
+from evaluation.metrics import attack_success_rate, clean_accuracy
+from models.backbones import build_vit
+from attacks.poisoning import (
     Attack,
     AttackSuccessSet,
     PoisonedTrainingSet,
@@ -37,7 +37,7 @@ from poison import (
     is_poisonable,
     poisoned_label,
 )
-from train import train_classifier
+from training.loop import train_classifier
 
 CONTROLLED_SIZE = 32
 

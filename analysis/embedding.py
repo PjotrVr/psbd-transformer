@@ -1,17 +1,17 @@
 """Two-dimensional projections of features for visualization: PCA and UMAP.
 
-t-SNE is deliberately not included. UMAP preserves more global structure at
-similar or lower cost, so for cluster visualization it is the better default,
-and PCA covers the linear case. See the notes below for when to reach for each.
+t-SNE is deliberately not included. UMAP preserves more global structure at similar
+or lower cost, so for cluster visualization it is the better default, and PCA
+covers the linear case.
 
 PCA is the honest first choice for the backdoor question because the backdoor is
 hypothesized to be a linear direction, and a linear projection cannot invent
 structure that is not there. UMAP reveals nonlinear cluster structure that PCA
-misses, but it warps distances and can produce clusters that are artifacts of
-its hyperparameters, so treat it as a qualitative illustration and always report
+misses, but it warps distances and can produce clusters that are artifacts of its
+hyperparameters, so treat it as a qualitative illustration and always report
 n_neighbors and min_dist.
 
-Each function takes a [num_samples, dim] tensor and returns a [num_samples, 2]
+Each function takes a (num_samples, dim) tensor and returns a (num_samples, 2)
 numpy array.
 """
 
@@ -21,7 +21,9 @@ from sklearn.decomposition import PCA
 
 
 def pca_project(features: torch.Tensor, num_components: int = 2) -> np.ndarray:
-    return PCA(n_components=num_components).fit_transform(features.float().numpy())
+    """Linear projection onto the leading num_components principal directions."""
+    projected = PCA(n_components=num_components).fit_transform(features.float().numpy())
+    return projected
 
 
 def umap_project(
@@ -45,4 +47,6 @@ def umap_project(
     projector = umap.UMAP(
         n_neighbors=num_neighbors, min_dist=min_distance, random_state=seed
     )
-    return projector.fit_transform(features.float().numpy())
+
+    projected = projector.fit_transform(features.float().numpy())
+    return projected

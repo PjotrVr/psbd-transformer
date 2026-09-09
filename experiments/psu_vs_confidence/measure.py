@@ -34,14 +34,15 @@ import numpy as np
 import torch
 from sklearn.metrics import roc_auc_score
 
-from defences.psbd_cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.psbd_metrics import pair_clean_to_backdoor, psu_from_cache
+from defences.decision import pair_clean_to_backdoor
+from defences.scores import psu_from_cache
 
 
 def parse_args() -> argparse.Namespace:

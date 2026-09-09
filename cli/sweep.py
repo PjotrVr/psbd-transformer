@@ -7,7 +7,7 @@ flattened into separate PBS jobs (pbs/generate_psbd_jobs.py), so many single-GPU
 jobs run concurrently rather than one long serial job.
 
 Stage 1 only: this writes the raw per-pass probabilities, the per-pass argmax
-classes, and the baseline to disk (psbd.cache). Threshold, TPR, FPR, AUROC, and
+classes, and the baseline to disk (defences.cache). Threshold, TPR, FPR, AUROC, and
 the shift ratio are a separate cheap CPU step (cli.analyze) that reads those back,
 so this script never touches the GPU for anything but forward passes.
 
@@ -22,23 +22,23 @@ import os
 
 import torch
 
-from psbd.cache import (
+from defences.cache import (
     dropout_pass_path,
     load_or_build_baseline,
     save_dropout_pass_probs,
     write_split_manifest,
 )
-from psbd.config import DATASET_REGISTRY
-from psbd.inference import compute_dropout_pass_probs
-from psbd.models import detect_architecture, load_checkpoint
-from psbd.operators import (
+from data.registry import DATASET_REGISTRY
+from defences.inference import compute_dropout_pass_probs
+from models.backbones import detect_architecture, load_checkpoint
+from defences.operators import (
     PERTURBATIONS,
     build_perturbation,
     check_operator_position,
     effective_forward_passes,
     scale_up,
 )
-from psbd.positions import (
+from models.positions import (
     DROPOUT_CONFIGS,
     PORTED_POSITION_NAMES,
     SINGLE_POSITION_NAMES,
@@ -46,17 +46,17 @@ from psbd.positions import (
     plug_dropout,
     unplug_dropout,
 )
-from psbd.splits import (
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from psbd.training import current_git_commit
+from training.loop import current_git_commit
 
 # The 9 dropout rates 0.1 to 0.9, the same grid the archived sweep used.
 DROPOUT_RATES: tuple[float, ...] = tuple(i / 10.0 for i in range(1, 10))
 
-# Reseeds the dropout mask sampling (see psbd.inference), distinct from the
+# Reseeds the dropout mask sampling (see defences.inference), distinct from the
 # data-split seed. Kept fixed so a rerun reproduces the same masks exactly.
 PSBD_MASK_SEED = 0
 # The PSBD paper's own value (sec/4_method.tex: "We perform forward inference k=3

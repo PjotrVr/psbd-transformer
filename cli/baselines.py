@@ -23,16 +23,16 @@ import os
 
 import torch
 
-from psbd.config import DATASET_REGISTRY
-from psbd.detectors import DETECTOR_NAMES, DetectorContext, build_detector
-from psbd.decision import (
+from data.registry import DATASET_REGISTRY
+from detectors import DETECTOR_NAMES, DetectorContext, build_detector
+from defences.decision import (
     HEADLINE_QUANTILE,
     PSBD_QUANTILES,
     detection_report,
     pair_clean_to_backdoor,
 )
-from psbd.models import load_checkpoint
-from psbd.splits import (
+from models.backbones import load_checkpoint
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
@@ -101,7 +101,7 @@ def score_checkpoint(
     model = load_checkpoint(metadata["architecture"], checkpoint_path, device)
     use_bfloat16 = not args.no_bfloat16
 
-    # Every detector is built through psbd.detectors.build_detector rather than
+    # Every detector is built through detectors.build_detector rather than
     # wired by hand here. That registry already resolves the 2 things this file
     # got wrong when it did wire them by hand: SCALE-UP's per-class statistics are
     # fitted on TRUE labels, which is what Eq. (3) defines them by, not on the

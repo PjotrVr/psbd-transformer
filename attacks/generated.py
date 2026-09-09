@@ -18,7 +18,7 @@ from pathlib import Path
 import torchvision.transforms.v2 as transforms_v2
 from PIL import Image
 
-from poison import Attack
+from attacks.poisoning import Attack
 
 
 @dataclass(frozen=True)
@@ -29,11 +29,15 @@ class GeneratedConfig:
 
 
 def _index_to_path(poisoned_dir: str) -> dict[int, str]:
+    """Map each dataset index to the poisoned PNG whose filename stem is that index."""
     paths = glob.glob(f"{poisoned_dir}/**/*.png", recursive=True)
-    return {int(Path(path).stem): path for path in paths}
+
+    by_index = {int(Path(path).stem): path for path in paths}
+    return by_index
 
 
 def build(config: GeneratedConfig, image_size: int, target_label: int) -> Attack:
+    """The pregenerated attack record, reading poisoned images by dataset index."""
     index_to_path = _index_to_path(config.poisoned_dir)
     to_tensor = transforms_v2.Compose(
         [transforms_v2.Resize((image_size, image_size)), transforms_v2.ToTensor()]
@@ -43,6 +47,8 @@ def build(config: GeneratedConfig, image_size: int, target_label: int) -> Attack
         # The stored image already carries the trigger, so the clean image passed
         # in is ignored and the pregenerated poisoned image is returned.
         stored = Image.open(index_to_path[index]).convert("RGB")
-        return to_tensor(stored)
+        stamped = to_tensor(stored)  # (C, H, W)
+        return stamped
 
-    return Attack(config.name, apply_trigger, config.label_mode, target_label)
+    attack = Attack(config.name, apply_trigger, config.label_mode, target_label)
+    return attack

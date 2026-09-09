@@ -1,15 +1,18 @@
 """Blend: alpha-blend a fixed pattern over the whole image (Chen et al., 2017).
 
 Static, pixel-space, dirty-label. The original paper uses a Hello Kitty image as
-the pattern. A seeded random pattern is used here to keep the file self-contained
-and free of any bundled image, and it can be swapped for a loaded pattern.
+the pattern. A seeded random pattern is used here to keep the package
+self-contained and free of any bundled image, and it can be swapped for a loaded
+pattern.
 """
 
 from dataclasses import dataclass
 
 import torch
 
-from poison import Attack
+from attacks.poisoning import Attack
+
+from .patterns import seeded_random_pattern
 
 
 @dataclass(frozen=True)
@@ -19,17 +22,15 @@ class BlendConfig:
     label_mode: str = "all_to_one"
 
 
-def _random_pattern(image_size: int, seed: int) -> torch.Tensor:
-    generator = torch.Generator().manual_seed(seed)
-    return torch.rand(3, image_size, image_size, generator=generator)
-
-
 def build(config: BlendConfig, image_size: int, target_label: int) -> Attack:
-    pattern = _random_pattern(image_size, config.pattern_seed)
+    """The Blend attack record for one image size and target label."""
+    pattern = seeded_random_pattern(image_size, config.pattern_seed)  # (3, S, S)
     alpha = config.alpha
 
     def apply_trigger(image: torch.Tensor, _index: int) -> torch.Tensor:
         # original: x_poisoned = (1 - alpha) * x + alpha * pattern
-        return (1.0 - alpha) * image + alpha * pattern
+        blended = (1.0 - alpha) * image + alpha * pattern  # (C, H, W)
+        return blended
 
-    return Attack("blend", apply_trigger, config.label_mode, target_label)
+    attack = Attack("blend", apply_trigger, config.label_mode, target_label)
+    return attack

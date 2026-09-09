@@ -23,22 +23,21 @@ import json
 import os
 import statistics
 
-from defences.psbd_cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.psbd_metrics import (
+from defences.decision import (
     complete_rates,
     detection_report,
     multi_probe_detection,
     pair_clean_to_backdoor,
-    psu_ratio_from_cache,
     select_rate_at_matched_shift,
-    shift_ratio,
 )
+from defences.scores import psu_ratio_from_cache, shift_ratio
 
 SPLITS = ("validation", "clean", "backdoor")
 RATE_ORDER = (0.1, 0.05, 0.01)

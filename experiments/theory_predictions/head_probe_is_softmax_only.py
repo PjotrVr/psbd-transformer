@@ -43,13 +43,13 @@ import pandas as pd
 import torch
 from scipy.stats import spearmanr
 
-from psbd.cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
 )
-from psbd.decision import complete_rates
+from defences.decision import complete_rates
 
 HEAD_PLACEMENT = "final_norm_out_gain_scale"
 # Same operator, same deterministic amplification, mid stack instead of at the

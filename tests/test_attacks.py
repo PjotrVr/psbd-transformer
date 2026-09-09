@@ -15,7 +15,7 @@ import pytest
 import torch
 
 from attacks import ATTACK_NAMES, build_attack, default_config
-from poison import (
+from attacks.poisoning import (
     Attack,
     AttackSuccessSet,
     CoverPoisonedTrainingSet,
@@ -506,7 +506,11 @@ def test_multi_target_clean_label_widens_both_pools_as_complements():
     CIFAR-100 and 0.5% on Tiny. The 2 pools stay exact complements however wide
     the set gets, because eval asks the opposite question of training.
     """
-    from poison import clean_label_target_set, is_eval_poisonable, is_poisonable
+    from attacks.poisoning import (
+        clean_label_target_set,
+        is_eval_poisonable,
+        is_poisonable,
+    )
 
     labels = list(range(10))
     for num_targets in (1, 2, 3):
@@ -528,7 +532,7 @@ def test_multi_target_clean_label_widens_both_pools_as_complements():
 
 def test_multi_target_keeps_labels_which_is_what_makes_it_clean_label():
     """The training label is never changed, however many targets there are."""
-    from poison import poisoned_label
+    from attacks.poisoning import poisoned_label
 
     for y in (0, 1, 2, 7):
         assert poisoned_label("clean_label_multi", y, 0, 10, 3) == y
@@ -540,7 +544,7 @@ def test_single_target_clean_label_is_untouched_by_the_multi_target_work():
     Every clean-label checkpoint trained before num_targets existed rebuilds
     through the default config, so a drift here silently reinterprets them.
     """
-    from poison import is_eval_poisonable, is_poisonable
+    from attacks.poisoning import is_eval_poisonable, is_poisonable
 
     config = default_config("sig")
     assert config.num_targets == 1

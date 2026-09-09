@@ -1,80 +1,63 @@
-"""Every module in every package, plus every root-level entrypoint, still imports.
+"""Every module in every package still imports.
 
-A reorganization's real failure mode is a broken import nobody happens to
-exercise in another test, so this is deliberately exhaustive rather than
-relying on the rest of the suite to catch it incidentally. One test case per
-module, parametrized, so a break names exactly which one broke.
+A reorganization's real failure mode is a broken import nobody happens to exercise
+in another test, so this is deliberately exhaustive rather than relying on the rest
+of the suite to catch it incidentally. One test case per module, parametrized, so a
+break names exactly which one broke.
+
+The list is walked from the filesystem rather than written out. A hand-maintained
+list is the thing that goes stale: the previous one still named 45 modules that had
+been deleted, which turned a reorganization into 45 confusing failures instead of
+1 clear one. EXPECTED_MINIMUM guards the other direction, since a walk that finds
+nothing would pass silently.
+
+Run with pytest from the repo root: pytest tests/test_imports.py.
 """
 
 import importlib
+import os
 
 import pytest
 
-MODULES = [
-    "adaptive_evasion",
-    "backdoor_data",
-    "baseline_detect",
-    "defence_tables",
-    "detector_comparison",
-    "detector_fusion",
-    "evaluate",
-    "loaders",
-    "metrics",
-    "models",
-    "pbs.grid",
-    # The detector ports and the pre-flight gate. Absent from this list, a syntax
-    # error in either surfaces only when a cluster job fails hours later.
-    "psbd.detectors",
-    "psbd.detectors.confidence",
-    "psbd.detectors.ibd_psc",
-    "psbd.detectors.scale_up",
-    "psbd.detectors.strip",
-    "psbd.detectors.teco",
-    "experiments.preflight.synthetic",
-    "experiments.preflight.check_signs",
-    "poison",
-    "psbd_analyze",
-    "psbd_dropout_sweep",
-    "psbd_head_profile",
-    "psbd_operating_points",
-    "psbd_report",
-    "psbd_variants",
-    "sam",
-    "stealth",
-    "train",
-    "train_backdoor",
-    "train_benign",
+PACKAGES = (
     "attacks",
-    "attacks.adaptive_blend",
-    "attacks.badnet",
-    "attacks.blend",
-    "attacks.bpp",
-    "attacks.generated",
-    "attacks.lc",
-    "attacks.lf",
-    "attacks.sig",
-    "attacks.tact",
-    "attacks.wanet",
     "analysis",
-    "analysis.analyze_latent",
-    "analysis.cka",
-    "analysis.direction",
-    "analysis.embedding",
-    "analysis.features",
-    "analysis.lipschitz",
+    "cli",
+    "data",
     "defences",
-    "defences.baselines",
-    "defences.checkpoint_eval",
-    "defences.detection",
-    "defences.dropout",
-    "defences.inference",
-    "defences.perturbations",
-    "defences.psbd_cache",
-    "defences.psbd_metrics",
+    "detectors",
+    "evaluation",
+    "models",
+    "training",
     "utils",
-    "utils.config",
-    "utils.datasets",
-]
+)
+
+# A floor, not a count, so adding a module needs no edit here.
+EXPECTED_MINIMUM = 60
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def discover_modules() -> list[str]:
+    """Every importable module under the packages, as dotted names."""
+    found = []
+    for package in PACKAGES:
+        directory = os.path.join(REPO_ROOT, package)
+        found.append(package)
+        for name in sorted(os.listdir(directory)):
+            if name.endswith(".py") and name != "__init__.py":
+                found.append(f"{package}.{name[:-3]}")
+    return found
+
+
+MODULES = discover_modules()
+
+
+def test_the_walk_found_the_tree():
+    """A walk that found nothing would make every case below vacuous."""
+    assert len(MODULES) >= EXPECTED_MINIMUM, (
+        f"found only {len(MODULES)} modules, so the walk is not seeing the tree"
+    )
 
 
 @pytest.mark.parametrize("module_name", MODULES)

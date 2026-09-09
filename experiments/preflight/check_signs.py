@@ -6,8 +6,8 @@ scored above 0.94. Nothing failed, nothing warned, and the numbers looked like
 numbers. A reviewer finding that in a submitted paper is the outcome this check
 is built to prevent.
 
-The convention every detector in psbd.detectors returns, and which
-psbd.decision.detection_report assumes, is LOW MEANS POISONED. There is exactly
+The convention every detector in detectors returns, and which
+defences.decision.detection_report assumes, is LOW MEANS POISONED. There is exactly
 one negation per detector, at the boundary, and each says so in its docstring.
 The hazard is that STRIP's raw statistic already points the right way while
 SCALE-UP's, IBD-PSC's and TeCo's do not, so a reader who negates uniformly gets 3
@@ -31,8 +31,8 @@ from experiments.preflight.synthetic import (
     build_backdoored_model,
     build_splits,
 )
-from psbd.decision import HEADLINE_QUANTILE, detection_report
-from psbd.detectors import DETECTOR_NAMES, DetectorContext, build_detector
+from defences.decision import HEADLINE_QUANTILE, detection_report
+from detectors import DETECTOR_NAMES, DetectorContext, build_detector
 
 # The synthetic backdoor is unmissable by construction, so any detector that is
 # wired correctly clears this comfortably. A sign inversion lands near 1 minus the

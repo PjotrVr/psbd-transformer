@@ -54,13 +54,13 @@ import os
 
 import torch
 
-from defences.checkpoint_eval import (
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
 from utils.numerics import safe_ratio, safe_ratio_positive
-from models import load_checkpoint, network_core
+from models.backbones import load_checkpoint, network_core
 
 TAPS = ("stream_in", "attention_write", "mlp_write")
 

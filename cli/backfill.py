@@ -33,11 +33,11 @@ import os
 
 import torchvision.transforms.v2 as transforms_v2
 
-from psbd.attacks import build_attack, default_config
-from psbd.cache import baseline_path, load_baseline
-from psbd.config import DATASET_REGISTRY
-from psbd.data import extract_labels, load_clean_datasets
-from psbd.poisoning import choose_poison_indices
+from attacks import build_attack, default_config
+from defences.cache import baseline_path, load_baseline
+from data.registry import DATASET_REGISTRY
+from data.loading import extract_labels, load_clean_datasets
+from attacks.poisoning import choose_poison_indices
 
 # Class counts per dataset are fixed, so the training label vector can be rebuilt
 # without touching the images. CIFAR and Tiny are balanced by construction. GTSRB

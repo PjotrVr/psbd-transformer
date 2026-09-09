@@ -23,8 +23,8 @@ import os
 
 import torch
 
-from defences.checkpoint_eval import PSBD_SPLIT_SEED, build_psbd_loaders_from_checkpoint
-from defences.psbd_cache import baseline_path
+from data.splits import PSBD_SPLIT_SEED, build_psbd_loaders_from_checkpoint
+from defences.cache import baseline_path
 
 SPLITS = ("validation", "clean", "backdoor")
 

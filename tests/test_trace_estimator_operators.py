@@ -18,7 +18,7 @@ empirical question measured in experiments/.
 import pytest
 import torch
 
-from psbd.operators import (
+from defences.operators import (
     DETERMINISTIC_PERTURBATIONS,
     PERTURBATIONS,
     build_perturbation,

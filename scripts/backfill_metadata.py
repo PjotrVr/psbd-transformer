@@ -29,9 +29,9 @@ import json
 import os
 
 from attacks import build_attack, default_config
-from defences.psbd_cache import baseline_path, load_baseline
-from poison import choose_indices_with_cover, choose_poison_indices
-from utils.config import DATASET_REGISTRY
+from defences.cache import baseline_path, load_baseline
+from attacks.poisoning import choose_indices_with_cover, choose_poison_indices
+from data.registry import DATASET_REGISTRY
 
 # Class counts per dataset are fixed, so the training label vector can be rebuilt
 # without touching the images. CIFAR and Tiny are balanced by construction. GTSRB
@@ -61,7 +61,7 @@ def training_labels(dataset, raw_data_dir):
 
     import torchvision.transforms.v2 as transforms_v2
 
-    from utils.datasets import extract_labels, load_clean_datasets
+    from data.loading import extract_labels, load_clean_datasets
 
     transform = transforms_v2.Compose([transforms_v2.ToTensor()])
     train, _ = load_clean_datasets(dataset, transform, raw_data_dir)

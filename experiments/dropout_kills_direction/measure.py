@@ -56,11 +56,11 @@ from lightning import seed_everything
 from analysis.direction import backdoor_direction, project_onto_direction
 from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
-from defences.checkpoint_eval import read_checkpoint_metadata, resolve_probe_attack
-from defences.dropout import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
-from models import load_checkpoint, vit_core
+from data.splits import read_checkpoint_metadata, resolve_probe_attack
+from models.positions import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
+from models.backbones import load_checkpoint, network_core
 from experiments.backdoor_direction_layers.measure import build_paired_loaders
-from utils.config import DATASET_REGISTRY
+from data.registry import DATASET_REGISTRY
 
 # The default grid. A residual-stream placement saturates below its first entry,
 # so --rates exists to reach the 0.01-to-0.09 window where it might still have a
@@ -110,7 +110,7 @@ def final_layer_features(
     )[layer]
     if post_ln:
         with torch.inference_mode():
-            features = vit_core(model).encoder.ln(features.to(device)).float().cpu()
+            features = network_core(model).encoder.ln(features.to(device)).float().cpu()
     return features
 
 

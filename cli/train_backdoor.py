@@ -24,7 +24,7 @@ import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 from torch.utils.data import DataLoader, Dataset, Subset
 
-from psbd.attacks import (
+from attacks import (
     ATTACK_NAMES,
     apply_config_overrides,
     build_attack,
@@ -33,25 +33,25 @@ from psbd.attacks import (
     adversarial_config_error,
     missing_adversarial_bases,
 )
-from psbd.attacks.generated import GeneratedConfig
-from psbd.config import DATASET_REGISTRY
-from psbd.data import (
+from attacks.generated import GeneratedConfig
+from data.registry import DATASET_REGISTRY
+from data.loading import (
     base_image_transform,
     extract_labels,
     limit_dataset,
     load_clean_datasets,
 )
-from psbd.eval_loaders import build_clean_loader
-from psbd.evaluation import clean_accuracy, evaluate_attack
-from psbd.evasion import FlaggedPoisonedSet, calibrate_probe_rate
-from psbd.poisoning import (
+from evaluation.loaders import build_clean_loader
+from evaluation.metrics import clean_accuracy, evaluate_attack
+from attacks.evasion import FlaggedPoisonedSet, calibrate_probe_rate
+from attacks.poisoning import (
     Attack,
     CoverPoisonedTrainingSet,
     PoisonedTrainingSet,
     choose_indices_with_cover,
     choose_poison_indices,
 )
-from psbd.training import (
+from training.loop import (
     build_model,
     checkpoint_metadata,
     save_checkpoint,
@@ -67,7 +67,7 @@ TRAIN_EVAL_SAMPLES = 10000
 def parse_attack_overrides(overrides: list[str] | None) -> dict:
     """Turn `key=value` command-line strings into a mapping.
 
-    Casting is left to psbd.attacks.apply_config_overrides so training and evaluation agree
+    Casting is left to attacks.apply_config_overrides so training and evaluation agree
     on the type of every field.
     """
     if not overrides:
@@ -176,14 +176,14 @@ def build_training_loader(
 ) -> tuple[DataLoader, int, Attack, object, float]:
     """The poisoned training loader, plus the attack record it was built from.
 
-    Evaluation is handled separately by psbd.evaluation and psbd.eval_loaders, so
+    Evaluation is handled separately by evaluation.metrics and evaluation.loaders, so
     this has no eval-loader concerns at all.
     """
     spec = DATASET_REGISTRY[args.dataset]
     transform = base_image_transform(image_size)
     train_clean, _ = load_clean_datasets(args.dataset, transform, args.raw_data_dir)
     # Subset before poison-index selection so poison_rate is measured against the
-    # truncated pool, mirroring the eval-side subset in psbd.eval_loaders.
+    # truncated pool, mirroring the eval-side subset in evaluation.loaders.
     train_clean = limit_dataset(train_clean, args.max_samples, args.seed)
     normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
 

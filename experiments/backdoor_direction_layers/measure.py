@@ -47,11 +47,11 @@ from analysis.cka import debiased_linear_cka
 from analysis.direction import backdoor_direction, trigger_activated_change
 from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
-from defences.checkpoint_eval import read_checkpoint_metadata, resolve_probe_attack
-from models import load_checkpoint
-from poison import PoisonedTrainingSet, is_eval_poisonable
-from utils.config import DATASET_REGISTRY
-from utils.datasets import extract_labels, load_clean_datasets
+from data.splits import read_checkpoint_metadata, resolve_probe_attack
+from models.backbones import load_checkpoint
+from attacks.poisoning import PoisonedTrainingSet, is_eval_poisonable
+from data.registry import DATASET_REGISTRY
+from data.loading import extract_labels, load_clean_datasets
 
 
 def parse_args() -> argparse.Namespace:

@@ -71,7 +71,7 @@ source .venv/bin/activate
 
 TRAIN = """
 echo "=== train {folder} ==="
-python train_backdoor.py \\
+python -m cli.train_backdoor \\
     --dataset {dataset} --attack {attack} --poison-rate {rate} \\
     --target-label 0 --architecture vit --epochs 15 --seed 0 \\
     --output checkpoints/{folder}/attack_result.pt
@@ -85,7 +85,7 @@ python train_backdoor.py \\
 SWEEP = """
 echo "=== sweep {folder} ==="
 rm -rf results/{folder}/psbd
-python psbd_dropout_sweep.py \\
+python -m cli.sweep \\
     --checkpoint-folder {folder} \\
     --position-config before_attention_norm \\
     --perturbation token_mask \\
@@ -120,7 +120,7 @@ def write_job(name, walltime, body):
 
 def analyze(folders):
     return (
-        "\necho '=== analyze ==='\npython psbd_analyze.py --checkpoint-folder "
+        "\necho '=== analyze ==='\npython -m cli.analyze --checkpoint-folder "
         + " ".join(folders)
         + "\n"
     )

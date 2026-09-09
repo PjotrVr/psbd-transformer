@@ -10,7 +10,7 @@ should show small TAC at every layer, because it never learned the trigger; a
 backdoored one should show TAC and the direction norm rising at the layer carrying
 the backdoor.
 
-All the work lives in psbd.analysis.latent. This file only parses arguments.
+All the work lives in analysis.latent. This file only parses arguments.
 
 Example
     python -m cli.analyze_latent --dataset cifar100 --attack badnet_a2o \
@@ -19,8 +19,8 @@ Example
 
 import argparse
 
-from psbd.analysis.latent import analyze_latent
-from psbd.config import DATASET_REGISTRY
+from analysis.latent import analyze_latent
+from data.registry import DATASET_REGISTRY
 
 
 def parse_args() -> argparse.Namespace:

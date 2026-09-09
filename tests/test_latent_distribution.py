@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from torchvision.models import VisionTransformer
 from torchvision.models.swin_transformer import SwinTransformer
 
-from psbd.analysis.distribution import (
+from analysis.distribution import (
     local_intrinsic_dimensionality,
     has_spread,
     class_centroids,
@@ -38,7 +38,7 @@ from psbd.analysis.distribution import (
     standardized_mean_shift,
     target_class_alignment,
 )
-from psbd.analysis.features import (
+from analysis.features import (
     default_reduction,
     detect_model_architecture,
     extract_layer_features,

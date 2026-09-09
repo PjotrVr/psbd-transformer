@@ -45,13 +45,13 @@ import os
 
 import torch
 
-from defences.checkpoint_eval import (
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from models import load_checkpoint
-from utils.config import DATASET_REGISTRY
+from models.backbones import load_checkpoint
+from data.registry import DATASET_REGISTRY
 
 WEIGHTS = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
 # How much clean accuracy a deployment will spend. 2 points is already generous.

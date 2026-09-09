@@ -19,7 +19,7 @@ ranks span [0, 1] for every split by construction, so a threshold at the 1st
 percentile of validation rank flags exactly the bottom 1% of the backdoor split no
 matter how extreme its scores are, pinning TPR to the false-positive rate. That
 produced TPR 0.010 at 1% FPR on every checkpoint, including ones where a component
-detector scored 1.000. This is the explanation psbd.scores.to_rank points at.
+detector scored 1.000. This is the explanation defences.scores.to_rank points at.
 
 Two rules, both requiring no poisoned data:
 
@@ -44,18 +44,18 @@ import os
 import numpy as np
 import torch
 
-from psbd.baselines import collect_overlay_batch, strip_scores
-from psbd.cache import (
+from detectors.simple import collect_overlay_batch, strip_scores
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
 )
-from psbd.decision import complete_rates, pair_clean_to_backdoor
-from psbd.models import load_checkpoint
-from psbd.scores import psu_ratio_from_cache, shift_ratio, to_rank
-from psbd.config import DATASET_REGISTRY
-from psbd.splits import (
+from defences.decision import complete_rates, pair_clean_to_backdoor
+from models.backbones import load_checkpoint
+from defences.scores import psu_ratio_from_cache, shift_ratio, to_rank
+from data.registry import DATASET_REGISTRY
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,

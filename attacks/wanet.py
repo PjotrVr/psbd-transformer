@@ -14,7 +14,7 @@ from dataclasses import dataclass
 import torch
 import torch.nn.functional as F
 
-from poison import Attack
+from attacks.poisoning import Attack
 
 
 @dataclass(frozen=True)
