@@ -14,6 +14,7 @@ Example
 """
 
 import argparse
+import os
 import time
 
 import torch
@@ -131,8 +132,12 @@ def train_one_benign(
         seed=args.seed,
     )["clean_accuracy"]
 
-    folder_name = checkpoint_folder_name(args.architecture, dataset_name, args)
-    output_path = f"{args.weights_dir}/{folder_name}/attack_result.pt"
+    if args.output:
+        output_path = args.output
+        folder_name = os.path.basename(os.path.dirname(output_path))
+    else:
+        folder_name = checkpoint_folder_name(args.architecture, dataset_name, args)
+        output_path = f"{args.weights_dir}/{folder_name}/attack_result.pt"
     save_checkpoint(
         model,
         num_classes,
@@ -176,6 +181,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--use-sam", action="store_true")
     parser.add_argument("--rho", type=float, default=0.1)
     parser.add_argument("--weights-dir", default="checkpoints")
+    parser.add_argument(
+        "--output",
+        default=None,
+        help="exact checkpoint path to write, instead of deriving "
+        "{weights-dir}/{architecture}_{dataset}_benign/attack_result.pt. Names 1 "
+        "folder, so it is only valid with exactly 1 dataset. Used by the seed "
+        "replicate jobs, which need a _seed_N tag the derived name cannot carry.",
+    )
     parser.add_argument("--raw-data-dir", default="raw_data")
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--seed", type=int, default=0)
@@ -196,6 +209,11 @@ def main() -> None:
     # per-dataset loop, so no subsetting code ever sees it (-1 would slice off one
     # sample instead of meaning "no limit").
     args.max_samples = None if args.max_samples == -1 else args.max_samples
+    if args.output and len(args.datasets) != 1:
+        raise SystemExit(
+            "--output names a single checkpoint, so it needs exactly 1 --datasets "
+            f"entry, got {len(args.datasets)}"
+        )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     accuracies = {}

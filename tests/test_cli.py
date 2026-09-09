@@ -442,3 +442,32 @@ def test_library_never_imports_cli(package: str) -> None:
         if "cli" in imported_roots(path):
             offenders.append(path)
     assert not offenders, f"{package} imports cli from {offenders}"
+
+
+def test_train_benign_output_needs_exactly_one_dataset() -> None:
+    """--output names 1 checkpoint folder, so it is refused alongside several datasets.
+
+    The seed replicate generator passes --output to get a _seed_N folder tag the
+    derived name cannot carry. Before the flag existed the generator emitted it
+    anyway, and 4 benign replicates died on argparse without training. The refusal
+    has to fire before any data loads, which is what this checks by giving it 2
+    datasets and no data directory at all.
+    """
+    module = importlib.import_module("cli.train_benign")
+    saved = sys.argv
+    try:
+        sys.argv = [
+            "cli.train_benign",
+            "--datasets",
+            "cifar10",
+            "cifar100",
+            "--output",
+            "nowhere/attack_result.pt",
+            "--raw-data-dir",
+            "does_not_exist",
+        ]
+        with pytest.raises(SystemExit) as refused:
+            module.main()
+    finally:
+        sys.argv = saved
+    assert "exactly 1" in str(refused.value)
