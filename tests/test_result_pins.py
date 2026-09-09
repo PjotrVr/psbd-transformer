@@ -1,10 +1,19 @@
-"""Pin known-good result values so branch cleanup cannot silently change numbers.
+"""Pin the psbd_metrics.json contract so a schema change cannot pass unnoticed.
 
-Each test loads a tracked psbd_metrics.json file and asserts that specific
-AUROC/TPR/FPR values match pinned constants. Tolerances are tight (1e-5) to
-catch any analysis pipeline regression.
+The pins used to address `placements["pre_residual"]` in a results file that the
+rewrite stopped tracking. Both halves of that failed: the placement vocabulary
+became `<position>_<operator>`, so the key does not exist, and the file is
+gitignored, so on a clean checkout the loader skipped and all three tests passed
+while checking nothing. A pin that silently skips is worse than no pin.
 
-Tests are skipped if the result files are not present (CI without checkpoints).
+The fixture under tests/fixtures/ is a trimmed copy of a real analysis output,
+committed so the pins have a versioned data source and never skip. Values are
+verbatim, so a change in how the reader parses them fails here.
+
+What this does NOT do is catch analysis-pipeline drift; a static fixture cannot.
+That is scripts/verify_results.py's job, which dumps every AUROC on 2 branches
+and diffs them. What this catches is the schema moving under the readers, which
+is exactly what went unnoticed for the two days these tests were inert.
 """
 
 import json
@@ -14,6 +23,15 @@ from pathlib import Path
 import pytest
 
 RESULTS_DIR = Path("results")
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
+# The placement the fixture carries, in the current <position>_<operator> naming.
+PINNED_PLACEMENT = "before_attention_norm_token_mask"
+
+
+def _load_fixture():
+    """The tracked sample. Never skips, which is the whole point of committing it."""
+    with open(FIXTURES_DIR / "psbd_metrics_sample.json") as handle:
+        return json.load(handle)
 
 
 def _load_psbd_metrics(folder_name):
@@ -35,20 +53,42 @@ def _load_metrics(folder_name):
 class TestPSBDMetricsPins:
     """Pin AUROC values from psbd_metrics.json for representative checkpoints."""
 
-    def test_vit_cifar10_adaptive_blend_oracle_auroc(self):
-        data = _load_psbd_metrics("vit_cifar10_adaptive_blend_0_1")
-        auroc = data["placements"]["pre_residual"]["oracle"]["auroc"]
-        assert abs(auroc - 0.7839836130401233) < 1e-5
+    def test_fixture_oracle_auroc(self):
+        placement = _load_fixture()["placements"][PINNED_PLACEMENT]
+        assert abs(placement["oracle"]["auroc"] - 0.9400195312500002) < 1e-5
 
-    def test_vit_cifar10_adaptive_blend_adaptive_auroc(self):
-        data = _load_psbd_metrics("vit_cifar10_adaptive_blend_0_1")
-        auroc = data["placements"]["pre_residual"]["adaptive"]["auroc"]
-        assert abs(auroc - 0.6665406346450617) < 1e-5
+    def test_fixture_adaptive_auroc(self):
+        placement = _load_fixture()["placements"][PINNED_PLACEMENT]
+        assert abs(placement["adaptive"]["auroc"] - 0.8795405864197531) < 1e-5
 
-    def test_vit_cifar10_adaptive_blend_tpr(self):
-        data = _load_psbd_metrics("vit_cifar10_adaptive_blend_0_1")
-        tpr = data["placements"]["pre_residual"]["oracle"]["tpr"]
-        assert abs(tpr - 0.7038888931274414) < 1e-5
+    def test_fixture_oracle_tpr(self):
+        placement = _load_fixture()["placements"][PINNED_PLACEMENT]
+        assert abs(placement["oracle"]["tpr"] - 0.9093055725097656) < 1e-5
+
+    def test_live_metrics_match_the_pinned_schema(self):
+        """A live analysis output must still have the shape the fixture records.
+
+        This is the check the old pins were reaching for. When the placement
+        vocabulary changed from the `pre_residual` alias to
+        `<position>_<operator>`, nothing failed; the readers simply started
+        raising KeyError much later, in a table generator.
+        """
+        live = _load_psbd_metrics("vit_cifar10_adaptive_blend_0_1")
+        fixture = _load_fixture()
+
+        assert set(fixture) - {"_fixture_note"} <= set(live), (
+            "a top-level key the fixture pins is missing from live output"
+        )
+        assert PINNED_PLACEMENT in live["placements"], (
+            f"{PINNED_PLACEMENT} is absent, so the placement naming has changed"
+        )
+        pinned = fixture["placements"][PINNED_PLACEMENT]
+        actual = live["placements"][PINNED_PLACEMENT]
+        assert set(pinned) == set(actual), "the placement block's keys have changed"
+        for mode in ("oracle", "adaptive"):
+            assert set(pinned[mode]) == set(actual[mode]), (
+                f"the {mode} block's keys have changed"
+            )
 
     def test_swin_cifar10_blend_exists(self):
         data = _load_psbd_metrics("swin_cifar10_blend_0_05")
