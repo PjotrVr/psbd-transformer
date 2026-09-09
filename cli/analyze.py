@@ -26,6 +26,7 @@ from psbd.cache import (
 )
 from psbd.config import DATASET_REGISTRY
 from psbd.decision import (
+    shift_key,
     HEADLINE_QUANTILE,
     PSBD_QUANTILES,
     SHIFT_MATCH_TARGETS,
@@ -271,9 +272,9 @@ def analyze_position_config(
     for target in SHIFT_MATCH_TARGETS:
         rate = select_rate_at_matched_shift(validation_sigma, target)
         if rate is None:
-            matched[f"sigma{target:.1f}"] = None
+            matched[shift_key(target)] = None
             continue
-        matched[f"sigma{target:.1f}"] = {
+        matched[shift_key(target)] = {
             "rate": rate,
             "achieved_shift_ratio": validation_sigma[rate],
             **by_rate[rate]["detection"][headline],

@@ -31,6 +31,8 @@ import json
 import os
 import sys
 
+from psbd.decision import SHIFT_MATCH_TARGETS, shift_key
+
 HEADLINE = "q0.25"
 
 MARKDOWN_COLUMNS = 15
@@ -43,8 +45,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--format", choices=("markdown", "csv"), default="markdown")
     parser.add_argument(
         "--matched-shift",
-        default="sigma0.8",
-        help="which matched-disturbance column to print (sigma0.2 .. sigma0.8)",
+        type=float,
+        default=0.8,
+        choices=SHIFT_MATCH_TARGETS,
+        help="which matched-disturbance shift ratio to print",
     )
     return parser.parse_args()
 
@@ -212,7 +216,10 @@ def print_negative_control(benign_rows: list[dict]) -> None:
 
 def main() -> None:
     args = parse_args()
-    rows = collect_rows(args.results_dir, args.checkpoints_dir, args.matched_shift)
+    # The flag is a shift ratio; the stored JSON is keyed by its string spelling,
+    # so the conversion happens once here at the boundary.
+    matched_key = shift_key(args.matched_shift)
+    rows = collect_rows(args.results_dir, args.checkpoints_dir, matched_key)
     if not rows:
         raise SystemExit(f"no psbd_metrics.json found under {args.results_dir}")
 
@@ -223,7 +230,7 @@ def main() -> None:
     backdoored = [row for row in rows if row["attack"] != "benign"]
     benign = [row for row in rows if row["attack"] == "benign"]
 
-    print(render_markdown(rows, args.matched_shift))
+    print(render_markdown(rows, matched_key))
     print(summarize_by_placement(backdoored))
     if benign:
         print_negative_control(benign)

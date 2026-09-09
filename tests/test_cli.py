@@ -55,12 +55,14 @@ CLI_MODULES = (
     "cli.train_backdoor",
     "cli.train_benign",
     "cli.variants",
+    "cli.analyze_latent",
 )
 
 # Every entrypoint and the module it was ported from. The old module stays the
 # source of truth for the flag set until it is deleted.
 PORTED_FROM = {
     "cli.analyze": "psbd_analyze",
+    "cli.analyze_latent": "analysis.analyze_latent",
     "cli.backfill": "scripts.backfill_metadata",
     "cli.baselines": "baseline_detect",
     "cli.compare_detectors": "detector_comparison",
@@ -455,3 +457,33 @@ def test_repeated_attack_override_accumulates(module_name: str) -> None:
         "adversarial_dir": "bases/",
         "adversarial_epsilon": "0.0627",
     }
+
+
+def test_split_operator_strips_stacked_qualifiers() -> None:
+    """A placement carrying more than 1 qualifier still resolves to its position.
+
+    Every qualifier pattern is anchored at the end of the name, so an outer one
+    hides an inner one. The sweep writes a block range and a mask seed together,
+    and a single fixed-order pass left pre_residual_blocks_9_16_seed1 parsing as
+    an unknown operator, which silently dropped those rows from the summary.
+    """
+    from cli.summary import KNOWN_OPERATORS, split_operator
+
+    stacked = (
+        ("pre_residual_blocks_9_16_seed1", "pre_residual", "dropout"),
+        ("mlp_norm_out_gain_scale_blocks_0_5_seed2", "mlp_norm_out", "gain_scale"),
+    )
+    for placement, position, operator in stacked:
+        got_position, got_operator, variant = split_operator(
+            placement, KNOWN_OPERATORS
+        )
+        assert (got_position, got_operator) == (position, operator), placement
+        # Both qualifiers survive; keeping only the last would lose the seed.
+        assert variant is not None and "+" in variant, placement
+
+    # A single qualifier keeps the spelling it had before stacking was handled.
+    assert split_operator("pre_residual_seed1", KNOWN_OPERATORS) == (
+        "pre_residual",
+        "dropout",
+        "mask_seed_1",
+    )

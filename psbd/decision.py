@@ -52,6 +52,18 @@ ADAPTIVE_SHIFT_TARGET = 0.8
 # placement is compared at matched sigma, and this is the ladder.
 SHIFT_MATCH_TARGETS: tuple[float, ...] = (0.2, 0.4, 0.6, 0.8)
 
+
+def shift_key(target: float) -> str:
+    """The psbd_metrics.json key holding results matched at this shift ratio.
+
+    The key is a string because it names a field in stored JSON, and 879 of 880
+    files on disk already spell it this way, so the format is fixed. Everything in
+    memory should pass the float and call this, rather than writing the f-string
+    again and risking 2 sites disagreeing on the precision.
+    """
+    return f"sigma{target:.1f}"
+
+
 # The rung of that ladder the placement comparison reports from. It is deliberately
 # NOT ADAPTIVE_SHIFT_TARGET: at 0.8 the destructive placements have already
 # saturated, so the ranking compresses and the comparison loses the resolution it
