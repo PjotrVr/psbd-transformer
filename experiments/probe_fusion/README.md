@@ -42,77 +42,68 @@ meaning anything.
 Every probe is read at its own rate matched to a clean-validation shift ratio, never at a
 shared rate, and the achieved shift is recorded next to every number.
 
-## Result: fusion beats the best single placement, +0.039 AUROC and +0.110 TPR@10%FPR
+## Result: on the COMPLETE panel, fusion does not beat the best single placement
 
-Run on the 67 cells clearing the 0.85 ASR bar, with the basis panel complete.
+Run on all 67 cells clearing the 0.85 ASR bar, every one carrying the complete 18-placement
+basis.
 
-The winner is the combination this study was asked to test:
+Selected on CIFAR-10 and GTSRB, reported on the held-out CIFAR-100 and Tiny (n=33), against
+the fixed single probe `before_attention_norm_token_mask`:
 
-```
-c5_ban_pre_two_bands =
-    before_attention_norm_token_mask        (input-side, all 12 blocks)
-  U pre_residual_blocks_5_8                 (residual-adjacent, mid depth)
-  U pre_residual_blocks_9_12                (residual-adjacent, late depth)
-```
+| quantity | value |
+|---|---|
+| mean delta AUROC | **+0.008** |
+| bootstrap 95% CI | **[-0.007, +0.023]** |
+| cells won | 17 of 33 |
+| verdict | **not supported, the interval spans zero** |
 
-Selected on CIFAR-10 and GTSRB, reported on the held-out CIFAR-100 and Tiny (n=27), against
-the fixed single probe a defender would otherwise deploy:
+Merging the two best single configurations specifically buys almost nothing, and the reason
+is mechanical: `both_sublayer_inputs_token_mask` is token masking at `before_attention_norm`
+AND `before_mlp_norm`, so it already CONTAINS the other. Fusing two probes that share a
+position fuses two correlated views.
 
-| metric | `before_attention_norm_token_mask` | fused | delta | 95% CI |
-|---|---|---|---|---|
-| AUROC | 0.924 | **0.963** | **+0.039** | [+0.022, +0.056] |
-| TPR @ 10% FPR | 0.811 | **0.920** | **+0.110** | [+0.037, +0.195] |
-| TPR @ 20% FPR | 0.902 | **0.950** | **+0.048** | [+0.011, +0.095] |
+| configuration | AUROC, all (n=67) | AUROC, hard (n=31) | delta vs the best single |
+|---|---|---|---|
+| `before_attention_norm_token_mask` alone | 0.923 | 0.878 | reference |
+| `both_sublayer_inputs_token_mask` alone | 0.908 | 0.864 | |
+| merge of the two (shared position) | 0.927 | 0.885 | +0.005, CI [-0.001, +0.011] |
+| merge across families, adding `pre_residual_blocks_9_12` | 0.937 | 0.891 | +0.015, CI [-0.006, +0.037] |
+| all three | 0.940 | 0.897 | +0.018, CI [-0.002, +0.038] |
 
-Achieved FPR at the 10% operating point is 0.1024 against a nominal 0.10, so the calibrated
-rule lands where it claims. It wins **24 of 27** held-out cells, and both combination rules
-agree: min-rank +0.039 [+0.022, +0.056], mean-rank +0.035 [+0.023, +0.049].
+Spanning position families is still worth more than merging within one, which is the
+direction the pre-registered C2 family predicted. It is simply not worth enough to clear a
+confidence interval.
 
-**Positive on every attack**, not carried by one:
+## This verdict replaces TWO earlier ones, and the reason is the same both times
 
-| attack | n | delta |
-|---|---|---|
-| wanet | 2 | +0.062 |
-| badnet_a2o | 6 | +0.057 |
-| bpp | 6 | +0.042 |
-| lf | 6 | +0.039 |
-| blend | 6 | +0.016 |
-| lc | 1 | +0.006 |
+| when | n usable cells | held-out delta | verdict |
+|---|---|---|---|
+| basis batch still running | 39 | +0.0145, CI [-0.003, +0.035] | not supported |
+| basis batch landed, TaCT not yet corrected | 56 | +0.039, CI [+0.022, +0.056] | supported |
+| **complete panel, TaCT corrected and swept** | **67** | **+0.008, CI [-0.007, +0.023]** | **not supported** |
 
-**Benign controls pass.** The fused score reads 0.487, 0.484, 0.499, 0.496 on the four
-benign checkpoints, so it invents no signal where there is no backdoor.
+The protocol and the pre-registered combination list never changed. The panel did. The middle
+reading was taken while TaCT was absent entirely, and TaCT is 11 of the 31 hard cells. The
+residual depth-band members that carry the combination score **0.624** on TaCT against
+**0.869** for input-side token masking, so adding TaCT removes the combination's edge.
 
-**Negative controls behave.** Three of four lose to the winner outright: `n3_same_operator`
--0.102, `n1_within_input_side` -0.023, `n2_within_residual` -0.020. The fourth,
-`n4_same_band` (band held fixed, family spanned), reads +0.030, below the winner's +0.039.
-That is informative rather than a failure: it says the gain is carried mainly by spanning
-the input-side and residual-adjacent FAMILIES, with depth span adding the remainder. It also
-matches the project's own headline, that the family split is the axis that carries effect.
-
-## This verdict replaces an earlier negative one, and why
-
-An earlier run of these same scripts reported NOT SUPPORTED: +0.0145, CI [-0.0032, +0.0349],
-winning 8 of 19, with the gain carried by badnet alone. That reading was taken while the
-basis panel was still being measured, on 39 usable cells, and the README recorded at the
-time that it was underpowered and had to be re-run when the batch landed. It has been, on
-unchanged pre-registered combinations and an unchanged protocol. What changed is the data:
-the panel went from 39 usable cells to 67, coverage of every basis placement completed, and
-the hard attacks entered the sample. The selection split also moved its winner from
-`c5_ban_pre_5_8` to `c5_ban_pre_two_bands`, both from the same pre-registered family.
+The lesson is about coverage, not about fusion: a fusion result read on a panel missing a
+whole attack is a result about the attacks that happened to be present. This is the third
+time in this project that unequal coverage produced a confident number that did not survive
+equal coverage.
 
 ## Verdict
 
-**Supported.** The deployment configuration is a SET, not a single placement. Fusing the
-input-side token mask with band-restricted residual dropout at blocks 5-8 and 9-12 costs no
-extra training and no extra checkpoint, only two more perturbation sweeps at inference, and
-buys +0.039 AUROC and +0.110 TPR at the 10% FPR operating point over the best single config.
+**Not supported.** Deploy the single best placement. `before_attention_norm_token_mask` has
+the highest hard-attack AUROC of any configuration measured (0.878, n=31), reaches the
+matched shift ratio on 100% of cells, and is rank #4/#1/#1 across poison rates on hard
+attacks. Fusion adds at most +0.018 and no combination clears a confidence interval.
 
-One structural caveat, found while measuring this. Band-restricted TOKEN masking cannot be
-brought to the disturbance the adaptive rule requires: at p=0.99 it reaches clean-validation
-shift ratio 0.705 on blocks 5-8 and 0.433 on blocks 9-12, because the 8 unperturbed blocks
-still carry the signal and a masking probability cannot exceed 1. Band-restricted residual
-DROPOUT has no such ceiling (0.959 at p=0.99), which is why the winning combination uses
-`pre_residual` for its depth-band members and not `before_attention_norm`.
+The structural caveat stands, and is worth keeping: band-restricted TOKEN masking cannot be
+brought to the disturbance the adaptive rule requires (sigma 0.705 on blocks 5-8, 0.433 on
+blocks 9-12, at masking probability 0.99, because the 8 unperturbed blocks still carry the
+signal and a probability cannot exceed 1). Band-restricted residual DROPOUT has no such
+ceiling, reaching 0.959 at p=0.99.
 
 ## Reproduce
 
