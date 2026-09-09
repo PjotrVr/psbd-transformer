@@ -119,6 +119,16 @@ KNOWN_OPERATORS = (
 
 UNKNOWN_OPERATOR = "unknown"
 
+# Every suffix that qualifies a run without naming an operator, with the variant
+# label it produces. Order here does not matter; the parser loops until no pattern
+# matches, so stacked qualifiers come off whatever order they were written in.
+QUALIFIER_SUFFIXES = (
+    (MODEL_DROPOUT_SUFFIX, "model_dropout_{0}"),
+    (BLOCK_RANGE_SUFFIX, "blocks_{0}_{1}"),
+    (PASS_COUNT_SUFFIX, "passes_{0}"),
+    (MASK_SEED_SUFFIX, "mask_seed_{0}"),
+)
+
 
 def split_operator(
     placement: str, known_operators: tuple[str, ...]
@@ -145,25 +155,25 @@ def split_operator(
             position = remaining[: -len(suffix)]
             return position, operator, variant_name
 
-    model_dropout = MODEL_DROPOUT_SUFFIX.search(remaining)
-    if model_dropout is not None:
-        variant = f"model_dropout_{model_dropout.group(1)}"
-        remaining = remaining[: model_dropout.start()]
-
-    block_range = BLOCK_RANGE_SUFFIX.search(remaining)
-    if block_range is not None:
-        variant = f"blocks_{block_range.group(1)}_{block_range.group(2)}"
-        remaining = remaining[: block_range.start()]
-
-    pass_count = PASS_COUNT_SUFFIX.search(remaining)
-    if pass_count is not None:
-        variant = f"passes_{pass_count.group(1)}"
-        remaining = remaining[: pass_count.start()]
-
-    mask_seed = MASK_SEED_SUFFIX.search(remaining)
-    if mask_seed is not None:
-        variant = f"mask_seed_{mask_seed.group(1)}"
-        remaining = remaining[: mask_seed.start()]
+    # Qualifiers stack, and the sweep writes them in whatever order the flags were
+    # given, so a single pass in a fixed order cannot work. Every pattern is
+    # anchored at the end of the string, which means an outer qualifier hides an
+    # inner one: pre_residual_blocks_9_16_seed1 does not match the block-range
+    # pattern at all until _seed1 comes off. Strip repeatedly until nothing more
+    # matches, and keep every qualifier found rather than letting the last one win.
+    qualifiers = []
+    stripping = True
+    while stripping:
+        stripping = False
+        for pattern, template in QUALIFIER_SUFFIXES:
+            found = pattern.search(remaining)
+            if found is not None:
+                qualifiers.append(template.format(*found.groups()))
+                remaining = remaining[: found.start()]
+                stripping = True
+    if qualifiers:
+        # Innermost first, so the name reads in the order the suffixes appear.
+        variant = "+".join(reversed(qualifiers))
 
     for operator in known_operators:
         if remaining.endswith(f"_{operator}"):
