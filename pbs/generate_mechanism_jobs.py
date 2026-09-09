@@ -14,6 +14,9 @@ here work":
                              substitute takes over the sink role when it is masked
     sink_hit_confound        whether a masking detector is reading the backdoor or reading
                              which tokens the draw happened to cover, zeroed and mean-filled
+    resolution_sweep         whether the attention shares are a statement about the backdoor
+                             or about sequence length, by serving the same weights at other
+                             resolutions with interpolated positional embeddings
     test_time_registers      whether giving the model spare tokens to sink into weakens the
                              attack, which is both a mechanism test and a candidate defence
     activation_patching      the causal version: overwrite one site with its value on the
@@ -54,6 +57,7 @@ SCRIPTS = (
     ("sink_hit_confound_mean", "--limit 256 --draws 12 --substitute mean"),
     ("activation_patching", "--limit 128 --noising"),
     ("test_time_registers", "--limit 1024 --registers 0 1 4 16 64"),
+    ("resolution_sweep", "--limit 512 --resolutions 160 192 224 256 320 448"),
 )
 # One representative cell per (attack, dataset) where the attack implanted, plus benign.
 FAMILIES = {
