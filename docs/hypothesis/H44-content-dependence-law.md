@@ -93,6 +93,47 @@ The CIFAR-100 arm is the control that shows the cost is real where fitting is ha
 1.000, 0.887, 0.843, 0.805, 0.789 at m = 1, 2, 4, 8, 100. So the attack is free on GTSRB and
 CIFAR-10 and costs about 0.20 ASR on CIFAR-100. An attacker picks the dataset regime.
 
+## THE DETECTION VALLEY: the two channels fail at opposite ends, and the attacker aims between
+
+The law above is only half the picture, and the other half changes what it means.
+
+PSU and predictive entropy are 2 different detection channels, and along the
+content-dependence axis they move in OPPOSITE directions. As `m` grows the trigger loses
+perturbation-robustness, so PSU dies; but a content-dependent map must contest the true
+source class, so the margin narrows and entropy comes alive. Measured at 10% on GTSRB:
+
+| m | 1 | 2 | 4 | 8 | 16 | 32 | 43 |
+|---|---|---|---|---|---|---|---|
+| PSU | 0.999 | 0.895 | 0.770 | **0.491** | 0.401 | 0.604 | 0.306 |
+| entropy | 0.717 | 0.315 | 0.621 | **0.789** | 0.844 | 0.788 | **0.849** |
+| **best of the 2** | 0.999 | 0.895 | **0.770** | 0.789 | 0.844 | 0.788 | 0.849 |
+
+So all-to-all, the endpoint H5 records as uncoverable, is **the easiest end for entropy**
+(0.849). The attack that actually evades is in the MIDDLE.
+
+**The attacker's optimum, minimising the best of the 2 channels:**
+
+| dataset, rate | optimal m | best-of-2 | ASR | ASR cost |
+|---|---|---|---|---|
+| GTSRB, 10% | 4 | 0.770 | 0.983 | 0.017 |
+| CIFAR-100, 10% | **8** | **0.584** | 0.805 | 0.195 |
+| CIFAR-100, 5% | 16 | 0.679 | 0.779 | 0.221 |
+| **Tiny, 10%** | **8** | **0.553** | 0.746 | 0.254 |
+
+On the 2 hard datasets the attacker reaches **near-chance detection against the better of
+2 complementary channels** for about 20 to 25 points of ASR. Neither pole does that: m = 1
+is caught by PSU at 0.889 to 0.999, m = K is caught by entropy at 0.658 to 0.849.
+
+**And the valley protects itself.** H43's router chooses between the channels by the sign of
+`d`, the suspect pool's mean PSU minus clean validation's. In the valley `d` is
+approximately 0 (GTSRB m = 8: -0.0038; m = 32: -0.0059), so the router has no signal exactly
+where it is needed and picks wrongly at both. The same collapse of the perturbation
+asymmetry that kills PSU also removes the router's evidence.
+
+This is what makes the law a result rather than a sweep. Detectability is **not monotone**
+in content dependence; it is a valley between 2 channels, and the valley is where an
+attacker should sit.
+
 ## What this does not claim
 
 - Single seed, 1 architecture, 1 placement. `m = 32` reads 0.604 against `m = 16`'s 0.401,
