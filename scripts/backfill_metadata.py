@@ -60,6 +60,7 @@ def training_labels(dataset, raw_data_dir):
         return labels
 
     import torchvision.transforms.v2 as transforms_v2
+
     from utils.datasets import extract_labels, load_clean_datasets
 
     transform = transforms_v2.Compose([transforms_v2.ToTensor()])
@@ -70,6 +71,12 @@ def training_labels(dataset, raw_data_dir):
 
 def deduce_realized_poison_rate(metadata, label_cache, raw_data_dir):
     """Replay the seeded poison selection and report the fraction actually poisoned."""
+    # A checkpoint recovered from an orphaned file may have no attack recorded at
+    # all, because its provenance was reconstructed from a job script that no longer
+    # exists. Nothing here can be replayed for it, and default_config(None) raises,
+    # which aborted the whole run partway through rather than skipping one folder.
+    if not metadata.get("attack") or not metadata.get("dataset"):
+        return None
     if metadata["attack"] == "benign":
         return {
             "realized_poison_rate": 0.0,
@@ -102,6 +109,11 @@ def deduce_realized_poison_rate(metadata, label_cache, raw_data_dir):
     # checkpoint recording seed null still yields a trustworthy realized rate.
     cover_rate = metadata.get("cover_rate") or 0.0
     source_classes = getattr(config, "source_classes", None)
+    # Runs predating the seeding commit record seed null, but their poison draw
+    # still went through default_rng(0): the selection functions always took an
+    # explicit seed and the entrypoint defaulted it to 0. Passing null through
+    # would seed from OS entropy and hand back a different index set every call.
+    selection_seed = metadata["seed"] or 0
     if cover_rate > 0.0 or source_classes is not None:
         chosen, _cover = choose_indices_with_cover(
             labels,
@@ -109,11 +121,11 @@ def deduce_realized_poison_rate(metadata, label_cache, raw_data_dir):
             metadata["poison_rate"],
             cover_rate,
             source_classes,
-            metadata["seed"],
+            selection_seed,
         )
     else:
         chosen = choose_poison_indices(
-            labels, attack, metadata["poison_rate"], metadata["seed"]
+            labels, attack, metadata["poison_rate"], selection_seed
         )
     # The count the rate asked for, before the eligible-pool cap. Comparing counts
     # rather than rates separates a real cap from the integer rounding that every
