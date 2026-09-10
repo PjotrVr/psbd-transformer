@@ -12,17 +12,18 @@ structure at a time measures something different from dissolving all of them
 uniformly, which is what the structured operators here exist to test.
 
 Every operator keeps nn.Dropout's 2 conventions, because PSU compares a perturbed
-pass against an unperturbed one and any deviation would read as signal: identity
-when self.training is False or rate is 0, and inverted scaling, so survivors are
-divided by the keep probability and the expected activation is unchanged.
+pass against an unperturbed pass and any deviation would read as signal. The
+first is identity when self.training is False or rate is 0. The second is
+inverted scaling: survivors are divided by the keep probability so the expected
+activation is unchanged.
 
 Shapes are (batch, tokens, channels), which ViT carries with batch_first=True.
 Swin carries (batch, height, width, channels), so the token-axis operators
 flatten the 2 spatial axes and restore them afterwards.
 
 Adding an operator is 3 steps: write the Module after whichever existing operator
-masks the same axis, add it to PERTURBATIONS, and list its position restriction
-in PERTURBATION_POSITIONS if it only makes sense somewhere specific.
+masks the same axis, add it to PERTURBATIONS and list its position restriction in
+PERTURBATION_POSITIONS if it only makes sense somewhere specific.
 """
 
 import torch
@@ -194,9 +195,9 @@ class GaussianNoise(nn.Module):
 
     The standard deviation is computed per sample, over every axis except the
     batch. A batch-wide reduction would make a sample's noise level depend on which
-    other samples shared its batch, and the validation, clean and backdoor splits
-    hold different image populations, so the 3 would sit at 3 noise levels while
-    the comparison between them assumes a single one. This is the only operator
+    other samples shared its batch. The validation, clean and backdoor splits hold
+    different image populations, so the 3 would sit at 3 noise levels while the
+    comparison between them assumes a single level. This is the only operator
     where that coupling was possible.
 
     No inverted scaling, because additive zero-mean noise already leaves the
@@ -392,10 +393,10 @@ class ScaleUp(nn.Module):
             x' = normalize(amplified)
 
     The loaders deliver normalized tensors, so the operator has to undo the
-    normalization, amplify, clip to the valid pixel range, and renormalize.
-    Skipping the round trip and scaling the normalized tensor directly would
-    amplify the dataset mean as though it were signal, and the clip, which is
-    where SCALE-UP's nonlinearity lives, would land at the wrong place entirely.
+    normalization, amplify, clip to the valid pixel range and renormalize. Scaling
+    the normalized tensor directly would amplify the dataset mean as though it were
+    signal. The clip, which is where SCALE-UP's nonlinearity lives, would also land
+    in the wrong place.
 
     rate is read as factor - 1, so rate 0 is the identity, matching every other
     operator.
@@ -511,7 +512,7 @@ PERTURBATIONS: dict[str, type[nn.Module]] = {
     # variation for its own sake.
     "rademacher": RademacherNoise,
     # Ports of 2 published perturbation-consistency detectors, so all 3
-    # perturbation families (input, activation, parameter) sit in one registry.
+    # perturbation families (input, activation, parameter) sit in a single registry.
     # scale_up is absent because it needs the dataset's normalization constants
     # and so cannot be built from a rate alone. See scale_up().
     "gain_scale": GainScale,
@@ -525,8 +526,8 @@ PERTURBATIONS: dict[str, type[nn.Module]] = {
 DETERMINISTIC_PERTURBATIONS: frozenset[str] = frozenset({"gain_scale", "scale_up"})
 
 # Which perturbations are meaningful at which positions. head_mask is the
-# constrained one: it is only a head mask on the concatenated per-head outputs,
-# and anywhere else its 64-wide groups are arbitrary channel blocks.
+# constrained case: it is only a head mask on the concatenated per-head outputs.
+# Anywhere else its 64-wide groups are arbitrary channel blocks.
 PERTURBATION_POSITIONS: dict[str, tuple[str, ...]] = {
     "head_mask": ("attention_heads",),
     "droppath": ("before_attention_residual", "before_mlp_residual"),
@@ -550,7 +551,7 @@ FORBIDDEN_OPERATOR_POSITIONS: dict[tuple[str, str], str] = {
     for operator in STRUCTURED_OPERATORS
 }
 
-# ViT's head reads token 0 alone, and TokenMask never masks token 0, so a token
+# ViT's head reads token 0 alone and TokenMask never masks token 0, so a token
 # mask applied after the final norm changes nothing the classifier ever sees.
 # PSU would be identically 0 and AUROC exactly 0.5, reading as "this position has
 # no effect" rather than as "this probe never fired".

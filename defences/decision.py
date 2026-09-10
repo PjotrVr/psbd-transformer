@@ -2,7 +2,7 @@
 
 defences.scores says what number a sample gets. This module says what that number
 means: where the threshold sits, which rate to run at, which samples are even
-comparable, and what TPR, FPR and AUROC come out. It reads scores and never the
+comparable and what TPR, FPR and AUROC come out. It reads scores and never the
 other way round.
 
 Detection rule: a sample is flagged when psu(x) < threshold, and the threshold is
@@ -41,11 +41,12 @@ ADAPTIVE_SHIFT_TARGET = 0.8
 # position perturbs a single additive contribution, while a residual-stream
 # position masks the whole stream once per block, so only (1-p)^12 of coordinates
 # survive the ViT stack. "Pre-residual beats post-residual" would then be
-# indistinguishable from "the weaker perturbation beats the destructive one".
+# indistinguishable from "the weaker perturbation beats the destructive
+# perturbation".
 #
 # The shared axis is effective strength instead. The clean-validation shift ratio
-# is measured on clean data only, so it stays defender-legal, and it says how much
-# the perturbation actually disturbed the model rather than how much noise was
+# is measured on clean data only, so it stays defender-legal. It says how much the
+# perturbation actually disturbed the model rather than how much noise was
 # nominally injected. Every placement is compared at matched sigma on this ladder.
 SHIFT_MATCH_TARGETS: tuple[float, ...] = (0.2, 0.4, 0.6, 0.8)
 
@@ -64,7 +65,8 @@ def shift_key(target: float) -> str:
 # The rung of that ladder the placement comparison reports from. Deliberately not
 # ADAPTIVE_SHIFT_TARGET: at 0.8 the destructive placements have already saturated,
 # so the ranking compresses and the comparison loses the resolution it exists for.
-# It is not a detection target either, and using it as one costs TPR at low FPR.
+# It is not a detection target either. Used as a detection target it costs TPR at
+# low FPR.
 # The 2 constants differ on purpose, which is why neither is written as a bare
 # literal outside this module.
 PLACEMENT_MATCH_TARGET = 0.6
@@ -118,7 +120,7 @@ def detection_report(
         "auroc_two_sided": max(auroc, 1.0 - auroc)
         if auroc_is_defined
         else float("nan"),
-        # "inverted" means backdoor samples are LESS robust to the perturbation than
+        # "inverted" means backdoor samples are less robust to the perturbation than
         # clean ones, the opposite of PSBD's premise.
         "direction": ("inverted" if auroc < 0.5 else "as_expected")
         if auroc_is_defined
