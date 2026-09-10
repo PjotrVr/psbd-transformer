@@ -52,7 +52,6 @@ AI_TELLS = (
     "in order to",
     "is responsible for",
     "leverage",
-    "robust",
     "seamless",
     "ensure that",
     "simply ",
