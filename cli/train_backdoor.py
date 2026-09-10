@@ -56,8 +56,8 @@ from training.loop import (
     checkpoint_metadata,
     save_checkpoint,
     train_classifier,
-    utc_timestamp,
 )
+from utils.provenance import utc_timestamp
 
 # Interpolation is measured on a fixed subsample. The trajectory, not the exact
 # value, is what the snapshot sweep reads.

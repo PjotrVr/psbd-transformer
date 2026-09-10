@@ -30,8 +30,8 @@ from training.loop import (
     checkpoint_metadata,
     save_checkpoint,
     train_classifier,
-    utc_timestamp,
 )
+from utils.provenance import utc_timestamp
 
 
 def build_benign_train_loader(
