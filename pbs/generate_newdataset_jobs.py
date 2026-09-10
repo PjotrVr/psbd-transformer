@@ -29,7 +29,12 @@ import os
 
 import torchvision.transforms.v2 as transforms_v2
 
-from data.loading import extract_labels, load_clean_datasets
+import sys
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO)
+
+from data.loading import extract_labels, load_clean_datasets  # noqa: E402
 
 PROJECT_ROOT = "/lustre/home/pstika/projects/PSBD-ViT"
 

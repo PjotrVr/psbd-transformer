@@ -19,13 +19,13 @@ import argparse
 import json
 import os
 
-from models.positions import DROPOUT_CONFIGS, SINGLE_POSITION_NAMES
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
 from data.splits import BENIGN_PROBE_ATTACK  # noqa: E402
+from models.positions import DROPOUT_CONFIGS, SINGLE_POSITION_NAMES  # noqa: E402
 
 BASE = "/lustre/home/pstika/projects/PSBD-ViT"
 
