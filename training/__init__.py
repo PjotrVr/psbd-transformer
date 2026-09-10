@@ -4,5 +4,5 @@ loop runs the epochs and writes the checkpoint with its provenance sidecar. sam 
 the Sharpness-Aware Minimization wrapper, used on top of AdamW when a run asks for
 it.
 
-Import the submodule you need; this package deliberately re-exports nothing.
+Import the submodule you need. This package re-exports nothing.
 """

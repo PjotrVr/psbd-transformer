@@ -25,11 +25,8 @@ loop must run the 2 passes itself, in this order:
 
 Skipping the second backward would hand second_step the gradient from the
 original weights, which is a plain base-optimizer update wearing SAM's name and
-costing twice as much. Calling second_step without first_step leaves the saved
-"original" weights absent and crashes, which is the intended loud failure.
-
-This implementation follows the standard formulation. It is intentionally small
-so it can be read and modified rather than pulled in as a dependency.
+costing twice as much. Calling second_step without first_step finds no saved
+weights and crashes, which is the intended loud failure.
 """
 
 import torch
@@ -42,8 +39,8 @@ GRADIENT_NORM_EPSILON = 1e-12
 class SAM(torch.optim.Optimizer):
     """2-pass sharpness-aware wrapper around a base optimizer class.
 
-    base_optimizer_cls is a class, not an instance, and is constructed here over
-    this optimizer's own param_groups so both share one group list.
+    base_optimizer_cls is a class rather than an instance. It is constructed here
+    over this optimizer's own param_groups so both share a single group list.
     """
 
     def __init__(
@@ -112,7 +109,7 @@ class SAM(torch.optim.Optimizer):
     def _gradient_norm(self) -> torch.Tensor:
         """The global l2 norm of the gradient, as a 0-dim tensor.
 
-        Norms are gathered onto one reference device so a model sharded across
+        Norms are gathered onto a single reference device so a model sharded across
         devices still yields a single scalar.
         """
         reference_device = self.param_groups[0]["params"][0].device

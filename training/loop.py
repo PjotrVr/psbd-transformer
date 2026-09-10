@@ -30,12 +30,11 @@ from .sam import SAM
 def build_model(
     architecture: str, num_classes: int, model_dropout: float = 0.0
 ) -> nn.Module:
-    """model_dropout is TRAINING-time dropout, 0.0 for every checkpoint so far.
+    """The backbone for an architecture, with optional training-time dropout.
 
-    PSBD requires a model trained without dropout and applies dropout only at
-    inference. This argument exists to test that requirement (see E2b in
-    docs/plans/adaptive-attacker-and-dropout-stacking.md), not to change the
-    default.
+    PSBD requires a model trained without dropout, so model_dropout is 0.0 for
+    every checkpoint in the project. The argument exists to test that requirement,
+    not to change the default.
     """
     if architecture == "vit":
         return build_vit(num_classes, dropout=model_dropout)
@@ -61,8 +60,8 @@ def build_optimizer(
 ) -> torch.optim.Optimizer:
     """Adam by default, or Adam wrapped in SAM when use_sam is set.
 
-    Adam is the base in both cases so the only difference between the vanilla and
-    the SAM run is the sharpness-aware two-step, which keeps the comparison clean.
+    Adam is the base in both cases, so the only difference between a plain run and a
+    SAM run is the sharpness-aware 2-step, which keeps the comparison clean.
     """
     if use_sam:
         return SAM(
@@ -86,7 +85,7 @@ def plain_update(
     criterion,
     optimizer,
 ) -> torch.Tensor:
-    """One ordinary forward-backward-step, returning the batch loss."""
+    """A plain forward, backward and step, returning the batch loss."""
     optimizer.zero_grad()
     loss = criterion(model(images), labels)
     loss.backward()
@@ -101,14 +100,13 @@ def sam_update(
     criterion,
     optimizer,
 ) -> torch.Tensor:
-    """One SAM update, returning the loss at the ORIGINAL weights.
+    """A SAM update, returning the loss at the original weights.
 
-    SAM does not implement step(), so the 2 passes are the caller's
-    responsibility and they must run in this order: backward, first_step to move
-    to the local worst-case weights, a SECOND backward there, then second_step to
-    restore the weights and let the base optimizer update them. Skipping the
-    second backward silently degrades this to a plain Adam update at twice the
-    cost. See training.sam for the full caller contract.
+    SAM does not implement step(), so the 2 passes are the caller's job, in this
+    order: backward, first_step to reach the local worst-case weights, a second
+    backward there, then second_step to restore the weights and let the base
+    optimizer update them. Skipping the second backward silently degrades this to
+    a plain Adam update at twice the cost. training.sam has the full contract.
     """
     # ViT and Swin use LayerNorm rather than BatchNorm, so the 2 forward passes
     # carry no running-statistics hazard that SAM has with BatchNorm models.
@@ -129,7 +127,7 @@ def train_one_epoch(
     device: torch.device,
     use_sam: bool,
 ) -> float:
-    """One epoch of ordinary training, returning the mean batch loss."""
+    """An epoch of ordinary training, returning the mean batch loss."""
     model.train()
 
     running_loss = 0.0
@@ -143,14 +141,11 @@ def train_one_epoch(
 
 
 def current_git_commit() -> str | None:
-    """The commit this run came from, marked when the tree it ran from was dirty.
+    """The commit this run came from, with -dirty appended if the tree had edits.
 
-    HEAD alone is a claim that checking out that commit reproduces the run, and
-    that claim is false whenever uncommitted changes are present. A run launched
-    from a dirty tree records `<sha>-dirty` so the provenance is honest about what
-    it can and cannot promise. The value stays a string, so every consumer keeps
-    working and a plain sha still means exactly what it always did. None outside a
-    git checkout, so provenance never blocks a run.
+    A bare sha claims that checking it out reproduces the run, which is false when
+    uncommitted changes were present, so a dirty tree records <sha>-dirty. None
+    outside a git checkout, so provenance never blocks a run.
     """
     try:
         result = subprocess.run(
@@ -231,13 +226,11 @@ def checkpoint_metadata(
 
 
 def resolve_checkpoint_path(path: str) -> str:
-    """Accept either the .pt path or the folder that should contain it.
+    """The .pt path, whether given the file or the folder that should hold it.
 
-    A job script passing `checkpoints/<name>` instead of
-    `checkpoints/<name>/attack_result.pt` would otherwise write a 343 MB file
-    named <name>, and drop its args.json into checkpoints/ itself where the next
-    run overwrites it. Normalizing here fixes every caller at once, including
-    jobs already queued from a generator with the old spelling.
+    A job passing checkpoints/<name> without the filename would otherwise write the
+    weights to a file called <name> and drop args.json into checkpoints/ itself,
+    where the next run overwrites it.
     """
     return path if path.endswith(".pt") else os.path.join(path, "attack_result.pt")
 
@@ -245,12 +238,10 @@ def resolve_checkpoint_path(path: str) -> str:
 def save_checkpoint(
     model: nn.Module, num_classes: int, path: str, metadata: dict | None = None
 ) -> None:
-    """Save in the attack_result.pt format models.backbones.load_checkpoint reads.
+    """Save the weights in the format load_checkpoint reads, plus an args.json sidecar.
 
-    metadata is training provenance (which attack produced the model, dataset,
-    target label, poison rate, seed, ...), written as an args.json sidecar next to
-    the checkpoint rather than merged into the .pt, so it can be read without
-    loading the model weights.
+    metadata is the training provenance. It sits beside the .pt rather than inside
+    it so it can be read without loading the weights.
     """
     path = resolve_checkpoint_path(path)
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -278,12 +269,11 @@ def train_classifier(
     model_dropout: float = 0.0,
     on_epoch_end: Callable[[nn.Module, int, float], None] | None = None,
 ) -> nn.Module:
-    """Train a fresh model and report validation accuracy each epoch.
+    """A freshly trained model, with validation accuracy printed after each epoch.
 
-    evasion, when set, replaces the plain epoch with the adaptive-attacker one
-    (attacks.evasion). It is the attacker's knob, not the defender's, and is recorded
-    in the checkpoint metadata so a run can never be mistaken for a normally
-    trained one.
+    evasion, when set, swaps in the adaptive attacker's epoch (attacks.evasion). It
+    is the attacker's knob, and it is recorded in the checkpoint metadata so the
+    run can never be mistaken for an ordinary training run.
     """
     model = build_model(architecture, num_classes, model_dropout).to(device)
     criterion = nn.CrossEntropyLoss()
@@ -317,8 +307,8 @@ def train_classifier(
             f"epoch {epoch}: loss={average_loss:.4f} "
             f"val_acc={validation_accuracy:.4f}{extra}"
         )
-        # Lets a caller snapshot the trajectory without this function learning about
-        # checkpoint paths; every write stays on the caller's side.
+        # A caller can snapshot the trajectory without the loop learning about
+        # checkpoint paths. Every write stays on the caller's side.
         if on_epoch_end is not None:
             on_epoch_end(model, epoch, validation_accuracy)
 
