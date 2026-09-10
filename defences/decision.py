@@ -77,6 +77,13 @@ PLACEMENT_MATCH_TARGET = 0.6
 RECOMMENDED_PLACEMENT = "before_attention_norm_token_mask"
 PUBLISHED_PLACEMENT = "post_residual"
 
+# The attack groups every table aggregates over, hard first and each ordered by
+# how hard the panel found it to detect. A number on BadNet says nothing about
+# whether a detector works, so the groups are never averaged together silently.
+HARD_ATTACKS = ("bpp", "wanet", "tact", "sig", "lc", "adaptive_blend")
+EASY_ATTACKS = ("badnet_a2o", "blend", "lf")
+PRIMARY_DATASETS = ("cifar100", "tiny")
+
 
 def threshold_at_quantile(validation_psu: torch.Tensor, quantile: float) -> float:
     """The detection threshold: a low quantile of clean validation PSU.

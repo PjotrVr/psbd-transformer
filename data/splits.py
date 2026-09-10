@@ -32,6 +32,12 @@ from attacks.poisoning import AttackSuccessSet, PoisonedTrainingSet
 # split.
 PSBD_SPLIT_SEED = 0
 PSBD_HELDOUT_SIZE = 2000
+SPLITS = ("validation", "clean", "backdoor")
+
+# The trigger a benign checkpoint is probed with when the caller names none, so
+# a benign model's detector numbers sit on the same footing as its PSBD numbers.
+BENIGN_PROBE_ATTACK = "badnet_a2o"
+BENIGN_PROBE_TARGET_LABEL = 0
 
 REQUIRED_METADATA_KEYS = ("dataset", "attack", "target_label", "architecture")
 

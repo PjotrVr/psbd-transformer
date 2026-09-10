@@ -15,13 +15,12 @@ it ignored.
 import hashlib
 import json
 import os
+from data.splits import SPLITS
 
 import torch
 
 RECORDS_DIR = "detectors"
 LEGACY_REPORT = "baseline_metrics.json"
-SPLITS = ("validation", "clean", "backdoor")
-
 # A record's status. Only a scored record counts as finished work, so a failed
 # one is retried by the next run instead of silently skipped.
 STATUS_SCORED = "scored"

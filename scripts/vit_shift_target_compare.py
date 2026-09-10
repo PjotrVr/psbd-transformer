@@ -20,8 +20,8 @@ comparison into an unmatched one. This script measures both and says which is de
 import argparse
 import json
 import statistics
+from defences.decision import HARD_ATTACKS as HARD
 
-HARD = ("wanet", "tact", "bpp", "adaptive_blend", "lc", "sig")
 TOLERANCE = 0.15
 
 
@@ -83,7 +83,7 @@ def main():
     targets = sorted(data, key=float)
 
     print(
-        f"cells clearing the ASR bar: "
+        "cells clearing the ASR bar: "
         + ", ".join(f"sigma={t}: {len(data[t])}" for t in targets)
     )
     print()

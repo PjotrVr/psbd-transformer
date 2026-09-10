@@ -22,6 +22,8 @@ import argparse
 import json
 import os
 import statistics
+from data.splits import SPLITS
+from defences.decision import EASY_ATTACKS, HARD_ATTACKS
 
 from defences.cache import (
     baseline_path,
@@ -39,12 +41,11 @@ from defences.decision import (
 )
 from defences.scores import psu_ratio_from_cache, shift_ratio
 
-SPLITS = ("validation", "clean", "backdoor")
 RATE_ORDER = (0.1, 0.05, 0.01)
 DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny")
 # Grouped easy first, then hard, each ordered by how hard this panel found them to detect.
-EASY_ORDER = ("badnet_a2o", "blend", "lf")
-HARD_ORDER = ("bpp", "wanet", "tact", "sig", "lc", "adaptive_blend")
+EASY_ORDER = EASY_ATTACKS
+HARD_ORDER = HARD_ATTACKS
 ATTACK_ORDER = EASY_ORDER + HARD_ORDER
 SHIFT_TARGET = 0.6
 TARGET_FPRS = (0.10, 0.20)

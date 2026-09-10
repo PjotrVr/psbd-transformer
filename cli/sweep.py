@@ -22,6 +22,7 @@ Example
 import argparse
 import json
 import os
+from data.splits import SPLITS
 
 import torch
 
@@ -66,8 +67,6 @@ PSBD_MASK_SEED = 0
 # times"). Caches at this k keep the bare folder name so every pre-existing cache
 # stays addressable.
 DEFAULT_FORWARD_PASSES = 3
-
-SPLITS = ("validation", "clean", "backdoor")
 
 
 def parse_args() -> argparse.Namespace:

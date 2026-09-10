@@ -23,13 +23,15 @@ charges the detector for the attack's failure.
 
 Example
     python -m cli.operating_points --poison-rate 0.01
-    python -m cli.operating_points --fpr 0.01 0.05 --placement pre_residual_blocks_5_8
+    python -m cli.operating_points --fpr 0.01 0.05 --placement before_attention_norm_token_mask
 """
 
 import argparse
 import glob
 import json
 import os
+from data.splits import SPLITS
+from defences.decision import ADAPTIVE_SHIFT_TARGET
 
 import numpy as np
 import torch
@@ -50,8 +52,6 @@ from defences.scores import psu_ratio_from_cache, shift_ratio
 
 DEFAULT_FPRS = (0.01, 0.05, 0.10)
 
-SPLITS = ("validation", "clean", "backdoor")
-
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -70,7 +70,7 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="report only this poison rate",
     )
-    parser.add_argument("--shift-target", type=float, default=0.7)
+    parser.add_argument("--shift-target", type=float, default=ADAPTIVE_SHIFT_TARGET)
     return parser.parse_args()
 
 

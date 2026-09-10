@@ -59,6 +59,7 @@ Deviations from the paper, each recorded in full in docs/detector-ports.md:
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from .strip import normalization_buffers
 
 from defences.inference import forward_probs
 
@@ -103,18 +104,6 @@ def amplify_pixels(
     return renormalized
 
 
-def _normalization_buffers(
-    mean: tuple[float, ...],
-    std: tuple[float, ...],
-    device: torch.device,
-    dtype: torch.dtype,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """The dataset statistics shaped to broadcast over (batch, C, H, W)."""
-    mean_tensor = torch.tensor(mean, device=device, dtype=dtype).view(1, -1, 1, 1)
-    std_tensor = torch.tensor(std, device=device, dtype=dtype).view(1, -1, 1, 1)
-    return mean_tensor, std_tensor
-
-
 @torch.inference_mode()
 def spc_scores(
     model: nn.Module,
@@ -141,7 +130,7 @@ def spc_scores(
     label_batches = []
     for images, labels in loader:
         images = images.to(device)  # (batch, C, H, W)
-        mean_tensor, std_tensor = _normalization_buffers(
+        mean_tensor, std_tensor = normalization_buffers(
             mean, std, images.device, images.dtype
         )
 

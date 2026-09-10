@@ -39,7 +39,10 @@ import sys
 
 from defences.decision import (
     ADAPTIVE_SHIFT_TARGET,
+    EASY_ATTACKS,
+    HARD_ATTACKS,
     HEADLINE_QUANTILE,
+    PRIMARY_DATASETS,
     PLACEMENT_MATCH_TARGET,
     PUBLISHED_PLACEMENT,
     RECOMMENDED_PLACEMENT,
@@ -61,9 +64,6 @@ from detectors.records import (
 from training.loop import current_git_commit, utc_timestamp
 
 PSBD_COLUMNS = ("psbd_adaptive", "psbd_matched06", "psbd_published")
-HARD_ATTACKS = ("bpp", "wanet", "tact", "sig", "lc", "adaptive_blend")
-EASY_ATTACKS = ("badnet_a2o", "blend", "lf")
-PRIMARY_DATASETS = ("cifar100", "tiny")
 DEFAULT_FPRS = (0.01, 0.05, 0.10, 0.25)
 # Below this many triggered images a per-cell TPR moves in steps a reader must
 # see, so the row is marked.

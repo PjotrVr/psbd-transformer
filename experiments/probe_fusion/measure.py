@@ -28,6 +28,7 @@ managed.
 import argparse
 import json
 import os
+from data.splits import SPLITS
 
 import torch
 
@@ -47,7 +48,6 @@ from defences.decision import (
 )
 from defences.scores import psu_ratio_from_cache, shift_ratio, to_rank
 
-SPLITS = ("validation", "clean", "backdoor")
 # The operating points a deployment is read at, per the reporting contract.
 TARGET_FPRS = (0.10, 0.20)
 # A probe whose achieved shift misses the target by more than this is reported but excluded

@@ -36,6 +36,7 @@ import argparse
 import glob
 import json
 import os
+from data.splits import SPLITS
 
 import numpy as np
 from sklearn.metrics import roc_auc_score
@@ -57,8 +58,6 @@ from defences.decision import (
     threshold_at_quantile,
 )
 from defences.scores import psu_from_cache, psu_ratio_from_cache, shift_ratio
-
-SPLITS = ("validation", "clean", "backdoor")
 
 VARIANTS = {
     "psbd_paper": {

@@ -37,6 +37,8 @@ import argparse
 import glob
 import json
 import os
+from data.splits import SPLITS
+from defences.decision import ADAPTIVE_SHIFT_TARGET, RECOMMENDED_PLACEMENT
 
 import numpy as np
 import torch
@@ -60,7 +62,6 @@ from data.splits import (
 )
 
 
-SPLITS = ("validation", "clean", "backdoor")
 COLUMNS = ("psbd", "strip", "mean", "min")
 
 # This table was built on the CIFAR-10 ViT grid, where the disjoint-failure pattern
@@ -75,10 +76,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoints-dir", default="checkpoints")
     parser.add_argument("--raw-data-dir", default="raw_data")
     parser.add_argument("--fpr", nargs="*", type=float, default=[0.01, 0.05])
-    parser.add_argument("--shift-target", type=float, default=0.7)
+    parser.add_argument("--shift-target", type=float, default=ADAPTIVE_SHIFT_TARGET)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=4)
-    parser.add_argument("--placement", default="pre_residual_blocks_5_8")
+    parser.add_argument("--placement", default=RECOMMENDED_PLACEMENT)
     return parser.parse_args()
 
 

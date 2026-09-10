@@ -12,8 +12,8 @@ import argparse
 import json
 import random
 import statistics
+from defences.decision import HARD_ATTACKS
 
-HARD_ATTACKS = ("wanet", "tact", "bpp", "adaptive_blend", "lc", "sig")
 RATES = (0.01, 0.05, 0.1)
 DATASETS = ("cifar10", "cifar100", "gtsrb", "tiny")
 BOOTSTRAP = 5000
@@ -419,7 +419,7 @@ def main():
     w("")
     first, second, third = names[0], names[1], names[2]
     w(
-        f"The three are **one tier, not an ordering**: every pairwise CI above spans zero, so no"
+        "The three are **one tier, not an ordering**: every pairwise CI above spans zero, so no"
     )
     w(
         "one of them is shown to beat another on this panel. What separates them is *where* they"

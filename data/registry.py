@@ -84,7 +84,6 @@ DATASET_REGISTRY: dict[str, DatasetSpec] = {
 # placement of the original PSBD paper. Both insert fresh perturbation modules
 # through the position registry rather than reusing a dropout the model already
 # has. models.positions says why.
-DROPOUT_PLACEMENTS = ("pre_residual", "post_residual")
 
 ARCHITECTURES = ("vit", "swin")
 
@@ -104,7 +103,6 @@ class RunConfig:
 
     forward_passes: int = 3  # number of stochastic dropout passes, k in the paper
     dropout_rates: tuple[float, ...] = tuple(i / 10.0 for i in range(1, 10))
-    psbd_quantiles: tuple[float, ...] = (0.1, 0.15, 0.2, 0.25)
 
     architecture: str = "vit"
     dropout_placement: str = "pre_residual"

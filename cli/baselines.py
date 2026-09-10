@@ -42,7 +42,9 @@ from torch.utils.data import DataLoader
 
 from data.registry import DATASET_REGISTRY
 from data.splits import (
+    BENIGN_PROBE_ATTACK,
     PSBD_SPLIT_SEED,
+    SPLITS,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
@@ -73,7 +75,6 @@ from detectors import (
     effective_precision,
 )
 from detectors.records import (
-    SPLITS,
     STATUS_FAILED,
     STATUS_SCORED,
     manifest_digest,
@@ -85,10 +86,6 @@ from detectors.records import (
 )
 from models.backbones import load_checkpoint
 from training.loop import current_git_commit, utc_timestamp
-
-# The trigger a benign checkpoint is probed with when the caller names none, so
-# its numbers sit on the same footing as its PSBD numbers.
-BENIGN_PROBE_ATTACK = "badnet_a2o"
 
 DEFAULT_RESULTS_DIR = "results"
 MANIFEST_INDEX_KEYS = (

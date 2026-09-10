@@ -20,6 +20,7 @@ import argparse
 import glob
 import json
 import os
+from data.splits import SPLITS
 
 import pandas as pd
 
@@ -35,8 +36,6 @@ from defences.scores import psu_from_cache, shift_ratio
 # The shift ratio every probe is read at, so probes are compared at a matched
 # disturbance rather than at a shared nominal rate.
 MATCHED_SHIFT = 0.6
-
-SPLITS = ("validation", "clean", "backdoor")
 
 
 def rate_tags(placement_dir):

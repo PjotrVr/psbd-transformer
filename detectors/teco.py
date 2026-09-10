@@ -63,6 +63,7 @@ where this project applies triggers too, and the result is requantized to the
 
 import io
 import math
+from .strip import normalization_buffers
 
 import numpy as np
 import torch
@@ -624,18 +625,6 @@ CORRUPTIONS = {
 DEFAULT_CORRUPTIONS: tuple[str, ...] = tuple(CORRUPTIONS)
 
 
-def _normalization_buffers(
-    mean: tuple[float, ...],
-    std: tuple[float, ...],
-    device: torch.device,
-    dtype: torch.dtype,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """The dataset statistics shaped to broadcast over (batch, C, H, W)."""
-    mean_tensor = torch.tensor(mean, device=device, dtype=dtype).view(1, -1, 1, 1)
-    std_tensor = torch.tensor(std, device=device, dtype=dtype).view(1, -1, 1, 1)
-    return mean_tensor, std_tensor
-
-
 @torch.inference_mode()
 def hardness_thresholds(
     model: nn.Module,
@@ -672,7 +661,7 @@ def hardness_thresholds(
     batch_thresholds = []
     for images, _ in loader:
         images = images.to(device)  # (batch, C, H, W)
-        mean_tensor, std_tensor = _normalization_buffers(
+        mean_tensor, std_tensor = normalization_buffers(
             mean, std, images.device, images.dtype
         )
         pixels = (images * std_tensor + mean_tensor).clamp(0.0, 1.0)

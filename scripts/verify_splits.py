@@ -20,13 +20,12 @@ poisoning, eval-set construction or dataset splits, and before trusting a table.
 import argparse
 import json
 import os
+from data.splits import SPLITS
 
 import torch
 
 from data.splits import PSBD_SPLIT_SEED, build_psbd_loaders_from_checkpoint
 from defences.cache import baseline_path
-
-SPLITS = ("validation", "clean", "backdoor")
 
 
 def cached_row_counts(psbd_dir: str) -> dict:

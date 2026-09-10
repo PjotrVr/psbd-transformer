@@ -14,6 +14,7 @@ Example
 import argparse
 import json
 import os
+from data.splits import SPLITS
 
 import torch
 
@@ -45,8 +46,6 @@ from defences.scores import (
     shift_target_histogram,
 )
 from data.splits import read_checkpoint_metadata
-
-SPLITS = ("validation", "clean", "backdoor")
 
 
 def parse_args() -> argparse.Namespace:
