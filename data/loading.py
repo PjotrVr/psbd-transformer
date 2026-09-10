@@ -1,17 +1,13 @@
-"""Clean dataset loading, transforms, and label extraction.
+"""Loading the clean datasets, and reading their labels cheaply.
 
-Side effects (disk reads, downloads) live here so the detection and analysis
-code can stay pure.
+Disk reads and downloads live here so the detection and analysis code stays pure.
 
-Boundary contract on normalization. A dataset built by load_clean_datasets must
-yield images in the 0 to 1 range, unnormalized. Every attack in this project
-stamps its trigger in pixel space, so normalization has to happen strictly after
-the trigger is applied. The dataset wrappers in attacks.poisoning own that final
-step: they take a normalize callable and apply it last. Baking a Normalize into
-the transform handed to load_clean_datasets would silently poison normalized
-tensors and produce triggers that do not match the attack's paper. Use
-base_image_transform here and construct the Normalize separately at the call
-site, where the ordering is visible.
+A dataset from load_clean_datasets yields images in 0 to 1, unnormalized. Every
+attack stamps its trigger in pixel space, so normalization has to come after the
+trigger, and the dataset wrappers in attacks.poisoning apply it last. Baking a
+Normalize into the transform handed in here would stamp triggers onto normalized
+tensors that no longer match the attack's paper. Use base_image_transform and
+construct the Normalize at the call site, where the order is visible.
 """
 
 import os
@@ -26,11 +22,11 @@ from .registry import DATASET_REGISTRY, DatasetSpec
 
 
 def base_image_transform(image_size: int) -> transforms_v2.Compose:
-    """Resize to image_size and convert to a 0-to-1 CHW tensor, without normalizing.
+    """The transform that resizes to image_size and yields a 0-to-1 (C, H, W) tensor.
 
-    This is the transform the poisoning pipeline requires. image_size is the
-    dataset's native trigger resolution, not 224: the model wrapper does its own
-    upscale to 224, so resizing here would place the trigger on the wrong pixels.
+    image_size is the dataset's native trigger resolution, not 224. The model wrapper
+    does its own upscale, so resizing to 224 here would put the trigger on the wrong
+    pixels.
     """
     transform = transforms_v2.Compose(
         [
@@ -42,7 +38,7 @@ def base_image_transform(image_size: int) -> transforms_v2.Compose:
 
 
 def denormalize(image: torch.Tensor, dataset_name: str) -> torch.Tensor:
-    """Undo normalization for visualization or trigger inspection.
+    """The image back in pixel space, for visualization or trigger inspection.
 
     image is (C, H, W) or (B, C, H, W). The statistics broadcast over both.
     """
@@ -55,10 +51,10 @@ def denormalize(image: torch.Tensor, dataset_name: str) -> torch.Tensor:
     return original_range
 
 
-# EuroSAT ships as one folder of 27000 images with no train and test split, so
-# this project defines one. A fixed permutation keeps it identical across every
-# run and every process, which matters because a checkpoint trained on one split
-# and evaluated on another would silently score itself on its own training data.
+# EuroSAT ships as a single folder of 27000 images with no train and test split,
+# so this project defines the split. A fixed permutation keeps it identical across
+# every run and process, since a checkpoint trained on 1 split and evaluated on
+# another would silently score itself on its own training data.
 EUROSAT_SPLIT_SEED = 0
 EUROSAT_TEST_FRACTION = 0.2
 
@@ -78,11 +74,11 @@ def load_clean_datasets(
     transform: transforms_v2.Compose,
     raw_data_dir: str,
 ) -> tuple[Dataset, Dataset]:
-    """Return (train, test) clean datasets for the given dataset name.
+    """The (train, test) clean datasets for a dataset name.
 
-    transform must not normalize, for the reason the module docstring gives.
-    Tiny ImageNet is read from the ImageFolder layout BackdoorBench writes, where
-    the validation split is already reorganized into per-class folders.
+    transform must not normalize, for the reason the module header gives. Tiny
+    ImageNet is read from the ImageFolder layout BackdoorBench writes, with the
+    validation split already reorganized into per-class folders.
     """
     spec: DatasetSpec = DATASET_REGISTRY[dataset_name]
     root = os.path.join(raw_data_dir, dataset_name)
@@ -133,12 +129,11 @@ def load_clean_datasets(
 def limit_dataset(dataset: Dataset, max_samples: int | None, seed: int) -> Dataset:
     """A reproducible random subset of dataset, or dataset itself when max_samples is None.
 
-    Uses numpy's Generator API, which is isolated from the legacy global
-    np.random state seed_everything seeds, so calling this never perturbs the
-    RNG stream that model init or DataLoader shuffling later draw from. A random
-    subset rather than a first-N slice matters for the ImageFolder-backed loaders
-    (Tiny ImageNet), whose samples are listed sorted by class, so a first-N slice
-    would cover only the first 1 or 2 classes.
+    numpy's Generator API is isolated from the global state seed_everything seeds,
+    so this never perturbs the stream model init or shuffling draw from later. A
+    random subset rather than a first-N slice matters for ImageFolder datasets,
+    whose samples are sorted by class, so a slice would cover only the first 1 or 2
+    classes.
     """
     dataset_size = len(dataset)
     if max_samples is None or max_samples >= dataset_size:
@@ -151,11 +146,10 @@ def limit_dataset(dataset: Dataset, max_samples: int | None, seed: int) -> Datas
 
 
 def extract_labels(dataset: Dataset) -> list[int]:
-    """Read integer labels without decoding image tensors where possible.
+    """The integer labels of a dataset, read without decoding images where possible.
 
-    Decoding every image just to read its label is the slow path the notebook
-    took on Tiny ImageNet, so prefer the label arrays torchvision exposes and
-    fall back to item indexing only when they are absent.
+    Decoding every image to read its label is slow on Tiny ImageNet, so the label
+    arrays torchvision exposes come first and item indexing is the fallback.
     """
     if isinstance(dataset, Subset):
         parent_labels = extract_labels(dataset.dataset)

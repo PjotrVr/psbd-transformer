@@ -1,9 +1,10 @@
-"""Static dataset facts and the tunable parameters of a detection sweep.
+"""Static dataset facts, and the tunable parameters of a detection sweep.
 
-Nothing here reads from disk or holds mutable global state. The registry is the
-single place a dataset's class count, normalization statistics, loader routing,
-and native trigger resolution are written down, so adding a dataset is a one
-entry change.
+DATASET_REGISTRY is the single place a dataset's class count, normalization
+statistics, loader routing and native trigger resolution are written down, so
+adding a dataset is a single entry here plus a loader branch in loading.py.
+RunConfig holds what a detection sweep can vary. Nothing here reads from disk or
+holds mutable state.
 """
 
 import os
@@ -13,31 +14,25 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class DatasetSpec:
-    """Normalization statistics and loader routing for one dataset.
+    """Normalization statistics and loader routing for a dataset.
 
-    image_size is the native resolution pixel space triggers are defined at,
-    which is not the 224 the model itself consumes. The model wrapper upscales
-    from image_size to 224 on its own, so a trigger stamped at image_size lands
-    on the same pixels the attack's paper describes.
+    image_size is the native resolution triggers are defined at, not the 224 the
+    model consumes. The model wrapper upscales on its own, so a trigger stamped at
+    image_size lands on the pixels the attack's paper describes.
     """
 
     num_classes: int
     mean: tuple[float, float, float]
     std: tuple[float, float, float]
-    loader_kind: str  # "cifar10", "cifar100", "gtsrb", or "image_folder"
+    loader_kind: str  # which branch of loading.load_clean_datasets reads it
     image_size: int
 
 
-# GTSRB uses identity normalization because BackdoorBench trains its GTSRB
-# models on unnormalized inputs, so matching that avoids a train/eval mismatch.
-# SVHN and EuroSAT exist in the panel for one reason: a clean-label attack can
-# only poison its target class, so the highest rate it can reach is
-# |target class| / |train set|, which for a balanced K-class dataset is exactly
-# 1/K. CIFAR-100 therefore caps at 1% and Tiny at 0.5% whatever class is chosen,
-# and no amount of compute changes that. Reaching 10% needs 10 classes or fewer.
-# SVHN is imbalanced, so its largest digit class is 18.9% of the training set,
-# and EuroSAT is near-balanced at roughly 11%. Both clear 1%, 5% and 10%.
-# Statistics below are measured on the training split, not copied from a paper.
+# GTSRB uses identity normalization because BackdoorBench trains its GTSRB models
+# on unnormalized inputs, and matching that avoids a train/eval mismatch. SVHN and
+# EuroSAT are in the panel because a clean-label attack can only poison its target
+# class, which caps its rate at |target class| / |train set|. 10 classes is the
+# most that still reaches 10%. Statistics are measured on the training split.
 DATASET_REGISTRY: dict[str, DatasetSpec] = {
     "cifar10": DatasetSpec(
         num_classes=10,
@@ -84,14 +79,11 @@ DATASET_REGISTRY: dict[str, DatasetSpec] = {
 }
 
 
-# Both placements insert FRESH perturbation modules through the position
-# registry. Neither reuses a Dropout torchvision already builds into the
-# transformer, because a trained dropout's inverted-scaling factor was
-# calibrated against the next layer's weights, so reusing it would conflate the
-# model's own regularization with PSBD's probe. pre_residual perturbs each
-# branch's output just before its residual add. post_residual perturbs the
-# stream just after each add, which is the ConvNet placement of the original
-# PSBD paper.
+# pre_residual perturbs each branch's output just before its residual add.
+# post_residual perturbs the stream just after the add, which is the ConvNet
+# placement of the original PSBD paper. Both insert fresh perturbation modules
+# through the position registry rather than reusing a dropout the model already
+# has. models.positions says why.
 DROPOUT_PLACEMENTS = ("pre_residual", "post_residual")
 
 ARCHITECTURES = ("vit", "swin")
@@ -130,7 +122,7 @@ class RunConfig:
     attack_folders: tuple[str, ...] = field(default_factory=tuple)
 
     def results_dir(self) -> str:
-        """Where this sweep's outputs go, one subdirectory per dropout placement."""
+        """Where this sweep's outputs go, a subdirectory per dropout placement."""
         directory = os.path.join(self.results_root, self.dropout_placement)
         return directory
 

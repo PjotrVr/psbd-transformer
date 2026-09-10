@@ -9,7 +9,7 @@ This is the PNG-backed twin of data.splits, which rebuilds a poisoned test set i
 memory from the attack recorded in a checkpoint's args.json. BackdoorBench folders
 carry no args.json, so they come through here instead. The eval-time eligibility
 and labeling questions are the same in both paths, and both answer them with
-attacks.poisoning's eval-time function pair, never the training-time one.
+attacks.poisoning's eval-time function pair, never the training-time pair.
 """
 
 import glob
@@ -84,14 +84,11 @@ def load_backdoor_splits(
     target_label: int,
     num_classes: int,
 ) -> tuple[Dataset, Dataset]:
-    """Return (backdoor_test, clean_counterparts), both filtered to eligible samples.
+    """(backdoor_test, clean_counterparts), both filtered to eligible samples.
 
-    clean_counterparts is index-aligned with backdoor_test: position i in each
-    refers to the same original test image, once with the trigger and once
-    without. Ineligible samples (the ones is_eval_poisonable excludes, for example
-    already-target-class images under all_to_one) are dropped from both, so
-    backdoor_test may be shorter than the full PNG folder, not merely shorter than
-    clean_test_dataset.
+    The 2 are index-aligned: position i in each is the same original test image,
+    with and without the trigger. Samples is_eval_poisonable excludes are dropped
+    from both, so backdoor_test can be shorter than the PNG folder itself.
     """
     backdoor_dir = os.path.join(weights_dir, folder_name, "bd_test_dataset")
     backdoor_paths = sorted(glob.glob(f"{backdoor_dir}/**/*.png", recursive=True))
@@ -122,11 +119,10 @@ def split_validation_and_eval(
     clean_val_size: int,
     seed: int,
 ) -> tuple[Subset, Subset, Subset]:
-    """Carve a clean validation set out of the clean counterparts.
+    """(clean_val, clean_eval, backdoor_eval), with a validation set carved off the clean side.
 
-    The split is stratified by label so the validation quantile threshold sees
-    every class. The backdoor eval set uses the same indices as the clean eval set
-    to preserve the paired alignment.
+    Stratified by label so the validation quantile threshold sees every class. The
+    backdoor eval set reuses the clean eval indices, which keeps the pairing.
     """
     labels = np.array(extract_labels(clean_counterparts))
     indices = np.arange(len(clean_counterparts))
@@ -150,10 +146,9 @@ def balance_by_class(
     examples_per_class: int,
     seed: int,
 ) -> tuple[Subset, Subset]:
-    """Keep a fixed number of examples per clean class for a balanced report.
+    """The 2 eval sets cut to a fixed number of examples per clean class.
 
-    Backdoor evaluation reuses the selected clean indices so the paired alignment
-    survives the balancing step.
+    The backdoor side reuses the selected clean indices so the pairing survives.
     """
     clean_labels = extract_labels(clean_eval)
 

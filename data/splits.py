@@ -9,7 +9,7 @@ The split itself is a plain shuffle of the full clean test set, derived from
 checkpoint of a dataset therefore sees the identical split, and hundreds of
 thousands of cached per-sample tensors are ordered by that one permutation.
 Anything that changes what psbd_split_permutation returns invalidates all of
-them silently, so treat those two lines as frozen.
+them silently, so treat those 2 lines as frozen.
 """
 
 import json
@@ -20,9 +20,6 @@ import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 from torch.utils.data import DataLoader, Dataset, Subset
 
-# The registry returns an attack record with .name, .apply_trigger, .label_mode,
-# and .target_label. The dataset wrappers below read only those 4 fields and do
-# no isinstance check, so the record's defining module does not matter.
 from attacks import apply_config_overrides, build_attack, default_config
 
 from .registry import DATASET_REGISTRY
@@ -40,11 +37,11 @@ REQUIRED_METADATA_KEYS = ("dataset", "attack", "target_label", "architecture")
 
 
 def read_checkpoint_metadata(checkpoint_path: str) -> dict:
-    """Read the args.json training provenance saved alongside the checkpoint.
+    """The args.json training provenance saved alongside a checkpoint.
 
     Raises FileNotFoundError when the sidecar is absent and KeyError when it is
-    present but incomplete, because both cases mean the eval set cannot be
-    rebuilt and guessing would produce a plausible wrong number.
+    incomplete, because either way the eval set cannot be rebuilt and guessing would
+    produce a plausible wrong number.
     """
     args_path = os.path.join(os.path.dirname(checkpoint_path), "args.json")
     if not os.path.exists(args_path):
@@ -106,10 +103,9 @@ def check_label_mode_agrees(
 ) -> None:
     """Fail when the recorded label mode contradicts the one the registry builds.
 
-    The recorded label_mode is written by training and the registry derives one
-    from the attack name. A disagreement means the eval set is being built for a
-    different attack than the one trained, and every number that follows is wrong
-    under a correct-looking label.
+    Training writes label_mode and the registry derives it from the attack name. A
+    disagreement means the eval set is being built for a different attack than was
+    trained, and every number after that is wrong under a correct-looking label.
     """
     recorded_mode = metadata.get("label_mode")
     if metadata["attack"] == "benign" or recorded_mode is None:
@@ -123,13 +119,12 @@ def check_label_mode_agrees(
 
 
 def psbd_split_permutation(n_total: int, seed: int = PSBD_SPLIT_SEED) -> torch.Tensor:
-    """The one permutation the whole PSBD split derives from, shape (n_total,).
+    """The single permutation the whole PSBD split derives from, shape (n_total,).
 
-    seed_everything then torch.randperm as the very first RNG consumption, so a
-    notebook that reloads the same full test set and reruns these two lines
-    recovers exactly which original test index maps to which saved tensor row.
-    This is the single definition both the sweep and any reproduction call, so
-    the two can never drift.
+    seed_everything then torch.randperm as the first RNG consumption, so anything
+    that reloads the same test set and reruns these 2 lines recovers which original
+    test index maps to which saved tensor row. The sweep and every reproduction call
+    this same definition, so they cannot drift.
     """
     seed_everything(seed)
     permutation = torch.randperm(n_total)
@@ -164,8 +159,8 @@ def build_psbd_loaders_from_checkpoint(
     A plain shuffle of the full clean test set, no stratification, no per-class
     balancing: heldout is the first 2000 of the permutation (the clean threshold
     set), analysis is the rest (the paired clean and backdoor analysis pool). 0
-    leakage by construction, since heldout and analysis are disjoint slices of one
-    permutation and the threshold set is clean only.
+    leakage by construction, since heldout and analysis are disjoint slices of a
+    single permutation and the threshold set is clean only.
 
     Every loader is shuffle=False, so row i of any split's saved tensor maps to
     that split's manifest index i with no hidden reordering. The manifest records
@@ -183,7 +178,7 @@ def build_psbd_loaders_from_checkpoint(
     attack_name, target_label = resolve_probe_attack(
         metadata, probe_attack, probe_target_label
     )
-    # A probe attack is chosen here rather than trained, so it takes no override; a
+    # A probe attack is chosen here rather than trained, so it takes no override. A
     # backdoored checkpoint rebuilds the exact trigger it was trained with.
     overrides = (
         metadata.get("attack_config_overrides")
