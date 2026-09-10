@@ -37,6 +37,7 @@ training pool and produce a partition rather than a per-input decision.
 | ibd_psc | Hou et al., ICML 2024 | retained confidence under parameter amplification | the shared split | 6 |
 | teco | Liu et al., CVPR 2023 | spread of corruption hardness thresholds | none | 71 |
 | cd_l | Huang et al., ICLR 2023 | L1 norm of the distilled input mask | none | 251 |
+| beatrix | Ma et al., NDSS 2023 | Gram-matrix deviation from class bands | the shared split, unlabelled | 1 |
 
 PSBD itself is not in this registry. It is scored through defences.inference and
 defences.scores at k forward passes per input.
@@ -49,6 +50,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
+from . import beatrix as beatrix_module
 from . import cd_l as cd_l_module
 from . import confidence as confidence_module
 from . import ibd_psc as ibd_psc_module
@@ -68,6 +70,7 @@ DETECTOR_NAMES: tuple[str, ...] = (
     "ibd_psc",
     "teco",
     "cd_l",
+    "beatrix",
 )
 
 # Buildable by name but outside DETECTOR_NAMES, so no default run, job or sign
@@ -86,6 +89,7 @@ FORWARD_PASSES_PER_INPUT: dict[str, int] = {
     "ibd_psc": ibd_psc_module.DEFAULT_ENSEMBLE_SIZE + 1,
     "teco": len(teco_module.DEFAULT_CORRUPTIONS) * teco_module.MAX_SEVERITY + 1,
     "cd_l": 1 + cd_l_module.DEFAULT_NUM_STEPS * 5 // 2,
+    "beatrix": 1,
 }
 
 # What each method needs from the shared clean validation split. "none" means the
@@ -98,18 +102,21 @@ DATA_REQUIREMENT: dict[str, str] = {
     "ibd_psc": "the clean validation split, labelled",
     "teco": "none",
     "cd_l": "none",
+    "beatrix": "the clean validation split, unlabelled",
 }
 
 # Methods whose build step runs forward passes over the clean validation split
 # before any input is scored. Listed so a caller can report that fixed cost
 # separately from the per-input cost, which is what a deployment would care about.
-NEEDS_FITTING: frozenset[str] = frozenset({"scale_up_data_limited", "ibd_psc"})
+NEEDS_FITTING: frozenset[str] = frozenset(
+    {"scale_up_data_limited", "ibd_psc", "beatrix"}
+)
 
 # Methods that fit per-sample statistics on the validation split and therefore
 # return out-of-fit scores for it (jackknife, leave-one-out or 2 folds) rather
 # than in-sample ones. A threshold set on in-sample scores is too tight, since a
 # sample deviates less from statistics it helped fit.
-CROSS_FITTED: frozenset[str] = frozenset({"scale_up_data_limited"})
+CROSS_FITTED: frozenset[str] = frozenset({"scale_up_data_limited", "beatrix"})
 
 # "autocast" methods run under context.use_bfloat16 like PSBD's own passes. A
 # "float32" method forces full precision for its gradient step whatever the
@@ -128,6 +135,7 @@ PRECISION_POLICY: dict[str, str] = {
     # at hours per checkpoint. The smoke run's bf16 against fp32 pair confirms the
     # choice within 0.02 AUROC or flips this entry to "float32".
     "cd_l": "autocast",
+    "beatrix": "autocast",
 }
 
 # The settings a run's provenance records, so 2 records can be compared for
@@ -159,6 +167,15 @@ DETECTOR_HYPERPARAMETERS: dict[str, dict] = {
         "mask_norm": cd_l_module.MASK_NORM,
         "mask_channels": cd_l_module.MASK_CHANNELS,
         "mask_parameter_init": cd_l_module.MASK_PARAMETER_INIT,
+    },
+    "beatrix": {
+        "powers": list(beatrix_module.PAPER_POWERS),
+        "mad_band": beatrix_module.MAD_BAND,
+        "feature_layer_by_architecture": dict(
+            beatrix_module.FEATURE_LAYER_BY_ARCHITECTURE
+        ),
+        "min_class_samples": beatrix_module.MIN_CLASS_SAMPLES,
+        "jackknife_folds": beatrix_module.JACKKNIFE_FOLDS,
     },
 }
 
@@ -195,6 +212,9 @@ class DetectorContext:
     seed: int = 0
     teco_corruptions: tuple[str, ...] = teco_module.DEFAULT_CORRUPTIONS
     cd_l_steps: int = cd_l_module.DEFAULT_NUM_STEPS
+    # None resolves per architecture, block 9 on ViT and 22 on Swin. The synthetic
+    # fixture's 2-block model needs 1.
+    beatrix_layer: int | None = None
 
 
 def effective_hyperparameters(name: str, context: DetectorContext) -> dict:
@@ -208,6 +228,8 @@ def effective_hyperparameters(name: str, context: DetectorContext) -> dict:
         settings["corruptions"] = list(context.teco_corruptions)
     if name == "cd_l":
         settings["num_steps"] = context.cd_l_steps
+    if name == "beatrix" and context.beatrix_layer is not None:
+        settings["feature_layer"] = context.beatrix_layer
     return settings
 
 
@@ -383,6 +405,52 @@ def _build_cd_l(context: DetectorContext) -> Detector:
     return score
 
 
+def _build_beatrix(context: DetectorContext) -> Detector:
+    validation_loader = _require_validation_loader("beatrix", context)
+    if context.num_classes is None:
+        raise ValueError(
+            "beatrix needs context.num_classes to fit 1 band per predicted class"
+        )
+
+    layer = (
+        context.beatrix_layer
+        if context.beatrix_layer is not None
+        else beatrix_module.default_feature_layer(context.model)
+    )
+    # 1 pass over the split gives the token bank and the predicted labels that
+    # both the bands and the jackknife read, so the split is never forwarded twice.
+    reference_tokens, reference_predicted = beatrix_module.collect_reference_tokens(
+        context.model, validation_loader, context.device, layer, context.use_bfloat16
+    )
+    bands = beatrix_module.fit_class_bands(
+        reference_tokens,
+        reference_predicted,
+        context.num_classes,
+        beatrix_module.PAPER_POWERS,
+        context.device,
+    )
+    # The threshold set is scored out of fit, see jackknife_deviations.
+    validation_scores = beatrix_module.deviation_scores(
+        beatrix_module.jackknife_deviations(
+            reference_tokens,
+            reference_predicted,
+            context.num_classes,
+            beatrix_module.PAPER_POWERS,
+            context.device,
+        )
+    )
+
+    def score(model: nn.Module, loader: DataLoader, device: torch.device):
+        _guard_same_model("beatrix", context.model, model)
+        if loader is context.validation_loader:
+            return validation_scores
+        return beatrix_module.beatrix_scores(
+            model, loader, device, layer, bands, context.use_bfloat16
+        )
+
+    return score
+
+
 def _build_teco(context: DetectorContext) -> Detector:
     def score(model: nn.Module, loader: DataLoader, device: torch.device):
         return teco_module.teco_scores(
@@ -408,6 +476,7 @@ DETECTOR_BUILDERS: dict[str, Callable[[DetectorContext], Detector]] = {
     "ibd_psc": _build_ibd_psc,
     "teco": _build_teco,
     "cd_l": _build_cd_l,
+    "beatrix": _build_beatrix,
 }
 
 
