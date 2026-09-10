@@ -1,46 +1,25 @@
-"""Probe positions for PSBD: WHERE a perturbation is injected inside a network.
+"""Probe positions: where a perturbation is injected inside a network.
 
-The companion module defences.operators owns WHAT a probe does. This module owns
-where it attaches, and knows nothing about the operator it plugs in beyond its
-nn.Dropout-shaped interface. That separation is the central variable of the
-study: the same operator at 2 different positions is 2 different experiments.
+defences.operators owns what a probe does. This module owns where it attaches and
+knows nothing about the operator beyond its nn.Dropout-shaped interface. The same
+operator at 2 positions is 2 different experiments, which is the central variable
+of the study.
 
-Every position is realized the same way, by attaching a fresh, independent
-module at a named submodule boundary through a forward pre-hook or forward hook,
-never by toggling a dropout the model already contains.
+Every position attaches a fresh module at a named submodule boundary through a
+forward pre-hook or forward hook, never by switching on a dropout the model
+already has. A trained dropout's inverted scaling was calibrated against the next
+layer's weights, so reusing it would conflate the model's own regularization with
+the probe. Hooks also mean adding a position never duplicates a block class, and
+removing one is handle.remove() with nothing to restore. activate_model_dropout is
+the deliberate exception, kept to study that conflation.
 
-Why never reuse the model's own dropout. A trained dropout's inverted-scaling
-factor was calibrated during training against the next layer's weights, so
-switching it back on at inference conflates 2 different things: the model's own
-regularization and PSBD's injected noise. Leaving every existing dropout (ViT's
-embedding dropout, both architectures' MLP-internal dropouts, Swin's
-stochastic_depth) at its natural eval identity and inserting separate modules
-keeps the perturbation a clean, single-purpose probe. The one function that
-deliberately breaks this, activate_model_dropout, exists to study the
-conflation itself.
+2 positions cannot be hooks because the tensor they perturb never crosses a module
+boundary: after_attention_residual, the stream between the attention add and its
+2 consumers, and attention_heads, the per-head outputs inside
+F.multi_head_attention_forward. Both use a removable per-instance forward wrapper.
 
-Why forward hooks rather than re-implementing a block's forward. A hook injects
-at a module boundary without copying or knowing the surrounding control flow, so
-adding a position never hand-duplicates a block class, and removing one is just
-handle.remove() with nothing to restore, because the original model was never
-mutated.
-
-Two positions cannot be expressed as a hook, because the tensor they need never
-crosses a module boundary. Both are realized by a removable per-instance forward
-wrapper instead, which still mutates no weights:
-
-  after_attention_residual  the residual stream right after the attention add is
-                            a local variable consumed twice, once by the
-                            MLP-branch norm and once by the second add, with no
-                            module boundary in between. See attach_residual_wrapper.
-  attention_heads           the per-head outputs live inside
-                            F.multi_head_attention_forward, which reads
-                            out_proj.weight directly and never calls out_proj as
-                            a module. See attach_attention_wrapper.
-
-Adding a position is 1 line in the architecture's registry below, plus a comment
-saying what makes that boundary interesting, as long as a pre-hook or post-hook
-can reach it.
+Adding a position is 1 line in the architecture's registry, plus a comment saying
+what makes that boundary interesting.
 """
 
 import functools
@@ -59,7 +38,7 @@ from defences.operators import masked_attention_forward
 
 @dataclass(frozen=True)
 class PositionSpec:
-    """One probe target inside a block, or once at model level.
+    """A probe target: a boundary inside every block, or a single one at model level.
 
     submodule_name is the dotted path to the module whose input (pre) or output
     (post) is perturbed. An empty submodule_name means the unit itself: the block
@@ -108,16 +87,16 @@ class ForwardRestore:
 ProbeHandle = RemovableHandle | ForwardRestore
 
 
-# ViT-B/16 EncoderBlock children: ln_1, self_attention, dropout, ln_2, mlp, one
-# set per each of the 12 blocks. Model-scope entries resolve from the network
-# root instead, which is where ViT's single embedding dropout sits.
+# ViT-B/16 EncoderBlock children: ln_1, self_attention, dropout, ln_2, mlp, a set
+# in each of the 12 blocks. Model-scope entries resolve from the network root
+# instead, which is where ViT's single embedding dropout sits.
 VIT_POSITIONS: dict[str, PositionSpec] = {
     "after_embedding": PositionSpec("encoder.dropout", "pre", scope="model"),
     "before_attention_norm": PositionSpec("ln_1", "pre"),
     "before_attention": PositionSpec("self_attention", "pre"),
     # The per-head outputs never cross a module boundary, so a hook on out_proj
-    # never fires (verified: the model output was bit-identical with one
-    # attached). Reaching the head axis means recomputing attention.
+    # never fires and leaves the output bit-identical. Reaching the head axis
+    # means recomputing attention.
     "attention_heads": PositionSpec("self_attention", "attention"),
     "before_attention_residual": PositionSpec("dropout", "post"),
     "before_mlp_norm": PositionSpec("ln_2", "pre"),
@@ -128,8 +107,8 @@ VIT_POSITIONS: dict[str, PositionSpec] = {
     # the skip untouched.
     "after_attention_residual": PositionSpec("", "residual"),
     "before_mlp": PositionSpec("mlp", "pre"),
-    # mlp.3 receives the 3072-dim post-GELU hidden layer, so one channel there is
-    # exactly one hidden neuron, which is what a structured operator masks.
+    # mlp.3 receives the 3072-dim post-GELU hidden layer, so each channel there is
+    # exactly 1 hidden neuron, which is what a structured operator masks.
     "mlp_neurons": PositionSpec("mlp.3", "pre"),
     "before_mlp_residual": PositionSpec("mlp", "post"),
     "after_mlp_residual": PositionSpec("", "post"),
@@ -142,27 +121,26 @@ VIT_POSITIONS: dict[str, PositionSpec] = {
     "mlp_norm_out": PositionSpec("ln_2", "post"),
     "final_norm_out": PositionSpec("encoder.ln", "post", scope="model"),
     # The raw normalized image, before the Resize wrapper, which is where the
-    # SCALE-UP port acts. Root scope rather than model scope: model scope
-    # resolves against network_core, which is inside the Resize, and SCALE-UP has
-    # to clip at the original resolution.
+    # SCALE-UP port acts. Root scope rather than model scope, since model scope
+    # resolves inside the Resize and SCALE-UP has to clip at the original
+    # resolution.
     "input_pixels": PositionSpec("", "pre", scope="root"),
 }
 
 # Swin-S SwinTransformerBlock (V1) children: norm1, attn, stochastic_depth,
-# norm2, mlp, one set per each of the 24 blocks. after_embedding targets the
+# norm2, mlp, a set in each of the 24 blocks. after_embedding targets the
 # model-level patch-embed Sequential features.0, since no existing dropout sits
 # there the way ViT's embedding dropout does.
 SWIN_POSITIONS: dict[str, PositionSpec] = {
     "after_embedding": PositionSpec("features.0", "post", scope="model"),
     "before_attention_norm": PositionSpec("norm1", "pre"),
     "before_attention": PositionSpec("attn", "pre"),
-    # Hooks attn and mlp directly, NOT stochastic_depth: self.stochastic_depth is
-    # one instance called twice per block (x + stochastic_depth(attn(...)), then
+    # Hooks attn and mlp directly, not stochastic_depth, which is a single
+    # instance called twice per block (x + stochastic_depth(attn(...)), then
     # x + stochastic_depth(mlp(...))), so a hook on it cannot tell which branch
-    # invoked it. Hooking attn and mlp is unambiguous, at the cost of the probe
-    # landing just before stochastic_depth sees the branch output rather than
-    # just after it. That is the only ViT/Swin asymmetry, and stochastic_depth
-    # itself stays untouched.
+    # invoked it. The cost is that the probe lands just before stochastic_depth
+    # sees the branch output rather than just after. That is the only ViT/Swin
+    # asymmetry, and stochastic_depth itself stays untouched.
     "before_attention_residual": PositionSpec("attn", "post"),
     "before_mlp_norm": PositionSpec("norm2", "pre"),
     "after_attention_residual": PositionSpec("", "residual"),
@@ -246,7 +224,7 @@ def plug_dropout(
 
     dropout_factory maps a position name to a constructor taking the rate,
     defaulting any unlisted position to nn.Dropout, so the perturbation kind is
-    overridable per position without touching the plug mechanics. Returns one
+    overridable per position without touching the plug mechanics. Returns a
     handle per attachment (12 or 24 per block-scope position, 1 per model-scope
     position), all removed together by unplug_dropout.
 
@@ -285,23 +263,19 @@ def unplug_dropout(handles: list[ProbeHandle]) -> None:
 def activate_model_dropout(
     model: nn.Module, rate: float
 ) -> list[tuple[nn.Module, float]]:
-    """Switch the model's OWN dropout modules on, returning what to restore.
+    """Switch the model's own dropout modules on, returning what to restore.
 
-    Everything else in this file deliberately avoids touching the model's own
-    dropouts, because a trained dropout's scaling was calibrated against the next
-    layer's weights and reusing it conflates the model's regularization with
-    PSBD's probe. This function exists to study exactly that conflation: what
-    PSBD measures on a model whose own dropout is live, with the probe stacked on
-    top.
+    The rest of the module never touches the model's own dropouts, because a
+    trained dropout's scaling was calibrated against the next layer's weights and
+    reusing it conflates the model's regularization with the probe. This is the
+    deliberate exception, for studying that conflation: what PSBD measures when the
+    probe is stacked on live model dropout.
 
-    Skips *.encoder.dropout for the same reason the position registry treats it
-    separately: it is the embedding dropout applied once before the block stack,
-    not a per-block placement, so including it would change the depth profile of
-    the disturbance rather than its magnitude.
-
-    Removal compounds. A probe at p_probe on top of a model dropout at p_model
-    leaves (1 - p_model)(1 - p_probe) alive, so the nominal probe rate no longer
-    describes the disturbance and only measured shift ratio does.
+    *.encoder.dropout is skipped because it is the embedding dropout, applied once
+    before the block stack, so including it would change the depth profile of the
+    disturbance rather than its magnitude. Removal compounds: a probe at p_probe on
+    top of model dropout at p_model leaves (1 - p_model)(1 - p_probe) alive, so only
+    the measured shift ratio describes the disturbance.
     """
     restore: list[tuple[nn.Module, float]] = []
     for name, module in model.named_modules():
@@ -334,17 +308,15 @@ def resolve_targets(
     block_types: tuple[type, ...],
     block_range: tuple[int, int] | None = None,
 ) -> list[nn.Module]:
-    """Every module a position attaches to: one per block, or one at model level.
+    """Every module a position attaches to, in each block or a single one at model level.
 
     block_range restricts a block-scope position to a contiguous span of blocks,
     1-indexed and inclusive, matching the layer numbering the latent analysis uses
-    (block 1 produces layer-1 features). None means every block, the default.
+    (block 1 produces layer-1 features). None means every block.
 
-    The restriction exists because where a trigger's backdoor direction reaches the
-    CLS token is attack-dependent: measured on CIFAR-10 ViT, blend arrives by layer
-    5 and a static patch trigger not until layer 9. Perturbing all 12 blocks cannot
-    distinguish "this position matters" from "this depth matters", and those are
-    different claims.
+    The restriction exists because the depth at which a trigger's backdoor
+    direction reaches the CLS token depends on the attack, and perturbing every
+    block cannot separate "this position matters" from "this depth matters".
     """
     if spec.scope == "root":
         if block_range is not None:
@@ -422,9 +394,9 @@ def _attach_probe(
 def _make_pre_hook(probe: nn.Module) -> Callable:
     """Perturb a module's positional input before it runs.
 
-    When several positional args are the same tensor object (ViT's
-    self_attention receives x as q, k, and v), one mask is drawn and shared, so
-    q, k, and v stay identical after perturbation.
+    When several positional args are the same tensor object (ViT's self_attention
+    receives x as q, k and v), a single mask is drawn and shared, so all 3 stay
+    identical after perturbation.
     """
 
     def pre_hook(module, args):
@@ -482,10 +454,10 @@ def attach_attention_wrapper(
 ) -> ForwardRestore:
     """Swap in the attention forward that exposes the head axis.
 
-    The second position a hook cannot express, for the same reason as the
-    residual one: the per-head outputs are a local inside
-    F.multi_head_attention_forward and never cross a module boundary. Mutates no
-    weights, so remove() restores the loaded model exactly.
+    The second position a hook cannot express, for the same reason as the residual
+    wrapper: the per-head outputs are a local inside F.multi_head_attention_forward
+    and never cross a module boundary. Mutates no weights, so remove() restores the
+    loaded model exactly.
     """
     probe = dropout_factory(rate)
     probe.train()
@@ -499,7 +471,7 @@ def _vit_post_attention_residual_forward(
 ):
     """EncoderBlock.forward with the probe on the stream after the attention add.
 
-    Mirrors torchvision's EncoderBlock.forward exactly except for the one probe
+    Mirrors torchvision's EncoderBlock.forward exactly except for the single probe
     call. The MLP-branch add is left alone: after_mlp_residual is a plain
     post-hook on the block, so plugging both positions composes into the full
     post-residual placement without either mechanism knowing about the other.

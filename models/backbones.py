@@ -34,18 +34,13 @@ MODEL_INPUT_SIZE = 224
 def build_vit(
     num_classes: int, dropout: float = 0.0, attention_dropout: float = 0.0
 ) -> nn.Module:
-    """ViT-B/16 with an ImageNet head replaced by a fresh num_classes head.
+    """ViT-B/16 with the ImageNet head replaced by a fresh num_classes head.
 
-    dropout defaults to 0.0, which is both torchvision's default and PSBD's
-    requirement: the paper trains "following the standard training procedure,
-    which excludes the use of dropout" and then applies dropout only at inference.
-    Every checkpoint in this project so far was built at 0.0.
-
-    The arguments exist to test that requirement rather than assume it. A model
-    trained with dropout has already been regularized against the single-path
-    dependence PSBD's neuron-bias mechanism relies on, so detection should degrade
-    if the mechanism is real and hold if it is not. Dropout carries no parameters,
-    so the pretrained weights load unchanged at any value.
+    dropout defaults to 0.0, which is torchvision's default and PSBD's requirement:
+    the paper trains without dropout and applies it only at inference, and every
+    checkpoint in this project was built that way. The arguments exist to test the
+    requirement rather than assume it. Dropout carries no parameters, so the
+    pretrained weights load unchanged at any value.
     """
     network = vit_b_16(
         weights=ViT_B_16_Weights.IMAGENET1K_V1,
@@ -80,20 +75,13 @@ ARCHITECTURE_BUILDERS: dict[str, Callable[[int], nn.Module]] = {
 def load_checkpoint(
     architecture: str, checkpoint_path: str, device: torch.device, strict: bool = True
 ) -> nn.Module:
-    """Build the named architecture and load a checkpoint's weights into it.
+    """The named architecture with a checkpoint's weights loaded, on device, in eval mode.
 
-    Returns the model on device, in eval mode.
-
-    strict is on by default and that is load-bearing. Both builders start from
-    ImageNet-pretrained weights, so a key mismatch under strict=False leaves a
-    fully functional ImageNet backbone with a randomly initialized head. Every
-    downstream tool then runs happily on a model that has no backdoor at all, and
-    the only symptom is a count printed to a log nobody reads. Failing loudly is
-    the difference between a crashed job and a plausible wrong number.
-
-    strict=False stays available for BackdoorBench checkpoints, whose key layout
-    predates this repo's Sequential(Resize, network) wrapper, but a caller has to
-    ask for it.
+    strict defaults on and that is load-bearing. Both builders start from ImageNet
+    weights, so a key mismatch under strict=False leaves a working ImageNet backbone
+    with a random head, and every downstream tool runs happily on a model with no
+    backdoor in it. strict=False stays available for BackdoorBench checkpoints,
+    whose key layout predates the Sequential(Resize, network) wrapper.
     """
     if architecture not in ARCHITECTURE_BUILDERS:
         raise ValueError(f"Unknown architecture: {architecture}")
@@ -122,18 +110,17 @@ def load_checkpoint(
     return loaded_model
 
 
-# ViT's wrapped vit_b_16 and Swin's wrapped swin_s have structurally distinct
-# state_dict key substrings, so a checkpoint's own weights identify its
-# architecture even when a folder name gives no hint (or an untrustworthy one).
+# The 2 backbones have distinct state_dict key substrings, so a checkpoint's own
+# weights identify its architecture when the folder name does not.
 VIT_STATE_DICT_MARKERS = ("conv_proj", "class_token", "encoder.layers.encoder_layer_")
 SWIN_STATE_DICT_MARKERS = ("features.",)
 
 
 def detect_architecture(checkpoint_path: str) -> str:
-    """Identify a checkpoint's architecture from its state_dict keys alone.
+    """The architecture a checkpoint's state_dict keys identify.
 
-    Raises when the keys match both marker sets or neither, because a checkpoint
-    that cannot be identified must not be silently loaded as a guess.
+    Raises when the keys match both marker sets or neither, since a checkpoint that
+    cannot be identified must not be loaded as a guess.
     """
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     keys = list(checkpoint.get("model", checkpoint).keys())
@@ -151,10 +138,10 @@ def detect_architecture(checkpoint_path: str) -> str:
 
 
 def network_core(model: nn.Module) -> nn.Module:
-    """Return the classifier network inside the Sequential(Resize, network) wrapper.
+    """The classifier network inside the Sequential(Resize, network) wrapper.
 
-    Dotted module paths resolve from here, not from the wrapper, whose only
-    children are the Resize and the network itself.
+    Dotted module paths resolve from here, not from the wrapper, whose only children
+    are the Resize and the network.
     """
     if isinstance(model, nn.Sequential):
         return model[1]
