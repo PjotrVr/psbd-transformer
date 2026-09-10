@@ -71,6 +71,12 @@ def shift_key(target: float) -> str:
 # literal outside this module.
 PLACEMENT_MATCH_TARGET = 0.6
 
+# The 2 placements every comparison names. configs/psbd_basis.json declares the
+# same 2 by note. tests/test_canon.py holds the 2 declarations together, so a
+# command that pins "the recommended configuration" cannot drift from the basis.
+RECOMMENDED_PLACEMENT = "before_attention_norm_token_mask"
+PUBLISHED_PLACEMENT = "post_residual"
+
 
 def threshold_at_quantile(validation_psu: torch.Tensor, quantile: float) -> float:
     """The detection threshold: a low quantile of clean validation PSU.
@@ -145,7 +151,7 @@ def threshold_diagnostics(
     tie_share_at_threshold is the fraction of validation scores equal to the
     threshold, within float32 resolution. tpr_interpolated is the true positive
     rate read off the ROC curve of the paired clean and backdoor scores at a false
-    positive rate equal to the quantile, which a tie cannot zero out. Both are
+    positive rate equal to the quantile, which a tie cannot drive to 0. Both are
     reported beside the quantile rule, never instead of it, since the quantile
     rule is the deployable one.
     """
