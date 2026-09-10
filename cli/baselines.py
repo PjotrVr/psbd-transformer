@@ -73,6 +73,7 @@ from detectors import (
     build_detector,
     effective_hyperparameters,
     effective_precision,
+    fitted_settings,
 )
 from detectors.records import (
     STATUS_FAILED,
@@ -294,15 +295,19 @@ def check_scores(name: str, split: str, scores: torch.Tensor, expected: int) -> 
 
 def score_detector(
     name: str, case: ScoringCase, device: torch.device
-) -> tuple[dict[str, torch.Tensor], dict[str, float]]:
-    """Per-split scores of 1 detector, each (n_split,), and the seconds each took.
+) -> tuple[dict[str, torch.Tensor], dict[str, float], dict]:
+    """Per-split scores of 1 detector, each (n_split,), the seconds each took, and
+    the settings the fit chose.
 
     Fitting happens inside build_detector and is timed under the "fit" key, so
     the fixed cost a deployment pays once is separable from the per-input cost.
+    The fitted settings (IBD-PSC's layer count, the calibrated omega) come back
+    so the record says what was run rather than what was allowed.
     """
     started = time.perf_counter()
     detector = build_detector(name, case.context)
     runtimes = {"fit": time.perf_counter() - started}
+    fitted = fitted_settings(detector)
 
     scores = {}
     for split in SPLITS:
@@ -312,7 +317,7 @@ def score_detector(
         check_scores(name, split, values, len(case.loaders[split].dataset))
         scores[split] = values.detach().cpu().float()
 
-    return scores, runtimes
+    return scores, runtimes, fitted
 
 
 def detection_blocks(
@@ -371,6 +376,7 @@ def build_record(
     case: ScoringCase,
     scores: dict[str, torch.Tensor],
     runtimes: dict[str, float],
+    fitted: dict,
     args: argparse.Namespace,
     device: torch.device,
 ) -> dict:
@@ -404,7 +410,10 @@ def build_record(
             "data_requirement": DATA_REQUIREMENT[name],
             "needs_fitting": name in NEEDS_FITTING,
             "cross_fitted": name in CROSS_FITTED,
-            "hyperparameters": effective_hyperparameters(name, case.context),
+            "hyperparameters": {
+                **effective_hyperparameters(name, case.context),
+                **fitted,
+            },
             "runtime_seconds": runtimes,
             "split": {
                 "seed": case.manifest["seed"],
@@ -487,8 +496,10 @@ def main() -> int:
         summaries = []
         for name in pending:
             try:
-                scores, runtimes = score_detector(name, case, device)
-                record = build_record(name, case, scores, runtimes, args, device)
+                scores, runtimes, fitted = score_detector(name, case, device)
+                record = build_record(
+                    name, case, scores, runtimes, fitted, args, device
+                )
                 write_scored(args, name, case, scores, record)
             except Exception as error:
                 traceback.print_exc()

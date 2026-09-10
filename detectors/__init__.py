@@ -35,6 +35,7 @@ training pool and produce a partition rather than a per-input decision.
 | scale_up | Guo et al., ICLR 2023 | label consistency under pixel amplification | none | 6 |
 | scale_up_data_limited | Guo et al., ICLR 2023 | the same, standardized per class | the shared split | 6 |
 | ibd_psc | Hou et al., ICML 2024 | retained confidence under parameter amplification | the shared split | 6 |
+| ibd_psc_calibrated | Hou et al., ICML 2024, omega searched | the same at the smallest omega Algorithm 1 accepts | the shared split | 6 |
 | teco | Liu et al., CVPR 2023 | spread of corruption hardness thresholds | none | 71 |
 | cd_l | Huang et al., ICLR 2023 | L1 norm of the distilled input mask | none | 251 |
 | beatrix | Ma et al., NDSS 2023 | Gram-matrix deviation from class bands | the shared split, unlabelled | 1 |
@@ -72,6 +73,7 @@ DETECTOR_NAMES: tuple[str, ...] = (
     "scale_up",
     "scale_up_data_limited",
     "ibd_psc",
+    "ibd_psc_calibrated",
     "teco",
     "cd_l",
     "beatrix",
@@ -93,6 +95,7 @@ FORWARD_PASSES_PER_INPUT: dict[str, int] = {
     "scale_up": len(scale_up_module.PAPER_SCALES) + 1,
     "scale_up_data_limited": len(scale_up_module.PAPER_SCALES) + 1,
     "ibd_psc": ibd_psc_module.DEFAULT_ENSEMBLE_SIZE + 1,
+    "ibd_psc_calibrated": ibd_psc_module.DEFAULT_ENSEMBLE_SIZE + 1,
     "teco": len(teco_module.DEFAULT_CORRUPTIONS) * teco_module.MAX_SEVERITY + 1,
     "cd_l": 1 + cd_l_module.DEFAULT_NUM_STEPS * 5 // 2,
     "beatrix": 1,
@@ -109,6 +112,7 @@ DATA_REQUIREMENT: dict[str, str] = {
     "scale_up": "none",
     "scale_up_data_limited": "the clean validation split, labelled",
     "ibd_psc": "the clean validation split, labelled",
+    "ibd_psc_calibrated": "the clean validation split, labelled",
     "teco": "none",
     "cd_l": "none",
     "beatrix": "the clean validation split, unlabelled",
@@ -123,7 +127,14 @@ DATA_REQUIREMENT: dict[str, str] = {
 # before any input is scored. Listed so a caller can report that fixed cost
 # separately from the per-input cost, which is what a deployment would care about.
 NEEDS_FITTING: frozenset[str] = frozenset(
-    {"scale_up_data_limited", "ibd_psc", "beatrix", "ted", "sentinet"}
+    {
+        "scale_up_data_limited",
+        "ibd_psc",
+        "ibd_psc_calibrated",
+        "beatrix",
+        "ted",
+        "sentinet",
+    }
 )
 
 # Methods that fit per-sample statistics on the validation split and therefore
@@ -145,6 +156,7 @@ PRECISION_POLICY: dict[str, str] = {
     "scale_up": "autocast",
     "scale_up_data_limited": "autocast",
     "ibd_psc": "autocast",
+    "ibd_psc_calibrated": "autocast",
     "teco": "autocast",
     # bf16 forward and backward with the mask, Adam state and objective in
     # float32. Full precision without TF32 runs 5 to 8 times slower and puts CD-L
@@ -171,6 +183,11 @@ DETECTOR_HYPERPARAMETERS: dict[str, dict] = {
     },
     "ibd_psc": {
         "scaling_factor": ibd_psc_module.DEFAULT_SCALING_FACTOR,
+        "ensemble_size": ibd_psc_module.DEFAULT_ENSEMBLE_SIZE,
+        "error_threshold": ibd_psc_module.DEFAULT_ERROR_THRESHOLD,
+    },
+    "ibd_psc_calibrated": {
+        "scaling_factors": list(ibd_psc_module.CALIBRATION_FACTORS),
         "ensemble_size": ibd_psc_module.DEFAULT_ENSEMBLE_SIZE,
         "error_threshold": ibd_psc_module.DEFAULT_ERROR_THRESHOLD,
     },
@@ -273,6 +290,17 @@ def effective_hyperparameters(name: str, context: DetectorContext) -> dict:
         settings["reduction"] = context.ted_reduction
     if name == "sentinet":
         settings["overlays"] = context.sentinet_overlays
+    return settings
+
+
+def fitted_settings(detector: Detector) -> dict:
+    """The data-dependent settings a builder chose while fitting, empty for most.
+
+    IBD-PSC's Algorithm 1 picks the layer count k from the clean split, and the
+    calibrated variant also picks omega, so a record has to carry what was run
+    rather than only the ladder it was allowed to choose from.
+    """
+    settings = dict(getattr(detector, "fitted_settings", {}))
     return settings
 
 
@@ -420,7 +448,7 @@ def _build_ibd_psc(context: DetectorContext) -> Detector:
 
     def score(model: nn.Module, loader: DataLoader, device: torch.device):
         _guard_same_model("ibd_psc", context.model, model)
-        return ibd_psc_module.ibd_psc_scores(
+        scores = ibd_psc_module.ibd_psc_scores(
             model,
             loader,
             device,
@@ -430,7 +458,47 @@ def _build_ibd_psc(context: DetectorContext) -> Detector:
             ibd_psc_module.DEFAULT_ENSEMBLE_SIZE,
             context.use_bfloat16,
         )
+        return scores
 
+    score.fitted_settings = {"start_layer_count": start_layer_count}
+    return score
+
+
+def _build_ibd_psc_calibrated(context: DetectorContext) -> Detector:
+    validation_loader = _require_validation_loader("ibd_psc_calibrated", context)
+
+    ordered_layers = ibd_psc_module.amplifiable_norm_layers(context.model)
+    scaling_factor, start_layer_count, trace = ibd_psc_module.calibrate_scaling_factor(
+        context.model,
+        validation_loader,
+        context.device,
+        ordered_layers,
+        ibd_psc_module.CALIBRATION_FACTORS,
+        ibd_psc_module.DEFAULT_ERROR_THRESHOLD,
+        context.use_bfloat16,
+    )
+
+    def score(model: nn.Module, loader: DataLoader, device: torch.device):
+        _guard_same_model("ibd_psc_calibrated", context.model, model)
+        scores = ibd_psc_module.ibd_psc_scores(
+            model,
+            loader,
+            device,
+            ordered_layers,
+            start_layer_count,
+            scaling_factor,
+            ibd_psc_module.DEFAULT_ENSEMBLE_SIZE,
+            context.use_bfloat16,
+        )
+        return scores
+
+    score.fitted_settings = {
+        "scaling_factor": scaling_factor,
+        "start_layer_count": start_layer_count,
+        "crossed_error_threshold": bool(
+            trace and trace[-1] > ibd_psc_module.DEFAULT_ERROR_THRESHOLD
+        ),
+    }
     return score
 
 
@@ -623,6 +691,7 @@ DETECTOR_BUILDERS: dict[str, Callable[[DetectorContext], Detector]] = {
     "beatrix": _build_beatrix,
     "ted": _build_ted,
     "sentinet": _build_sentinet,
+    "ibd_psc_calibrated": _build_ibd_psc_calibrated,
 }
 
 

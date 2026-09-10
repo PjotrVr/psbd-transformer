@@ -79,6 +79,8 @@ Further deviations, each smaller than the substitution above:
 
 `amplifiable_norm_layers` reverses definition order, matching the released code's `list(reversed(range(layer_num)))`, so element 0 is the layer nearest the head. Definition order equals execution order for torchvision's ViT-B/16 and Swin-S, so the reversal really is depth ordering here. That would not hold for an architecture that declares its modules out of forward order, which is a latent assumption the released code shares and the port inherits rather than fixes.
 
+**The calibrated variant.** The smoke of 2026-09-10 (`docs/runs/2026-09-10-detector-smoke.md`) showed the substitution above is not enough on its own. At the paper's $\omega = 1.5$ a 99%-accurate GTSRB ViT keeps its predictions through every amplified LayerNorm, Algorithm 1 never crosses $\xi$, $k$ falls back to $L$, and every input, clean or poisoned, retains its label at probability 1, so the AUROC is 0.506 with 31% of the validation scores tied at the threshold. `ibd_psc_calibrated` runs Algorithm 1 at each $\omega$ in `CALIBRATION_FACTORS`, 1.5, 2, 3, 5 and 8, and scores at the first $\omega$ whose trace crosses $\xi$, recording the chosen $\omega$ and $k$ in the run's `hyperparameters` under `scaling_factor` and `start_layer_count`. A model the paper's setting already breaks is scored exactly as `ibd_psc` scores it, since 1.5 is tried first. Both names run on the panel, the faithful port so the paper's own setting is on record and the calibrated one so the method gets the amplification its mechanism needs on this architecture.
+
 ## Hyperparameters
 
 | Symbol | Paper default | This port | Constant name |
@@ -89,6 +91,7 @@ Further deviations, each smaller than the substitution above:
 | $T$, detection threshold | 0.9 | recorded, unused, the registry's quantile rule replaces it | `DEFAULT_DETECTION_THRESHOLD` |
 | $L$, amplifiable layer count | count of `BatchNorm2d`, architecture-dependent | count of affine `LayerNorm`, 25 on ViT-B/16, 53 on Swin-S | computed by `amplifiable_norm_layers` |
 | clean reference budget | 100 per Section 5.1 | the shared 2000-sample split | none, see deviation 4 |
+| `CALIBRATION_FACTORS` | not in the paper | 1.5, 2, 3, 5, 8 | `ibd_psc_calibrated` only, the paper's value first |
 
 ## Cost
 
@@ -121,6 +124,8 @@ A low score says the amplified ensemble stopped agreeing with the unamplified mo
 The paper's own adaptive section reports 2 designs that push IBD-PSC toward failure, and both cost the attacker. Design 1 reduces IBD-PSC's worst-case AUROC to 0.819, still well above chance, a partial rather than a full break (Hou et al., Section 5.4). Design 2 defeats the detector more completely but does so by collapsing the model's own benign accuracy to 0.101, which is a broken model rather than a usable attack, the same shape TeCo's own adaptive attack takes when it costs 40 points of clean accuracy to evade. Neither of the paper's own adaptive designs is a free evasion in the way STRIP's or SCALE-UP's are.
 
 The project's own theoretical framework predicts a 3rd failure mode that has not yet been run as a training experiment. `docs/attack-design/A5-low-confidence-backdoor.md` argues that amplifying $\gamma$ and $\beta$ breaks a thin decision margin as easily as it breaks a clean one, since the mechanism the paper relies on, inflating a close comparison until it flips, does not distinguish why the comparison was close. That analysis predicts an AUROC below 0.55 for IBD-PSC against a backdoor deliberately trained at low confidence, and it is a prediction rather than a measurement, carrying the same caveat as the identical claim in `docs/detectors/confidence.md`, that the document's own PSBD conclusion needed a later correction (A21) even though the IBD-PSC row itself was not the part corrected.
+
+The smoke of 2026-09-10 measured the saturation the calibrated variant exists for: on `vit_gtsrb_badnet_a2o_0_05` at $\omega = 1.5$ every backdoor score is exactly $-1$ and the clean scores average $-0.98$ on both the 500-image and the full 2000-image split, so the detector reads 0.481 and 0.506. On `vit_gtsrb_blend_0_05` the same setting reads 0.970, which says the amplification does bite on a model whose clean margins are thinner, and that the failure is a scale mismatch rather than a wrong sign. The table with every number is in `docs/runs/2026-09-10-detector-smoke.md`.
 
 Algorithm 1's selected $k$ is itself worth reading alongside the AUROC. `docs/attack-design/A1-operating-point-and-threshold.md` notes that Algorithm 1 picks $k$ from the clean top-1 error rate crossing $\xi$, so sharpening a model's clean confidence raises the amplification needed to break its predictions, which pushes $k$ upward and, on an architecture with a limited layer budget, can leave fewer than $n$ members available once the ensemble clamp at deviation 3 applies. A $k$ landing at 1 or at $L$ on a given checkpoint is a sign the amplification scale was mismatched to that model rather than evidence about the backdoor.
 

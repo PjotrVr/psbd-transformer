@@ -25,13 +25,14 @@ This page is the entry point into the registry, `detectors/__init__.py`'s own do
 | `scale_up` | Guo et al., ICLR 2023 | label consistency under pixel amplification | none | 6 | autocast | cheap |
 | `scale_up_data_limited` | Guo et al., ICLR 2023 | the same, standardized per predicted class | the shared split, labelled | 6 | autocast | cheap |
 | `ibd_psc` | Hou et al., ICML 2024 | retained confidence under parameter amplification | the shared split, labelled | 6 | autocast | cheap |
+| `ibd_psc_calibrated` | Hou et al., ICML 2024, omega searched upward | the same at the smallest omega whose Algorithm 1 crosses xi | the shared split, labelled | 6 | autocast | cheap |
 | `teco` | Liu et al., CVPR 2023 | spread of corruption hardness thresholds | none | 71 | autocast | teco |
 | `cd_l` | Huang et al., ICLR 2023 | L1 norm of the distilled input mask | none | 251 | autocast, bfloat16 forward and backward with the mask, Adam state and objective in float32, contingent on a smoke pair against float32 | cd_l |
 | `beatrix` | Ma et al., NDSS 2023 | Gram-matrix deviation from class bands | the shared split, unlabelled | 1 | autocast | cheap |
 | `ted` | Mo et al., IEEE S&P 2024 | outlier rank trajectory over depth | the shared split, labelled | 1 | autocast | cheap |
 | `sentinet` | Chou et al., S&P Workshops 2020 | residual above the clean (avgConf, fooled) envelope | 100 images plus the split | 202 | autocast | sentinet |
 
-This is `DETECTOR_NAMES` as `detectors/__init__.py` declares it, 10 entries. `bad_expert` is registered under `EXPERIMENTAL_DETECTOR_NAMES` once its smoke run has fixed its settings and never joins a default run or a job until then.
+This is `DETECTOR_NAMES` as `detectors/__init__.py` declares it, 11 entries. `ibd_psc_calibrated` is the 1 registered variant of a faithful port, added after the smoke of 2026-09-10 showed the paper's amplification factor leaves a ViT's predictions intact (`ibd_psc.md`). `bad_expert` is registered under `EXPERIMENTAL_DETECTOR_NAMES` once its smoke run has fixed its settings and never joins a default run or a job until then.
 
 ## Clean-data budgets
 

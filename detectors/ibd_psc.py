@@ -71,6 +71,13 @@ Further deviations, each recorded in full in docs/detectors/ibd_psc.md:
   5. Amplified parameters are written in place and restored from saved clones,
      which is exact and allocates no second model. The released code deep-copies
      the model once per ensemble member per batch.
+  6. A calibrated variant, registered as ibd_psc_calibrated, searches omega
+     upward over CALIBRATION_FACTORS until Algorithm 1 finds a depth whose clean
+     error crosses xi, then scores at that omega. The paper's omega of 1.5 on a
+     ViT's LayerNorm leaves a 99%-accurate model's predictions intact through
+     every amplified layer, so k lands at L and every score saturates at the
+     retained probability 1 (docs/runs/2026-09-10-detector-smoke.md). The
+     faithful port stays as ibd_psc and both are recorded.
 """
 
 from contextlib import contextmanager
@@ -86,6 +93,9 @@ DEFAULT_SCALING_FACTOR = 1.5  # omega
 DEFAULT_ENSEMBLE_SIZE = 5  # n
 DEFAULT_ERROR_THRESHOLD = 0.6  # xi
 DEFAULT_DETECTION_THRESHOLD = 0.9  # T, unused here since scoring is threshold-free
+# The omega ladder of the calibrated variant, the paper's value first so a model
+# the paper's setting already breaks is scored exactly as ibd_psc scores it.
+CALIBRATION_FACTORS = (1.5, 2.0, 3.0, 5.0, 8.0)
 
 
 def amplifiable_norm_layers(model: nn.Module) -> list[nn.LayerNorm]:
@@ -212,6 +222,45 @@ def select_start_layer_count(
     # that never breaks is L. The released code instead returns None here and
     # crashes on the next call.
     return total_layers, error_rates
+
+
+def calibrate_scaling_factor(
+    model: nn.Module,
+    validation_loader: DataLoader,
+    device: torch.device,
+    ordered_layers: list[nn.LayerNorm],
+    factors: tuple[float, ...] = CALIBRATION_FACTORS,
+    error_threshold: float = DEFAULT_ERROR_THRESHOLD,
+    use_bfloat16: bool = True,
+) -> tuple[float, int, list[float]]:
+    """The smallest omega at which Algorithm 1 crosses xi, with its k and error trace.
+
+    Algorithm 1 assumes the amplification is strong enough that some depth
+    breaks the clean predictions. When no depth does, k falls back to L and the
+    ensemble scores an almost unamplified model, so every input retains its
+    label and the detector reads chance. The search runs Algorithm 1 at each
+    factor in order and stops at the first whose final error rate exceeds xi.
+    When none does, the last factor is returned with k = L, which a caller can
+    detect from the trace.
+    """
+    trace: list[float] = []
+    start_layer_count = len(ordered_layers)
+    chosen = factors[-1]
+    for factor in factors:
+        start_layer_count, trace = select_start_layer_count(
+            model,
+            validation_loader,
+            device,
+            ordered_layers,
+            factor,
+            error_threshold,
+            use_bfloat16,
+        )
+        crossed = trace[-1] > error_threshold
+        if crossed:
+            chosen = factor
+            break
+    return chosen, start_layer_count, trace
 
 
 @torch.inference_mode()

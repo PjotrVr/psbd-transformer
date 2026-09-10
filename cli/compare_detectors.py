@@ -605,7 +605,7 @@ def rewrite_results_block(path: str, body: list[str]) -> None:
 
 
 # Detectors documented in 1 file share its results block.
-DOC_OF = {"scale_up_data_limited": "scale_up"}
+DOC_OF = {"scale_up_data_limited": "scale_up", "ibd_psc_calibrated": "ibd_psc"}
 
 
 def per_detector_blocks(cells, columns, values, args) -> dict[str, list[str]]:
