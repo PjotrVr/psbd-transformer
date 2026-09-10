@@ -1,19 +1,22 @@
-"""PSBD dropout-position sweep for one (checkpoint, position-config), all 9 rates.
+"""Stage 1 of PSBD: the GPU sweep over rates for a (checkpoint, position) pair.
 
-One invocation is the atomic unit of work: a single checkpoint, a single
-position-config, sweeping the 9 dropout rates internally over one loaded model
-and one baseline cache. The outer grid over checkpoints and position-configs is
-flattened into separate PBS jobs (pbs/generate_psbd_jobs.py), so many single-GPU
-jobs run concurrently rather than one long serial job.
+A single invocation is the unit of work: a checkpoint and a position-config, with
+the 9 dropout rates swept over a single loaded model and baseline cache. The outer
+grid over checkpoints and positions is flattened into separate PBS jobs by the
+generators in pbs/, so many single-GPU jobs run concurrently.
 
-Stage 1 only: this writes the raw per-pass probabilities, the per-pass argmax
-classes, and the baseline to disk (defences.cache). Threshold, TPR, FPR, AUROC, and
-the shift ratio are a separate cheap CPU step (cli.analyze) that reads those back,
-so this script never touches the GPU for anything but forward passes.
+This writes the raw per-pass probabilities, the per-pass argmax classes and the
+baseline to disk (defences.cache) and computes no metric. Threshold, TPR, FPR,
+AUROC and the shift ratio are cli.analyze's job, a cheap CPU step that reads those
+tensors back.
 
 A benign checkpoint has no attack of its own, so probing it needs --probe-attack
-to name the trigger. That is the sweep's negative control and chance-level
+to name the trigger. That is the sweep's negative control, and chance-level
 detection is the expected result.
+
+Example
+    python -m cli.sweep --checkpoint-folder vit_cifar10_badnet_a2o_0_1 \
+        --position-config before_attention_norm --perturbation token_mask
 """
 
 import argparse
@@ -136,10 +139,9 @@ def parse_args() -> argparse.Namespace:
         metavar=("FIRST", "LAST"),
         help=(
             "restrict a block-scope position to blocks FIRST..LAST, 1-indexed and "
-            "inclusive. Where a trigger's backdoor direction reaches the CLS token "
-            "is attack-dependent (blend by layer 5, a static patch not until 9), so "
-            "perturbing all 12 blocks cannot separate 'this position matters' from "
-            "'this depth matters'."
+            "inclusive. The depth at which a trigger's backdoor direction reaches "
+            "the CLS token depends on the attack, so perturbing every block cannot "
+            "separate 'this position matters' from 'this depth matters'."
         ),
     )
     parser.add_argument(
@@ -168,15 +170,15 @@ def cache_config_name(
     """The results/ subfolder name for one placement.
 
     A band-restricted run is a different measurement from the same position applied
-    to every block, so it needs its own folder. Without the suffix the two would
+    to every block, so it needs its own folder. Without the suffix the 2 would
     write the same rate_<tag>_<split>.pt filenames and the second run would
     silently overwrite the first.
 
     The same applies to the perturbation operator and to the Monte Carlo pass
     count. PSU is an expectation over k passes, so a k=20 cache is a different
-    measurement from a k=3 one at the same (position, operator, rate). Without k
-    in the name the two collide, and worse, --skip-existing would find the k=3
-    files and skip the k=20 work while reporting success.
+    measurement from a k=3 cache at the same (position, operator, rate). Without k
+    in the name the 2 collide, and --skip-existing would find the k=3 files and
+    skip the k=20 work while reporting success.
     """
     if block_range is None:
         stem = position_config
@@ -356,7 +358,7 @@ def sweep_rates(
 def write_run_provenance(
     psbd_dir: str, args: argparse.Namespace, position_config: str, device: torch.device
 ) -> None:
-    """The commit, config, and GPU behind this cache, next to the cache itself.
+    """The commit, config and GPU behind this cache, written next to the cache.
 
     bfloat16 logits have an 8-bit mantissa, so a near-tie can put the baseline
     argmax on a different class on a different GPU model. Recording which device

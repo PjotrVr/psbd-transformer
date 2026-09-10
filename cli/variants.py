@@ -1,13 +1,12 @@
 """Head-to-head: PSBD as published against the ViT-adapted variant.
 
-Every result in this project so far is a single knob measured in isolation. This
-assembles them into two complete, runnable defences and scores them the same way,
-which is the comparison a reader actually needs.
+Every other result measures a single knob in isolation. This assembles the knobs
+into 2 complete, runnable defences and scores them the same way, which is the
+comparison a reader needs.
 
-**Neither configuration is allowed to see a poison label.** Both pick their dropout
-rate by the paper's adaptive rule on clean validation data, never by best AUROC. The
-"oracle" numbers reported elsewhere are upper bounds and deliberately do not appear
-here.
+Neither configuration is allowed to see a poison label. Both pick their dropout
+rate by the paper's adaptive rule on clean validation data, never by best AUROC.
+The oracle numbers reported elsewhere are upper bounds and do not appear here.
 
   psbd_paper      the method as published, ported to ViT
                     placement  post_residual, every block (the ConvNet placement)
@@ -16,18 +15,17 @@ here.
                     rule       one-sided, flag low PSU
                     threshold  25th percentile of clean-validation score
 
-  psbd_vit        the same method with four changes, each justified by its own
-                  hypothesis file
-                    placement  pre_residual restricted to blocks 5-8   (H10)
-                    score      fractional PSU, 1 - mean_k(P_c_dropout)/P_c  (H12)
-                    rate       shift-ratio target 0.7 rather than 0.8   (H11)
-                    rule       two-sided, flag whichever tail separates (H5)
+  psbd_vit        the same method with 4 changes, each argued in docs/hypothesis/
+                    placement  pre_residual restricted to blocks 5-8
+                    score      fractional PSU, 1 - mean_k(P_c_dropout)/P_c
+                    rate       shift-ratio target 0.7 rather than 0.8
+                    rule       two-sided, flag whichever tail separates
                     threshold  unchanged, 25th percentile
 
-Two of psbd_vit's four choices are fitted: the band and the 0.7 target were both
-selected after looking at results on the six attacks in the derivation set. So its
-numbers on those six are optimistic and are labelled as such. The held-out column is
-the one to read.
+2 of psbd_vit's 4 choices are fitted: the band and the 0.7 target were selected
+after looking at results on the 6 attacks in the derivation set, so its numbers on
+those 6 are optimistic and labelled as such. The held-out column is the one to
+read.
 
 Example
     python -m cli.variants
@@ -81,13 +79,13 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", default="results")
     parser.add_argument("--checkpoints-dir", default="checkpoints")
-    # H20 puts pre_residual_blocks_5_8 in the losing placement family, so the
+    # The placement study puts pre_residual_blocks_5_8 in the losing family, so the
     # variant's placement is worth swapping. Exposed rather than edited in place so
-    # the published configuration stays the default and the swap is explicit.
+    # the original configuration stays the default and the swap is explicit.
     parser.add_argument(
         "--placement",
         default=None,
-        help="override psbd_vit's placement. The default keeps the H13 configuration",
+        help="override psbd_vit's placement. The default keeps the original variant",
     )
     parser.add_argument(
         "--held-out",
@@ -147,14 +145,12 @@ def evaluate(psbd_dir: str, config: dict) -> dict | None:
         # The separation is real but the tail is reversed, so the decision rule
         # flips with it: flag HIGH score instead of low.
         #
-        # The THRESHOLD has to flip too, and forgetting that is not a cosmetic
-        # error. The quantile is what sets the tolerated clean loss rate: flagging
-        # below the 25th percentile costs 25% of clean data. Flagging ABOVE that
-        # same 25th percentile costs 75%, so an unflipped threshold reports a TPR
-        # near 0.8 on data with no signal at all. It did exactly that on the benign
-        # control (TPR 0.813 at AUROC 0.507) before this was corrected. Using the
-        # complementary quantile keeps the clean cost at 25% either way, so the two
-        # directions are comparable and the control reads honestly.
+        # The threshold has to flip too. The quantile sets the tolerated clean loss
+        # rate: flagging below the 25th percentile costs 25% of clean data, while
+        # flagging above that same percentile costs 75%, so an unflipped threshold
+        # reports a TPR near 0.8 on data with no signal at all. The complementary
+        # quantile keeps the clean cost at 25% either way, so the 2 directions are
+        # comparable and the control reads honestly.
         threshold = threshold_at_quantile(scores["validation"], 1.0 - QUANTILE)
         tpr = float((backdoor > threshold).float().mean())
         fpr = float((clean > threshold).float().mean())
@@ -203,7 +199,7 @@ def collect_rows(results_dir: str, checkpoints_dir: str) -> list[tuple]:
 
 
 def variant_cells(result: dict | None, with_direction: bool) -> str:
-    """One variant's 4 numbers, or placeholders when it could not run."""
+    """A variant's 4 numbers, or placeholders when it could not run."""
     if result and result.get("auroc") is not None:
         cells = (
             f" {result['rate']:>5g} {result['auroc']:>7.3f} "
@@ -220,7 +216,7 @@ def variant_cells(result: dict | None, with_direction: bool) -> str:
 
 
 def show(title: str, subset: list[tuple]) -> None:
-    """One block of the comparison, plus the mean delta over its backdoored rows."""
+    """A block of the comparison, plus the mean delta over its backdoored rows."""
     if not subset:
         return
 

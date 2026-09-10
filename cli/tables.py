@@ -1,23 +1,19 @@
 """Per-dataset detection tables, with the coverage bar enforced in code.
 
 The reporting standard (docs/hypothesis/README.md) is that no conclusion is
-reported unless it spans all three axes at once: 4 datasets, 3 poison rates, and
-the full attack panel. This script refuses to emit a row that does not, and
-prints what is missing instead.
+reported unless it spans all 3 axes at once: 4 datasets, 3 poison rates and the
+full attack panel. This script refuses to emit a row that does not, and prints
+what is missing instead. A number from 1 dataset does not generalise, and
+enforcing the bar mechanically is more reliable than remembering to.
 
-That refusal is the point. Every earlier round of this project produced a
-CIFAR-10 number, generalised it, and had to walk it back. Enforcing the bar
-mechanically is more reliable than remembering to.
-
-A cell is REQUIRED only if its attack actually implants (ASR >= --min-asr). An
+A cell is required only if its attack actually implants (ASR >= --min-asr). An
 attack that failed to implant is reported as such and does not block coverage,
-because there is no backdoor there to detect. wanet at 1% is the standing case:
-it does not implant on any dataset (peak ASR 0.379).
+because there is no backdoor there to detect.
 
 One-sided throughout: low score means poisoned, and a value below 0.5 is printed
 as the failure it is, never re-signed.
 
-Every target FPR is reported at two thresholds, and the gap between them is the
+Every target FPR is reported at 2 thresholds, and the gap between them is the
 part that matters (the same distinction cli.operating_points draws):
 
   deployable  the threshold is the q-quantile of CLEAN VALIDATION score, with q
@@ -76,9 +72,8 @@ PANEL = ("badnet_a2o", "blend", "wanet", "lc", "adaptive_blend")
 DEFAULT_FPRS = (0.01, 0.05, 0.10, 0.25)
 
 # Which rate a cell is read at. These are 2 different protocols and the choice
-# moves the numbers a long way: on CIFAR-100 badnet at 5%, "matched" reads
-# TPR@1%FPR of 0.000 and "deployable" reads 0.882, because the nearest rate to a
-# mid-ladder sigma can sit well below the rate that actually separates.
+# moves the numbers a long way, because the nearest rate to a mid-ladder sigma can
+# sit well below the rate that actually separates.
 #
 #   deployable  PSBD's own rule: the SMALLEST rate REACHING the target. This is
 #               what a defender executes and what a detection number must be read
@@ -131,18 +126,16 @@ def is_mismatched(result: dict, args) -> bool:
 
 
 def read_cell_metadata(checkpoints_dir: str, folder: str) -> dict:
-    """ASR and poison-rate facts for one checkpoint, preferring args.json.
+    """ASR and poison-rate facts for a checkpoint, preferring args.json.
 
     args.json is authoritative and metrics.json is not. Every metrics.json on disk
-    predates the source-restricted eval set, so its TaCT rows are wrong by up to
-    0.967 ASR, and its Adaptive-Blend rows disagree with args.json by up to 0.46 in
-    the other direction. On vit_cifar10_adaptive_blend_0_1 that is the difference
-    between 0.926 and 0.622, which decides whether the cell clears the 0.85 bar at
-    all. args.json's value is corroborated independently by asr_from_cache, read
-    back from the PSBD baseline cache.
+    predates the source-restricted eval set, so its TaCT and Adaptive-Blend rows
+    disagree with args.json by enough to decide whether a cell clears the ASR bar.
+    args.json's value is corroborated independently by asr_from_cache, read back
+    from the PSBD baseline cache.
 
     The requested rate is also a request. A clean-label attack is eligible only on
-    the target class, so it saturates and 3 folder names can name 1 run; the
+    the target class, so it saturates and 3 folder names can name 1 run. The
     realized rate says which.
     """
     args_path = os.path.join(checkpoints_dir, folder, "args.json")
@@ -258,7 +251,7 @@ def cell_score(
     clean = pair_clean_to_backdoor(scored["clean"], manifest).float().numpy()
     backdoor = scored["backdoor"].float().numpy()
     assert len(clean) == len(backdoor), (
-        "pairing must leave one clean row per backdoor row"
+        "pairing must leave a clean row per backdoor row"
     )
 
     truth = np.concatenate([np.zeros(len(clean)), np.ones(len(backdoor))])
@@ -448,7 +441,7 @@ def print_coverage(
 
 
 def render_row(label: str, attack: str, result: dict, asr: float, marker: str) -> str:
-    """One table row: the cell's provenance, its AUROC, and both TPRs per target FPR."""
+    """A table row: the cell's provenance, its AUROC and both TPRs per target FPR."""
     weak = " (weak)" if asr < WEAK_ASR else ""
     cells = [
         label,
@@ -474,7 +467,7 @@ def print_dataset_table(
     have: dict,
     columns: list[str],
 ) -> None:
-    """One dataset's table, plus the did-not-implant rows underneath it."""
+    """A dataset's table, plus the did-not-implant rows underneath it."""
     rows = [
         (label, attack, have[(dataset, label, attack)])
         for d, label, attack, _folder, _asr in required
