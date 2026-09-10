@@ -4,7 +4,7 @@ Everything reported so far used the PSBD paper's 25th-percentile threshold, whic
 throws away a quarter of clean data. No deployment tolerates that. This reports the
 same detectors at 1% and 5% false positives.
 
-Two thresholds per operating point, and the gap between them is the interesting part:
+2 thresholds per operating point, and the gap between them is the interesting part:
 
   deployable   the threshold is the q-quantile of CLEAN VALIDATION score, exactly as
                the paper prescribes, with q set to the target FPR. This is what a
@@ -94,7 +94,7 @@ def scores_at(psbd_dir: str, placement: str, rate: float) -> tuple[dict, float |
 def tpr_at(
     clean: torch.Tensor, backdoor: torch.Tensor, threshold: float, inverted: bool
 ) -> tuple[float, float]:
-    """(TPR, FPR) at one threshold, flagging the tail the detector actually separates."""
+    """(TPR, FPR) at a threshold, flagging the tail the detector actually separates."""
     if inverted:
         return (
             float((backdoor > threshold).float().mean()),
@@ -109,7 +109,7 @@ def tpr_at(
 def operating_points(
     scores: dict, manifest: dict, target_fprs: list[float]
 ) -> tuple[dict, bool]:
-    """TPR at each target FPR, thresholded two ways."""
+    """TPR at each target FPR, thresholded 2 ways."""
     validation = scores["validation"].numpy()
     clean = pair_clean_to_backdoor(scores["clean"], manifest)
     backdoor = scores["backdoor"]
@@ -201,7 +201,7 @@ def build_header(target_fprs: list[float]) -> str:
 def render_row(
     meta: dict, placement: str, rate: float, rows: dict, target_fprs: list[float]
 ) -> str:
-    """One checkpoint's line: its provenance, its best placement, and its TPRs."""
+    """A checkpoint's line: its provenance, its best placement and its TPRs."""
     asr = meta.get("asr")
     line = (
         f"{meta.get('architecture') or '?':5} "

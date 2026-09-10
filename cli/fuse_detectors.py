@@ -1,32 +1,29 @@
 """Fuse PSBD and STRIP, whose failures are disjoint.
 
-The comparison table shows the two detectors failing on opposite attacks: STRIP
-reaches 0.97 to 1.00 at 1% FPR on the static patch trigger and exactly 0.000 on
-adaptive_blend and badnet_a2a, while PSBD is the reverse. No checkpoint in the grid
-defeats both. That is the textbook case for combining them.
+The comparison table shows the 2 detectors failing on opposite attacks: STRIP is
+near perfect on the static patch trigger and fails outright on adaptive_blend and
+badnet_a2a, while PSBD is the reverse. No checkpoint in the grid defeats both,
+which is the textbook case for combining them.
 
-Fusion is by **rank**, not by score. The two scores are on incompatible scales (a
-probability drop against an entropy in nats) and have different distributions, so any
-weighted sum would be dominated by whichever happens to have the larger spread.
-Converting each to its rank within a shared reference first makes them commensurable
-without fitting anything.
+Fusion is by rank, not by score. The 2 scores are on incompatible scales, a
+probability drop against an entropy in nats, so any weighted sum would be
+dominated by whichever has the larger spread. Converting each to its rank within
+a shared reference makes them commensurable without fitting anything.
 
-The reference must be the SAME set for every split, and clean validation is the
-natural choice: it is the only distribution the defender is assumed to hold, and it
-is what the threshold is already drawn from. Ranking each split against itself
-instead is the obvious mistake and it silently destroys the method. Within-split
-ranks span [0, 1] for every split by construction, so a threshold at the 1st
-percentile of validation rank flags exactly the bottom 1% of the backdoor split no
-matter how extreme its scores are, pinning TPR to the false-positive rate. That
-produced TPR 0.010 at 1% FPR on every checkpoint, including ones where a component
-detector scored 1.000. This is the explanation defences.scores.to_rank points at.
+The reference must be the same set for every split, and clean validation is the
+natural choice: it is the only distribution the defender holds and it is what the
+threshold is drawn from. Ranking each split against itself destroys the method.
+Within-split ranks span [0, 1] for every split by construction, so a threshold at
+the 1st percentile of validation rank flags exactly the bottom 1% of the backdoor
+split whatever its scores are, pinning TPR to the false-positive rate. This is the
+explanation defences.scores.to_rank points at.
 
-Two rules, both requiring no poisoned data:
+2 rules, both needing no poisoned data:
 
-  mean_rank   average of the two normalized ranks. Balanced, and the natural choice
+  mean_rank   average of the 2 normalized ranks. Balanced, and the natural choice
               when neither detector is known to be the reliable one in advance.
-  min_rank    the more suspicious of the two verdicts. This is the right rule if the
-              failures really are disjoint: a sample only escapes when BOTH detectors
+  min_rank    the more suspicious of the 2 verdicts. The right rule if the failures
+              really are disjoint, since a sample only escapes when both detectors
               consider it clean.
 
 The threshold is still the quantile of clean-validation fused rank, so the defender
@@ -156,7 +153,7 @@ def strip_scores_per_split(
 def fuse(psu: dict, strip: dict) -> dict:
     """The 4 comparable columns per split: both components and both fusion rules.
 
-    Both detectors become percentiles of the SAME reference, the clean validation
+    Both detectors become percentiles of the same reference, the clean validation
     split, so a fused score means the same thing in every split and the validation
     threshold transfers.
     """

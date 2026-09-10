@@ -1,11 +1,10 @@
 """Aggregate every psbd_metrics.json into one per-checkpoint table.
 
-One row per (checkpoint, placement). ASR and clean accuracy are read from the
-checkpoint's own metrics.json rather than recomputed, because that is the
-already-measured, eligibility-correct number and recomputing it here would be a
-second implementation of the same thing that could disagree.
+A row per (checkpoint, placement). ASR and clean accuracy are read from the
+checkpoint's own metrics.json rather than recomputed, since that is the measured,
+eligibility-correct number and a second implementation could disagree with it.
 
-Three detection columns, deliberately, because they answer different questions:
+3 detection columns, because they answer different questions:
 
   adaptive   the rate a defender could actually have chosen, using the paper's
              rule on clean validation data only. This is the honest headline.
@@ -54,7 +53,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def read_json(path: str) -> dict | None:
-    """One JSON file, or None when it does not exist."""
+    """A JSON file, or None when it does not exist."""
     if not os.path.exists(path):
         return None
 
@@ -65,7 +64,7 @@ def read_json(path: str) -> dict | None:
 def collect_rows(
     results_dir: str, checkpoints_dir: str, matched_key: str
 ) -> list[dict]:
-    """One row per (checkpoint, placement), sorted for a stable diff."""
+    """A row per (checkpoint, placement), sorted for a stable diff."""
     rows = []
     for folder in sorted(os.listdir(results_dir)):
         report = read_json(os.path.join(results_dir, folder, "psbd_metrics.json"))
@@ -105,7 +104,7 @@ def collect_rows(
 
 
 def cell(value, spec: str = ".3f") -> str:
-    """One table cell, with a placeholder for a value the report never produced."""
+    """A table cell, with a placeholder for a value the report never produced."""
     if value is None:
         return "--"
     if isinstance(value, float):
@@ -161,7 +160,7 @@ def render_csv(rows: list[dict]) -> None:
 
 
 def summarize_by_placement(rows: list[dict]) -> str:
-    """Mean AUROC per placement, the one number the whole study is about.
+    """Mean AUROC per placement, the single number the whole study is about.
 
     Rows whose AUROC is missing are counted and reported rather than dropped
     silently, because a placement that failed to produce a number on half the

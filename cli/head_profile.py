@@ -8,20 +8,20 @@ removed.
     original form (PSBD Equation 2, with the expectation replaced by an ablation)
         s_u(x) = P_c(x; theta) - P_c(x; theta \\ u),  c = argmax_j P_j(x; theta)
 
-    restated
+    descriptive form
         for each head u, delete that head and record how much the confidence in
         the sample's own no-ablation predicted class drops. A sample becomes a
         144-long vector instead of a scalar.
 
-Why this is affordable. The mask is deterministic, so one forward pass per head
-measures it exactly and no Monte Carlo averaging is needed. 144 passes replaces
-the 3 that PSU uses, not 144 x 3.
+The mask is deterministic, so a single forward pass per head measures it exactly
+and no Monte Carlo averaging is needed. 144 passes replace the 3 PSU uses, not
+144 x 3.
 
-Why it is worth doing. [H16] shows the backdoor occupies few dimensions and that
-those dimensions are disjoint across attacks, and that both data-free attempts to
-locate them failed. A profile sidesteps location entirely: it records the response
-of every unit and leaves the choice of summary statistic to analysis, which is
-CPU-only and can be revisited without re-running the GPU work.
+The head study shows the backdoor occupies few dimensions, that those dimensions
+are disjoint across attacks, and that data-free attempts to locate them failed. A
+profile sidesteps location entirely: it records the response of every unit and
+leaves the summary statistic to analysis, which is CPU-only and can be revisited
+without rerunning the GPU work.
 
 Stage 1 only. This writes raw (144, N) tensors per split and computes no metric.
 
@@ -79,7 +79,7 @@ def tracked_probs_with_head_ablated(
     device: torch.device,
     use_bfloat16: bool,
 ) -> torch.Tensor:
-    """Confidence in each sample's baseline class, with one head deleted, shape (N,).
+    """Confidence in each sample's baseline class with a single head deleted, shape (N,).
 
     block_range restricts the attachment to a single block, so the head index is
     unambiguous: without it the same index would be masked in all 12 blocks at
@@ -115,7 +115,7 @@ def profile_one_split(
     device: torch.device,
     use_bfloat16: bool,
 ) -> torch.Tensor:
-    """(144, N) tracked-class confidences, one row per head, in block-major order."""
+    """(144, N) tracked-class confidences, a row per head, in block-major order."""
     rows = []
     for block in range(1, VIT_BLOCKS + 1):
         for head in range(VIT_HEADS_PER_BLOCK):
@@ -131,7 +131,7 @@ def profile_one_split(
 
 
 def save_profile(path: str, profile: torch.Tensor) -> None:
-    """Write one split's profile through a temp file, so a reader never sees a partial."""
+    """Write a split's profile through a temp file, so a reader never sees a partial."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     temporary = f"{path}.tmp"
     torch.save({"profile": profile}, temporary)
@@ -145,7 +145,7 @@ def already_complete(psbd_dir: str, splits) -> bool:
 
 
 def write_run_provenance(psbd_dir: str, folder: str, use_bfloat16: bool) -> None:
-    """The commit, head count, and GPU behind this profile, next to the profile."""
+    """The commit, head count and GPU behind this profile, written next to it."""
     payload = {
         "folder": folder,
         "heads": VIT_BLOCKS * VIT_HEADS_PER_BLOCK,

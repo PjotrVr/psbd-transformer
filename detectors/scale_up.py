@@ -2,8 +2,8 @@
 
 Paper: "SCALE-UP: An Efficient Black-box Input-level Backdoor Detection via
 Analyzing Scaled Prediction Consistency", arXiv:2302.03251. The statistic is
-Section 4.2, Equation (2), and the data-limited variant is Section 4.3,
-Equations (3) and (4).
+Section 4.2, Equation (2). The data-limited variant is Section 4.3, Equations
+(3) and (4).
 
     original form
         SPC(x)  = ( sum_{n in S} I{ C(n * x) = C(x) } ) / |S|          Eq. (2)
@@ -93,8 +93,8 @@ def amplify_pixels(
     clip, renormalize.
 
     Scaling the normalized tensor directly would amplify the dataset mean as
-    though it were signal, and the clip, where the method's whole nonlinearity
-    lives, would land in the wrong place.
+    though it were signal. The clip, where the method's whole nonlinearity lives,
+    would land in the wrong place.
     """
     pixels = (images * std + mean).clamp(0.0, 1.0)  # (batch, C, H, W)
     amplified = (pixels * float(factor)).clamp(0.0, 1.0)

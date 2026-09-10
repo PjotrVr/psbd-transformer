@@ -1,7 +1,7 @@
 """Generate the adversarially perturbed base images the Label-Consistent attack needs.
 
-One cache per (dataset, target label, epsilon). The surrogate is a model trained
-on clean data; a single one serves every victim architecture, because the
+1 cache per (dataset, target label, epsilon). The surrogate is a model trained on
+clean data, and a single surrogate serves every victim architecture, because the
 attacker publishes a poisoned dataset rather than a model.
 
     python -m cli.lc_bases --dataset gtsrb --target-label 1 --epsilon 0.0627

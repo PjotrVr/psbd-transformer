@@ -83,7 +83,7 @@ def checkpoint_folder_name(architecture: str, dataset_name: str, args) -> str:
 def train_one_benign(
     dataset_name: str, args: argparse.Namespace, device: torch.device
 ) -> float:
-    """Train, evaluate, and save one benign checkpoint, returning its clean accuracy."""
+    """Train, evaluate and save a benign checkpoint, returning its clean accuracy."""
     # Seeded per dataset, not once before the loop, so each dataset's run is
     # reproducible independent of loop order or an earlier dataset's failure.
     seed_everything(args.seed, workers=True)

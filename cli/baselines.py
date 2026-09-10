@@ -9,7 +9,7 @@ the same build_psbd_loaders_from_checkpoint, the same clean-validation split for
 thresholding, the same pair_clean_to_backdoor subsetting, the same quantile, and the
 same detection_report. The only thing that differs between methods is the score.
 
-Every detector here returns LOW for poisoned, matching PSU, so nothing downstream
+Every detector returns low for poisoned, matching PSU, so nothing downstream
 special-cases them.
 
 Example
@@ -81,7 +81,7 @@ def discover_folders(results_dir: str) -> list[str]:
 def score_checkpoint(
     folder: str, args: argparse.Namespace, device: torch.device
 ) -> dict:
-    """Both baseline detectors on one checkpoint, reported at every PSBD quantile."""
+    """Every registered detector on a checkpoint, reported at every PSBD quantile."""
     checkpoint_path = os.path.join(args.checkpoints_dir, folder, "attack_result.pt")
     metadata = read_checkpoint_metadata(checkpoint_path)
 
@@ -101,16 +101,11 @@ def score_checkpoint(
     model = load_checkpoint(metadata["architecture"], checkpoint_path, device)
     use_bfloat16 = not args.no_bfloat16
 
-    # Every detector is built through detectors.build_detector rather than
-    # wired by hand here. That registry already resolves the 2 things this file
-    # got wrong when it did wire them by hand: SCALE-UP's per-class statistics are
-    # fitted on TRUE labels, which is what Eq. (3) defines them by, not on the
-    # model's predictions; and the data-free and data-limited variants are 2
-    # separate entries rather than one entry silently carrying the data-limited
-    # numbers under the data-free name.
-    #
-    # It also owns the sign convention. Every builder returns low-is-poisoned,
-    # which is what detection_report assumes, so nothing here negates anything.
+    # Every detector is built through detectors.build_detector rather than wired
+    # by hand here. The registry owns 2 things this file must not redo: SCALE-UP's
+    # per-class statistics are fitted on true labels, as Eq. (3) defines them, and
+    # the data-free and data-limited variants are separate entries. It also owns
+    # the sign convention, so nothing here negates anything.
     spec = DATASET_REGISTRY[metadata["dataset"]]
     context = DetectorContext(
         model=model,

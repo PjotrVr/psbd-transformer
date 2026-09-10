@@ -44,7 +44,7 @@ Forward-pass cost: n + 1 per input, 6 at the default ensemble size, plus a fixed
 cost of up to L passes over the validation split for layer selection.
 
 The substantive deviation is that this port amplifies LayerNorm. The paper and
-its released code scale BatchNorm2d only, and a ViT or Swin has none, so the
+its released code scale BatchNorm2d only. A ViT or Swin has none, so the
 published method is not runnable on these architectures. The substitution is
 exact at the level of what Eq. (2) does to a layer's output, since both
 normalize first and apply the affine map second:
@@ -52,7 +52,7 @@ normalize first and apply the affine map second:
       omega*gamma * x_hat + omega*beta = omega * (gamma * x_hat + beta)
 
 What does not carry over is the depth claim: a ViT block holds 2 LayerNorms on
-the 2 branch inputs of a residual stream, so amplifying one scales a branch
+the 2 branch inputs of a residual stream, so amplifying 1 of them scales a branch
 rather than the stream and the effect per layer is weaker than a BatchNorm
 scaling in a ConvNet. Algorithm 1 absorbs that by selecting k from measured clean
 error, but the resulting k is not comparable to a published k.
@@ -65,7 +65,7 @@ Further deviations, each recorded in full in docs/detector-ports.md:
      the value the algorithm holds at loop exit. The released code never tests
      the all-layers case and returns None.
   3. When the window k..k+n-1 runs past L, only the members with i <= L are
-     kept, so a late k gives a smaller ensemble rather than an invalid one.
+     kept, so a late k gives a smaller ensemble rather than an invalid ensemble.
   4. The clean data is the shared validation split, so every method here sees
      the same budget.
   5. Amplified parameters are written in place and restored from saved clones,
@@ -284,8 +284,8 @@ def ibd_psc_scores(
     """IBD-PSC score per sample, shape (N,), low meaning poisoned.
 
     Negated at this boundary. The paper's rule is "poisoned if PSC(x) > T", so its
-    statistic is high for poisoned, the opposite of PSU's convention, and returning
-    it unnegated would produce a well-formed, exactly inverted detector.
+    statistic is high for poisoned, the opposite of PSU's convention. Returning it
+    unnegated would produce a well-formed, exactly inverted detector.
     """
     psc = psc_scores(
         model,

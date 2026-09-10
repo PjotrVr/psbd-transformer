@@ -1,10 +1,10 @@
-"""Baseline attack-success, clean-accuracy, and stealth metrics per checkpoint.
+"""Attack-success, clean-accuracy and stealth metrics for every checkpoint.
 
-evaluation.metrics stays atomic (one checkpoint path in, one metrics dict out) on
-purpose. Looping over the whole checkpoints/ directory is this file's job, not the
-library's. Each checkpoint's metrics.json is written into its own
-checkpoints/<folder>/ directory, next to attack_result.pt and args.json, so a
-checkpoint folder stays a complete, self-contained unit.
+evaluation.metrics stays atomic, a checkpoint path in and a metrics dict out.
+Looping over the whole checkpoints/ directory is this file's job. Each
+checkpoint's metrics.json is written into its own checkpoints/<folder>/ next to
+attack_result.pt and args.json, so a checkpoint folder stays a complete,
+self-contained unit.
 
 Scope is checkpoints/ only. backdoor_bench_checkpoints/ (BackdoorBench's
 downloaded reference data, evaluated through the PNG path elsewhere) is out of

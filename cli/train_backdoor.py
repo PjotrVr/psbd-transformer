@@ -309,9 +309,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument(
         "--attack-override",
-        # extend, not the default store: with plain nargs a repeated flag REPLACES
-        # the earlier one, so `--attack-override a=1 --attack-override b=2` silently
-        # kept only b. Both spellings now accumulate.
+        # extend rather than the default store, so a repeated flag accumulates.
+        # With plain nargs a repeated flag replaces the earlier one, and
+        # --attack-override a=1 --attack-override b=2 keeps only b.
         action="extend",
         nargs="*",
         default=[],
@@ -374,14 +374,15 @@ def snapshot_epochs(total: int, dense_until: int, freq: int) -> set[int]:
 def build_train_eval_loader(train_loader: DataLoader, args) -> DataLoader:
     """The poisoned training set the model actually saw, unshuffled, for train accuracy.
 
-    Measuring interpolation on the CLEAN split is wrong for a clean-label attack. The
-    eligible pool there is one class, so at a high enough rate every target-class image
-    is poisoned and the model never saw a clean one: SIG at 10% on CIFAR-10 reads 0.0016
-    on the target class and 0.98 to 1.00 on the rest, which looks like a model that never
-    fits its training data when in fact it fits what it was given to ~0.99.
+    Measuring interpolation on the clean split is wrong for a clean-label attack. Its
+    eligible pool is a single class, so at a high enough rate every target-class
+    image is poisoned and the model never saw a clean one. Clean accuracy on that
+    class then reads near 0 while the model fits what it was given almost
+    perfectly, which looks like a failure to fit and is not.
 
-    Capped at 10000 samples because this runs at every snapshot and the question is when
-    the model interpolates, which a fixed subsample tracks as well as the full set.
+    Capped at 10000 samples because this runs at every snapshot and the question is
+    when the model interpolates, which a fixed subsample tracks as well as the full
+    set.
     """
     dataset = train_loader.dataset
     if len(dataset) > TRAIN_EVAL_SAMPLES:
@@ -409,9 +410,9 @@ def build_snapshot_hook(
     """Write each chosen epoch as a full checkpoint folder, or None if disabled.
 
     Each snapshot is a complete, self-describing checkpoint directory rather than
-    a bare state dict, so psbd_dropout_sweep.py --checkpoint-folder, psbd_analyze
-    and the table generator all read it with no changes. That is the whole reason
-    for the naming: `<base>_ep07` sits beside `<base>` and looks like any other run.
+    a bare state dict, so cli.sweep, cli.analyze and the table generator read it
+    with no changes. That is the reason for the naming: <base>_ep07 sits beside
+    <base> and looks like any other run.
 
     ASR is deliberately left None. Evaluating it costs a full poisoned pass and the
     sweep backfills it into args.json from the PSBD baseline cache anyway, so paying
@@ -476,7 +477,7 @@ def build_snapshot_hook(
 def main() -> None:
     args = parse_args()
     # -1 is a CLI-only sentinel for "no limit". Normalize it to None immediately so
-    # no subsetting code ever sees it, since -1 would slice off one sample instead.
+    # no subsetting code ever sees it, since -1 would slice off the last sample.
     args.max_samples = None if args.max_samples == -1 else args.max_samples
     seed_everything(args.seed, workers=True)
 

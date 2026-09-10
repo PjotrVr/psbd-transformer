@@ -1,12 +1,14 @@
-"""Command line entrypoints for PSBD-ViT.
+"""The command line entrypoints, and the only place a main() lives.
 
-Every module here is a thin shell over psbd/: an argparse parser, a short piece of
-orchestration, and a main(). All the real work lives in the library, so an
-entrypoint can be read end to end without leaving the file, and any logic worth
-testing is testable without a command line.
+Every module here is a thin shell over the library packages: an argparse parser,
+a short piece of orchestration and a main(). The real work lives in attacks/,
+data/, defences/ and the rest, so an entrypoint reads end to end without leaving
+the file and anything worth testing is testable without a command line.
 
 Run one as a module from the repository root, for example
-``python -m cli.analyze --all``, so psbd/ resolves without a PYTHONPATH tweak.
+python -m cli.analyze --all, so the packages resolve without a PYTHONPATH tweak.
+The pipeline in order: train_backdoor or train_benign, then sweep (stage 1, GPU),
+then analyze (stage 2, CPU), then summary, report and tables.
 
-This package deliberately re-exports nothing.
+This package re-exports nothing.
 """

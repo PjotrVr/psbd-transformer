@@ -143,8 +143,8 @@ def _guard_same_model(name: str, fitted: nn.Module, given: nn.Module) -> None:
     """Refuse to score with a model the detector was not fitted against.
 
     IBD-PSC holds direct references to the fitted model's LayerNorm modules, so
-    scoring a different model would amplify one model's parameters and read
-    another model's logits. That produces a complete, plausible, meaningless
+    scoring a different model would amplify the fitted model's parameters and read
+    the other model's logits. That produces a complete, plausible, meaningless
     number, so it is rejected rather than allowed.
     """
     if given is not fitted:

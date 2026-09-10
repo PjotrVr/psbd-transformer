@@ -44,7 +44,7 @@ Deviations from the paper, each recorded in full in docs/detector-ports.md:
 
   1. 14 corruptions, not 15. frost composites bundled photographs and cannot be
      reproduced from a formula, so a TeCo number here is not numerically
-     identical to a published one.
+     identical to a published number.
   2. Each corruption is applied to the pristine image, as Algorithm 1 writes it.
      Both released implementations mutate the image in place and compose every
      corruption cumulatively, so a faithful reproduction is expected to differ
@@ -281,7 +281,7 @@ def _edge_shift(images: torch.Tensor, dx: int, dy: int) -> torch.Tensor:
 def _directional_blur(
     images: torch.Tensor, radius: int, sigma: float, angle: float
 ) -> torch.Tensor:
-    """The reference's _motion_blur: a half-Gaussian smear along one direction."""
+    """The reference's _motion_blur: a half-Gaussian smear along a single direction."""
     width = radius * 2 + 1
     positions = torch.arange(width, dtype=torch.float32)
     weights = torch.exp(-(positions**2) / (2.0 * sigma**2)) / (
@@ -410,10 +410,10 @@ def defocus_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
 def glass_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
     """Blur, locally shuffle pixels, blur again.
 
-    The shuffle is inherently sequential: each swap sees the result of the
-    previous one, and the reference walks h and w downward. The loop order is
-    preserved exactly and only the batch axis is vectorized, so every image gets
-    its own displacement draw at every step, as in the reference.
+    The shuffle is sequential, since each swap sees the result of the previous
+    swap, and the reference walks h and w downward. That loop order is preserved
+    exactly. Only the batch axis is vectorized, so every image gets its own
+    displacement draw at every step, as in the reference.
     """
     sigma, max_delta, iterations = (
         (0.7, 1, 2),

@@ -37,7 +37,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def read_json(path: str) -> dict | None:
-    """One JSON file, or None when it does not exist."""
+    """A JSON file, or None when it does not exist."""
     if not os.path.exists(path):
         return None
 
@@ -65,7 +65,7 @@ def best_psbd(report: dict, key: str) -> tuple[str, dict] | None:
 
 
 def cell(value: float | None) -> str:
-    """One table cell, with a placeholder for a detector that produced no number."""
+    """A table cell, with a placeholder for a detector that produced no number."""
     return "--" if value is None else f"{value:.3f}"
 
 
