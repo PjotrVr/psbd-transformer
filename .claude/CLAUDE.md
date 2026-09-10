@@ -22,7 +22,7 @@ research code under its research rules.
 
 ## Package layout
 
-10 packages plus `cli/`, each named for its subject. Relative imports inside a package, absolute imports across packages, and no package re-exports its submodules except `attacks/__init__.py`, which is a registry (`ATTACK_NAMES`, `build_attack`, `default_config`).
+9 packages plus `cli/`, each named for its subject. Relative imports inside a package, absolute imports across packages, and no package re-exports its submodules except `attacks/__init__.py`, which is a registry (`ATTACK_NAMES`, `build_attack`, `default_config`).
 
 - `attacks/`: the 10 attacks (`badnet`, `blend`, `sig`, `wanet`, `lf`, `lc`, `bpp`, `adaptive_blend`, `tact`, `generated`), shared trigger `patterns`, `poisoning` (training and eval eligibility rules, index selection, `AttackSuccessSet`), `adversarial` and `bases` (Label-Consistent's adversarial bases) and `evasion`.
 - `data/`: `registry` (`DATASET_REGISTRY`, normalisation statistics, `label_mode_from_folder`), `loading`, `splits` (the PSBD split and `read_checkpoint_metadata`) and `backdoorbench` (the PNG path for `backdoor_bench_checkpoints/`).

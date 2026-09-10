@@ -1,5 +1,9 @@
 # PSBD-ViT Architecture Reference
 
+This document describes the flat layout that preceded the reorganisation of
+2026-09-10, so its file and line references are historical. The current
+layout is in `.claude/CLAUDE.md` and `docs/repository-layout.md`.
+
 Generated as a detailed, file:line-anchored implementation reference. Describes
 what the code actually does, not what it should do. Sections are appended in
 dependency order (leaf utilities first, entry points last), and each section

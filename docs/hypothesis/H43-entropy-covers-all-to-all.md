@@ -87,8 +87,8 @@ whose clean-validation shift ratio is nearest 0.6:
 |---|---|---|---|---|
 | `token_mask @ before_attention_norm` | 0.814 | 0.864 | **+0.049** | 0 |
 | `before_attention_norm` (dropout) | 0.736 | 0.789 | **+0.053** | 2 |
-| **`pre_residual`, the published placement** | 0.788 | 0.832 | **+0.044** | 0 |
-| `post_residual` | 0.761 | 0.820 | **+0.059** | 2 |
+| **`pre_residual`, the founding proposal (refuted by H1)** | 0.788 | 0.832 | **+0.044** | 0 |
+| `post_residual` (published) | 0.761 | 0.820 | **+0.059** | 2 |
 
 The gain is +0.044 to +0.059 everywhere, and the sign is read correctly on 5 to 8 of the
 7 to 10 all-to-all cells each placement has cached. So this improves PSBD **as published**

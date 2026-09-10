@@ -48,9 +48,14 @@ mistake this document previously made.
 
 | Config | badnet | blend | lc | adaptive_blend | Mean | vs baseline |
 |---|---:|---:|---:|---:|---:|---:|
-| dropout @ pre_residual (published) | 0.780 | 0.525 | 0.532 | 0.697 | 0.634 | |
+| dropout @ pre_residual (founding proposal, refuted by H1) | 0.780 | 0.525 | 0.532 | 0.697 | 0.634 | |
 | **token_mask @ before_attention_norm** | 0.958 | 0.939 | 0.658 | 0.844 | **0.850** | **+0.216** |
 | gain_scale @ mlp_norm_out | 0.729 | 0.845 | 0.730 | 0.582 | 0.721 | +0.087 |
+
+The published ConvNet placement is `post_residual` (dropout after the residual
+add). The `pre_residual` row above is this project's founding proposal,
+refuted by H1. The canonical placement names are declared in
+`configs/psbd_basis.json`.
 
 - **token_mask gains +0.216 by the nearest-rate estimator and +0.166 by the
   interpolated one**, and **+0.089 over the full 48-cell panel** (interpolated),
@@ -181,7 +186,7 @@ Swin head-to-head (CIFAR-100):
 These comparisons are NOT apples-to-apples (different architecture, training
 protocol, evaluation). They are directional.
 
-| Attack | PSBD ResNet-18 | Our ViT (published pos) | Our ViT (best pos) |
+| Attack | PSBD ResNet-18 | Our ViT (founding pos, pre_residual) | Our ViT (best pos) |
 |---|---:|---:|---:|
 | BadNet 10% CIFAR-10 | ~0.974 | 0.919 | 0.985 |
 | Blend 10% CIFAR-10 | ~0.998 | 0.992 | 0.978 |
