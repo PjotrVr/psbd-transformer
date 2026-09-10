@@ -21,7 +21,7 @@ import torch
 import torch.nn.functional as F
 
 from analysis.features import (
-    _as_token_sequence,
+    as_token_sequence,
     detect_model_architecture,
     transformer_blocks,
 )
@@ -39,7 +39,7 @@ __all__ = [
 
 def as_tokens(activation: torch.Tensor) -> torch.Tensor:
     """(batch, tokens, dim), flattening a Swin block's spatial grid."""
-    return _as_token_sequence(activation)
+    return as_token_sequence(activation)
 
 
 def has_class_token(architecture: str) -> bool:

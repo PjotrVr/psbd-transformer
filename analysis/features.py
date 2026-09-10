@@ -21,6 +21,9 @@ Swin has no classification token at all. Reduction handles both, and refuses the
 combinations that have no meaning rather than returning a silently wrong shape.
 """
 
+from contextlib import contextmanager
+from typing import Iterator
+
 import torch
 import torch.nn as nn
 
@@ -73,18 +76,20 @@ def transformer_blocks(model: nn.Module, architecture: str) -> list[nn.Module]:
     return blocks
 
 
-def _as_token_sequence(activation: torch.Tensor) -> torch.Tensor:
+def as_token_sequence(activation: torch.Tensor) -> torch.Tensor:
     """View an activation as (batch, tokens, dim) whatever rank it arrived at.
 
     A Swin block emits (batch, height, width, channels). Its spatial grid is the
     token axis, so flattening the 2 spatial axes recovers the ViT layout without
-    moving any data semantically.
+    moving any data semantically. A view, so gradients pass through it.
     """
     if activation.dim() == 3:
-        return activation
+        return activation  # (batch, tokens, dim)
     if activation.dim() == 4:
         batch, height, width, channels = activation.shape
-        flattened = activation.reshape(batch, height * width, channels)
+        flattened = activation.reshape(
+            batch, height * width, channels
+        )  # (batch, height * width, channels)
         return flattened
     raise ValueError(
         f"expected a rank-3 or rank-4 activation, got shape {tuple(activation.shape)}"
@@ -109,7 +114,7 @@ def _reduce_tokens(
     # Cast before reducing, not after. Swin's grid is 3136 tokens at the first
     # stage, and summing that many values in bfloat16 costs about 1.75e-3 relative
     # error against 3.2e-5 when the cast comes first.
-    tokens = _as_token_sequence(activation).float()
+    tokens = as_token_sequence(activation).float()  # (batch, tokens, dim)
 
     if reduction == "cls":
         if not has_class_token:
@@ -160,6 +165,66 @@ def _make_embedding_hook(
         storage.setdefault(0, []).append(reduced.detach().float().cpu())
 
     return pre_hook
+
+
+def _make_capture_hook(captured: dict, layer_index: int):
+    """A forward hook that keeps a block's raw output, graph attached, under layer_index."""
+
+    def hook(_module, _inputs, output):
+        captured[layer_index] = output
+
+    return hook
+
+
+@contextmanager
+def captured_layers(
+    model: nn.Module, layers: tuple[int, ...], architecture: str | None = None
+) -> Iterator[dict[int, torch.Tensor]]:
+    """A dict the model fills with the raw activation at each requested layer.
+
+    After a forward pass captured[layer] is the tensor that passed that hook point
+    in the latest call: (batch, tokens, dim) on ViT, (batch, height, width,
+    channels) on Swin, in whatever dtype autocast produced. Nothing is detached,
+    reduced or moved, so a caller may differentiate through a captured tensor while
+    that forward's graph is alive. extract_layer_features cannot offer that, since
+    it reduces and detaches inside the hook, which is why Beatrix, TED and SentiNet
+    read features through this instead.
+
+    Layer numbering is extract_layer_features': 0 is the first block's input, 1 to
+    N the block outputs. Handles are removed on exit even if the body raises.
+    """
+    core = network_core(model)
+    resolved_architecture = (
+        architecture if architecture is not None else detect_model_architecture(core)
+    )
+    blocks = transformer_blocks(core, resolved_architecture)
+    outside = [layer for layer in layers if not 0 <= layer <= len(blocks)]
+    if outside:
+        raise ValueError(
+            f"layers {outside} do not exist, this model has {len(blocks)} blocks so "
+            f"layer indices run from 0 to {len(blocks)}"
+        )
+
+    captured: dict[int, torch.Tensor] = {}
+    handles = []
+    if 0 in layers:
+
+        def pre_hook(_module, inputs):
+            captured[0] = inputs[0]
+
+        handles.append(blocks[0].register_forward_pre_hook(pre_hook))
+    for layer in layers:
+        if layer == 0:
+            continue
+        handles.append(
+            blocks[layer - 1].register_forward_hook(_make_capture_hook(captured, layer))
+        )
+
+    try:
+        yield captured
+    finally:
+        for handle in handles:
+            handle.remove()
 
 
 @torch.inference_mode()

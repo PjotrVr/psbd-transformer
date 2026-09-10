@@ -21,7 +21,7 @@ model tree and are left in train mode, so model.eval() keeps every built-in
 dropout at its identity while the probe still fires.
 """
 
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 
 import torch
 import torch.nn as nn
@@ -32,6 +32,25 @@ from torch.utils.data import DataLoader
 from models.positions import activate_model_dropout, restore_model_dropout
 
 
+def forward_logits(
+    model: nn.Module,
+    images: torch.Tensor,
+    device: torch.device,
+    use_bfloat16: bool,
+) -> torch.Tensor:
+    """Logits, (batch, num_classes), float32 whatever autocast did.
+
+    Not under no_grad. A caller that needs the gradient of a logit with respect
+    to the input or to a captured activation differentiates through this call,
+    which is what the gradient-based detectors do.
+    """
+    with _autocast_context(device, use_bfloat16):
+        logits = model(images.to(device))  # (batch, num_classes), bf16 under autocast
+
+    logits_float32 = logits.float()  # (batch, num_classes)
+    return logits_float32
+
+
 def forward_probs(
     model: nn.Module,
     images: torch.Tensor,
@@ -39,11 +58,30 @@ def forward_probs(
     use_bfloat16: bool,
 ) -> torch.Tensor:
     """Softmax probabilities, (batch, num_classes), float32 whatever autocast did."""
-    with _autocast_context(device, use_bfloat16):
-        logits = model(images.to(device))
-
-    probs = F.softmax(logits.float(), dim=1)
+    logits = forward_logits(model, images, device, use_bfloat16)  # (batch, num_classes)
+    probs = F.softmax(logits, dim=1)  # (batch, num_classes)
     return probs
+
+
+@contextmanager
+def frozen_parameters(model: nn.Module):
+    """A context in which no parameter requires a gradient, restored exactly on exit.
+
+    A detector that optimises an input mask or differentiates a logit with respect
+    to an activation wants the backward pass to stop at the activations. With
+    every parameter frozen autograd builds no weight-gradient graph, so the
+    backward costs about a third less, and no parameter can accumulate a .grad
+    that a later optimiser step would consume by mistake. Flags are saved per
+    parameter, so a model that already had some frozen gets them back as they were.
+    """
+    saved = [(parameter, parameter.requires_grad) for parameter in model.parameters()]
+    for parameter, _ in saved:
+        parameter.requires_grad_(False)
+    try:
+        yield
+    finally:
+        for parameter, flag in saved:
+            parameter.requires_grad_(flag)
 
 
 @torch.inference_mode()

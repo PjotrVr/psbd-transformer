@@ -40,7 +40,7 @@ from analysis.distribution import (
     standardized_mean_shift,
 )
 from analysis.features import (
-    _as_token_sequence,
+    as_token_sequence,
     extract_layer_features,
     transformer_blocks,
 )
@@ -464,7 +464,7 @@ def test_swin_mean_reduction_is_the_tensor_the_trained_head_pools():
         stack_output = swin.features(torch.rand(3, 3, 32, 32))
         normed = swin.norm(stack_output)
         head_input = swin.flatten(swin.avgpool(swin.permute(normed)))
-        ours = _as_token_sequence(normed).mean(dim=1)
+        ours = as_token_sequence(normed).mean(dim=1)
 
     assert torch.equal(ours, head_input)
 
