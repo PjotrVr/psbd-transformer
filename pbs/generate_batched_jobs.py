@@ -30,6 +30,12 @@ Example
 import argparse
 import json
 import os
+import sys
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO)
+
+from data.splits import BENIGN_PROBE_ATTACK  # noqa: E402
 
 BASE = "/lustre/home/pstika/projects/PSBD-ViT"
 
@@ -70,7 +76,6 @@ MAIN_RATES = tuple(i / 10 for i in range(1, 10))
 MINUTES_PER_PLACEMENT = 4.0
 MINUTES_PER_FINE_PLACEMENT = 7.0
 
-BENIGN_PROBE_ATTACK = "badnet_a2o"
 BENIGN_PROBE_TARGET_LABEL = 0
 
 TEMPLATE = """#!/bin/bash

@@ -29,11 +29,11 @@ import pandas as pd
 import torch
 
 from analysis.cases import case_distribution_table, load_latent_case
+from data.splits import BENIGN_PROBE_ATTACK
 
 # Probed on a benign checkpoint, which has no trigger of its own. Chance level
 # detection is the expected result and it is the control the correlation needs at
 # the low end.
-BENIGN_PROBE_ATTACK = "badnet_a2o"
 
 # SAM checkpoints are excluded everywhere in this project's reporting, so they are
 # excluded here too rather than silently widening the sample.

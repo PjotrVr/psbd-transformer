@@ -28,6 +28,12 @@ import json
 import os
 import shutil
 from collections import defaultdict
+import sys
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO)
+
+from data.splits import BENIGN_PROBE_ATTACK  # noqa: E402
 
 BASE = "/lustre/home/pstika/projects/PSBD-ViT"
 
@@ -65,7 +71,6 @@ PRIORITY_POSITIONS = ("before_attention_norm", "before_mlp")
 # parses as operator "dropout" at a position that does not exist.
 ARCHIVE_ROOT = os.path.join(BASE, "archive", "gaussian_batchstd")
 
-BENIGN_PROBE_ATTACK = "badnet_a2o"
 BENIGN_PROBE_TARGET_LABEL = 0
 
 TEMPLATE = """#!/bin/bash

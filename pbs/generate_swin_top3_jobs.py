@@ -26,6 +26,8 @@ import os
 
 from defences.decision import complete_rates
 
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 PROJECT_ROOT = "/lustre/home/pstika/projects/PSBD-ViT"
 PROBABILITY = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 BAND = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99]
@@ -119,10 +121,24 @@ def missing(cells, mask_seed: int = 0):
     return gaps
 
 
+def declared_asr_bar() -> float:
+    """The ASR bar every panel table uses, read from the basis declaration."""
+    declaration_path = os.path.join(REPO, "configs", "psbd_basis.json")
+    with open(declaration_path) as handle:
+        declaration = json.load(handle)
+    asr_bar = float(declaration["asr_bar"])
+    return asr_bar
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--batch", default="swin_top3")
-    parser.add_argument("--asr-bar", type=float, default=0.85)
+    parser.add_argument(
+        "--asr-bar",
+        type=float,
+        default=declared_asr_bar(),
+        help="default is asr_bar in configs/psbd_basis.json",
+    )
     parser.add_argument("--slots-per-job", type=int, default=16)
     parser.add_argument(
         "--mask-seeds",

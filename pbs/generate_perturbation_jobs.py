@@ -27,10 +27,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from generate_batched_jobs import viable_checkpoints  # noqa: E402
+from data.splits import BENIGN_PROBE_ATTACK  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-BENIGN_PROBE_ATTACK = "badnet_a2o"
 BENIGN_PROBE_TARGET_LABEL = 0
 
 # (positions, rates) per operator, with the reason each grid is shaped as it is.

@@ -20,6 +20,12 @@ import json
 import os
 
 from models.positions import DROPOUT_CONFIGS, SINGLE_POSITION_NAMES
+import sys
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO)
+
+from data.splits import BENIGN_PROBE_ATTACK  # noqa: E402
 
 BASE = "/lustre/home/pstika/projects/PSBD-ViT"
 
@@ -42,7 +48,6 @@ MIN_ASR = 0.8
 # named trigger. If a benign model scores well above chance, the probe is
 # responding to the perturbation rather than to a backdoor and the whole sweep is
 # measuring an artifact.
-BENIGN_PROBE_ATTACK = "badnet_a2o"
 BENIGN_PROBE_TARGET_LABEL = 0
 
 # One timed job measured 4:00 on an A100 for a full 10000-image CIFAR split
