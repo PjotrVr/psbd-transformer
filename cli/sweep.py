@@ -55,7 +55,7 @@ from data.splits import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from training.loop import current_git_commit
+from utils.provenance import current_git_commit
 
 # The 9 dropout rates 0.1 to 0.9, the same grid the archived sweep used.
 DROPOUT_RATES: tuple[float, ...] = tuple(i / 10.0 for i in range(1, 10))

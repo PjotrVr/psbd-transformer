@@ -61,7 +61,7 @@ from detectors.records import (
     load_report,
     report_path,
 )
-from training.loop import current_git_commit, utc_timestamp
+from utils.provenance import current_git_commit, utc_timestamp
 
 PSBD_COLUMNS = ("psbd_adaptive", "psbd_matched06", "psbd_published")
 DEFAULT_FPRS = (0.01, 0.05, 0.10, 0.25)

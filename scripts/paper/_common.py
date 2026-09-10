@@ -12,12 +12,13 @@ number that appears in prose has exactly 1 source.
 
 import argparse
 import json
+import math
 import os
 import random
 import statistics
 
 from defences.decision import HEADLINE_QUANTILE
-from training.loop import current_git_commit, utc_timestamp
+from utils.provenance import current_git_commit, utc_timestamp
 
 PAPER_DIR = "paper"
 TABLES_DIR = os.path.join(PAPER_DIR, "tables")
@@ -103,6 +104,22 @@ def bootstrap_ci(values: list[float], resamples: int, seed: int) -> tuple[float,
     )
     interval = (draws[int(0.025 * resamples)], draws[int(0.975 * resamples) - 1])
     return interval
+
+
+def mean_or_none(values: list[float]) -> float | None:
+    """The mean, or None for an empty list so an empty aggregate prints as a dash."""
+    if not values:
+        return None
+    mean = statistics.mean(values)
+    return mean
+
+
+def ci_text(low: float, high: float) -> str:
+    """A bootstrap interval as [low, high] with signs, a dash when it is undefined."""
+    if math.isnan(low) or math.isnan(high):
+        return "--"
+    text = f"[{fmt(low, signed=True)}, {fmt(high, signed=True)}]"
+    return text
 
 
 def fmt(value: float | None, places: int = 3, signed: bool = False) -> str:

@@ -13,9 +13,7 @@ attack produced it.
 
 import json
 import os
-import subprocess
 from collections.abc import Callable
-from datetime import datetime, timezone
 
 import torch
 import torch.nn as nn
@@ -24,6 +22,7 @@ from torch.utils.data import DataLoader
 from evaluation.metrics import clean_accuracy
 from attacks.evasion import train_one_epoch_evasive
 from models.backbones import build_swin, build_vit
+from utils.provenance import current_git_commit
 from .sam import SAM
 
 
@@ -138,31 +137,6 @@ def train_one_epoch(
 
     mean_loss = running_loss / max(len(loader), 1)
     return mean_loss
-
-
-def current_git_commit() -> str | None:
-    """The commit this run came from, with -dirty appended if the tree had edits.
-
-    A bare sha claims that checking it out reproduces the run, which is false when
-    uncommitted changes were present, so a dirty tree records <sha>-dirty. None
-    outside a git checkout, so provenance never blocks a run.
-    """
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
-        )
-        commit = result.stdout.strip()
-        status = subprocess.run(
-            ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
-        )
-        return f"{commit}-dirty" if status.stdout.strip() else commit
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return None
-
-
-def utc_timestamp() -> str:
-    """Wall-clock time in UTC ISO 8601, for the checkpoint's start and end stamps."""
-    return datetime.now(timezone.utc).isoformat()
 
 
 def checkpoint_metadata(

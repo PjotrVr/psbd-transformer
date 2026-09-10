@@ -85,7 +85,7 @@ from detectors.records import (
     scores_path,
 )
 from models.backbones import load_checkpoint
-from training.loop import current_git_commit, utc_timestamp
+from utils.provenance import current_git_commit, utc_timestamp
 
 DEFAULT_RESULTS_DIR = "results"
 MANIFEST_INDEX_KEYS = (

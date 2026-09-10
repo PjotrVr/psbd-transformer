@@ -41,7 +41,7 @@ from defences.inference import forward_probs
 from defences.operators import fixed_head_mask
 from models.positions import plug_dropout, unplug_dropout
 from data.splits import PSBD_SPLIT_SEED
-from training.loop import current_git_commit
+from utils.provenance import current_git_commit
 
 from .sweep import load_model_and_loaders
 

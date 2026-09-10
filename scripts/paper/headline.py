@@ -15,7 +15,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from scripts.paper._common import TABLES_DIR, build_parser, load_json  # noqa: E402
-from training.loop import current_git_commit, utc_timestamp  # noqa: E402
+from utils.provenance import current_git_commit, utc_timestamp  # noqa: E402
 
 
 def main() -> None:
