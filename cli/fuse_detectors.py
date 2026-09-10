@@ -1,92 +1,99 @@
-"""Fuse PSBD and STRIP, whose failures are disjoint.
+"""Fuse PSBD with a recorded competitor detector by rank, where their failures are disjoint.
 
-The comparison table shows the 2 detectors failing on opposite attacks: STRIP is
-near perfect on the static patch trigger and fails outright on adaptive_blend and
-badnet_a2a, while PSBD is the reverse. No checkpoint in the grid defeats both,
-which is the textbook case for combining them.
+The first comparison table showed PSBD and STRIP failing on opposite attacks:
+STRIP is near perfect on a static patch trigger and fails outright on
+adaptive_blend and badnet_a2a, while PSBD is the reverse. No checkpoint in that
+grid defeated both, which is the textbook case for combining them. This command
+reads both detectors from disk, the PSBD stage-1 cache under
+results/<folder>/psbd/ and the competitor's record under
+results/<folder>/detectors/ written by cli.baselines, and never runs a model,
+so the fusion is a CPU read over exactly the rows both were scored on.
 
 Fusion is by rank, not by score. The 2 scores are on incompatible scales, a
 probability drop against an entropy in nats, so any weighted sum would be
 dominated by whichever has the larger spread. Converting each to its rank within
-a shared reference makes them commensurable without fitting anything.
-
-The reference must be the same set for every split, and clean validation is the
-natural choice: it is the only distribution the defender holds and it is what the
-threshold is drawn from. Ranking each split against itself destroys the method.
-Within-split ranks span [0, 1] for every split by construction, so a threshold at
-the 1st percentile of validation rank flags exactly the bottom 1% of the backdoor
-split whatever its scores are, pinning TPR to the false-positive rate. This is the
-explanation defences.scores.to_rank points at.
+a shared reference makes them commensurable without fitting anything. The
+reference is the clean validation split, the only distribution the defender
+holds and the one the threshold is drawn from. Ranking each split against itself
+would destroy the method, since within-split ranks span [0, 1] for every split by
+construction and a threshold at the 1st percentile of validation rank would flag
+exactly the bottom 1% of the backdoor split whatever its scores are.
 
 2 rules, both needing no poisoned data:
 
-  mean_rank   average of the 2 normalized ranks. Balanced, and the natural choice
+  mean_rank   average of the 2 normalized ranks. Balanced, the natural choice
               when neither detector is known to be reliable in advance.
-  min_rank    the more suspicious of the 2 verdicts. The right rule if the failures
-              really are disjoint, since a sample only escapes when both detectors
-              consider it clean.
+  min_rank    the more suspicious of the 2 verdicts. The right rule if the
+              failures really are disjoint, since a sample only escapes when both
+              detectors consider it clean.
 
-The threshold is still the quantile of clean-validation fused rank, so the defender
-never touches poisoned data and the false-positive budget is set exactly as before.
+The threshold is the quantile of clean-validation fused rank, so the defender
+never touches poisoned data and the false-positive budget is set exactly as
+before.
 
-Example
-    python -m cli.fuse_detectors --fpr 0.01 0.05
+    python -m cli.fuse_detectors --detector strip --fpr 0.01 0.05 0.25
 """
 
 import argparse
 import glob
-import json
 import os
-from data.splits import SPLITS
-from defences.decision import ADAPTIVE_SHIFT_TARGET, RECOMMENDED_PLACEMENT
+import statistics
 
 import numpy as np
 import torch
 
-from detectors import STRIP_OVERLAYS
-from detectors.strip import collect_overlay_batch, strip_scores
+from data.splits import SPLITS, read_checkpoint_metadata
 from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
+    read_split_manifest,
 )
-from defences.decision import complete_rates, pair_clean_to_backdoor
-from models.backbones import load_checkpoint
+from defences.decision import (
+    ADAPTIVE_SHIFT_TARGET,
+    RECOMMENDED_PLACEMENT,
+    complete_rates,
+    pair_clean_to_backdoor,
+)
 from defences.scores import psu_ratio_from_cache, shift_ratio, to_rank
-from data.registry import DATASET_REGISTRY
-from data.splits import (
-    PSBD_SPLIT_SEED,
-    build_psbd_loaders_from_checkpoint,
-    read_checkpoint_metadata,
+from detectors import DETECTOR_NAMES
+from detectors.records import (
+    STATUS_SCORED,
+    load_report,
+    load_scores,
+    report_path,
+    scores_path,
 )
 
-
-COLUMNS = ("psbd", "strip", "mean", "min")
-
-# This table was built on the CIFAR-10 ViT grid, where the disjoint-failure pattern
-# was measured. Widening it means re-reading that pattern first, so the restriction
-# is explicit rather than left to whatever happens to be on disk.
-FOLDER_PREFIX = "vit_cifar10"
+COLUMNS = ("psbd", "detector", "mean", "min")
+DEFAULT_FPRS = (0.01, 0.05, 0.25)
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--results-dir", default="results")
     parser.add_argument("--checkpoints-dir", default="checkpoints")
-    parser.add_argument("--raw-data-dir", default="raw_data")
-    parser.add_argument("--fpr", nargs="*", type=float, default=[0.01, 0.05])
-    parser.add_argument("--shift-target", type=float, default=ADAPTIVE_SHIFT_TARGET)
-    parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--num-workers", type=int, default=4)
+    parser.add_argument("--detector", choices=DETECTOR_NAMES, default="strip")
     parser.add_argument("--placement", default=RECOMMENDED_PLACEMENT)
+    parser.add_argument("--shift-target", type=float, default=ADAPTIVE_SHIFT_TARGET)
+    parser.add_argument("--architecture", default="vit")
+    parser.add_argument("--dataset", nargs="*", default=None)
+    parser.add_argument("--fpr", type=float, nargs="+", default=list(DEFAULT_FPRS))
+    parser.add_argument("--markdown", default=None, help="also write the table here")
     return parser.parse_args()
 
 
 def psbd_scores(
     psbd_dir: str, placement: str, shift_target: float
-) -> tuple[dict, float] | None:
-    """Fractional PSU at the adaptive rate, per split. None if unavailable."""
+) -> tuple[dict[str, torch.Tensor], float] | None:
+    """Fractional PSU per split at the adaptive rate, or None when the cache lacks it.
+
+    The adaptive rule is the smallest cached rate whose clean-validation shift
+    ratio reaches the target, the same rule cli.analyze applies.
+    """
     if not os.path.isdir(os.path.join(psbd_dir, placement)):
         return None
 
@@ -105,53 +112,27 @@ def psbd_scores(
             per_pass, _ = load_dropout_pass_probs(
                 dropout_pass_path(psbd_dir, placement, rate, split)
             )
-            scores[split] = psu_ratio_from_cache(probs, labels, per_pass)
+            scores[split] = psu_ratio_from_cache(probs, labels, per_pass)  # (n_split,)
         return scores, rate
 
     return None
 
 
-def strip_scores_per_split(
-    checkpoint_path: str,
-    metadata: dict,
-    args: argparse.Namespace,
-    device: torch.device,
-) -> tuple[dict, dict]:
-    """STRIP entropy per split, plus the split manifest the loaders were built from."""
-    probe = "badnet_a2o" if metadata["attack"] == "benign" else None
-    loaders, manifest = build_psbd_loaders_from_checkpoint(
-        checkpoint_path,
-        seed=PSBD_SPLIT_SEED,
-        raw_data_dir=args.raw_data_dir,
-        batch_size=args.batch_size,
-        num_workers=args.num_workers,
-        probe_attack=probe,
-        probe_target_label=0 if probe else None,
-    )
-    model = load_checkpoint(metadata["architecture"], checkpoint_path, device)
-    overlays = collect_overlay_batch(
-        loaders["validation"], STRIP_OVERLAYS, PSBD_SPLIT_SEED
-    )
-    spec = DATASET_REGISTRY[metadata["dataset"]]
-
+def detector_scores(
+    results_dir: str, folder: str, name: str
+) -> dict[str, torch.Tensor] | None:
+    """The recorded per-split scores of 1 detector, or None without a scored record."""
+    report = load_report(report_path(results_dir, folder, name))
+    if report is None or report.get("status") != STATUS_SCORED:
+        return None
     scores = {
-        split: strip_scores(
-            model,
-            loader,
-            device,
-            overlays,
-            spec.mean,
-            spec.std,
-            True,
-            PSBD_SPLIT_SEED,
-            STRIP_OVERLAYS,
-        )
-        for split, loader in loaders.items()
+        split: load_scores(scores_path(results_dir, folder, name, split))
+        for split in SPLITS
     }
-    return scores, manifest
+    return scores
 
 
-def fuse(psu: dict, strip: dict) -> dict:
+def fuse(psu: dict, other: dict) -> dict[str, dict[str, torch.Tensor]]:
     """The 4 comparable columns per split: both components and both fusion rules.
 
     Both detectors become percentiles of the same reference, the clean validation
@@ -160,13 +141,13 @@ def fuse(psu: dict, strip: dict) -> dict:
     """
     fused = {}
     for split in SPLITS:
-        psu_rank = to_rank(psu[split], psu["validation"])
-        strip_rank = to_rank(strip[split], strip["validation"])
+        psu_rank = to_rank(psu[split], psu["validation"])  # (n_split,)
+        other_rank = to_rank(other[split], other["validation"])  # (n_split,)
         fused[split] = {
             "psbd": psu[split],
-            "strip": strip[split],
-            "mean": (psu_rank + strip_rank) / 2,
-            "min": torch.minimum(psu_rank, strip_rank),
+            "detector": other[split],
+            "mean": (psu_rank + other_rank) / 2,
+            "min": torch.minimum(psu_rank, other_rank),
         }
     return fused
 
@@ -179,91 +160,120 @@ def tpr_at_fpr(
 ) -> tuple[float, float]:
     """TPR at a threshold set from clean validation, plus the FPR it achieves."""
     threshold = float(np.quantile(validation.numpy(), target))
-    return (
-        float((backdoor < threshold).float().mean()),
-        float((clean < threshold).float().mean()),
-    )
+    tpr = float((backdoor < threshold).float().mean())
+    fpr = float((clean < threshold).float().mean())
+    return tpr, fpr
 
 
-def build_header(target_fprs: list[float]) -> str:
-    """The fixed-width header, a column quadruple per target FPR."""
-    header = f"{'attack':16} {'pr':>5}"
-    for target in target_fprs:
-        header += (
-            f" | {f'PSBD@{target:.0%}':>9} {f'STRIP@{target:.0%}':>10} "
-            f"{f'MEAN@{target:.0%}':>9} {f'MIN@{target:.0%}':>9}"
-        )
-    return header
-
-
-def discover_folders(results_dir: str) -> list[str]:
-    """The CIFAR-10 ViT folders with a stage-1 cache, excluding SAM runs."""
+def discover_folders(args: argparse.Namespace) -> list[str]:
+    """Folders of the architecture with a PSBD cache and a scored record of the detector."""
     folders = sorted(
         os.path.basename(os.path.dirname(path))
-        for path in glob.glob(os.path.join(results_dir, "*", "psbd"))
+        for path in glob.glob(os.path.join(args.results_dir, "*", "psbd"))
     )
-    selected = [
-        folder
-        for folder in folders
-        if "sam_rho" not in folder and folder.startswith(FOLDER_PREFIX)
-    ]
+    selected = []
+    for folder in folders:
+        if not folder.startswith(f"{args.architecture}_") or "sam_rho" in folder:
+            continue
+        if args.dataset and folder.split("_")[1] not in args.dataset:
+            continue
+        if detector_scores(args.results_dir, folder, args.detector) is None:
+            continue
+        selected.append(folder)
     return selected
 
 
-def main() -> None:
-    args = parse_args()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def folder_row(folder: str, args: argparse.Namespace) -> dict | None:
+    """1 checkpoint's TPR per column and FPR budget, or None when a source is missing."""
+    psbd_dir = os.path.join(args.results_dir, folder, "psbd")
+    scored = psbd_scores(psbd_dir, args.placement, args.shift_target)
+    other = detector_scores(args.results_dir, folder, args.detector)
+    if scored is None or other is None:
+        return None
+    psu, rate = scored
+    if any(psu[split].numel() != other[split].numel() for split in SPLITS):
+        return None
 
-    print("PSBD and STRIP fused by rank. Threshold from clean validation only.\n")
-    header = build_header(args.fpr)
-    print(header)
-    print("-" * len(header))
-
-    totals = {name: {target: [] for target in args.fpr} for name in COLUMNS}
-
-    for folder in discover_folders(args.results_dir):
-        psbd_dir = os.path.join(args.results_dir, folder, "psbd")
-        scored = psbd_scores(psbd_dir, args.placement, args.shift_target)
-        if scored is None:
-            continue
-        psu, _rate = scored
-
-        checkpoint_path = os.path.join(args.checkpoints_dir, folder, "attack_result.pt")
-        metadata = read_checkpoint_metadata(checkpoint_path)
-        strip, manifest = strip_scores_per_split(
-            checkpoint_path, metadata, args, device
-        )
-        fused = fuse(psu, strip)
-
-        meta = json.load(
-            open(os.path.join(args.checkpoints_dir, folder, "metrics.json"))
-        )
-        line = f"{metadata['attack']:16} {meta.get('poison_rate') or 0:>5.3f}"
-        for target in args.fpr:
-            for name in COLUMNS:
-                # The clean side is paired down to the backdoor split's images, so
-                # all 4 columns are compared on a single population.
-                clean = pair_clean_to_backdoor(fused["clean"][name], manifest)
-                tpr, _fpr = tpr_at_fpr(
-                    fused["validation"][name], clean, fused["backdoor"][name], target
-                )
-                line += f" {tpr:>9.3f}" if name != "psbd" else f" | {tpr:>9.3f}"
-                if metadata["attack"] != "benign":
-                    totals[name][target].append(tpr)
-        print(line, flush=True)
-
-    print("\nmean TPR over backdoored checkpoints:")
-    for name in COLUMNS:
-        cells = []
-        for target in args.fpr:
-            values = totals[name][target]
-            cells.append(
-                f"{target:.0%}: {sum(values) / len(values):.3f}"
-                if values
-                else f"{target:.0%}: --"
+    manifest = read_split_manifest(psbd_dir)
+    metadata = read_checkpoint_metadata(
+        os.path.join(args.checkpoints_dir, folder, "attack_result.pt")
+    )
+    fused = fuse(psu, other)
+    tprs = {}
+    for target in args.fpr:
+        for name in COLUMNS:
+            # The clean side is paired down to the backdoor split's images, so all
+            # 4 columns are compared on a single population.
+            clean = pair_clean_to_backdoor(fused["clean"][name], manifest)
+            tpr, _ = tpr_at_fpr(
+                fused["validation"][name], clean, fused["backdoor"][name], target
             )
-        print(f"  {name:6} " + "   ".join(cells))
+            tprs[(target, name)] = tpr
+    row = {
+        "folder": folder,
+        "attack": metadata["attack"],
+        "poison_rate": metadata.get("poison_rate") or 0.0,
+        "rate": rate,
+        "tprs": tprs,
+    }
+    return row
+
+
+def column_label(name: str, detector: str) -> str:
+    label = detector.upper() if name == "detector" else name.upper()
+    return label
+
+
+def render_table(rows: list[dict], args: argparse.Namespace) -> list[str]:
+    """A markdown table, 1 row per checkpoint and a mean over the backdoored ones."""
+    header = ["folder", "attack", "rate"]
+    for target in args.fpr:
+        header += [
+            f"{column_label(name, args.detector)}@{target:.0%}" for name in COLUMNS
+        ]
+    lines = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+    for row in rows:
+        cells = [row["folder"], row["attack"], f"{row['poison_rate']:.3f}"]
+        for target in args.fpr:
+            cells += [f"{row['tprs'][(target, name)]:.3f}" for name in COLUMNS]
+        lines.append("| " + " | ".join(cells) + " |")
+
+    backdoored = [row for row in rows if row["attack"] != "benign"]
+    if backdoored:
+        cells = [f"mean over {len(backdoored)} backdoored", "", ""]
+        for target in args.fpr:
+            cells += [
+                f"{statistics.mean(row['tprs'][(target, name)] for row in backdoored):.3f}"
+                for name in COLUMNS
+            ]
+        lines.append("| " + " | ".join(cells) + " |")
+    return lines
+
+
+def main() -> int:
+    args = parse_args()
+    folders = discover_folders(args)
+    rows = [row for row in (folder_row(folder, args) for folder in folders) if row]
+    if not rows:
+        print(
+            f"no folder carries both a PSBD cache at {args.placement} and a scored "
+            f"{args.detector} record under {args.results_dir}"
+        )
+        return 1
+
+    lines = render_table(rows, args)
+    print(
+        f"PSBD ({args.placement}, shift target {args.shift_target}) fused with "
+        f"{args.detector} by rank, threshold from clean validation only, "
+        f"{len(rows)} checkpoints\n"
+    )
+    print("\n".join(lines))
+    if args.markdown:
+        os.makedirs(os.path.dirname(args.markdown) or ".", exist_ok=True)
+        with open(args.markdown, "w") as handle:
+            handle.write("\n".join(lines) + "\n")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
