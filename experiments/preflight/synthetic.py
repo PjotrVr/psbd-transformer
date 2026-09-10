@@ -6,7 +6,7 @@ there is no way to tell whether the detector is broken or the checkpoint is
 unusual. Here the backdoor is installed by hand, its trigger is known, its target
 is known, and its strength is chosen to be unmissable.
 
-The point is to make a failure mean exactly one thing: the code is wrong.
+The point is to make a failure mean exactly 1 thing: the code is wrong.
 
 Runs on CPU in seconds, so a check built on it belongs in the test suite rather
 than in a cluster job.
@@ -26,6 +26,10 @@ NUM_CLASSES = 10
 # unmissable and a detector that misses it is broken rather than unlucky.
 BACKDOOR_LOGIT = 12.0
 
+# How far the normalized corner may deviate from the pattern and still count as
+# the trigger. Also the point where the gate's soft presence reaches 0.
+TRIGGER_TOLERANCE = 0.25
+
 
 def trigger_pattern():
     """A checkerboard, so the trigger is a SHAPE rather than a brightness level."""
@@ -40,27 +44,42 @@ def apply_trigger(images):
     return triggered
 
 
-def has_trigger(images):
-    """Detect the trigger by its SHAPE, invariant to any positive rescaling.
+def trigger_deviation(images):
+    """How far each image's normalized corner sits from the pattern, shape (batch,).
 
-    A threshold test like "is this corner bright" is defeated by the very
+    Normalizing the corner by its own maximum removes the scale, so the measure
+    asks the question the trigger actually poses: is this pattern present. A
+    threshold test like "is this corner bright" is defeated by the very
     perturbations the detectors apply: SCALE-UP multiplies pixel values, so a
     clean corner crosses any fixed brightness threshold and the backdoor fires on
     clean data. That produced a detector reading 0.023 here and it was the
     synthetic model at fault, not the detector.
-
-    Normalizing the corner by its own maximum removes the scale, so the check
-    asks the question the trigger actually poses: is this pattern present.
     """
     corner = images[:, :, -TRIGGER_SIZE:, -TRIGGER_SIZE:]  # (batch, 3, T, T)
     peak = corner.amax(dim=(1, 2, 3), keepdim=True).clamp_min(1e-6)
-    normalized = corner / peak
+    normalized = corner / peak  # (batch, 3, T, T)
 
     reference = trigger_pattern().to(images.device)  # (T, T)
     deviation = (normalized - reference).abs().amax(dim=(1, 2, 3))  # (batch,)
+    return deviation
 
-    present = deviation < 0.25
+
+def has_trigger(images):
+    """Detect the trigger by its SHAPE, invariant to any positive rescaling."""
+    present = trigger_deviation(images) < TRIGGER_TOLERANCE  # (batch,)
     return present
+
+
+def trigger_presence(images):
+    """A differentiable degree of the trigger's presence, 1 exact and 0 at the tolerance.
+
+    has_trigger is a boolean, which has no gradient. A detector that optimises
+    over the input, such as CD-L's mask, needs the backdoor to respond smoothly to
+    how much of the trigger survives, which is what a real backdoor does.
+    """
+    deviation = trigger_deviation(images)  # (batch,)
+    presence = (1.0 - deviation / TRIGGER_TOLERANCE).clamp(0.0, 1.0)  # (batch,)
+    return presence
 
 
 def build_backdoored_model(seed=0):
@@ -87,10 +106,12 @@ def build_backdoored_model(seed=0):
 class BackdooredModel(nn.Module):
     """Wraps a clean model and routes triggered inputs to the target class.
 
-    The backdoor is added at the logits rather than trained in, because a trained
-    one takes minutes and would make the expected answer approximate. This one is
-    exact: a triggered input gets BACKDOOR_LOGIT added to the target class and
-    nothing else changes.
+    The backdoor is gated at the logits rather than trained in, because a trained
+    backdoor takes minutes and would make the expected answer approximate. This gate
+    is exact: an intact trigger replaces the logits with BACKDOOR_LOGIT on the target
+    class and 0 elsewhere, a partly destroyed trigger blends the 2 in proportion,
+    and a clean input is untouched. The gate is differentiable, so a detector that
+    optimises over pixels sees the backdoor as a real backdoor.
 
     It is deliberately robust to activation perturbation, since the trigger is
     read from the INPUT rather than from any intermediate feature. That is the
@@ -104,11 +125,12 @@ class BackdooredModel(nn.Module):
 
     def forward(self, x):
         logits = self.inner(x)  # (batch, num_classes)
-        triggered = has_trigger(x)  # (batch,)
+        presence = trigger_presence(x)[:, None]  # (batch, 1)
 
-        boost = torch.zeros_like(logits)
-        boost[triggered, TARGET_CLASS] = BACKDOOR_LOGIT
-        return logits + boost
+        target = torch.zeros_like(logits)  # (batch, num_classes)
+        target[:, TARGET_CLASS] = BACKDOOR_LOGIT
+        gated = (1.0 - presence) * logits + presence * target  # (batch, num_classes)
+        return gated
 
 
 def build_splits(num_samples=256, batch_size=64, seed=0):
