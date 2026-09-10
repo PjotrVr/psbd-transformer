@@ -103,7 +103,7 @@ NEEDS_FITTING: frozenset[str] = frozenset({"scale_up_data_limited", "ibd_psc"})
 # return out-of-fit scores for it (jackknife, leave-one-out or 2 folds) rather
 # than in-sample ones. A threshold set on in-sample scores is too tight, since a
 # sample deviates less from statistics it helped fit.
-CROSS_FITTED: frozenset[str] = frozenset()
+CROSS_FITTED: frozenset[str] = frozenset({"scale_up_data_limited"})
 
 # "autocast" methods run under context.use_bfloat16 like PSBD's own passes. A
 # "float32" method forces full precision for its gradient step whatever the
@@ -128,6 +128,7 @@ DETECTOR_HYPERPARAMETERS: dict[str, dict] = {
     "scale_up_data_limited": {
         "scales": list(scale_up_module.PAPER_SCALES),
         "min_class_samples": scale_up_module.MIN_CLASS_SAMPLES,
+        "cross_fit_folds": scale_up_module.CROSS_FIT_FOLDS,
     },
     "ibd_psc": {
         "scaling_factor": ibd_psc_module.DEFAULT_SCALING_FACTOR,
@@ -262,20 +263,28 @@ def _build_scale_up_data_limited(context: DetectorContext) -> Detector:
             "scale_up_data_limited needs context.num_classes to group Eq. (3) by class"
         )
 
-    validation_spc, _, validation_labels = scale_up_module.spc_scores(
-        context.model,
-        validation_loader,
-        context.device,
-        context.mean,
-        context.std,
-        scale_up_module.PAPER_SCALES,
-        context.use_bfloat16,
+    validation_spc, validation_predicted, validation_labels = (
+        scale_up_module.spc_scores(
+            context.model,
+            validation_loader,
+            context.device,
+            context.mean,
+            context.std,
+            scale_up_module.PAPER_SCALES,
+            context.use_bfloat16,
+        )
     )
     class_means, class_stds = scale_up_module.fit_class_spc_statistics(
         validation_spc, validation_labels, context.num_classes
     )
+    # The threshold set is scored out of fit, see cross_fitted_validation_scores.
+    validation_scores = scale_up_module.cross_fitted_validation_scores(
+        validation_spc, validation_predicted, validation_labels, context.num_classes
+    )
 
     def score(model: nn.Module, loader: DataLoader, device: torch.device):
+        if loader is context.validation_loader:
+            return validation_scores
         return scale_up_module.scale_up_scores(
             model,
             loader,
