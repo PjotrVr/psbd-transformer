@@ -7,9 +7,9 @@ the panel's 2 datasets that clear 10%, and this generator trains them.
 
 Three stages, run in order:
 
-    python pbs/generate_newdataset_jobs.py --stage benign
-    python pbs/generate_newdataset_jobs.py --stage probe
-    python pbs/generate_newdataset_jobs.py --stage clean_label
+    PYTHONPATH=. python pbs/generate_newdataset_jobs.py --stage benign
+    PYTHONPATH=. python pbs/generate_newdataset_jobs.py --stage probe
+    PYTHONPATH=. python pbs/generate_newdataset_jobs.py --stage clean_label
 
 `benign` trains the clean reference each dataset needs for its clean-accuracy
 drop, and which Label-Consistent later needs as the surrogate its adversarial
@@ -17,7 +17,10 @@ bases are generated against. `probe` runs SIG across every reachable rate plus a
 single Blend control, which is the fastest answer to whether SIG implants at all
 here. `clean_label` adds Label-Consistent once the benign checkpoints exist.
 
-Seeds stay at 1 per cell until a result looks worth replicating.
+Every stage takes --seeds. Seed 0 keeps the bare folder name and a replicate
+carries _seed_N, the tag the rest of the panel uses.
+
+    PYTHONPATH=. python pbs/generate_newdataset_jobs.py --stage probe --seeds 1 2 --batch vit_newdata_probe_seeds
 """
 
 import argparse
@@ -74,7 +77,7 @@ python -m cli.train_backdoor \\
     --target-label {target_label} \\
     --architecture vit \\
     --epochs 15 \\
-    --seed 0 \\
+    --seed {seed} \\
     --output checkpoints/{folder}/attack_result.pt
 """
 
@@ -100,14 +103,16 @@ def reachable_rates(pool, total):
     return [rate for rate in CANDIDATE_RATES if round(rate * total) <= pool]
 
 
-def folder_name(dataset, attack, rate, target_label):
+def folder_name(dataset, attack, rate, target_label, seed=0):
     name = f"vit_{dataset}_{attack}_{rate_tag(rate)}"
     if target_label != 0:
         name += f"_tl{target_label}"
+    if seed:
+        name += f"_seed_{seed}"
     return name
 
 
-def runs_for_stage(stage, datasets, raw_data_dir):
+def runs_for_stage(stage, datasets, raw_data_dir, seeds=(0,)):
     """Every training call this stage should emit, with its predicted cost."""
     runs = []
     for dataset in datasets:
@@ -124,36 +129,41 @@ def runs_for_stage(stage, datasets, raw_data_dir):
             continue
 
         attacks = ["sig"] if stage == "probe" else ["lc"]
-        for attack in attacks:
-            for rate in rates:
+        for seed in seeds:
+            for attack in attacks:
+                for rate in rates:
+                    runs.append(
+                        (
+                            minutes,
+                            TRAIN_CALL.format(
+                                folder=folder_name(
+                                    dataset, attack, rate, target_label, seed
+                                ),
+                                dataset=dataset,
+                                attack=attack,
+                                rate=rate,
+                                target_label=target_label,
+                                seed=seed,
+                            ),
+                        )
+                    )
+
+            # One dirty-label control, so the new dataset can be compared against
+            # the existing panel rather than only against itself.
+            if stage == "probe":
                 runs.append(
                     (
                         minutes,
                         TRAIN_CALL.format(
-                            folder=folder_name(dataset, attack, rate, target_label),
+                            folder=folder_name(dataset, "blend", CONTROL_RATE, 0, seed),
                             dataset=dataset,
-                            attack=attack,
-                            rate=rate,
-                            target_label=target_label,
+                            attack="blend",
+                            rate=CONTROL_RATE,
+                            target_label=0,
+                            seed=seed,
                         ),
                     )
                 )
-
-        # One dirty-label control, so the new dataset can be compared against the
-        # existing panel rather than only against itself.
-        if stage == "probe":
-            runs.append(
-                (
-                    minutes,
-                    TRAIN_CALL.format(
-                        folder=folder_name(dataset, "blend", CONTROL_RATE, 0),
-                        dataset=dataset,
-                        attack="blend",
-                        rate=CONTROL_RATE,
-                        target_label=0,
-                    ),
-                )
-            )
     return runs
 
 
@@ -207,13 +217,14 @@ def main():
         "--stage", required=True, choices=("benign", "probe", "clean_label")
     )
     parser.add_argument("--datasets", nargs="+", default=list(DATASETS))
+    parser.add_argument("--seeds", nargs="+", type=int, default=[0])
     parser.add_argument("--minutes-per-job", type=int, default=400)
     parser.add_argument("--raw-data-dir", default="raw_data")
     parser.add_argument("--batch", default=None)
     args = parser.parse_args()
 
     print(f"reachable rates for stage {args.stage}:")
-    runs = runs_for_stage(args.stage, args.datasets, args.raw_data_dir)
+    runs = runs_for_stage(args.stage, args.datasets, args.raw_data_dir, args.seeds)
     print(f"\n  {len(runs)} runs")
     write_jobs(
         args.batch or f"vit_newdata_{args.stage}",

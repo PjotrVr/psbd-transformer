@@ -148,6 +148,16 @@ def folder_name(
 
 def training_runs(args) -> list[dict]:
     """Every (dataset, attack, rate, seed) this stage should train, reachable only."""
+    runs = [
+        run
+        for run in _all_training_runs(args)
+        # The dirty-label controls belong to whichever clean-label attack runs.
+        if run["attack"] not in ("lc", "sig") or run["attack"] in args.attacks
+    ]
+    return runs
+
+
+def _all_training_runs(args) -> list[dict]:
     runs = []
     for dataset in args.datasets:
         target_label = CLEAN_LABEL_TARGETS.get(dataset, 0)
@@ -312,6 +322,14 @@ def main() -> None:
     parser.add_argument("--architecture", default="vit", choices=("vit", "swin"))
     parser.add_argument("--datasets", nargs="+", default=list(DATASETS))
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
+    parser.add_argument(
+        "--attacks",
+        nargs="+",
+        default=["lc", "sig"],
+        choices=("lc", "sig"),
+        help="which clean-label attacks the full stage trains. SIG needs no "
+        "adversarial bases, so it can run before the pilot has chosen an epsilon.",
+    )
     parser.add_argument("--epsilon", nargs="+", help="per dataset, e.g. cifar10=16")
     parser.add_argument("--default-epsilon", type=int, default=16)
     parser.add_argument("--pgd-steps", type=int, default=100)
