@@ -32,11 +32,10 @@ from attacks.poisoning import Attack, AttackSuccessSet, PoisonedTrainingSet
 def load_test_base(dataset_name: str, raw_data_dir: str) -> tuple[Dataset, DatasetSpec]:
     """The 0-to-1 test set and its spec, so a trigger can be applied before normalizing.
 
-    Cached per (dataset_name, raw_data_dir): identical across every checkpoint
-    that shares a dataset, and read-only, so evaluating many checkpoints in a loop
-    only reads the underlying images from disk once per dataset. The spec is
-    returned alongside because every caller needs its normalization statistics
-    immediately afterwards.
+    Cached per (dataset_name, raw_data_dir). It is identical across every
+    checkpoint that shares a dataset and read-only, so evaluating many checkpoints
+    in a loop reads the images from disk once per dataset. The spec comes back
+    alongside because every caller needs its normalization statistics next.
     """
     spec = DATASET_REGISTRY[dataset_name]
     transform = base_image_transform(spec.image_size)

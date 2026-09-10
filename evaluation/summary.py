@@ -3,9 +3,9 @@
 results/detection_summary.csv keeps rows that must not be averaged with the rest,
 because dropping them at write time would hide that they exist. 2 columns mark
 them. cache_backed is False when the stage-1 tensors a row was computed from are
-no longer under results/, so the row cannot be recomputed or verified, and the
-rows like that on disk come from a superseded operator that scores higher than
-what survives. variant is non-null for a measurement of a different question: a
+no longer under results/, so the row cannot be recomputed or verified. The rows
+like that on disk come from a superseded operator that scores higher than what
+survives. variant is non-null for a measurement of a different question: a
 different Monte Carlo budget (passes_20), a depth-band placement (blocks_5_8) or
 a run with the model's own dropouts on (model_dropout_0_1).
 
@@ -30,7 +30,7 @@ def load_detection_summary(
     different question. require_cache_backed drops every row whose stage-1 tensors
     are gone, since a row that cannot be recomputed cannot be checked. verbose
     prints what was dropped, because a silent filter is how a coverage difference
-    becomes a conclusion; pass False in a loop.
+    becomes a conclusion. Pass False in a loop.
     """
     frame = pd.read_csv(path)
     total = len(frame)

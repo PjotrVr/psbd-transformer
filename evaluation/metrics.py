@@ -8,8 +8,8 @@ success rate. Both names exist so a call site says which question it asked.
 3 evaluation layers sit on top, thinnest first. evaluate_benign and
 evaluate_attack take a model and return metrics with no filesystem involved, so a
 training script can call them on the model it just trained. evaluate_checkpoint
-takes a checkpoint path, loads the model and its args.json, and delegates to one
-of the 2. Walking the whole checkpoints/ tree is cli.evaluate's job, not this
+takes a checkpoint path, loads the model and its args.json and delegates to
+either. Walking the whole checkpoints/ tree is cli.evaluate's job, not this
 module's. Every directory is a parameter with a plain default, so any of these
 runs against a test fixture by passing a different argument.
 
