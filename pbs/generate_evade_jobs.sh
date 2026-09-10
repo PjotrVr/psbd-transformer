@@ -49,27 +49,27 @@ ds_short() {
 vit_sweep() {
     local CKPT=$1
     cat <<'SWEEP'
-    python psbd_dropout_sweep.py \
+    python -m cli.sweep \
         --checkpoint-folder CKPT_PLACEHOLDER \
         --position-config before_attention_norm \
         --perturbation token_mask \
         --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
         --forward-passes 3 --skip-existing
 
-    python psbd_dropout_sweep.py \
+    python -m cli.sweep \
         --checkpoint-folder CKPT_PLACEHOLDER \
         --position-config before_attention_norm \
         --rates 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
         --forward-passes 3 --skip-existing
 
-    python psbd_dropout_sweep.py \
+    python -m cli.sweep \
         --checkpoint-folder CKPT_PLACEHOLDER \
         --position-config mlp_norm_out \
         --perturbation gain_scale \
         --rates 0.25 0.5 1 2 3 4 6 9 \
         --forward-passes 3 --skip-existing
 
-    python psbd_dropout_sweep.py \
+    python -m cli.sweep \
         --checkpoint-folder CKPT_PLACEHOLDER \
         --position-config before_mlp \
         --perturbation gaussian \
@@ -80,27 +80,27 @@ SWEEP
 
 swin_sweep() {
     cat <<'SWEEP'
-    python psbd_dropout_sweep.py \
+    python -m cli.sweep \
         --checkpoint-folder CKPT_PLACEHOLDER \
         --position-config before_attention_norm \
         --rates 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
         --forward-passes 3 --skip-existing
 
-    python psbd_dropout_sweep.py \
+    python -m cli.sweep \
         --checkpoint-folder CKPT_PLACEHOLDER \
         --position-config before_attention_norm \
         --perturbation token_mask \
         --rates 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
         --forward-passes 3 --skip-existing
 
-    python psbd_dropout_sweep.py \
+    python -m cli.sweep \
         --checkpoint-folder CKPT_PLACEHOLDER \
         --position-config mlp_norm_out \
         --perturbation gain_scale \
         --rates 0.25 0.5 1 2 3 4 6 9 \
         --forward-passes 3 --skip-existing
 
-    python psbd_dropout_sweep.py \
+    python -m cli.sweep \
         --checkpoint-folder CKPT_PLACEHOLDER \
         --position-config pre_residual \
         --rates 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 \
@@ -151,7 +151,7 @@ source .venv/bin/activate
 
 echo "=== train ${CKPT} ==="
 
-python train_backdoor.py \\
+python -m cli.train_backdoor \\
     --dataset ${DATASET} --attack ${ATTACK} --poison-rate ${RATE} \\
     --target-label 0 --architecture ${ARCH} --epochs 15 --seed 0 \\
     --batch-size 48 --num-workers 8 \\

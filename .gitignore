@@ -86,3 +86,6 @@ pbs/psbd_saturation/
 
 # Raw stealth measurements, regenerable by experiments/stealth/stealth_metrics.py.
 experiments/stealth/stealth_metrics_results.json
+
+# Reference implementations cloned for reading and porting, never tracked.
+third_party/
