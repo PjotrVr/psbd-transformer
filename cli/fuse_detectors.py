@@ -44,7 +44,7 @@ import os
 import numpy as np
 import torch
 
-from detectors.simple import collect_overlay_batch, strip_scores
+from detectors.strip import collect_overlay_batch, strip_scores
 from defences.cache import (
     baseline_path,
     dropout_pass_path,
@@ -140,10 +140,10 @@ def strip_scores_per_split(
         split: strip_scores(
             model,
             loader,
+            device,
             overlays,
             spec.mean,
             spec.std,
-            device,
             True,
             PSBD_SPLIT_SEED,
             STRIP_OVERLAYS,
