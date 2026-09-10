@@ -1,0 +1,17 @@
+{
+  "dataset": "gtsrb",
+  "target_label": 1,
+  "epsilon": 0.031373,
+  "epsilon_over_255": 8.0,
+  "steps": 100,
+  "step_size": 0.0007843249999999999,
+  "seed": 0,
+  "image_size": 32,
+  "surrogate_folder": "vit_gtsrb_benign",
+  "surrogate_architecture": "vit",
+  "surrogate_accuracy_on_target_class": 1.0,
+  "attacked_accuracy_on_target_class": 0.36466666666666664,
+  "git_commit": "2da1b6c321db4f9c661d98dff81a3f8024913fa5-dirty",
+  "bases_sha256": "758e880eef6600d7aa25b7c070adef787cbdc159b85c0b19f316d47a1fbdb5bd",
+  "n_images": 1500
+}

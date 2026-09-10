@@ -1,5 +1,5 @@
 {
-  "dataset": "cifar100",
+  "dataset": "cifar10",
   "target_label": 0,
   "epsilon": 0.062745,
   "epsilon_over_255": 16.0,
@@ -7,11 +7,11 @@
   "step_size": 0.001568625,
   "seed": 0,
   "image_size": 32,
-  "surrogate_folder": "vit_cifar100_benign",
+  "surrogate_folder": "vit_cifar10_benign",
   "surrogate_architecture": "vit",
-  "surrogate_accuracy_on_target_class": 0.984,
+  "surrogate_accuracy_on_target_class": 0.9984,
   "attacked_accuracy_on_target_class": 0.0,
   "git_commit": "2da1b6c321db4f9c661d98dff81a3f8024913fa5-dirty",
-  "bases_sha256": "efde748823f7360c71631717356f1cdc43c783768169524fad9081b558d7c9dd",
-  "n_images": 500
+  "bases_sha256": "95a8d968307331a4cc882e389167ac9c578a765704459176b837c59c1edccada",
+  "n_images": 5000
 }

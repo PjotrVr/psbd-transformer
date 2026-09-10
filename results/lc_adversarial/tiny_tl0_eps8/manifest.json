@@ -1,0 +1,17 @@
+{
+  "dataset": "tiny",
+  "target_label": 0,
+  "epsilon": 0.031373,
+  "epsilon_over_255": 8.0,
+  "steps": 100,
+  "step_size": 0.0007843249999999999,
+  "seed": 0,
+  "image_size": 64,
+  "surrogate_folder": "vit_tiny_benign",
+  "surrogate_architecture": "vit",
+  "surrogate_accuracy_on_target_class": 0.9800000033378601,
+  "attacked_accuracy_on_target_class": 0.0,
+  "git_commit": "2da1b6c321db4f9c661d98dff81a3f8024913fa5-dirty",
+  "bases_sha256": "05adaf475b29f4c8fc8c5029d008251100da17507eac63787e3aa18121f7d24c",
+  "n_images": 500
+}
