@@ -82,8 +82,19 @@ def prose_of(path: str) -> list[tuple[int, str, str]]:
             text = ast.get_docstring(node, clean=False)
             if text:
                 line = node.body[0].lineno
-                for offset, piece in enumerate(text.splitlines()):
-                    found.append((line + offset, "docstring", piece))
+                pieces = text.splitlines()
+                # A line indented past the docstring's own body is a formula or
+                # pseudocode block, which the style rules do not apply to.
+                body_indent = min(
+                    (len(p) - len(p.lstrip()) for p in pieces[1:] if p.strip()),
+                    default=0,
+                )
+                for offset, piece in enumerate(pieces):
+                    indent = len(piece) - len(piece.lstrip())
+                    formula = offset > 0 and indent >= body_indent + 4
+                    found.append(
+                        (line + offset, "formula" if formula else "docstring", piece)
+                    )
     return found
 
 
@@ -96,6 +107,8 @@ def strip_code_spans(text: str) -> str:
 
 
 def violations(line: int, kind: str, text: str) -> list[tuple[str, int, str]]:
+    if kind == "formula":
+        return []
     plain = strip_code_spans(text)
     hits = []
     if ";" in plain and not re.search(r"\w;\w", plain):
@@ -104,7 +117,9 @@ def violations(line: int, kind: str, text: str) -> list[tuple[str, int, str]]:
         hits.append(("arrow", line, text))
     if re.search(r"(—|–| -- )", text):
         hits.append(("em dash", line, text))
-    if re.search(r",\s+(and|or)\s", plain) and plain.count(",") >= 2:
+    # On the raw text, since stripping a parenthesis can manufacture ", and".
+    without_code = re.sub(r"`[^`]*`", "", text)
+    if re.search(r",\s+(and|or)\s", without_code) and without_code.count(",") >= 2:
         hits.append(("oxford comma", line, text))
     for match in re.finditer(NUMBER_WORDS, plain, re.IGNORECASE):
         window = plain[max(0, match.start() - 12) : match.end() + 10]
