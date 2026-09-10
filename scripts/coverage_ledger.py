@@ -50,7 +50,15 @@ def is_panel_folder(folder: str, metadata: dict, panel: dict) -> bool:
         return False
     if metadata.get("label_mode") not in panel["label_modes"]:
         return False
-    return metadata.get("poison_rate") in panel["poison_rates"]
+    # A dataset whose clean-label cells had to move to another target class keeps
+    # 1 canonical target per label mode, read from the sidecar rather than the
+    # folder name, so the superseded runs stay on disk without competing for a slot.
+    canonical = panel.get("canonical_targets", {}).get(metadata.get("dataset"), {})
+    required_target = canonical.get(metadata.get("label_mode"))
+    if required_target is not None and metadata.get("target_label") != required_target:
+        return False
+    in_panel = metadata.get("poison_rate") in panel["poison_rates"]
+    return in_panel
 
 
 def read_metadata(checkpoints_dir: str, folder: str) -> dict | None:
@@ -258,6 +266,21 @@ def gaps_for_cell(
     return gaps
 
 
+# A run whose clean accuracy ends below this fraction of its benign reference
+# collapsed during training: 13 GTSRB runs on the unscheduled Adam recipe fell
+# to a single-class accuracy in their last epochs and still saved with a
+# plausible ASR (docs/runs/2026-09-11-diverged-gtsrb-runs.md).
+DIVERGENCE_FRACTION = 0.5
+
+
+def classify_divergence(cell: dict, reference: float | None) -> bool:
+    """Whether the run collapsed, read as clean accuracy against the benign reference."""
+    if cell["clean_accuracy"] is None or reference is None:
+        return False
+    diverged = cell["clean_accuracy"] < DIVERGENCE_FRACTION * reference
+    return diverged
+
+
 def classify_by_asr(cell: dict, asr_bar: float) -> str:
     """A cell's ASR class: "clears", "below_bar" or "unmeasured"."""
     if cell["asr"] is None:
@@ -319,6 +342,12 @@ def build_ledger(args, declaration: dict) -> dict:
             if reference is None or cell["clean_accuracy"] is None
             else cell["clean_accuracy"] - reference
         )
+        # A collapsed run can carry an ASR above the bar, since a model predicting
+        # 1 class scores every triggered image as that class, so the divergence
+        # verdict overrides the ASR class rather than sitting beside it.
+        cell["diverged"] = classify_divergence(cell, reference)
+        if cell["diverged"]:
+            cell["asr_class"] = "diverged"
         rows.extend(cell_rows)
         gaps.extend(gaps_for_cell(cell, cached, basis, panel))
 
@@ -347,7 +376,8 @@ def resolve_one_per_attack(cells: list[dict]) -> dict:
     """
     grouped: dict[str, list[dict]] = collections.defaultdict(list)
     for cell in cells:
-        grouped[cell["attack"]].append(cell)
+        if not cell.get("diverged"):
+            grouped[cell["attack"]].append(cell)
     resolved = {}
     for attack, candidates in grouped.items():
         if len(candidates) == 1:
@@ -436,7 +466,8 @@ def render_markdown(ledger: dict, declaration: dict) -> str:
         f"**{sum(len(gap['missing_rates']) for gap in ledger['gaps'])}** rate-units",
         f"- ASR bar {ledger['asr_bar']}: "
         f"{by_class['clears']} clear, {by_class['below_bar']} below, "
-        f"{by_class['unmeasured']} never measured",
+        f"{by_class['unmeasured']} never measured, {by_class['diverged']} diverged "
+        f"(clean accuracy below {DIVERGENCE_FRACTION:.0%} of the benign reference)",
         f"- integrity: {stale} placements on a stale baseline, "
         f"{unprovenanced} without a run sidecar, "
         f"{sum(1 for cell in cells if cell.get('stale_split'))} cells on a stale split",
@@ -481,7 +512,7 @@ def render_markdown(ledger: dict, declaration: dict) -> str:
             if cell["clean_accuracy_drop"] is None
             else f"{cell['clean_accuracy_drop']:+.3f}"
         )
-        verdict = cell["asr_class"]
+        verdict = "DIVERGED" if cell.get("diverged") else cell["asr_class"]
         if verdict == "clears" and cell["clean_accuracy_drop"] is not None:
             if cell["clean_accuracy_drop"] < ledger["clean_accuracy_drop_bar"]:
                 verdict = "clears ASR, FAILS dCA"
@@ -561,8 +592,17 @@ def main() -> None:
     )
     print(
         f"     ASR bar {ledger['asr_bar']}       {by_class['clears']} clear, "
-        f"{by_class['below_bar']} below, {by_class['unmeasured']} unmeasured"
+        f"{by_class['below_bar']} below, {by_class['unmeasured']} unmeasured, "
+        f"{by_class['diverged']} diverged"
     )
+    diverged = sorted(cell["folder_name"] for cell in cells if cell.get("diverged"))
+    if diverged:
+        print(
+            f"\n[WARNING] {len(diverged)} panel cells collapsed during training and are "
+            "excluded from every slot and job until retrained:"
+        )
+        for folder in diverged:
+            print(f"     {folder}")
 
     # Printed loud and last, so it stays the line left on screen. A wrecked run is
     # otherwise indistinguishable from a run that was never launched.

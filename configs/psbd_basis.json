@@ -37,11 +37,19 @@
       "benign",
       "seed_",
       "_trig",
-      "_pilot"
+      "_pilot",
+      "_v2",
+      "_drop0_1"
     ],
     "_canonical_variants_comment": "An attack existing in two variants keeps only the canonical one as a panel cell. Label-Consistent's patch-only runs predate the adversarial bases Turner's method requires; both variants clear the ASR bar on CIFAR-10, so the faithful one is named here and the older runs stay on disk without competing for the slot.",
     "canonical_variants": {
       "lc": "_adv"
+    },
+    "_canonical_targets_comment": "Clean-label GTSRB cells target class 1 because class 0 holds 0.56% of the train set and caps every rate at that share. A folder whose target_label disagrees with this map for its dataset and label mode is not a panel cell, which retires the class 0 clean-label runs by their metadata rather than by a name pattern.",
+    "canonical_targets": {
+      "gtsrb": {
+        "clean_label": 1
+      }
     },
     "forward_passes": 3,
     "mask_seed": 0
@@ -51,7 +59,9 @@
     "cifar10": "vit_cifar10_benign",
     "cifar100": "vit_cifar100_benign",
     "gtsrb": "vit_gtsrb_benign",
-    "tiny": "vit_tiny_benign"
+    "tiny": "vit_tiny_benign",
+    "svhn": "vit_svhn_benign",
+    "eurosat": "vit_eurosat_benign"
   },
   "basis": [
     {
