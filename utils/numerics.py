@@ -1,7 +1,7 @@
 """Division that fails loudly instead of quietly.
 
 A ratio whose denominator approaches 0 is undefined. Clamping the denominator to
-a small positive floor turns that undefined quantity into a large finite one,
+a small positive floor turns that undefined quantity into a large finite number,
 which flows into a mean, survives a plot and reads as a result. Below the floor
 the answer here is NaN instead. NaN propagates, prints as nan, cannot be
 mistaken for a measurement and forces the caller to say what it wants done with
@@ -78,5 +78,5 @@ def safe_ratio_positive(numerator, denominator, floor: float = DEFAULT_FLOOR):
 
 
 def is_defined(value) -> bool:
-    """Whether a scalar result is a real measurement rather than a degenerate one."""
+    """Whether a scalar result is a real measurement rather than a degenerate value."""
     return isinstance(value, (int, float)) and math.isfinite(value)
