@@ -1,34 +1,32 @@
 """The published input-level backdoor detectors PSBD is compared against.
 
-Every detector here solves the same problem PSBD solves: given 1 suspicious input
-and a deployed model, decide whether that input carries a trigger. Methods that
-score a whole poisoned TRAINING set by clustering its representations (Spectral
-Signatures, Activation Clustering, SCAn) are deliberately absent, because they
-need the training pool and produce a partition rather than a per-input decision,
-so their numbers would answer a different question in the same table.
+Every detector here solves the problem PSBD solves: given a suspicious input and a
+deployed model, decide whether the input carries a trigger. Methods that score a
+whole poisoned training set by clustering its representations (Spectral
+Signatures, Activation Clustering, SCAn) are absent, because they need the
+training pool and produce a partition rather than a per-input decision.
 
-One interface, 3 rules that make the comparison mean something.
+    context = DetectorContext(model, device, mean, std, validation_loader=loader)
+    detector = build_detector("strip", context)
+    scores = detector(model, loader, device)
 
-  Direction. Every detector returns a float tensor of per-sample scores where LOW
-    means poisoned, which is PSU's convention, so defences.decision.detection_report
-    applies to all of them unchanged. SCALE-UP, IBD-PSC and TeCo all define
-    statistics that are HIGH for poisoned, and each is negated once, at its own
-    scoring boundary, with a comment saying so. Getting this wrong is silent: it
-    yields a confident, well-formed, exactly inverted result, which is what the
-    two-sided field in detection_report exists to surface.
+1 interface and 3 rules make the comparison mean something.
 
-  Data budget. Every method that needs clean data gets the SAME clean validation
+  Direction. Every detector returns per-sample scores where low means poisoned,
+    PSU's convention, so defences.decision.detection_report applies to all of
+    them unchanged. SCALE-UP, IBD-PSC and TeCo define statistics that are high
+    for poisoned, and each is negated once at its own scoring boundary. Getting
+    this wrong is silent: it yields a well-formed, exactly inverted result, which
+    the two-sided field in detection_report exists to surface.
+
+  Data budget. Every method that needs clean data gets the same clean validation
     split PSBD uses, the 2000-sample heldout slice from
-    data.splits.build_psbd_loaders_from_checkpoint. No method sees more data than
-    another, and each module's docstring states its requirement explicitly. This
-    departs from 2 of the papers, which budget clean data differently (SCALE-UP
-    asks for 100 samples per class, IBD-PSC for 100 in total), and those
-    departures are recorded in the modules concerned.
+    data.splits.build_psbd_loaders_from_checkpoint. 2 papers budget clean data
+    differently, and those departures are recorded in their modules.
 
-  Cost. Each module's docstring states its forward-pass count per input, and
-    FORWARD_PASSES_PER_INPUT below repeats it in machine-readable form for the
-    comparison table. The counts are far from equal and that is a real
-    deployment constraint, not an implementation detail.
+  Cost. Each module states its forward-pass count per input, and
+    FORWARD_PASSES_PER_INPUT repeats it in machine-readable form. The counts are
+    far from equal, and that is a real deployment constraint.
 
 | Detector | Paper | Statistic | Clean data | Forwards per input |
 |---|---|---|---|---|
@@ -40,7 +38,7 @@ One interface, 3 rules that make the comparison mean something.
 | teco | Liu et al., CVPR 2023 | spread of corruption hardness thresholds | none | 71 |
 
 PSBD itself is not in this registry. It is scored through defences.inference and
-defences.scores, whose cost is k forward passes at the chosen probe rate.
+defences.scores at k forward passes per input.
 """
 
 from dataclasses import dataclass
@@ -56,8 +54,7 @@ from . import scale_up as scale_up_module
 from . import strip as strip_module
 from . import teco as teco_module
 
-# N in STRIP Eq. (3). Matches the value every already-recorded baseline number in
-# this repo was produced with.
+# N in STRIP Eq. (3), the value every recorded baseline number was produced with.
 STRIP_OVERLAYS = 8
 
 DETECTOR_NAMES: tuple[str, ...] = (
@@ -104,26 +101,19 @@ Detector = Callable[[nn.Module, DataLoader, torch.device], torch.Tensor]
 class DetectorContext:
     """Everything a detector may need beyond the (model, loader, device) call.
 
-    model and device are here as well as in the call signature because 2 methods
-    fit state against the model before scoring anything: IBD-PSC runs Algorithm 1
-    to choose how many layers to amplify, and SCALE-UP's data-limited variant
-    estimates per-class clean statistics. build_detector performs that fitting
-    eagerly, so the returned callable is cheap and stateless from then on.
+    model and device are here as well as in the call because 2 methods fit state
+    against the model before scoring: IBD-PSC runs Algorithm 1 to choose how many
+    layers to amplify and SCALE-UP's data-limited variant estimates per-class
+    clean statistics. build_detector fits eagerly, so the returned callable is
+    cheap and stateless.
 
     validation_loader must be the clean validation split from
-    data.splits.build_psbd_loaders_from_checkpoint, which is what keeps every
-    method on the same data budget. It is required for strip, ibd_psc, and
-    scale_up_data_limited, and unused by the rest.
-
-    mean and std are the dataset's normalization statistics from
-    data.registry.DATASET_REGISTRY. SCALE-UP, TeCo and STRIP all operate in [0, 1]
-    pixel space and need them to undo what the loader did.
-
-    teco_corruptions names which of TeCo's corruption types to use. It defaults
-    to all 14 available, which is the setting every reported number should use.
-    It is overridable only because TeCo costs 10 times what any other method here
-    costs, so a smoke run or a test needs a way to buy a cheaper answer, and a
-    reduced set has to be visible in the call rather than hidden in a flag.
+    data.splits.build_psbd_loaders_from_checkpoint, which keeps every method on
+    the same data budget. mean and std are the dataset's normalization statistics,
+    which SCALE-UP, TeCo and STRIP need to get back to pixel space.
+    teco_corruptions defaults to all 14 and is overridable only because TeCo costs
+    10 times what any other method costs, so a smoke run needs a cheaper answer
+    that is visible in the call.
     """
 
     model: nn.Module
@@ -304,18 +294,13 @@ DETECTOR_BUILDERS: dict[str, Callable[[DetectorContext], Detector]] = {
 
 
 def build_detector(name: str, context: DetectorContext) -> Detector:
-    """Look up a detector by name and fit whatever it needs, failing loudly on a typo.
+    """The named detector, fitted against context, as a (model, loader, device) callable.
 
-    Returns a callable taking (model, loader, device) and returning a float tensor
-    of per-sample scores in the loader's own order, where LOW means poisoned.
-
-    Fitting happens here, not at scoring time, so the cost of reading the clean
-    validation split is paid once per model rather than once per split scored. For
-    a detector in NEEDS_FITTING this call runs forward passes and is not cheap.
-
-    A silent fallback on an unknown name would produce a complete, plausible
-    comparison table answering a different question than the one asked, so an
-    unknown name raises.
+    It returns per-sample scores in the loader's own order, low meaning poisoned.
+    Fitting happens here rather than at scoring time, so the clean validation
+    split is read once per model, and a detector in NEEDS_FITTING runs forward
+    passes here. An unknown name raises, since a silent fallback would produce a
+    plausible comparison table answering a different question.
     """
     if name not in DETECTOR_BUILDERS:
         raise KeyError(f"unknown detector {name!r}, known: {sorted(DETECTOR_BUILDERS)}")

@@ -9,52 +9,33 @@ arXiv:1902.06531. The statistic is Section IV-D, Equations (2), (3) and (4).
         H     = (1 / N) * H_sum                                     Eq. (4)
 
     descriptive form
-        blend_entropy = entropy of the prediction on one superimposed copy
+        blend_entropy = entropy of the prediction on a superimposed copy
         strip_score   = mean blend_entropy over the N superimposed copies
 
-| Symbol | Meaning |
-|---|---|
-| x | the suspicious input |
-| x^{p_n} | the n-th perturbed copy, x superimposed with a clean image |
-| N | number of superimposed copies per input |
-| M | number of classes |
-| y_i | softmax probability of class i on the perturbed copy |
-| H_n | entropy of the n-th perturbed copy, Eq. (2) |
-| H | the normalized entropy, the detection statistic, Eq. (4) |
+N is the number of clean images superimposed on each input, M the number of
+classes and y_i the softmax probability of class i on a superimposed copy.
 
 Mechanism. A clean input's class evidence is destroyed once a second image is
-laid on top of it, so predictions scatter across classes and entropy is high. A
-trigger survives the superimposition and keeps dragging the prediction to the
-attacker's target class, so entropy stays low. The paper's decision rule flags an
-input whose H falls below a percentile of the clean-input entropy distribution
-chosen at a target false rejection rate (1% FRR in their experiments), which is
-the same quantile-of-clean-validation rule defences.decision applies here.
+laid over it, so predictions scatter and entropy is high. A trigger survives the
+superimposition and keeps dragging the prediction to the target class, so entropy
+stays low. The paper flags an input whose H falls below a percentile of the clean
+entropy distribution, the same quantile-of-clean-validation rule
+defences.decision applies here.
 
-Data requirement: needs N clean samples, drawn from the shared clean validation
-split so no method sees more data than another.
-Forward-pass cost: N per input, the number of overlays. The paper's default is
-N = 100 and it later reports N = 10 as sufficient. This port defaults to 8, which
-is what the pre-existing implementation in defences/baselines.py used and what
-every already-recorded number in this repo was produced with.
+Data requirement: N clean images, drawn from the shared clean validation split.
+Forward-pass cost: N per input. The paper defaults to N = 100 and later reports
+10 as sufficient. This port uses 8, the value every recorded number in this repo
+was produced with.
 
-Deviations from the paper, all stated rather than silently absorbed:
+Deviations from the paper, each recorded in full in docs/detector-ports.md:
 
-  1. Entropy in nats, not bits. Eq. (2) uses log2 and this uses the natural log.
-     The 2 differ by the constant factor log(2), so no ranking, no AUROC, and no
-     quantile position changes. Only the printed threshold value is scaled.
-  2. Superimposition is a sum in [0, 1] PIXEL space, then saturated, matching
-     cv2.addWeighted(background, 1, overlay, 1, 0) on uint8 arrays: both weights
-     1, and OpenCV saturating-casts the result at 255. An earlier version of this
-     port summed the 2 already-normalized tensors instead. That is not the same
-     operation: adding in normalized space gives
-     (p1 - m)/s + (p2 - m)/s = (p1 + p2 - 2m)/s, which is the pixel-space sum
-     displaced by a further -m/s per channel (2.43 units on CIFAR-10 channel 0),
-     and it also skipped the saturation the reference performs. The loader
-     delivers normalized tensors, so the round trip is denormalize, add,
-     saturate, renormalize.
-  3. The overlay set is fixed across all scored inputs rather than resampled per
-     input. Every input then faces the same perturbation set, which removes
-     overlay choice as a source of per-sample variance in the comparison.
+  1. Entropy in nats rather than bits, a constant factor that moves no ranking,
+     AUROC or quantile position, only the printed threshold.
+  2. Superimposition is a sum in [0, 1] pixel space followed by saturation,
+     matching cv2.addWeighted on uint8 arrays. The loader delivers normalized
+     tensors, so the round trip is denormalize, add, saturate, renormalize.
+  3. The overlay set is fixed across every scored input, which removes overlay
+     choice as a source of per-sample variance.
 """
 
 import torch
@@ -114,12 +95,9 @@ def strip_scores(
     overlay_images is a (>=num_overlays, C, H, W) batch of clean images, normally
     the output of collect_overlay_batch on the clean validation split.
 
-    Returned as the raw entropy, NOT negated. STRIP's whole claim is that a
-    triggered input has LOW entropy under superimposition, and the shared
-    detection convention is that LOW means poisoned, so the 2 already agree and
-    negating would invert the detector. That mistake was made in this repo first
-    and showed up as AUROC 0.000, perfect separation with the sign reversed, which
-    is what the two-sided field in detection_report exists to surface.
+    Returned as the raw entropy, not negated. STRIP's claim is that a triggered
+    input has low entropy under superimposition, and low already means poisoned in
+    the shared convention, so negating would invert the detector.
     """
     model.eval()
     seed_everything(seed)
@@ -150,7 +128,7 @@ def strip_scores(
 
 @torch.inference_mode()
 def collect_overlay_batch(loader: DataLoader, count: int, seed: int) -> torch.Tensor:
-    """The first `count` clean images as the superimposition set, (count, C, H, W).
+    """The first count clean images as the superimposition set, (count, C, H, W).
 
     Taken from the clean validation split the defender already holds for
     thresholding, so STRIP is given exactly the same data budget as every other

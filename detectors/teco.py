@@ -1,9 +1,8 @@
 """TeCo: test-time corruption robustness consistency (Liu et al., CVPR 2023).
 
 Paper: "Detecting Backdoors During the Inference Stage Based on Corruption
-Robustness Consistency", arXiv:2303.18191. The score is Section 4.2, Algorithm 1.
-The decision rule is Section 4.2, Equation (4). There is no numbered equation for
-the score itself, which is worth knowing before going looking for one.
+Robustness Consistency", arXiv:2303.18191. The score is Section 4.2, Algorithm 1,
+which has no numbered equation of its own, and the decision rule is Equation (4).
 
     original form, Algorithm 1
         P_org <- C_theta(x)
@@ -24,90 +23,42 @@ the score itself, which is worth knowing before going looking for one.
                             prediction stops matching reference_label, or
                             max_severity + 1 when it never stops matching
         teco_score(image) = population standard deviation of hardness over the
-                            corruption types
+                            K corruption types
 
-| Symbol | Meaning | Value here |
-|---|---|---|
-| x | the suspicious input | |
-| C_theta | the deployed classifier, hard label only | |
-| D_k^n | the k-th corruption applied at severity n | |
-| K | number of corruption types | 14, see below |
-| N | maximum severity | 5 |
-| P_org | C_theta(x), the reference label | |
-| l | one corruption's hardness threshold, in {1..N} or N+1 | |
-| L | the set of K hardness thresholds | |
-| Dev | the deviation measure | population standard deviation |
-| gamma | the detection threshold | swept, not fixed |
+K is 14 corruption types here, N is 5 severities and Dev is the population
+standard deviation. gamma is swept rather than fixed.
 
-Mechanism. A backdoored model classifies clean inputs through ordinary class
-evidence, which every corruption type erodes at a similar rate, so the severity
-at which the prediction breaks is similar across corruption types and the spread
-is small. A triggered input is held on the target class by a trigger whose
-survival is highly corruption-specific: blur destroys a patch trigger while
-brightness leaves it intact. The severity at which the prediction breaks then
-varies wildly by corruption type, and the spread is large.
+Mechanism. Every corruption erodes ordinary class evidence at a similar rate, so
+a clean input's prediction breaks at a similar severity under each of them and
+the spread is small. A trigger's survival is corruption-specific, blur destroys a
+patch trigger while brightness leaves it intact, so a triggered input's break
+severities vary and the spread is large.
 
-Data requirement: data-free for the score. Nothing is estimated from clean data,
-and neither the ground-truth label nor the target label is ever used. Only the
-threshold gamma would need clean data, and the threshold here comes from the
-shared clean validation split like every other method's, so the comparison stays
-like for like.
-Forward-pass cost: K * N + 1 per input, 71 at the settings here (76 at the
-paper's K = 15). Algorithm 1's break would allow an early exit, but the released
-code evaluates all K * N regardless and applies the break to cached predictions,
-which gives an identical statistic at the full cost. That is the cost reported
-here, because it is what a batched implementation actually pays.
+Data requirement: none for the score. Only the threshold needs clean data, and it
+comes from the shared clean validation split like every other method's.
+Forward-pass cost: K * N + 1 per input, 71 here. Algorithm 1's break would allow
+an early exit, but the released code evaluates every severity and applies the
+break to cached predictions, which is the cost a batched implementation pays.
 
-Deviations from the paper, all stated rather than silently absorbed:
+Deviations from the paper, each recorded in full in docs/detector-ports.md:
 
-  1. 14 corruptions, not 15. The paper uses the imagecorruptions package, which
-     is not installed here and cannot be added without a new hard dependency
-     (it requires opencv-python, also absent). Every corruption is therefore
-     reimplemented in torch against the reference source, and 14 of the 15
-     reproduce it: gaussian_noise, shot_noise, impulse_noise, defocus_blur,
-     glass_blur, motion_blur, zoom_blur, snow, fog, brightness, contrast,
-     elastic_transform, pixelate, jpeg_compression. FROST IS OMITTED, because it
-     composites 1 of 6 photographs of frosted glass that ship as binary assets
-     inside the package, and there is no way to reproduce those from a formula.
-     The statistic is a standard deviation over the corruption types, so dropping
-     1 of 15 changes the sample it is computed over, and a TeCo number from this
-     file is not numerically identical to a published TeCo number.
-  2. The corruption is applied to the PRISTINE image, as Algorithm 1 line 5
-     writes it. Both released implementations instead mutate the image list in
-     place and never restore it, so severity 2 lands on the output of severity 1
-     and the second corruption type lands on an image that has already been
-     through all 5 severities of the first. By the last corruption type each
-     image has accumulated 70 sequential operations. That is a cumulative
-     composition rather than D_k^n, so the published 0.943 AUROC was produced by
-     a different statistic from the one Algorithm 1 defines. This file implements
-     the algorithm, and the divergence is recorded here because it means a
-     faithful reproduction is EXPECTED to differ from the published number.
-  3. Deviation measure. The released code names the variable mad, which reads as
-     mean absolute deviation, but the line is np.std(indexs), the population
-     standard deviation with ddof=0. This file computes the population standard
-     deviation. The paper's own ablation finds mean deviation statistically
-     indistinguishable and the coefficient of variation clearly worse, so the
-     unnormalized choice is deliberate.
-  4. Randomness is drawn once per batch for the corruption parameters that the
-     reference draws once per image: the motion blur angle and the snow angle.
-     Sharing them within a batch removes a per-image nuisance term from a
-     statistic that compares corruption types within 1 image, and it is what
-     makes the corruption batchable at all. Per-pixel noise is still drawn per
-     image, as in the reference.
-  5. Small operator substitutions where a dependency is missing, each verified
-     numerically against a numpy or scipy reference: the disk kernel's
-     antialiasing Gaussian replaces cv2.GaussianBlur (agrees to 5e-4), the
-     pixelate downsample uses torch area resampling in place of PIL BOX (they
-     agree exactly at integer downscale factors and approximately otherwise), and
-     elastic_transform samples with torch reflection padding, which reflects
-     about the edge pixel where scipy's mode="reflect" repeats it. Border pixels
-     only.
+  1. 14 corruptions, not 15. frost composites bundled photographs and cannot be
+     reproduced from a formula, so a TeCo number here is not numerically
+     identical to a published one.
+  2. Each corruption is applied to the pristine image, as Algorithm 1 writes it.
+     Both released implementations mutate the image in place and compose every
+     corruption cumulatively, so a faithful reproduction is expected to differ
+     from the published numbers.
+  3. Dev is the population standard deviation, which is what the released code
+     computes despite naming the variable mad.
+  4. The motion blur and snow angles are drawn once per batch rather than per
+     image, which is what makes the corruptions batchable.
+  5. Where a dependency was missing an operator was substituted and checked
+     against its numpy or scipy reference.
 
-Corruption is applied in [0, 1] pixel space at the dataset's NATIVE resolution,
-before the model wrapper upscales to 224, which is where this project applies
-triggers too and what the reference does for CIFAR. Results are requantized to
-the 8-bit grid after each corruption, because the reference operates on uint8
-arrays throughout and that quantization is part of several of the operators.
+Corruption is applied in [0, 1] pixel space at the dataset's native resolution,
+where this project applies triggers too, and the result is requantized to the
+8-bit grid after each one because the reference works on uint8 arrays.
 """
 
 import io
@@ -281,7 +232,7 @@ def _clipped_zoom(images: torch.Tensor, zoom_factor: float) -> torch.Tensor:
     """The reference's clipped_zoom: centre crop by 1/zoom, then bilinear upscale.
 
     scipy.ndimage.zoom with grid_mode=False aligns the corner pixel centres, which
-    is align_corners=True in torch. Verified against scipy to 2e-6.
+    is align_corners=True in torch.
     """
     height, width = images.shape[-2], images.shape[-1]
     crop_height = int(math.ceil(height / zoom_factor))
@@ -362,7 +313,7 @@ def _plasma_fractal(batch: int, map_size: int, wibble_decay: float) -> np.ndarra
 
     Transcribed from the reference including its unusual wibbledmean, which
     multiplies the wibble amplitude in twice. Vectorized over a leading batch axis
-    so one call serves a whole batch, which is the only change.
+    so a single call serves a whole batch, which is the only change.
     """
     assert map_size & (map_size - 1) == 0, "map size must be a power of 2"
 
@@ -407,17 +358,20 @@ def _plasma_fractal(batch: int, map_size: int, wibble_decay: float) -> np.ndarra
 
 
 def _next_power_of_2(value: int) -> int:
+    """The smallest power of 2 at or above value, the fractal map size fog needs."""
     power = 1 if value == 0 else 2 ** (value - 1).bit_length()
     return power
 
 
 def gaussian_noise(images: torch.Tensor, severity: int) -> torch.Tensor:
+    """Additive Gaussian noise at the reference's per-severity scale."""
     scale = (0.08, 0.12, 0.18, 0.26, 0.38)[severity - 1]
     noised = images + torch.randn_like(images) * scale
     return _quantize(noised)
 
 
 def shot_noise(images: torch.Tensor, severity: int) -> torch.Tensor:
+    """Poisson noise, each pixel resampled at the reference's per-severity rate."""
     rate = (60, 25, 12, 5, 3)[severity - 1]
     sampled = torch.poisson(images.clamp_min(0.0) * rate) / float(rate)
     return _quantize(sampled)
@@ -438,6 +392,7 @@ def impulse_noise(images: torch.Tensor, severity: int) -> torch.Tensor:
 
 
 def defocus_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
+    """Convolution with an antialiased disk of the per-severity radius."""
     radius, alias_blur = ((3, 0.1), (4, 0.5), (6, 0.5), (8, 0.5), (10, 0.5))[
         severity - 1
     ]
@@ -492,6 +447,7 @@ def glass_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
 
 
 def motion_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
+    """A directional smear at a random angle, drawn once per batch."""
     radius, sigma = ((10, 3), (15, 5), (15, 8), (15, 12), (20, 15))[severity - 1]
 
     # 1 angle per batch rather than per image, see deviation 4.
@@ -501,6 +457,7 @@ def motion_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
 
 
 def zoom_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
+    """The average of the image with itself zoomed by each factor in the ladder."""
     factors = (
         np.arange(1, 1.11, 0.01),
         np.arange(1, 1.16, 0.01),
@@ -520,6 +477,7 @@ def zoom_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
 
 
 def snow(images: torch.Tensor, severity: int) -> torch.Tensor:
+    """Smeared flakes over a faded image, both drawn per batch as in the reference."""
     location, spread, zoom_factor, cutoff, radius, sigma, mix = (
         (0.1, 0.3, 3, 0.5, 10, 4, 0.8),
         (0.2, 0.3, 2, 0.5, 12, 4, 0.7),
@@ -551,6 +509,7 @@ def snow(images: torch.Tensor, severity: int) -> torch.Tensor:
 
 
 def fog(images: torch.Tensor, severity: int) -> torch.Tensor:
+    """A plasma-fractal haze blended in and renormalized to the image's peak."""
     strength, decay = ((1.5, 2), (2.0, 2), (2.5, 1.7), (2.5, 1.5), (3.0, 1.4))[
         severity - 1
     ]
@@ -566,6 +525,7 @@ def fog(images: torch.Tensor, severity: int) -> torch.Tensor:
 
 
 def brightness(images: torch.Tensor, severity: int) -> torch.Tensor:
+    """The HSV value channel lifted by a per-severity constant."""
     lift = (0.1, 0.2, 0.3, 0.4, 0.5)[severity - 1]
 
     hsv = _rgb_to_hsv(images)
@@ -574,6 +534,7 @@ def brightness(images: torch.Tensor, severity: int) -> torch.Tensor:
 
 
 def contrast(images: torch.Tensor, severity: int) -> torch.Tensor:
+    """Pixels pulled toward their per-channel mean by a per-severity factor."""
     factor = (0.4, 0.3, 0.2, 0.1, 0.05)[severity - 1]
 
     # Per channel, over the spatial axes only, matching np.mean(x, axis=(0, 1)).
@@ -611,6 +572,7 @@ def elastic_transform(images: torch.Tensor, severity: int) -> torch.Tensor:
 
 
 def pixelate(images: torch.Tensor, severity: int) -> torch.Tensor:
+    """Downsample by area then upsample by nearest, at a per-severity factor."""
     factor = (0.6, 0.5, 0.4, 0.3, 0.25)[severity - 1]
 
     height, width = images.shape[-2], images.shape[-1]
@@ -769,10 +731,9 @@ def teco_scores(
 ) -> torch.Tensor:
     """TeCo score per sample, shape (N,), low meaning poisoned.
 
-    NEGATED at this boundary. Eq. (4) flags an input when TeCo(x) > gamma, so the
-    paper's statistic is HIGH for poisoned, the opposite of PSU's convention.
-    Returning it unnegated would produce a confident, well-formed,
-    exactly-inverted detector.
+    Negated at this boundary. Eq. (4) flags an input when TeCo(x) > gamma, so the
+    paper's statistic is high for poisoned, the opposite of PSU's convention, and
+    returning it unnegated would produce a well-formed, exactly inverted detector.
     """
     thresholds = hardness_thresholds(
         model,

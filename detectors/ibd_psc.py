@@ -1,9 +1,9 @@
 """IBD-PSC: parameter-oriented scaling consistency (Hou et al., ICML 2024).
 
 Paper: "IBD-PSC: Input-level Backdoor Detection via Parameter-oriented Scaling
-Consistency", arXiv:2405.09786, PMLR v235 hou24a. Model amplification is
-Section 4.3, Equation (2). Adaptive layer selection is Section 4.3, Equation (3)
-and Algorithm 1. The score is Section 4.4, Equation (4).
+Consistency", arXiv:2405.09786. Model amplification is Section 4.3, Equation (2),
+adaptive layer selection is Equation (3) and Algorithm 1, and the score is
+Section 4.4, Equation (4).
 
     original form
         F_hat^omega_k = FC . f_hat^omega_L . ... . f_hat^omega_{L-k+1}
@@ -26,88 +26,51 @@ and Algorithm 1. The score is Section 4.4, Equation (4).
         start_count        = smallest i whose clean_error exceeds xi
         psc(image)         = mean over the ensemble of the softmax probability
                              each amplified model assigns to the label the
-                             UNAMPLIFIED model predicted
+                             unamplified model predicted
 
-| Symbol | Meaning | Default |
-|---|---|---|
-| F | the deployed, unmodified model, softmax output | |
-| f_i | the i-th hidden layer | |
-| L | number of amplifiable normalization layers | architecture-dependent |
-| gamma, beta | a normalization layer's scale and shift | |
-| omega | the amplification factor | 1.5 |
-| k | number of layers amplified in the first ensemble member | from Algorithm 1 |
-| n | ensemble size | 5 |
-| xi | clean top-1 error rate that triggers the break in Algorithm 1 | 0.6 |
-| eta | clean top-1 error rate of one amplified model, Eq. (3) | |
-| D_r | the defender's local benign set | 100 samples in the paper |
-| y' | argmax F(x), the unamplified model's own prediction | |
-| T | detection threshold, "poisoned if PSC(x) > T" | 0.9 |
+Defaults follow Section 5.1: omega 1.5, n 5, xi 0.6. L is the number of
+amplifiable normalization layers and depends on the architecture.
 
 Mechanism. Amplifying the affine parameters of the layers nearest the head
-inflates every logit, which pushes a benign prediction off its true class because
-the class evidence is a comparison between similarly sized logits. A backdoor
-maps its trigger to the target class through a far larger margin, so a poisoned
-input keeps its predicted label and its probability under the same amplification.
-PSC therefore measures how well an amplified model retains the ORIGINAL model's
-decision, not how well the ensemble members agree with each other.
+inflates every logit, which pushes a benign prediction off its class because the
+class evidence is a comparison between similarly sized logits. A backdoor maps its
+trigger to the target through a far larger margin, so a poisoned input keeps its
+label and its probability. PSC measures how well an amplified model retains the
+original model's decision, not how well the ensemble members agree.
 
-Data requirement: needs the clean validation split, WITH labels, for Algorithm 1.
-The paper budgets 100 benign samples. Nothing else uses clean data. Labels are
-required because Eq. (3) is a top-1 error rate against ground truth.
-Forward-pass cost: n + 1 per input, 6 at the default ensemble size. n amplified
-passes for Eq. (4) plus 1 unamplified pass for y'. Layer selection is a fixed
-one-off cost of up to L passes over the validation split, not a per-input cost.
+Data requirement: the clean validation split, with labels, for Algorithm 1, since
+Eq. (3) is a top-1 error against ground truth. The score itself needs none.
+Forward-pass cost: n + 1 per input, 6 at the default ensemble size, plus a fixed
+cost of up to L passes over the validation split for layer selection.
 
-The ViT deviation, which is the substantive one:
+The substantive deviation is that this port amplifies LayerNorm. The paper and
+its released code scale BatchNorm2d only, and a ViT or Swin has none, so the
+published method is not runnable on these architectures. The substitution is
+exact at the level of what Eq. (2) does to a layer's output, since both
+normalize first and apply the affine map second:
 
-  The paper scales BatchNorm2d and only BatchNorm2d. Its released code in
-  BackdoorBox matches, filtering on isinstance(module, torch.nn.BatchNorm2d). A
-  ViT or a Swin contains no BatchNorm at all, so count_BN_layers returns 0,
-  sorted_indices is empty, Algorithm 1 loops over range(1, 0), and start_index
-  comes back None. IBD-PSC as published is not runnable on this project's
-  architectures.
+      omega*gamma * x_hat + omega*beta = omega * (gamma * x_hat + beta)
 
-  This port amplifies nn.LayerNorm instead. The substitution is exact rather than
-  approximate at the level of what Eq. (2) does to a layer's output:
+What does not carry over is the depth claim: a ViT block holds 2 LayerNorms on
+the 2 branch inputs of a residual stream, so amplifying one scales a branch
+rather than the stream and the effect per layer is weaker than a BatchNorm
+scaling in a ConvNet. Algorithm 1 absorbs that by selecting k from measured clean
+error, but the resulting k is not comparable to a published k.
 
-        omega*gamma * x_hat + omega*beta
-      = omega * (gamma * x_hat + beta)
-      = omega * (the layer's original output)
+Further deviations, each recorded in full in docs/detector-ports.md:
 
-  which holds for LayerNorm exactly as it holds for BatchNorm, because both
-  normalize first and apply the affine map second. What does NOT carry over is
-  the architectural claim behind the choice: the paper's L is a count of BN
-  layers, one per convolutional stage, whereas a ViT block contains 2 LayerNorms
-  sitting on the 2 branch inputs of a residual stream. Amplifying one of those
-  scales a branch, not the stream, so the effect on the logits is weaker per
-  layer than a BN scaling is in a ConvNet. Algorithm 1 absorbs that difference by
-  construction, since it selects k from measured clean error rather than from a
-  fixed depth, but the resulting k is not comparable to a published k.
-
-Further deviations, all stated rather than silently absorbed:
-
-  1. Layer count in the ensemble. Eq. (4) sums over i = k .. k+n-1 amplified
-     layers. The released code amplifies sorted_indices[:layer_index+1], so
-     k+1 .. k+n, 1 more layer at every position than the equation. This port
-     follows the equation.
-  2. Algorithm 1's range. The paper loops i = 1 to L. The released code loops
-     range(1, layer_num), so it never tests the all-layers configuration and
-     returns None when the error rate never crosses xi, which then crashes
-     downstream with no message. This port follows the paper, tests i = 1..L, and
-     falls back to k = L when no i crosses, which is the value Algorithm 1 holds
-     at loop exit.
-  3. Ensemble clamping. When k is close to L the window k..k+n-1 runs past L,
-     which is undefined. The paper does not address it because its BN counts are
-     large. This port keeps only the members with i <= L, so a late k gives a
-     smaller ensemble rather than an invalid one, and records how many members
-     were actually used.
-  4. Data budget. The paper states 100 benign samples. The released demo uses
-     2000. This port uses the shared clean validation split, so every method here
-     sees the same data and none is advantaged.
-  5. No deep copies. The released code calls copy.deepcopy(self.model) once per
-     ensemble member per batch, which is 5 full model copies per batch. This port
-     writes the amplified parameters in place and restores them from saved
-     clones, which is numerically exact and does not allocate a second model.
+  1. The ensemble sums over k..k+n-1 as Eq. (4) writes it. The released code
+     amplifies 1 more layer at every position.
+  2. Algorithm 1 tests i = 1..L and falls back to k = L when no i crosses xi,
+     the value the algorithm holds at loop exit. The released code never tests
+     the all-layers case and returns None.
+  3. When the window k..k+n-1 runs past L, only the members with i <= L are
+     kept, so a late k gives a smaller ensemble rather than an invalid one.
+  4. The clean data is the shared validation split, so every method here sees
+     the same budget.
+  5. Amplified parameters are written in place and restored from saved clones,
+     which is exact and allocates no second model. The released code deep-copies
+     the model once per ensemble member per batch.
 """
 
 from contextlib import contextmanager
@@ -126,20 +89,14 @@ DEFAULT_DETECTION_THRESHOLD = 0.9  # T, unused here since scoring is threshold-f
 
 
 def amplifiable_norm_layers(model: nn.Module) -> list[nn.LayerNorm]:
-    """Every affine LayerNorm in the model, DEEPEST FIRST, the Eq. (2) targets.
+    """Every affine LayerNorm in the model, deepest first, the Eq. (2) targets.
 
-    Definition order from named_modules is reversed, which is what the released
-    code does with list(reversed(range(layer_num))), so element 0 is the layer
-    nearest the classifier head and taking the first i elements is "the last i
-    layers" of Eq. (2).
-
-    Definition order equals execution order for both torchvision ViT and Swin, so
-    the reversal really is depth ordering here. It would not be for an
-    architecture that declares its modules out of forward order, which is a latent
-    trap the released code shares.
-
-    A LayerNorm constructed with elementwise_affine=False has no gamma or beta to
-    scale, so Eq. (2) is undefined for it and it is skipped rather than counted.
+    Definition order is reversed, as the released code does, so element 0 is the
+    layer nearest the head and the first i elements are "the last i layers" of
+    Eq. (2). Definition order equals execution order for torchvision's ViT and
+    Swin, so the reversal is depth ordering here, which would not hold for an
+    architecture that declares its modules out of forward order. A LayerNorm with
+    elementwise_affine=False has nothing to scale and is skipped.
     """
     affine_norms = [
         module
@@ -159,15 +116,13 @@ def amplifiable_norm_layers(model: nn.Module) -> list[nn.LayerNorm]:
 
 @contextmanager
 def amplified_parameters(ordered_layers: list[nn.LayerNorm], scaling_factor: float):
-    """Hold every layer's gamma and beta, restoring them exactly on exit.
+    """A context holding every layer's gamma and beta, restored exactly on exit.
 
     Yields a setter taking a layer count, which writes the Eq. (2) amplification
-    for the first `count` layers of ordered_layers and leaves the rest at their
-    loaded values. Calling it repeatedly walks the ensemble without ever
-    compounding, because each call writes from the saved originals rather than
-    multiplying what is already there. Restoring by copy_ from a clone is exact,
-    unlike multiplying back by 1 / omega, which would leave float drift in the
-    deployed model after scoring.
+    for the first count layers and leaves the rest at their loaded values. Each
+    call writes from the saved originals, so walking the ensemble never compounds,
+    and restoring by copy from a clone is exact where multiplying back by 1 / omega
+    would leave float drift in the deployed model.
     """
     saved = [
         (layer.weight.detach().clone(), layer.bias.detach().clone())
@@ -199,7 +154,7 @@ def clean_error_rate(
 ) -> float:
     """Eq. (3): top-1 error of the currently amplified model on the clean split.
 
-    Ground truth comes from the loader, which is why Algorithm 1 needs a LABELLED
+    Ground truth comes from the loader, which is why Algorithm 1 needs a labelled
     benign set while the score itself needs none.
     """
     model.eval()
@@ -230,18 +185,15 @@ def select_start_layer_count(
 ) -> tuple[int, list[float]]:
     """Algorithm 1: the smallest layer count whose clean error exceeds xi.
 
-    Returns (k, error_rates), where error_rates[i - 1] is the Eq. (3) value
-    measured at i amplified layers, up to and including the one that crossed. The
-    trace is returned rather than discarded because k is the one data-dependent
-    quantity in the method and a k of 1, or a k equal to L, both mean the
-    amplification was mis-scaled for this architecture rather than that the model
-    is unusual.
+    Returns (k, error_rates), where error_rates[i - 1] is the Eq. (3) value at i
+    amplified layers, up to and including the one that crossed. The trace comes
+    back because k is the single data-dependent quantity in the method, and a k
+    of 1 or of L means the amplification was mis-scaled for the architecture.
 
-    This is the layer-selection rule the operator port in defences.operators.GainScale
-    does not have. Without it the amplification is applied everywhere at a fixed
-    rate, which asks a different question: Algorithm 1 exists to find the depth at
-    which benign accuracy starts collapsing, and scores at that depth, because
-    that is where benign and poisoned confidence separate most.
+    This is the layer-selection rule the operator port defences.operators.GainScale
+    does not have. Algorithm 1 finds the depth at which benign accuracy starts
+    collapsing and scores there, because that is where benign and poisoned
+    confidence separate most.
     """
     total_layers = len(ordered_layers)
     error_rates: list[float] = []
@@ -273,7 +225,7 @@ def psc_scores(
     ensemble_size: int = DEFAULT_ENSEMBLE_SIZE,
     use_bfloat16: bool = True,
 ) -> torch.Tensor:
-    """Eq. (4): raw PSC per sample, shape (N,), HIGH for poisoned.
+    """Eq. (4): raw PSC per sample, shape (N,), high for poisoned.
 
     y' is taken from the unamplified model once per batch and never recomputed per
     ensemble member, which is what makes this a measure of retained agreement with
@@ -331,9 +283,9 @@ def ibd_psc_scores(
 ) -> torch.Tensor:
     """IBD-PSC score per sample, shape (N,), low meaning poisoned.
 
-    NEGATED at this boundary. The paper's rule is "poisoned if PSC(x) > T", so its
-    statistic is HIGH for poisoned, the opposite of PSU's convention. Returning it
-    unnegated would produce a confident, well-formed, exactly-inverted detector.
+    Negated at this boundary. The paper's rule is "poisoned if PSC(x) > T", so its
+    statistic is high for poisoned, the opposite of PSU's convention, and returning
+    it unnegated would produce a well-formed, exactly inverted detector.
     """
     psc = psc_scores(
         model,

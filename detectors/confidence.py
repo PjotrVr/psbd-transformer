@@ -1,27 +1,17 @@
 """The confidence null: maximum softmax probability, and nothing else.
 
-There is no paper to cite. This is the null model every input-level backdoor
-detector has to beat before its extra machinery has earned anything, and it is
-included because an adversarial review of this project found it beating PSBD on
-the benign control. A method that cannot separate itself from 1 forward pass and
-a max is not detecting backdoors, it is reading calibration.
-
-Statistic:
+There is no paper to cite. This is the null model every input-level detector has
+to beat before its extra machinery has earned anything, and it beats PSBD on the
+benign control. A method that cannot separate itself from a single forward pass
+and a max is reading calibration, not detecting backdoors.
 
     original form
         s(x) = max_c P(c | x; theta)
 
     descriptive form
-        confidence = largest softmax probability the model assigns to any class
+        confidence = the largest softmax probability the model assigns to any class
 
-| Symbol | Meaning |
-|---|---|
-| x | the suspicious input |
-| theta | the deployed model's parameters |
-| P(c \\| x; theta) | softmax probability of class c |
-| s(x) | the raw confidence statistic |
-
-Data requirement: data-free. Nothing is estimated from a clean set.
+Data requirement: none.
 Forward-pass cost: 1 per input.
 """
 
@@ -42,10 +32,9 @@ def confidence_scores(
     """Negated max softmax probability per sample, shape (N,), low meaning poisoned.
 
     Negated at the boundary so the shared convention holds. A backdoored model is
-    typically MORE confident on a triggered input than on a clean one, so the raw
-    statistic is HIGH for poisoned. Returning it unnegated would register as a
-    detector with the sign reversed, which reads as a confident, well-formed,
-    exactly-inverted result rather than as an error.
+    usually more confident on a triggered input than on a clean one, so the raw
+    statistic is high for poisoned, and returning it unnegated would read as a
+    well-formed, exactly inverted result rather than as an error.
     """
     model.eval()
 
