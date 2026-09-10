@@ -50,6 +50,32 @@ def test_emitted_flags_are_accepted_by_cli_baselines(generator):
     assert "#PBS -N det_c_001" in script
 
 
+def test_the_teco_group_runs_at_batch_256_and_the_cheap_group_at_the_default(generator):
+    args = generator.build_arg_parser().parse_args([])
+    cell = {
+        "folder": "vit_gtsrb_badnet_a2o_0_05",
+        "dataset": "gtsrb",
+        "attack": "badnet_a2o",
+    }
+    teco = generator.render_job("teco", 1, [(cell, ["teco"])], args)
+    cheap = generator.render_job("cheap", 1, [(cell, ["strip"])], args)
+
+    generator.verify_flags(teco)
+    assert "--batch-size 256" in teco
+    assert "--batch-size" not in cheap
+
+
+def test_every_registered_detector_has_a_measured_cost(generator):
+    for name in DETECTOR_NAMES:
+        assert name in generator.SECONDS_PER_INPUT, name
+    cell = {"folder": "x", "dataset": "gtsrb", "attack": "badnet_a2o"}
+    cheap = generator.estimated_minutes(
+        cell, list(generator.DETECTOR_GROUPS["cheap"]), "cheap"
+    )
+    cd_l = generator.estimated_minutes(cell, ["cd_l"], "cd_l")
+    assert generator.FIXED_MINUTES_PER_CHECKPOINT < cheap < cd_l
+
+
 def test_a_wrong_flag_is_refused(generator):
     with pytest.raises(SystemExit, match="rejects"):
         generator.verify_flags("python -m cli.baselines --no-such-flag 1")

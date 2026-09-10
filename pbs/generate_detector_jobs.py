@@ -28,7 +28,6 @@ sys.path.insert(0, REPO)
 
 from cli.baselines import build_parser as baselines_parser  # noqa: E402
 from data.splits import BENIGN_PROBE_ATTACK, BENIGN_PROBE_TARGET_LABEL  # noqa: E402
-from detectors import FORWARD_PASSES_PER_INPUT  # noqa: E402
 from detectors.records import scored_detectors  # noqa: E402
 
 # Grouped by cost. The cheap group finishes in minutes per checkpoint, the other
@@ -40,6 +39,7 @@ DETECTOR_GROUPS: dict[str, tuple[str, ...]] = {
         "scale_up",
         "scale_up_data_limited",
         "ibd_psc",
+        "ibd_psc_calibrated",
         "beatrix",
         "ted",
     ),
@@ -59,13 +59,37 @@ INPUTS_PER_CHECKPOINT = {
     "svhn": 2000 + 2 * 24032,
     "eurosat": 2000 + 2 * 3400,
 }
-# ViT-B/16 forward throughput in bf16 on an A100 at batch 64. The smoke run
-# replaces this with the measured figure per group.
-IMAGES_PER_SECOND = 2130.0
-# TeCo's glass_blur is a launch-bound Python loop that scales with pixels, so its
-# wall clock runs well past its forward count. A gradient step counts 2.5.
-GROUP_SLOWDOWN = {"cheap": 1.0, "teco": 2.0, "cd_l": 1.0, "sentinet": 1.0}
-# Model load, split construction and fitting, per checkpoint.
+# Measured on the login-node A100 in the smoke of 2026-09-10
+# (docs/runs/2026-09-10-detector-smoke.md): scoring seconds per input over the
+# validation, clean and backdoor rows at batch 64 in bfloat16, teco at batch 256
+# where its launch-bound corruption loop runs 40% faster at identical scores.
+SECONDS_PER_INPUT = {
+    "confidence": 0.001,
+    "strip": 0.005,
+    "scale_up": 0.004,
+    "scale_up_data_limited": 0.002,
+    "ibd_psc": 0.002,
+    "ibd_psc_calibrated": 0.002,
+    "beatrix": 0.001,
+    "ted": 0.001,
+    "teco": 0.035,
+    "cd_l": 0.112,
+    "sentinet": 0.057,
+}
+# Fit seconds per validation image for the methods that fit before scoring, from
+# the same smoke. The calibrated IBD-PSC runs Algorithm 1 at up to 5 factors.
+FIT_SECONDS_PER_VALIDATION_IMAGE = {
+    "scale_up_data_limited": 0.004,
+    "ibd_psc": 0.021,
+    "ibd_psc_calibrated": 0.105,
+    "beatrix": 0.018,
+    "ted": 0.004,
+    "sentinet": 0.088,
+}
+VALIDATION_IMAGES = 2000
+# Groups whose commands carry a batch size other than cli.baselines' default.
+BATCH_SIZE_BY_GROUP = {"teco": 256}
+# Model load and split construction, per checkpoint.
 FIXED_MINUTES_PER_CHECKPOINT = 3.0
 MIN_WALLTIME_HOURS = 6.0
 WALLTIME_MARGIN = 2.0
@@ -102,7 +126,7 @@ COMMAND = """python -m cli.baselines \\
     --detectors {detectors} \\
     --checkpoints-dir {checkpoints_dir} \\
     --raw-data-dir {raw_data_dir} \\
-    --results-dir {results_dir}{probe} \\
+    --results-dir {results_dir}{probe}{batch} \\
     --skip-existing || echo "[FAILED rc=$?] {folder}"
 """
 
@@ -174,11 +198,13 @@ def pending_work(
 
 
 def estimated_minutes(cell: dict, detectors: list[str], group: str) -> float:
-    """Wall-clock estimate for 1 checkpoint, from forward counts and the group's slowdown."""
-    passes = sum(FORWARD_PASSES_PER_INPUT[name] for name in detectors)
+    """Wall-clock estimate for 1 checkpoint, from the smoke's measured seconds."""
     inputs = INPUTS_PER_CHECKPOINT[cell["dataset"]]
-    seconds = inputs * passes / IMAGES_PER_SECOND * GROUP_SLOWDOWN[group]
-    minutes = seconds / 60.0 + FIXED_MINUTES_PER_CHECKPOINT
+    scoring = inputs * sum(SECONDS_PER_INPUT[name] for name in detectors)
+    fitting = VALIDATION_IMAGES * sum(
+        FIT_SECONDS_PER_VALIDATION_IMAGE.get(name, 0.0) for name in detectors
+    )
+    minutes = (scoring + fitting) / 60.0 + FIXED_MINUTES_PER_CHECKPOINT
     return minutes
 
 
@@ -201,10 +227,17 @@ def pack_jobs(
     return jobs
 
 
-def render_command(cell: dict, detectors: list[str], args: argparse.Namespace) -> str:
+def render_command(
+    cell: dict, detectors: list[str], group: str, args: argparse.Namespace
+) -> str:
     probe = (
         f" \\\n    --probe-attack {BENIGN_PROBE_ATTACK} --probe-target-label {BENIGN_PROBE_TARGET_LABEL}"
         if cell["attack"] == "benign"
+        else ""
+    )
+    batch = (
+        f" \\\n    --batch-size {BATCH_SIZE_BY_GROUP[group]}"
+        if group in BATCH_SIZE_BY_GROUP
         else ""
     )
     command = COMMAND.format(
@@ -214,6 +247,7 @@ def render_command(cell: dict, detectors: list[str], args: argparse.Namespace) -
         raw_data_dir=args.raw_data_dir,
         results_dir=args.results_dir,
         probe=probe,
+        batch=batch,
     )
     return command
 
@@ -228,7 +262,7 @@ def walltime_text(estimate_minutes: float) -> str:
 def render_job(group: str, index: int, job: list, args: argparse.Namespace) -> str:
     estimate = sum(estimated_minutes(cell, detectors, group) for cell, detectors in job)
     commands = "\n".join(
-        render_command(cell, detectors, args) for cell, detectors in job
+        render_command(cell, detectors, group, args) for cell, detectors in job
     )
     script = TEMPLATE.format(
         walltime=walltime_text(estimate),
