@@ -2,7 +2,7 @@
 
 paper/findings.md names numbers by macro so it cannot drift from the tables.
 This writes paper/findings.rendered.md with every macro replaced by its value
-from headline.json, marks a macro headline.tex does not define, and marks an
+from headline.json, marks a macro headline.tex does not define and marks an
 evidence path that does not exist under the results tree or the repository.
 
     PYTHONPATH=. python scripts/paper/findings_index.py --results-dir results
