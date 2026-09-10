@@ -1,40 +1,23 @@
-"""Model behaviour metrics and the atomic evaluation of one checkpoint.
+"""Model behaviour metrics, and the evaluation of a single checkpoint.
 
-Two concerns live here, folded together because one is only ever used through the
-other: the counting primitives that turn a loader into accuracy numbers, and the
-3 layers of evaluation built on top of them.
+Accuracy on a loader is a single pass and a comparison, and what it means depends
+on the loader. On a clean loader it is clean accuracy. On an AttackSuccessSet,
+whose labels are the attack's intended labels, the same number is the attack
+success rate. Both names exist so a call site says which question it asked.
 
-Counting primitives. Accuracy on a loader is a single pass and a comparison, and
-what it means depends entirely on which loader it is handed. On a clean loader it
-is clean accuracy. On an AttackSuccessSet, whose labels are the attack's intended
-labels, the same number is the attack success rate. Both names exist so a call
-site says which question it asked.
+3 evaluation layers sit on top, thinnest first. evaluate_benign and
+evaluate_attack take a model and return metrics with no filesystem involved, so a
+training script can call them on the model it just trained. evaluate_checkpoint
+takes a checkpoint path, loads the model and its args.json, and delegates to one
+of the 2. Walking the whole checkpoints/ tree is cli.evaluate's job, not this
+module's. Every directory is a parameter with a plain default, so any of these
+runs against a test fixture by passing a different argument.
 
-Evaluation layers, thinnest to widest:
-  evaluate_benign / evaluate_attack   model in, metrics out, no filesystem at
-                                      all, so a training script can call these
-                                      directly on the model it just trained, no
-                                      save-then-reload needed.
-  evaluate_checkpoint                 a checkpoint path in, metrics out. Loads
-                                      the model and its args.json sidecar, then
-                                      delegates to one of the 2 above.
-
-There is deliberately no third, directory-walking layer here. Looping over the
-whole checkpoints/ tree is orchestration at a higher altitude than "one checkpoint
-path in, one metrics dict out", so it belongs to an entrypoint, not to this
-module. Its absence is by design.
-
-Every directory this module touches is a parameter with a plain default, not a
-bare module-level constant read inside a function body, so any of these are safe
-to call against a different tree (a test fixture, a scratch export) just by
-passing a different argument.
-
-The detection helpers at the end (threshold, TPR/FPR, AUROC) are the standalone
-form of the same rule defences.decision.detection_report applies inside a sweep. They
-are kept because a caller holding 2 score tensors and 1 quantile should not have
-to build a report dict to ask 1 question. The 2 quantile implementations are NOT
-interchangeable: this one uses torch.quantile and defences.decision uses numpy's, and
-the 2 differ in the last bits on some inputs.
+The detection helpers at the end (threshold, TPR and FPR, AUROC) are the
+standalone form of the rule defences.decision.detection_report applies inside a
+sweep, for a caller holding 2 score tensors and a quantile. The 2 quantile
+implementations are not interchangeable: this one uses torch.quantile, decision
+uses numpy's, and they differ in the last bits on some inputs.
 """
 
 import json
@@ -88,20 +71,18 @@ def attack_success_rate(
     use_bfloat16: bool,
     success_labels: tuple[int, ...] | None = None,
 ) -> float:
-    """Backdoor loader carries the trigger label, so accuracy on it is the ASR.
+    """Accuracy on the backdoor loader, which is the ASR since its labels are the intended ones.
 
     The loader must be built over attacks.poisoning.AttackSuccessSet, which selects
     samples by eval-time eligibility and labels them by the eval-time intended
-    label. Handing this a training-time poisoned set would measure a different
-    quantity under the same name, which for a clean-label attack is the exact
-    opposite population.
+    label. A training-time poisoned set would measure a different quantity under
+    the same name, for a clean-label attack the exact opposite population.
 
-    success_labels widens what counts as a success from one class to a set, which
-    a multi-target clean-label attack needs: its trigger is planted on several
-    classes at once and predicts the set rather than any member of it, so
-    demanding a particular member would understate the attack by roughly its size.
-    Note this also raises the chance baseline from 1/K to |set|/K, which is why
-    the target set is meant to stay small.
+    success_labels widens a success from a single class to a set, which a
+    multi-target clean-label attack needs: its trigger predicts the set rather than
+    any member, so demanding a particular member would understate the attack by
+    roughly the set's size. It also raises the chance baseline from 1/K to |set|/K,
+    which is why the target set stays small.
     """
     if not success_labels or len(success_labels) == 1:
         return prediction_accuracy(model, backdoor_loader, device, use_bfloat16)
@@ -136,12 +117,10 @@ def class_correct_and_total(
     num_classes: int,
     use_bfloat16: bool,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """One pass over loader, returning per-class correct and total counts, both (num_classes,).
+    """Per-class correct and total counts from a single pass, both (num_classes,).
 
-    The shared computation clean_accuracy_by_class needs, exposed publicly so a
-    caller that wants both the pooled and the per-class accuracy on the same
-    loader (see evaluate_benign) can compute this once instead of running the pass
-    twice.
+    Exposed so a caller that wants both the pooled and the per-class accuracy on
+    the same loader (evaluate_benign) runs the pass once.
     """
     model.eval()
 
@@ -234,14 +213,12 @@ def evaluate_attack(
     max_samples: int | None = None,
     seed: int = 0,
 ) -> dict:
-    """Attack success rate and clean accuracy, for a model probed with one attack.
+    """Attack success rate and clean accuracy for a model under a single attack.
 
     config is the attack's own config dataclass, for example
-    BadNetConfig(label_mode="all_to_all") from attacks.badnet, or whatever
-    attacks.default_config(attack_name) returns. Applies the trigger to every
-    eligible test image, never a poison_rate sample of it: poison_rate only
-    controls how many training images get poisoned, eval always asks about the
-    whole eligible test set.
+    BadNetConfig(label_mode="all_to_all") or whatever default_config(attack_name)
+    returns. The trigger goes on every eligible test image, never a poison_rate
+    sample of it.
     """
     image_size = DATASET_REGISTRY[dataset_name].image_size
     attack = build_attack(attack_name, config, image_size, target_label)
@@ -279,7 +256,7 @@ def evaluate_checkpoint(
     raw_data_dir: str = "raw_data",
     batch_size: int = 64,
 ) -> dict:
-    """Load one checkpoint and its args.json, evaluate it as benign or under its own attack."""
+    """Metrics for a checkpoint, as benign or under its own attack, read from its args.json."""
     args = read_args_json(os.path.dirname(checkpoint_path))
     model = load_checkpoint(args["architecture"], checkpoint_path, device)
     folder_name = os.path.basename(os.path.dirname(checkpoint_path))
@@ -330,7 +307,7 @@ def evaluate_checkpoint(
 
 
 def save_metrics(output_path: str, metrics: dict) -> None:
-    """Write one metrics dict as JSON, creating its directory."""
+    """Write a metrics dict as JSON, creating its directory."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w") as handle:
         json.dump(metrics, handle, indent=2)
@@ -353,7 +330,7 @@ def detection_rates(
     backdoor_scores: torch.Tensor,
     threshold: float,
 ) -> tuple[float, float]:
-    """Return (tpr, fpr) at the threshold, flagging PSU below it as poisoned."""
+    """(tpr, fpr) at the threshold, flagging PSU below it as poisoned."""
     tpr = (backdoor_scores < threshold).float().mean().item()
     fpr = (clean_scores < threshold).float().mean().item()
     return float(tpr), float(fpr)

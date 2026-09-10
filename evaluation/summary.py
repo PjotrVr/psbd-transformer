@@ -1,26 +1,16 @@
-"""Loading the detection summary so the unsafe rows cannot be used by accident.
+"""Loading the detection summary so the unsafe rows cannot be pooled by accident.
 
-`results/detection_summary.csv` carries rows that must not be pooled with the
-rest, and carrying them is deliberate: dropping them at write time would hide
-that they exist. The hazard is that nothing was dropping them at read time
-either, so every `groupby("operator").auroc.mean()` over the file silently
-included them.
+results/detection_summary.csv keeps rows that must not be averaged with the rest,
+because dropping them at write time would hide that they exist. 2 columns mark
+them. cache_backed is False when the stage-1 tensors a row was computed from are
+no longer under results/, so the row cannot be recomputed or verified, and the
+rows like that on disk come from a superseded operator that scores higher than
+what survives. variant is non-null for a measurement of a different question: a
+different Monte Carlo budget (passes_20), a depth-band placement (blocks_5_8) or
+a run with the model's own dropouts on (model_dropout_0_1).
 
-Two columns mark them:
-
-`cache_backed` is False when the stage-1 tensors the row was computed from are no
-longer under `results/`. Those rows cannot be recomputed or verified. All 3029 of
-them are the batch-coupled Gaussian that audit finding A2 archived, and they
-score about 0.087 higher than the records that survive, so they inflate whatever
-they touch.
-
-`variant` is non-null for a measurement that is not the plain one: the superseded
-Gaussian, a different Monte Carlo budget (`passes_20`), a depth-band placement
-(`blocks_5_8`), or a run with the model's own dropouts activated
-(`model_dropout_0_1`). Each is a legitimate measurement of a different question.
-
-So `load_detection_summary` defaults to the plain, verifiable rows and says what
-it dropped. Asking for the rest requires saying so.
+load_detection_summary defaults to the plain, verifiable rows and says what it
+dropped. Asking for the rest requires saying so.
 """
 
 import pandas as pd
@@ -36,15 +26,11 @@ def load_detection_summary(
 ) -> pd.DataFrame:
     """The detection summary, filtered to rows that can be pooled and verified.
 
-    plain_only drops every row whose `variant` is set, which are measurements of
-    a different question rather than of the same question done differently.
-
-    require_cache_backed drops every row whose stage-1 tensors are gone. A row
-    that cannot be recomputed cannot be checked, and the ones in this file that
-    cannot be recomputed are known to be a superseded operator.
-
-    verbose prints what was dropped, because a silent filter is how a coverage
-    difference becomes a conclusion. Pass False in a loop.
+    plain_only drops every row whose variant is set, since those measure a
+    different question. require_cache_backed drops every row whose stage-1 tensors
+    are gone, since a row that cannot be recomputed cannot be checked. verbose
+    prints what was dropped, because a silent filter is how a coverage difference
+    becomes a conclusion; pass False in a loop.
     """
     frame = pd.read_csv(path)
     total = len(frame)
@@ -67,11 +53,10 @@ def load_detection_summary(
 
 
 def summary_coverage(frame: pd.DataFrame) -> pd.DataFrame:
-    """One row per (architecture, dataset) with the checkpoint and cell counts.
+    """A row per (architecture, dataset) with its checkpoint and cell counts.
 
-    Coverage differences between groups have inverted conclusions in this project
-    before, so the shape of what is being averaged is worth looking at before the
-    average is.
+    A coverage difference between groups can invert a conclusion, so the shape of
+    what is being averaged is worth seeing before the average.
     """
     coverage = (
         frame.groupby(["architecture", "dataset"])

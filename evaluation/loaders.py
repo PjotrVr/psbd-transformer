@@ -1,11 +1,10 @@
 """Evaluation data loaders: clean and poisoned, over the full test set.
 
-Two loader kinds, matching the 2 questions evaluation asks: how accurate is the
+2 loader kinds, matching the 2 questions evaluation asks: how accurate is the
 model on unpoisoned images, and how often does the trigger flip an eligible image
-to the attacker's target. Poisoning here always applies the trigger to every
-eligible test image, never a poison_rate sample of it, since poison_rate only
-controls how much of the training set gets poisoned, a training-time concept eval
-has no use for.
+to the attacker's target. Poisoning here applies the trigger to every eligible
+test image, never a poison_rate sample of it, since poison_rate only controls how
+much of the training set is poisoned and evaluation has no use for it.
 
 This is a different split policy from data.splits, which carves the same test set
 into a heldout threshold set and an analysis pool for a detection sweep. Here
@@ -65,9 +64,8 @@ def build_clean_loader(
     test_base = limit_dataset(test_base, max_samples, seed)
     normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
 
-    # PoisonedTrainingSet with no poison_indices and no attack is just a plain
-    # normalized dataset: attack.apply_trigger is only ever called for indices
-    # inside poison_indices, which is empty here, so attack is never touched.
+    # With no poison_indices this is a plain normalized dataset. apply_trigger is
+    # only reached for indices in that set, so the None attack is never touched.
     clean_set = PoisonedTrainingSet(test_base, None, set(), normalize, spec.num_classes)
 
     loader = DataLoader(
