@@ -9,7 +9,7 @@ generators, already-run migrations, and regenerable caches. Nothing in `scratch/
 may be the only source of a published number.
 
 Repo-level tools are not experiments and stay in `scripts/`:
-`verify_results.py` and `backfill_metadata.py`.
+`verify_results.py` and the coverage ledger.
 
 ## Conventions
 

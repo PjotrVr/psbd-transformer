@@ -110,8 +110,7 @@ Full layout and the rule for where a new file goes: `docs/repository-layout.md`.
 `scripts/` holds repo-level tools that are not commands: `coverage_ledger.py`,
 `vit_config_inventory.py`, `vit_config_tables.py`, `vit_detection_tables.py`,
 `vit_shift_target_compare.py`, `vit_top3_tables.py`, `verify_results.py`,
-`verify_splits.py`, `prose_audit.py`, `check_prose_only.py`,
-`backfill_metadata.py`.
+`verify_splits.py`, `prose_audit.py` and `check_prose_only.py`.
 
 ## Competitor detectors
 
