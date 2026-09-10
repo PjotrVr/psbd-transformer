@@ -42,7 +42,7 @@ def psu_from_cache(
     """Per-sample PSU, shape (N,), float32.
 
     baseline_probs is the (N, num_classes) no-dropout softmax, baseline_labels
-    its (N,) argmax, and per_pass_probs the (k, N) probability that each dropout
+    its (N,) argmax and per_pass_probs the (k, N) probability that each dropout
     pass assigned to that same argmax class. The subtraction is the paper's
     equation with no reinterpretation.
     """

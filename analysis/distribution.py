@@ -1,23 +1,22 @@
 """How the clean and backdoor latent distributions differ, layer by layer.
 
-The rest of this subpackage answers pointwise questions: which direction does the
-trigger write into (direction.py), how similar are two representations overall
-(cka.py), where do the points land in 2 dimensions (embedding.py). This module
-answers the distributional one. Given the same images with and without the
-trigger, it asks how far apart the two populations sit, how separable they are,
-whether the backdoor population collapses onto a smaller subspace, and whether it
-drifts toward the attack's target class.
+The rest of this package answers pointwise questions: which direction the trigger
+writes into (direction.py), how similar 2 representations are overall (cka.py),
+where the points land in 2 dimensions (embedding.py). This module answers the
+distributional question. Given the same images with and without the trigger, it
+asks how far apart the 2 populations sit, how separable they are, whether the
+backdoor population collapses onto a smaller subspace and whether it drifts
+toward the attack's target class.
 
-Every function here takes plain (num_samples, dim) float tensors and returns
-plain numbers or tensors, with no plotting and no file writing, so a notebook, a
-script, and a test all call the same code. The plotting helpers live at the
-bottom and return a Figure rather than saving one, which is what makes them
-usable in a notebook without a detour through disk.
+Every function takes plain (num_samples, dim) float tensors and returns plain
+numbers or tensors, with no plotting and no file writing, so a notebook, a script
+and a test all call the same code. The plotting helpers at the bottom return a
+Figure rather than saving a file, which makes them usable in a notebook.
 
-A note on Swin: its blocks change width between stages (96, 192, 384, 768), so a
-per-layer table has layers of different dim. Every statistic here is computed
-within a layer, so that is fine, but do not compare a raw direction norm at layer
-2 against one at layer 20 without accounting for it.
+Swin's blocks change width between stages (96, 192, 384, 768), so a per-layer
+table has layers of different dim. Every statistic here is computed within a
+layer, so that is fine, but a raw direction norm at layer 2 is not comparable to
+a norm at layer 20 without accounting for it.
 """
 
 import matplotlib.figure
@@ -30,7 +29,7 @@ from .cka import debiased_linear_cka
 from .direction import backdoor_direction, project_onto_direction
 from .embedding import pca_project, umap_project
 
-# A covariance estimated from a few hundred samples in 768 dimensions is singular,
+# A covariance estimated from hundreds of samples in 768 dimensions is singular,
 # so Mahalanobis distance needs a shrinkage term. 0.1 is the Ledoit-Wolf ballpark
 # and is applied as a fixed fraction of the mean eigenvalue rather than estimated,
 # because the estimate itself is unstable in this regime.
@@ -46,7 +45,7 @@ def separation_auroc(
 ) -> float:
     """AUROC of a 1-dimensional score separating clean from backdoor samples.
 
-    0.5 means the two populations are indistinguishable along this score and 1.0
+    0.5 means the 2 populations are indistinguishable along this score and 1.0
     means perfectly separated. Values below 0.5 mean the score separates them in
     the opposite direction, which is information rather than failure, so it is
     reported unflipped.
@@ -70,7 +69,7 @@ def separation_auroc(
 def standardized_mean_shift(
     clean_features: torch.Tensor, backdoor_features: torch.Tensor
 ) -> float:
-    """Cohen's d between the two populations along their mean-difference direction.
+    """Cohen's d between the 2 populations along their mean-difference direction.
 
     original form
         d = (mean_1 - mean_2) / pooled_standard_deviation
@@ -142,7 +141,7 @@ def mahalanobis_distances(
 
     The shrinkage is not neutral, and the direction of its bias matters here.
     Replacing eigenvalue lam with 0.9 lam + 0.1 mean_lam leaves a wide direction
-    almost untouched and inflates a narrow one toward the mean, so the same 3
+    almost untouched and inflates a narrow direction toward the mean, so the same 3
     standard deviation move reads about 3.96 along the widest clean direction and
     about 0.84 along the narrowest. A trigger writes off the clean manifold, which
     is the narrow case, so the shrinkage works against the signal. It is kept
@@ -158,8 +157,8 @@ def mahalanobis_distances(
     query = query_features.double()
 
     if reference.shape[0] < 2:
-        # One row defines no distribution to measure against. A layer this small
-        # must not take the whole table down with it, so it reports absent.
+        # A single row defines no distribution to measure against. A layer this
+        # small must not take the whole table down with it, so it reports absent.
         return torch.full((query.shape[0],), float("nan"))
 
     covariance = shrunk_covariance(reference)
@@ -182,45 +181,30 @@ def mahalanobis_distances(
 
 
 def effective_rank(features: torch.Tensor) -> float:
-    """How many directions the population actually occupies, by participation ratio.
+    """How many directions the population occupies, by participation ratio.
 
     original form
         participation ratio = (sum of eigenvalues)^2 / sum of (eigenvalues^2)
 
-    The name is overloaded in the literature and 3 other statistics also answer to
-    "effective rank". This is none of them, so any write-up has to give the
-    formula above in a display equation on first use rather than rely on the name:
+    3 other statistics also answer to "effective rank" in the literature: Roy and
+    Vetterli's entropy of the normalized singular values, Kumar et al.'s
+    thresholded count and the stable rank, which divides by the largest eigenvalue.
+    This is none of them, so a write-up has to give the formula on first use. The
+    participation ratio is used because it is a smooth function of the whole
+    spectrum, needs no threshold and has a closed-form sample bias in n and dim.
 
-        Roy and Vetterli (EUSIPCO 2007)  exp of the Shannon entropy of the
-                                         singular values normalized by their L1
-                                         norm, so a distribution over singular
-                                         values rather than over eigenvalues
-        srank (Kumar et al., ICLR 2021)  a thresholded count, the smallest k
-                                         whose singular values carry 1 - delta of
-                                         the total
-        stable rank                      squared Frobenius norm over squared
-                                         spectral norm, which divides by the
-                                         LARGEST eigenvalue rather than by the
-                                         sum of squares
+    A value near 1 means the population lies on a single direction, which is the
+    sharp form of "does the trigger collapse the representation", a question raw
+    variance cannot answer because a collapse can raise total variance while
+    removing directions.
 
-    The participation ratio is used here because it is a smooth function of the
-    whole spectrum, needs no threshold, and its sample bias is a closed form in n
-    and dim, which is what makes rank_ratio comparable across layers.
-
-    A value near 1 means the population lies on a single direction. It is the
-    sharp form of the question "does the trigger collapse the representation",
-    which a raw variance cannot answer because a collapse can raise total
-    variance while removing directions.
-
-    Read it as a relative quantity, never as an absolute count of directions. A
-    sample covariance from n samples in dim dimensions is biased downward, and
-    the measured value tracks the Marchenko-Pastur prediction dim / (1 + dim / n)
-    closely: at dim 768 and n 1000 an isotropic population reads about 434 rather
-    than 768, and at n 500 it reads about 302. The bias is a function of n and dim
-    alone, so 2 populations of the same width measured at the same n are
-    comparable to each other even though neither is near its true value. That is
-    exactly the comparison rank_ratio makes, which is why rank_ratio is the number
-    to quote and this one is context for it.
+    Read it as a relative quantity, never as a count of directions. A sample
+    covariance from n samples in dim dimensions is biased downward and tracks the
+    Marchenko-Pastur prediction dim / (1 + dim / n), so an isotropic population at
+    dim 768 and n 1000 reads about 434 rather than 768. The bias depends on n and
+    dim alone, so 2 populations of the same width at the same n are comparable to
+    each other, which is the comparison rank_ratio makes and why rank_ratio is the
+    number to quote.
     """
     centered = features.double() - features.double().mean(dim=0, keepdim=True)
     sample_count = centered.shape[0]
@@ -259,19 +243,17 @@ def local_intrinsic_dimensionality(
     where r_i(x) is the distance from x to its i-th nearest neighbour in the
     reference set and r_k(x) is the furthest of the k.
 
-    This is measured because it is the quantity the 2 nearest opposite results in
-    the literature use. Ma et al. report adversarial inputs at LID about 4.36
-    against about 1.53 for normal inputs, and COLLIDER filters backdoor training
-    data on the premise that clean samples have LOW LID. Both say corrupted inputs
-    are locally HIGHER dimensional, which is the opposite sign to the rank ratio
-    collapse measured here.
+    Measured because the 2 nearest opposite results in the literature use it. Ma
+    et al. find adversarial inputs at higher LID than clean inputs, and COLLIDER
+    filters backdoor training data on the premise that clean samples have low
+    LID. Both say corrupted inputs are locally higher dimensional, the opposite
+    sign to the rank ratio collapse measured here.
 
-    The 2 are not in contradiction, and saying why is the point. LID is a local
-    neighbourhood expansion rate at a single point. The participation ratio is a
-    global second moment property of a population. A sample can sit in a locally
-    sparse region, so high LID, while the population it belongs to occupies few
-    directions, so low participation ratio. Measuring both on the same features is
-    what turns that from an argument into a result.
+    The 2 do not contradict each other. LID is a local neighbourhood expansion
+    rate at a single point, while the participation ratio is a global second
+    moment property of a population, so a sample can sit in a locally sparse
+    region while its population occupies few directions. Measuring both on the
+    same features turns that from an argument into a result.
 
     A query drawn from the reference set is its own nearest neighbour at distance
     0, which would make the log diverge, so 1 extra neighbour is taken and the
@@ -359,21 +341,16 @@ def crossfit_projection_scores(
 
     The backdoor direction is the mean paired difference, so fitting it on the
     same samples a separation statistic then scores is circular: the direction is
-    chosen to maximize exactly the gap being measured. The resulting floor is not
-    small. At 768 dimensions with 1000 samples, 2 populations drawn from one
-    distribution report an in-sample AUROC near 0.573 and a Cohen's d near 0.259,
-    where the truth is 0.5 and 0.
-
-    That floor scales with sqrt(dim / num_samples), which makes it worse than a
-    constant offset. Swin's width grows from 96 to 768 across its stack, so an
-    in-sample statistic plotted against depth produces a rising curve out of pure
-    noise, in the exact shape a backdoor appearing with depth would produce.
+    chosen to maximize exactly the gap being measured. 2 populations drawn from a
+    single distribution then report an in-sample AUROC well above 0.5, and the
+    floor scales with sqrt(dim / num_samples). Swin's width grows from 96 to 768
+    across its stack, so an in-sample statistic plotted against depth produces a
+    rising curve out of pure noise, in the shape a backdoor appearing with depth
+    would produce.
 
     Cross-fitting removes it. Each fold's samples are scored by a direction
-    estimated from the other folds only, so under the null the expected
-    projection is 0 and the statistic sits at its true value. A real effect is
-    unaffected: on a genuine trigger the fitted and cross-fitted estimates agree
-    to within 0.002 AUROC.
+    estimated from the other folds only, so under the null the expected projection
+    is 0 and the statistic sits at its true value. A real effect is unaffected.
 
     The split is on the pair index, because row i of each population is the same
     image, and splitting them independently would break the pairing the direction
@@ -445,10 +422,10 @@ def layer_distribution_row(
     clean_labels: torch.Tensor | None = None,
     target_label: int | None = None,
 ) -> dict[str, float]:
-    """Every distributional statistic for one layer, as a flat dict.
+    """Every distributional statistic for a layer, as a flat dict.
 
-    Kept flat and JSON-friendly so a list of these goes straight into a
-    DataFrame, a table, or a pinned test fixture.
+    Kept flat and JSON-friendly so a list of these goes straight into a DataFrame,
+    a table or a pinned test fixture.
     """
     direction = backdoor_direction(clean_features, backdoor_features)
 
@@ -520,7 +497,7 @@ def layer_distribution_table(
     clean_labels: torch.Tensor | None = None,
     target_label: int | None = None,
 ) -> list[dict[str, float]]:
-    """One row per layer, in layer order, each carrying a "layer" key.
+    """A row per layer, in layer order, each carrying a "layer" key.
 
     Feed the result to pandas.DataFrame to get the table a notebook wants.
     """
@@ -549,7 +526,7 @@ def plot_layer_profile(
         "direction_norm",
     ),
 ) -> matplotlib.figure.Figure:
-    """One panel per metric against layer index, sharing the x axis.
+    """A panel per metric against layer index, sharing the x axis.
 
     This is the view that answers "at what depth does the backdoor appear",
     which is the question the placement results turn on.
@@ -641,7 +618,7 @@ def plot_embedding_scatter(
     """Both populations in 2 dimensions, projected jointly so the axes agree.
 
     Projecting the concatenation rather than each population separately is what
-    makes the two clouds comparable; fitting twice would give two unrelated
+    makes the 2 clouds comparable. Fitting twice would give 2 unrelated
     coordinate systems. Passing clean_labels colours the clean cloud by class,
     which shows whether the backdoor cloud lands on the target class or beside it.
     """

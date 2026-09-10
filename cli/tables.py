@@ -338,7 +338,7 @@ def parse_args() -> argparse.Namespace:
     )
     args = parser.parse_args()
 
-    # A target outside (0, 1) is not a false-positive rate, and np.quantile would
+    # A target outside (0, 1) is not a false-positive rate. np.quantile would
     # raise deep inside the scoring loop instead of here at the boundary.
     for target in args.fpr:
         if not 0.0 < target < 1.0:

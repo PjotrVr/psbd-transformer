@@ -1,9 +1,9 @@
-"""One call from a checkpoint folder name to its clean and backdoor latent features.
+"""A single call from a checkpoint folder name to its clean and backdoor latent features.
 
 Every latent question starts the same way: pick a trained model, build the same
 test images with and without its trigger, and read the residual stream at every
 block. That setup is 6 objects and a dozen arguments, which is fine inside a
-script and hostile inside a notebook. This module collapses it to one call.
+script and hostile inside a notebook. This module collapses it to a single call.
 
 The checkpoint's own args.json supplies the dataset, attack, target label and
 architecture, so the caller names a folder and nothing else. That is deliberate:
@@ -30,7 +30,7 @@ CHECKPOINT_FILENAME = "attack_result.pt"
 
 @dataclass(frozen=True)
 class LatentCase:
-    """Everything the distribution tools need about one checkpoint, already loaded.
+    """Everything the distribution tools need about a checkpoint, already loaded.
 
     clean_features and backdoor_features are index-aligned layer by layer: row i
     of each is the same test image, once clean and once triggered. The paired
@@ -80,7 +80,7 @@ def load_latent_case(
 
     folder is a name under checkpoint_root, for example
     "vit_cifar100_badnet_a2o_0_01". A benign checkpoint has no trigger of its own,
-    so it needs probe_attack to say which trigger to probe it with; that is the
+    so it needs probe_attack to say which trigger to probe it with. That is the
     negative control, and chance-level separation is the expected result.
 
     reduction defaults to whatever the architecture's head reads, the class token
@@ -88,7 +88,7 @@ def load_latent_case(
 
     use_bfloat16 is exposed rather than fixed because autocast only engages on
     CUDA, so a GPU run and a CPU run of the same call are not the same
-    computation. The per-sample paired difference is the part that suffers; pass
+    computation. The per-sample paired difference is the part that suffers. Pass
     False when comparing across devices or when a very weak trigger makes that
     difference the whole signal.
     """
@@ -114,10 +114,10 @@ def load_latent_case(
 
     image_size = DATASET_REGISTRY[dataset].image_size
     # Rebuild the trigger the checkpoint was actually trained with. A probe attack
-    # is chosen here rather than trained, so it takes no override; a backdoored
+    # is chosen here rather than trained, so it takes no override. A backdoored
     # checkpoint rebuilds its own recorded config. Without this a run trained at a
-    # non-default trigger is probed with the default one, which is the failure this
-    # module's docstring warns about: a plausible number rather than an error.
+    # non-default trigger is probed with the default trigger, which is the failure
+    # the module header warns about: a plausible number rather than an error.
     overrides = (
         metadata.get("attack_config_overrides")
         if attack_name == metadata.get("attack")

@@ -1,6 +1,6 @@
 """Stealth metrics: how visible an attack's trigger is, in pixel space.
 
-PSNR, SSIM, and LPIPS between each clean test image and its triggered self,
+PSNR, SSIM and LPIPS between each clean test image and its triggered self,
 measured before normalization (the range where pixel-space triggers are defined,
 0 to 1). These answer a different question than ASR or clean accuracy: not how
 well the trigger fools the model, but how hard it is for a human to notice, so
@@ -8,7 +8,7 @@ they need no model and no checkpoint, only an attack and the raw test images.
 
 Stealth depends only on (dataset_name, attack_name) for the attacks in scope,
 because this measures the EVAL trigger, which is built purely from the attack
-config and image size, never from poison_rate, target_label, seed, architecture,
+config and image size, never from poison_rate, target_label, seed, architecture
 or SAM/rho. So the same trigger stamped on the same images yields byte-identical
 numbers across all 8 to 16 checkpoints that share a (dataset, attack) pair.
 cached_stealth_metrics computes each pair once per process rather than rerunning
@@ -34,8 +34,8 @@ from attacks.poisoning import Attack
 # they run in float32 regardless of the bfloat16 used for model evaluation.
 STEALTH_DTYPE = torch.float32
 
-# One LPIPS network per backbone, reused across every (dataset, attack) pair in a
-# run. Building it loads pretrained weights from disk, not worth repeating.
+# A single LPIPS network per backbone, reused across every (dataset, attack) pair
+# in a run. Building it loads pretrained weights from disk, not worth repeating.
 _lpips_models: dict[str, lpips.LPIPS] = {}
 
 _stealth_cache: dict[tuple[str, str], dict] = {}
@@ -54,7 +54,7 @@ def build_clean_triggered_pairs(
     image with its own triggered self, not through AttackSuccessSet's eligibility
     filter: stealth is pixel visibility to a human, which does not depend on an
     image's class or whether the label mode would poison it, so the pool is wider
-    and simpler than the ASR-eligible one.
+    and simpler than the ASR-eligible pool.
     """
     test_base, _spec = load_test_base(dataset_name, raw_data_dir)
     test_base = limit_dataset(test_base, max_samples, seed)
@@ -95,6 +95,7 @@ def per_image_ssim(clean: torch.Tensor, triggered: torch.Tensor) -> torch.Tensor
 
 
 def _lpips_model(backbone: str, device) -> lpips.LPIPS:
+    """The LPIPS network for a backbone, built on first use and kept."""
     if backbone not in _lpips_models:
         _lpips_models[backbone] = lpips.LPIPS(net=backbone).to(device).eval()
     return _lpips_models[backbone]
@@ -118,6 +119,7 @@ def per_image_lpips(
 
 
 def _mean_std(values: torch.Tensor) -> tuple[float, float]:
+    """(mean, std) of a per-image metric as plain floats."""
     return float(values.mean()), float(values.std())
 
 
@@ -132,7 +134,7 @@ def compute_stealth_metrics(
 ) -> dict:
     """PSNR/SSIM/LPIPS between pair-aligned clean and triggered images, pixel space.
 
-    Per-image reductions (SSIM reduction='none', PSNR and LPIPS computed one image
+    Per-image reductions (SSIM reduction='none', PSNR and LPIPS computed an image
     at a time) so the reported std is a real spread over images, not the std of
     batch means. Batched to bound memory on large test sets like Tiny ImageNet.
     """

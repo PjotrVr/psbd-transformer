@@ -29,7 +29,7 @@ import torch.nn as nn
 from models.backbones import network_core
 
 # The alignment counts are integers, so 1 is the smallest difference they can
-# express and the smallest spread that can honestly divide one.
+# express and the smallest spread that can honestly divide a difference.
 MINIMUM_ALIGNMENT_SPREAD = 1.0
 
 
@@ -90,21 +90,21 @@ def head_weight_alignment(
             score_i = number of large-magnitude alignments between class direction
                       c_i and the early output-projection weights
 
-    The paper's absolute threshold does not transfer to ViT. Measured on this
-    repo's checkpoints, every alignment magnitude falls below 0.032, so any
-    ConvNet-scale constant makes every count 0 and the detector returns a tied
-    vector that decides nothing. The threshold is therefore taken as a quantile of
-    the model's OWN alignment distribution, which keeps the detector data-free
-    (weights only, no inputs) while making it scale-free. The quantile fixes the
-    total count across all classes, so only its distribution over classes carries
-    the signal, which is what the outlier rule reads.
+    The paper's absolute threshold does not transfer to ViT. Every alignment
+    magnitude on this project's checkpoints sits far below any ConvNet-scale
+    constant, so such a constant makes every count 0 and the detector returns a
+    tied vector that decides nothing. The threshold is therefore a quantile of the
+    model's own alignment distribution, which keeps the detector data-free while
+    making it scale-free. The quantile fixes the total count across all classes,
+    so only its distribution over classes carries the signal, which is what the
+    outlier rule reads.
     """
     core = network_core(model)
     class_directions = core.heads.head.weight.detach()  # (num_classes, dim)
 
     # The head reads encoder.ln(x)[:, 0], so the true readout direction is the class
     # row scaled by the final LayerNorm gain, not the raw row. Folding it in makes
-    # the alignment magnitudes, and therefore the threshold, mean what they should.
+    # the alignment magnitudes and the threshold mean what they should.
     class_directions = class_directions * core.encoder.ln.weight.unsqueeze(0)
 
     projection_weights = [
@@ -134,12 +134,11 @@ def alignment_outlier_score(
                 spread of every other class
 
     Returns (Z, top_class). A backdoored model is flagged when Z > 3, with the top
-    class read as the attacker's target.
+    class read as the attacker's target. head_weight_alignment on its own returns
+    a vector of counts and makes no decision.
 
-    Without this, head_weight_alignment returns a vector of counts and makes no
-    decision, which is why it produced no detection anywhere in this project until
-    now. The floor is in count units and defaults to 1, the smallest difference the
-    counts can express: when every class but one scores identically the standard
+    The floor is in count units and defaults to 1, the smallest difference the
+    counts can express. When every class but 1 scores identically the standard
     deviation collapses and Z would otherwise diverge on a 1-count difference.
     """
     ordered = scores.sort(descending=True).values  # (num_classes,)

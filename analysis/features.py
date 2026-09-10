@@ -15,7 +15,7 @@ Because the hooks read whatever a block returns, they capture a post-residual
 perturbation automatically when the post_residual placement is active, which is
 exactly what the placement comparison needs.
 
-The two architectures disagree on activation rank. A ViT block returns
+The 2 architectures disagree on activation rank. A ViT block returns
 (batch, tokens, dim), a Swin block returns (batch, height, width, channels), and
 Swin has no classification token at all. Reduction handles both, and refuses the
 combinations that have no meaning rather than returning a silently wrong shape.
@@ -76,8 +76,8 @@ def transformer_blocks(model: nn.Module, architecture: str) -> list[nn.Module]:
 def _as_token_sequence(activation: torch.Tensor) -> torch.Tensor:
     """View an activation as (batch, tokens, dim) whatever rank it arrived at.
 
-    A Swin block emits (batch, height, width, channels); its spatial grid is the
-    token axis, so flattening the two spatial axes recovers the ViT layout without
+    A Swin block emits (batch, height, width, channels). Its spatial grid is the
+    token axis, so flattening the 2 spatial axes recovers the ViT layout without
     moving any data semantically.
     """
     if activation.dim() == 3:
@@ -97,7 +97,7 @@ def _reduce_tokens(
     """Collapse the token axis of a residual-stream tensor to (batch, dim).
 
     "cls" keeps token 0, the classification token whose final state drives the
-    prediction, and is available only on an architecture that has one. "mean"
+    prediction, and is available only on an architecture that has a class token. "mean"
     averages tokens and is the Swin default for that reason. "flatten" keeps all
     tokens and is memory heavy, so use it only for small sample counts.
 
@@ -141,6 +141,8 @@ def default_reduction(architecture: str) -> TokenReduction:
 def _make_block_hook(
     storage: dict, layer_index: int, reduction: TokenReduction, has_class_token: bool
 ):
+    """A forward hook that stores a block's reduced output under layer_index."""
+
     def hook(_module, _inputs, output):
         reduced = _reduce_tokens(output, reduction, has_class_token)
         storage.setdefault(layer_index, []).append(reduced.detach().float().cpu())
@@ -151,6 +153,8 @@ def _make_block_hook(
 def _make_embedding_hook(
     storage: dict, reduction: TokenReduction, has_class_token: bool
 ):
+    """A pre-hook that stores the first block's reduced input as layer 0."""
+
     def pre_hook(_module, inputs):
         reduced = _reduce_tokens(inputs[0], reduction, has_class_token)
         storage.setdefault(0, []).append(reduced.detach().float().cpu())

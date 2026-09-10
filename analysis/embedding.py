@@ -1,8 +1,8 @@
-"""Two-dimensional projections of features for visualization: PCA and UMAP.
+"""2-dimensional projections of features for visualization: PCA and UMAP.
 
-t-SNE is deliberately not included. UMAP preserves more global structure at similar
-or lower cost, so for cluster visualization it is the better default, and PCA
-covers the linear case.
+t-SNE is not included. UMAP preserves more global structure at similar or lower
+cost, so for cluster visualization it is the better default. PCA covers the
+linear case.
 
 PCA is the honest first choice for the backdoor question because the backdoor is
 hypothesized to be a linear direction, and a linear projection cannot invent

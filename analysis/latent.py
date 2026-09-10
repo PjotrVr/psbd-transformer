@@ -5,14 +5,14 @@ builds paired clean and triggered versions of the same test images, extracts the
 per-layer CLS features, and reports where the trigger lives and how separable clean
 and backdoor representations are.
 
-Run it on a benign checkpoint and on a backdoored one and compare. The benign model
-should show small TAC everywhere, because it never learned the trigger. The
-backdoored model should show TAC and the backdoor direction norm rising at the
-layer that carries the backdoor.
+Run it on a benign checkpoint and on a backdoored checkpoint and compare. The
+benign model should show small TAC everywhere, because it never learned the
+trigger. The backdoored model should show TAC and the backdoor direction norm
+rising at the layer that carries the backdoor.
 
-This is a library function, not an entrypoint. analyze_latent takes every path and
-knob as an argument and returns the per-layer statistics, so a script, a notebook,
-or a test can call it without going through a command line.
+cli.analyze_latent is the command. analyze_latent here takes every path and knob
+as an argument and returns the per-layer statistics, so a script, a notebook or a
+test calls it without going through a command line.
 """
 
 import matplotlib
@@ -42,7 +42,7 @@ def build_paired_loaders(
     sample_count: int,
     seed: int,
 ) -> tuple[DataLoader, DataLoader]:
-    """Return clean and triggered loaders over the same images, index-aligned.
+    """Clean and triggered loaders over the same images, index-aligned.
 
     Both loaders are unshuffled and drawn from the same subset, so position i in
     each refers to the same test image, once clean and once triggered. That pairing
@@ -76,7 +76,7 @@ def layer_statistics(
     clean_features: dict[int, torch.Tensor],
     backdoor_features: dict[int, torch.Tensor],
 ) -> dict[int, dict[str, float]]:
-    """Per-layer backdoor direction norm, max TAC, and clean-vs-backdoor CKA.
+    """Per-layer backdoor direction norm, max TAC and clean-vs-backdoor CKA.
 
     A rising direction norm and TAC mark where the trigger becomes dominant. A
     falling CKA marks where clean and backdoor representations diverge.
@@ -95,7 +95,7 @@ def layer_statistics(
 
 
 def print_layer_report(statistics: dict[int, dict[str, float]]) -> None:
-    """Write the per-layer table to stdout, one row per layer."""
+    """Write the per-layer table to stdout, a row per layer."""
     print(f"{'layer':>5} {'direction_norm':>15} {'max_tac':>10} {'cka':>8}")
     for layer in sorted(statistics):
         row = statistics[layer]
@@ -111,7 +111,7 @@ def save_pca_scatter(
     layer: int,
     output_path: str,
 ) -> None:
-    """PCA of the CLS features at one layer, clean against backdoor.
+    """PCA of the CLS features at a layer, clean against backdoor.
 
     PCA is the honest first view, because the backdoor is hypothesized to be a
     linear direction and a linear projection cannot invent structure.
@@ -154,7 +154,7 @@ def analyze_latent(
     output: str = "latent_scatter.png",
     seed: int = 0,
 ) -> dict[int, dict[str, float]]:
-    """Run the whole worked example on one checkpoint, returning the per-layer table.
+    """The per-layer table for a checkpoint, with the whole worked example run on it.
 
     Prints the table and saves a PCA scatter at the layer whose backdoor direction
     norm is largest, which is the layer the trigger is written into most strongly.

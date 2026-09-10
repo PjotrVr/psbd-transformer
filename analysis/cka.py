@@ -1,7 +1,7 @@
 """Centered Kernel Alignment (CKA), biased and debiased.
 
 CKA scores how similar 2 sets of features are on the same inputs, invariant to
-rotation and isotropic scaling. Two flavors are provided.
+rotation and isotropic scaling. 2 estimators are provided.
 
 The biased estimator is simple and fine when the sample count is much larger than
 the feature dimension. When it is not, it assigns even unrelated representations a
@@ -11,9 +11,9 @@ The debiased estimator (Nguyen et al., 2021, built on the unbiased HSIC of Song 
 al., 2012) removes that baseline. Its expectation is 0 under independence, so
 unrelated representations score near 0 and values are comparable across sample
 sizes. Prefer it when the sample count is close to or below the feature dimension,
-which for ViT-B/16 CLS features of dimension 768 means a few hundred samples. It
-can fall slightly outside 0 to 1, which is expected for a finite-sample unbiased
-estimate.
+which for ViT-B/16 CLS features of dimension 768 means sample counts in the
+hundreds. It can fall slightly outside 0 to 1, which is expected for a
+finite-sample unbiased estimate.
 
 The placement experiment uses this to compare a layer to itself with dropout off
 versus on, separately for clean and backdoor, which shows which placement perturbs
@@ -179,7 +179,7 @@ def layerwise_cka_matrix(
     features_by_layer_b: dict[int, torch.Tensor],
     debiased: bool = True,
 ) -> torch.Tensor:
-    """CKA between every layer of one model and every layer of another.
+    """CKA between every layer of a model and every layer of another model.
 
     Returns a (len(layers_a), len(layers_b)) matrix indexed by the 2 sorted layer
     lists. Grams are precomputed once per layer, so the estimator runs on gram
