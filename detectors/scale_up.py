@@ -37,7 +37,7 @@ Data requirement: none for data-free. The clean validation split for
 data-limited, where the paper budgets 100 benign samples per class.
 Forward-pass cost: |S| + 1 per input, 6 at the default scaling set.
 
-Deviations from the paper, each recorded in full in docs/detector-ports.md:
+Deviations from the paper, each recorded in full in docs/detectors/scale_up.md:
 
   1. The scaling set defaults to the paper's S = {3, 5, 7, 9, 11}. The released
      code uses range(1, 12), a different statistic on a different support, kept

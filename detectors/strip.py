@@ -27,7 +27,7 @@ Forward-pass cost: N per input. The paper defaults to N = 100 and later reports
 10 as sufficient. This port uses 8, the value every recorded number in this repo
 was produced with.
 
-Deviations from the paper, each recorded in full in docs/detector-ports.md:
+Deviations from the paper, each recorded in full in docs/detectors/strip.md:
 
   1. Entropy in nats rather than bits, a constant factor that moves no ranking,
      AUROC or quantile position, only the printed threshold.

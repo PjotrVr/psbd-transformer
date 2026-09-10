@@ -57,7 +57,7 @@ rather than the stream and the effect per layer is weaker than a BatchNorm
 scaling in a ConvNet. Algorithm 1 absorbs that by selecting k from measured clean
 error, but the resulting k is not comparable to a published k.
 
-Further deviations, each recorded in full in docs/detector-ports.md:
+Further deviations, each recorded in full in docs/detectors/ibd_psc.md:
 
   1. The ensemble sums over k..k+n-1 as Eq. (4) writes it. The released code
      amplifies 1 more layer at every position.

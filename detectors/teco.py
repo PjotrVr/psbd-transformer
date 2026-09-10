@@ -40,7 +40,7 @@ Forward-pass cost: K * N + 1 per input, 71 here. Algorithm 1's break would allow
 an early exit, but the released code evaluates every severity and applies the
 break to cached predictions, which is the cost a batched implementation pays.
 
-Deviations from the paper, each recorded in full in docs/detector-ports.md:
+Deviations from the paper, each recorded in full in docs/detectors/teco.md:
 
   1. 14 corruptions, not 15. frost composites bundled photographs and cannot be
      reproduced from a formula, so a TeCo number here is not numerically
