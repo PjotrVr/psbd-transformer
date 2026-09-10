@@ -20,6 +20,7 @@ Example
 """
 
 import argparse
+from dataclasses import dataclass
 import json
 import os
 from data.splits import SPLITS
@@ -299,6 +300,19 @@ def run_one_rate(
         )
 
 
+@dataclass(frozen=True)
+class SweepSettings:
+    """What 1 placement sweep injects, at which rates, and how it is named on disk."""
+
+    operator: str = "dropout"
+    rates: tuple[float, ...] = DROPOUT_RATES
+    block_range: tuple[int, int] | None = None
+    cache_name: str | None = None
+    model_dropout: float = 0.0
+    mask_seed: int = PSBD_MASK_SEED
+    dataset: str | None = None
+
+
 def sweep_rates(
     model: torch.nn.Module,
     architecture: str,
@@ -309,13 +323,7 @@ def sweep_rates(
     device: torch.device,
     forward_passes: int,
     use_bfloat16: bool,
-    rates: tuple[float, ...] = DROPOUT_RATES,
-    block_range: tuple[int, int] | None = None,
-    cache_name: str | None = None,
-    operator: str = "dropout",
-    model_dropout: float = 0.0,
-    mask_seed: int = PSBD_MASK_SEED,
-    dataset: str | None = None,
+    settings: SweepSettings,
 ) -> None:
     """For each rate: plug the position, run every split, save, unplug.
 
@@ -327,17 +335,20 @@ def sweep_rates(
     quietly wrong.
     """
     position_names = DROPOUT_CONFIGS.get(position, (position,))
-    cache_name = cache_name or position
+    cache_name = settings.cache_name or position
+    block_range = settings.block_range
+    model_dropout = settings.model_dropout
+    mask_seed = settings.mask_seed
 
     # A deterministic operator returns the same value on every pass, so PSU's
     # expectation over k is exact at 1 pass and a k > 1 sweep would write k
     # identical rows. The cache folder name still carries the REQUESTED k, so
     # naming and --skip-existing keep working against caches written before this.
-    passes = effective_forward_passes(operator, forward_passes)
-    operator = bound_operator(operator, dataset)
+    passes = effective_forward_passes(settings.operator, forward_passes)
+    operator = bound_operator(settings.operator, settings.dataset)
     factory = {name: operator for name in position_names}
 
-    for rate in rates:
+    for rate in settings.rates:
         handles = plug_dropout(
             model, architecture, position_names, factory, rate, block_range=block_range
         )
@@ -458,6 +469,15 @@ def run_one_checkpoint(
 
     for position in pending:
         write_run_provenance(psbd_dir, args, position, device)
+        settings = SweepSettings(
+            operator=args.operator,
+            rates=rates,
+            block_range=block_range,
+            cache_name=cache_names[position],
+            model_dropout=args.model_dropout,
+            mask_seed=args.mask_seed,
+            dataset=metadata["dataset"],
+        )
         sweep_rates(
             model,
             architecture,
@@ -468,13 +488,7 @@ def run_one_checkpoint(
             device,
             args.forward_passes,
             use_bfloat16,
-            rates=rates,
-            block_range=block_range,
-            cache_name=cache_names[position],
-            operator=args.operator,
-            model_dropout=args.model_dropout,
-            mask_seed=args.mask_seed,
-            dataset=metadata["dataset"],
+            settings,
         )
         print(f"[ok] {folder} {cache_names[position]}", flush=True)
 

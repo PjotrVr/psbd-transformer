@@ -27,7 +27,8 @@ from data.loading import limit_dataset, load_clean_datasets
 from evaluation.loaders import build_clean_loader
 from evaluation.metrics import evaluate_benign
 from training.loop import (
-    checkpoint_metadata,
+    LEARNING_RATE_SCHEDULES,
+    CheckpointMetadata,
     save_checkpoint,
     train_classifier,
 )
@@ -110,7 +111,7 @@ def train_one_benign(
     # Reseed right before the regular workflow so model init and training start from
     # an identical RNG state whether or not --max-samples triggered any subsetting.
     seed_everything(args.seed, workers=True)
-    model = train_classifier(
+    model, trajectory = train_classifier(
         args.architecture,
         num_classes,
         train_loader,
@@ -119,6 +120,8 @@ def train_one_benign(
         epochs=args.epochs,
         use_sam=args.use_sam,
         rho=args.rho,
+        learning_rate_schedule=args.lr_schedule,
+        clip_grad_norm=args.clip_grad_norm,
     )
     ended_at = utc_timestamp()
 
@@ -142,7 +145,7 @@ def train_one_benign(
         model,
         num_classes,
         output_path,
-        metadata=checkpoint_metadata(
+        metadata=CheckpointMetadata(
             dataset=dataset_name,
             attack="benign",
             label_mode=None,
@@ -160,7 +163,11 @@ def train_one_benign(
             asr=None,
             started_at=started_at,
             ended_at=ended_at,
-        ),
+            learning_rate_schedule=args.lr_schedule,
+            clip_grad_norm=args.clip_grad_norm,
+            best_validation_accuracy=trajectory.best,
+            final_validation_accuracy=trajectory.final,
+        ).as_dict(),
     )
     print(f"{folder_name} clean accuracy {accuracy:.4f}, saved {output_path}")
     print(f"time taken: {folder_name} took {(time.time() - started) / 60:.1f} min")
@@ -180,6 +187,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--architecture", choices=("vit", "swin"), default="vit")
     parser.add_argument("--use-sam", action="store_true")
     parser.add_argument("--rho", type=float, default=0.1)
+    parser.add_argument(
+        "--lr-schedule",
+        choices=LEARNING_RATE_SCHEDULES,
+        default="constant",
+        help="constant is every panel run, cosine anneals to 0 by the last epoch",
+    )
+    parser.add_argument(
+        "--clip-grad-norm",
+        type=float,
+        default=None,
+        help="gradient norm bound, off by default as on every panel run",
+    )
     parser.add_argument("--weights-dir", default="checkpoints")
     parser.add_argument(
         "--output",
