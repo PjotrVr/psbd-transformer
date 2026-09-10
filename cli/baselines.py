@@ -63,13 +63,13 @@ from defences.decision import (
 from detectors import (
     CROSS_FITTED,
     DATA_REQUIREMENT,
-    DETECTOR_HYPERPARAMETERS,
     DETECTOR_NAMES,
     EXPERIMENTAL_DETECTOR_NAMES,
     FORWARD_PASSES_PER_INPUT,
     NEEDS_FITTING,
     DetectorContext,
     build_detector,
+    effective_hyperparameters,
     effective_precision,
 )
 from detectors.records import (
@@ -407,7 +407,7 @@ def build_record(
             "data_requirement": DATA_REQUIREMENT[name],
             "needs_fitting": name in NEEDS_FITTING,
             "cross_fitted": name in CROSS_FITTED,
-            "hyperparameters": DETECTOR_HYPERPARAMETERS[name],
+            "hyperparameters": effective_hyperparameters(name, case.context),
             "runtime_seconds": runtimes,
             "split": {
                 "seed": case.manifest["seed"],

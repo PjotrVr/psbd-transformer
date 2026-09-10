@@ -36,6 +36,7 @@ training pool and produce a partition rather than a per-input decision.
 | scale_up_data_limited | Guo et al., ICLR 2023 | the same, standardized per class | the shared split | 6 |
 | ibd_psc | Hou et al., ICML 2024 | retained confidence under parameter amplification | the shared split | 6 |
 | teco | Liu et al., CVPR 2023 | spread of corruption hardness thresholds | none | 71 |
+| cd_l | Huang et al., ICLR 2023 | L1 norm of the distilled input mask | none | 251 |
 
 PSBD itself is not in this registry. It is scored through defences.inference and
 defences.scores at k forward passes per input.
@@ -48,6 +49,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
+from . import cd_l as cd_l_module
 from . import confidence as confidence_module
 from . import ibd_psc as ibd_psc_module
 from . import scale_up as scale_up_module
@@ -65,6 +67,7 @@ DETECTOR_NAMES: tuple[str, ...] = (
     "scale_up_data_limited",
     "ibd_psc",
     "teco",
+    "cd_l",
 )
 
 # Buildable by name but outside DETECTOR_NAMES, so no default run, job or sign
@@ -73,7 +76,8 @@ EXPERIMENTAL_DETECTOR_NAMES: tuple[str, ...] = ()
 
 # Model queries per scored input, the deployment cost of each method. Counts
 # include the 1 unamplified or uncorrupted pass a method needs to fix its own
-# reference label, since a defender pays for that too.
+# reference label, since a defender pays for that too. A backward pass counts as
+# 1.5 forwards, so a gradient step is 2.5 forward-equivalents.
 FORWARD_PASSES_PER_INPUT: dict[str, int] = {
     "confidence": 1,
     "strip": STRIP_OVERLAYS,
@@ -81,6 +85,7 @@ FORWARD_PASSES_PER_INPUT: dict[str, int] = {
     "scale_up_data_limited": len(scale_up_module.PAPER_SCALES) + 1,
     "ibd_psc": ibd_psc_module.DEFAULT_ENSEMBLE_SIZE + 1,
     "teco": len(teco_module.DEFAULT_CORRUPTIONS) * teco_module.MAX_SEVERITY + 1,
+    "cd_l": 1 + cd_l_module.DEFAULT_NUM_STEPS * 5 // 2,
 }
 
 # What each method needs from the shared clean validation split. "none" means the
@@ -92,6 +97,7 @@ DATA_REQUIREMENT: dict[str, str] = {
     "scale_up_data_limited": "the clean validation split, labelled",
     "ibd_psc": "the clean validation split, labelled",
     "teco": "none",
+    "cd_l": "none",
 }
 
 # Methods whose build step runs forward passes over the clean validation split
@@ -117,6 +123,11 @@ PRECISION_POLICY: dict[str, str] = {
     "scale_up_data_limited": "autocast",
     "ibd_psc": "autocast",
     "teco": "autocast",
+    # bf16 forward and backward with the mask, Adam state and objective in
+    # float32. Full precision without TF32 runs 5 to 8 times slower and puts CD-L
+    # at hours per checkpoint. The smoke run's bf16 against fp32 pair confirms the
+    # choice within 0.02 AUROC or flips this entry to "float32".
+    "cd_l": "autocast",
 }
 
 # The settings a run's provenance records, so 2 records can be compared for
@@ -139,6 +150,16 @@ DETECTOR_HYPERPARAMETERS: dict[str, dict] = {
         "corruptions": list(teco_module.DEFAULT_CORRUPTIONS),
         "max_severity": teco_module.MAX_SEVERITY,
     },
+    "cd_l": {
+        "learning_rate": cd_l_module.DEFAULT_LEARNING_RATE,
+        "adam_betas": list(cd_l_module.ADAM_BETAS),
+        "num_steps": cd_l_module.DEFAULT_NUM_STEPS,
+        "l1_weight": cd_l_module.DEFAULT_L1_WEIGHT,
+        "tv_weight": cd_l_module.DEFAULT_TV_WEIGHT,
+        "mask_norm": cd_l_module.MASK_NORM,
+        "mask_channels": cd_l_module.MASK_CHANNELS,
+        "mask_parameter_init": cd_l_module.MASK_PARAMETER_INIT,
+    },
 }
 
 Detector = Callable[[nn.Module, DataLoader, torch.device], torch.Tensor]
@@ -160,7 +181,8 @@ class DetectorContext:
     which SCALE-UP, TeCo and STRIP need to get back to pixel space.
     teco_corruptions defaults to all 14 and is overridable only because TeCo costs
     10 times what any other method costs, so a smoke run needs a cheaper answer
-    that is visible in the call.
+    that is visible in the call. cd_l_steps is overridable for the same reason,
+    100 Adam steps per input make CD-L the costliest method here.
     """
 
     model: nn.Module
@@ -172,6 +194,21 @@ class DetectorContext:
     use_bfloat16: bool = True
     seed: int = 0
     teco_corruptions: tuple[str, ...] = teco_module.DEFAULT_CORRUPTIONS
+    cd_l_steps: int = cd_l_module.DEFAULT_NUM_STEPS
+
+
+def effective_hyperparameters(name: str, context: DetectorContext) -> dict:
+    """The settings a run used, the table's defaults overridden by the context's knobs.
+
+    A record must say what was run, not what the default would have been, so the
+    2 cost knobs a smoke run turns down are read from the context here.
+    """
+    settings = dict(DETECTOR_HYPERPARAMETERS[name])
+    if name == "teco":
+        settings["corruptions"] = list(context.teco_corruptions)
+    if name == "cd_l":
+        settings["num_steps"] = context.cd_l_steps
+    return settings
 
 
 def effective_precision(name: str, context: DetectorContext) -> str:
@@ -330,6 +367,22 @@ def _build_ibd_psc(context: DetectorContext) -> Detector:
     return score
 
 
+def _build_cd_l(context: DetectorContext) -> Detector:
+    def score(model: nn.Module, loader: DataLoader, device: torch.device):
+        return cd_l_module.cd_l_scores(
+            model,
+            loader,
+            device,
+            context.mean,
+            context.std,
+            context.use_bfloat16,
+            context.seed,
+            context.cd_l_steps,
+        )
+
+    return score
+
+
 def _build_teco(context: DetectorContext) -> Detector:
     def score(model: nn.Module, loader: DataLoader, device: torch.device):
         return teco_module.teco_scores(
@@ -354,6 +407,7 @@ DETECTOR_BUILDERS: dict[str, Callable[[DetectorContext], Detector]] = {
     "scale_up_data_limited": _build_scale_up_data_limited,
     "ibd_psc": _build_ibd_psc,
     "teco": _build_teco,
+    "cd_l": _build_cd_l,
 }
 
 
