@@ -17,9 +17,10 @@ SIG only, because it needs no adversarial bases and is the attack that actually
 fails. Label-Consistent follows if this looks worth pursuing, and would need
 bases generated for every class in the set.
 
-1 seed per cell. The point is a direction, not an interval.
+Seed 0 keeps the bare folder name and a replicate carries _seed_N.
 
     python pbs/generate_multitarget_jobs.py
+    python pbs/generate_multitarget_jobs.py --seeds 1 2 --batch vit_multitarget_seeds
 """
 
 import argparse
@@ -67,7 +68,7 @@ python train_backdoor.py \\
     --target-label 0 \\
     --architecture vit \\
     --epochs 15 \\
-    --seed 0 \\
+    --seed {seed} \\
     --attack-override num_targets={num_targets} \\
     --output checkpoints/{folder}/attack_result.pt
 """
@@ -77,30 +78,34 @@ def rate_tag(rate):
     return f"{rate:g}".replace(".", "_")
 
 
-def folder_name(dataset, num_targets, rate):
-    """`_m{n}` marks the target-set size, and 1 target keeps the bare name.
+def folder_name(dataset, num_targets, rate, seed=0):
+    """_m{n} marks the target-set size, and 1 target keeps the bare name.
 
     The tag has to avoid every substring the panel filters on, so it cannot reuse
-    `a2m`, which already means the content-dependent all-to-m label map and is a
-    different thing entirely.
+    a2m, which already means the content-dependent all-to-m label map and is a
+    different thing entirely. A replicate carries _seed_N after it.
     """
     name = f"vit_{dataset}_sig_{rate_tag(rate)}"
     if num_targets > 1:
         name += f"_m{num_targets}"
+    if seed:
+        name += f"_seed_{seed}"
     return name
 
 
-def build_runs():
+def build_runs(seeds=(0,)):
     return [
         (
             TRAIN_MINUTES[dataset],
             TRAIN_CALL.format(
-                folder=folder_name(dataset, num_targets, rate),
+                folder=folder_name(dataset, num_targets, rate, seed),
                 dataset=dataset,
                 rate=rate,
                 num_targets=num_targets,
+                seed=seed,
             ),
         )
+        for seed in seeds
         for dataset, num_targets, rate in CELLS
     ]
 
@@ -154,14 +159,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--minutes-per-job", type=int, default=400)
     parser.add_argument("--batch", default="vit_multitarget")
+    parser.add_argument("--seeds", nargs="+", type=int, default=[0])
     args = parser.parse_args()
 
-    for dataset, num_targets, rate in CELLS:
-        print(
-            f"  {folder_name(dataset, num_targets, rate)}: "
-            f"{num_targets} target classes at {rate:.0%}"
-        )
-    write_jobs(args.batch, pack(build_runs(), args.minutes_per_job))
+    for seed in args.seeds:
+        for dataset, num_targets, rate in CELLS:
+            print(
+                f"  {folder_name(dataset, num_targets, rate, seed)}: "
+                f"{num_targets} target classes at {rate:.0%}, seed {seed}"
+            )
+    write_jobs(args.batch, pack(build_runs(args.seeds), args.minutes_per_job))
 
 
 if __name__ == "__main__":
