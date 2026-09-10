@@ -1,73 +1,73 @@
-# Coding Style
+# Coding style
 
 ## All code
 
-- Comments explain why only, never what the syntax already shows
-- `uv` for Python environments and dependencies, always, pinned
-- PyTorch Lightning `seed_everything` for seeding, always, in all code and not just research. The module is named `lightning`, not `pytorch_lightning`, so the import is `from lightning import seed_everything`
-- Blank lines separate logical phases in every tier and style
-- Tensor ops carry shape annotations (tuple form or readable form, either is fine, but they must be present)
-- Shape assertions are a must where a mismatch would be silent, removed manually if unwanted
-- Side effects (I/O, networking, state mutation) isolated into dedicated functions
-- `return` never contains logic: assign the final computed value to a named variable and return that name. Literals, constants, existing variables, and simple conditional expressions are fine bare. Applies to recursion too
-- Early returns and guard clauses are allowed and encouraged
-- No decorative banners, dividers, or placeholder comments
-- No trivial one line wrapper functions, inline the operation directly
-- Name length is context dependent: `temp` is fine when temperature is unambiguous in that file, spelled out when it isn't
-- Python tooling: `ruff` for lint/format (defaults: line length 88, indent 4, double quotes)
-- Import style: `import torch.nn as nn` form, naming the full path so symbol origin is visible while reading, no wildcard imports unless wildcard is the established convention for that library
-- Imports are always shown in a code block, in every style including concise, never omitted
-- Never invent a nonstandard import alias. Use the language's established alias (`import torch.nn.functional as F`, not something made up like `nnf`)
-- When a paper symbol collides with a standard import alias, the standard alias wins. Rename the paper symbol and note the rename in the glossary comment
-- Style defaults: concise style is the default for code appearing inside writing (passages, blog posts, technical analysis). Descriptive style is the default when producing actual code as the deliverable
+- Comments explain why only, never what the syntax already shows.
+- `uv` for Python environments and dependencies, always, pinned.
+- PyTorch Lightning `seed_everything` for seeding, always, in all code and not just research. The module is named `lightning`, not `pytorch_lightning`, so the import is `from lightning import seed_everything`.
+- Blank lines separate logical phases in every tier and style.
+- Tensor ops carry shape annotations (tuple form or readable form, either is fine, but they must be present).
+- Shape assertions are a must where a mismatch would be silent.
+- Side effects (I/O, networking, state mutation) isolated into dedicated functions.
+- `return` never contains logic: assign the final computed value to a named variable and return that name. Literals, constants, existing variables, and simple conditional expressions are fine bare. Applies to recursion too.
+- Early returns and guard clauses are allowed and encouraged.
+- No decorative banners, dividers, or placeholder comments.
+- No trivial one-line wrapper functions, inline the operation directly.
+- Name length is context dependent: `temp` is fine when temperature is unambiguous in that file, spelled out when it isn't.
+- Python tooling: `ruff` for lint and format (defaults: line length 88, indent 4, double quotes).
+- Import style: `import torch.nn as nn` form, naming the full path so symbol origin is visible while reading. No wildcard imports unless wildcard is the established convention for that library.
+- Imports are always shown in a code block, in every style including concise. Never omit them.
+- Never invent a nonstandard import alias. Use the language's established alias (`import torch.nn.functional as F`, not something made up like `nnf`).
+- When a paper symbol collides with a standard import alias, the standard alias wins. Rename the paper symbol and note the rename in the glossary comment.
+- Style defaults: concise style is the default for code appearing inside writing (passages, blog posts, technical analysis). Descriptive style is the default when producing actual code as the deliverable.
 
 ## Production code
 
-- Type hints on signatures
-- Docstrings on public functions, classes, modules, stating contract not implementation
-- `main()` entry point and standard project layout
-- Separation of concerns, clear module responsibility boundaries
-- Error handling and input validation at system boundaries
-- `argparse` for configuration and CLI args
-- Testability as a design constraint
-- Always descriptive style, concise style never applies to production code
+- Type hints on signatures.
+- Docstrings on public functions, classes, modules, stating contract not implementation.
+- `main()` entry point and standard project layout.
+- Separation of concerns, clear module responsibility boundaries.
+- Error handling and input validation at system boundaries.
+- `argparse` for configuration and CLI args.
+- Testability as a design constraint.
+- Always descriptive style. Concise style never applies to production code.
 
 ## Research and experimentation code
 
-- Optimized for edit speed and comprehension, not extension or reuse
-- Everything visible in as few files as possible, no chasing definitions across 50 modules
-- Flat structure: no class hierarchies, no dependency injection, no config frameworks
-- No docstrings, no type hints
-- Modular means swappable blocks, not layered abstraction
-- Top level flow reads sequentially, helper functions defined after the main flow so the file reads top down as narrative
-- Hyperparameters and constants at module level by default, unless stated otherwise
-- Let failures crash loudly, no try/except unless the failure mode is specific and expected, nothing overengineered
-- Experiment tracking only when asked, wandb or plain files when asked
-- Jupyter notebooks are a first class brainstorming target and follow all research rules, notebooks are never production code
+- Optimized for edit speed and comprehension, not extension or reuse.
+- Everything visible in as few files as possible, no chasing definitions across many modules.
+- Flat structure: no class hierarchies, no dependency injection, no config frameworks.
+- No docstrings, no type hints.
+- Modular means swappable blocks, not layered abstraction.
+- Top level flow reads sequentially, helper functions defined after the main flow so the file reads top down as narrative.
+- Hyperparameters and constants at module level by default, stated otherwise when something else is wanted.
+- Let failures crash loudly, no try/except unless the failure mode is specific and expected, nothing overengineered.
+- Experiment tracking only when asked, and then wandb or plain files.
+- Jupyter notebooks are a first-class brainstorming target and follow all research rules, never production code.
 
 ## Descriptive style (default for actual code deliverables)
 
-- Names carry meaning at point of use, no glossary needed
-- Prefix conventions group related quantities (`student_logits`, `student_temp`, `teacher_logits`, `teacher_temp`)
-- Every value a function needs is passed as a parameter, nothing captured from enclosing scope, except genuine module level globals
-- Each conceptual step gets its own named intermediate variable even when inlining is possible
-- Comments sit above the block they explain, full sentences, stating the reason
-- Helper functions get real, meaningful names
+- Names carry meaning at point of use, no glossary needed.
+- Prefix conventions group related quantities (`student_logits`, `student_temp`, `teacher_logits`, `teacher_temp`).
+- Every value a function needs is passed as a parameter, nothing captured from enclosing scope, except genuine module level globals.
+- Each conceptual step gets its own named intermediate variable even when inlining is possible.
+- Comments sit above the block they explain, full sentences, stating the reason.
+- Helper functions get real, meaningful names.
 
 ## Concise style (default for code inside writing)
 
-- Scope: code with a mathematical, algorithmic, or physical source (formulas, numerical methods, simulations, signal processing, crypto primitives, probability and statistics, classical algorithms with textbook notation). Not for I/O, data loading, config, orchestration, or glue code
-- Names are mathematical notation turned into code, mirroring the source symbols so code maps line by line onto the paper
-- Glossary comment block at the top only when names are opaque, skipped when self evident
-- Paired or indexed quantities share a stem and differ by numeric suffix
-- Trailing comments short and descriptive rather than full sentences, as long as they need to be and no longer
-- Expressions stay inline, tuple unpacking puts related assignments on one line
-- Enclosing scope values may be referenced directly rather than threaded as parameters, when genuinely global to the file
-- Arithmetic mirrors the source formula rather than being refactored into something more idiomatic
+- Scope: code with a mathematical, algorithmic, or physical source (formulas, numerical methods, simulations, signal processing, crypto primitives, probability and statistics, classical algorithms with textbook notation). Not for I/O, data loading, config, orchestration, or glue code.
+- Names are mathematical notation turned into code, mirroring the source symbols so code maps line by line onto the paper.
+- Glossary comment block at the top only when names are opaque, skipped when self-evident.
+- Paired or indexed quantities share a stem and differ by numeric suffix.
+- Trailing comments short and descriptive rather than full sentences, as long as they need to be and no longer.
+- Expressions stay inline, tuple unpacking puts related assignments on one line.
+- Enclosing-scope values may be referenced directly rather than threaded as parameters, when genuinely global to the file.
+- Arithmetic mirrors the source formula rather than being refactored into something more idiomatic.
 
 ## Worked examples
 
-These define the styles, not the rules above.
+These examples define the styles, not the rules above.
 
 ### Adam update step
 
