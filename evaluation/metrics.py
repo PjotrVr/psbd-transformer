@@ -30,6 +30,7 @@ from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 
 from attacks import build_attack, default_config
+from attacks.poisoning import clean_label_target_set
 from data.registry import DATASET_REGISTRY
 from .loaders import build_clean_loader, build_poisoned_loader
 from defences.inference import forward_probs
@@ -92,10 +93,14 @@ def attack_success_rate(
     hit = 0
     total = 0
     for images, labels in backdoor_loader:
-        predictions = forward_probs(model, images, device, use_bfloat16).argmax(dim=1)
+        predictions = forward_probs(model, images, device, use_bfloat16).argmax(
+            dim=1
+        )  # (batch,)
         hit += torch.isin(predictions, targets).sum().item()
         total += labels.size(0)
-    return hit / total if total > 0 else 0.0
+
+    rate = hit / total if total > 0 else 0.0
+    return rate
 
 
 def clean_accuracy(
@@ -235,8 +240,23 @@ def evaluate_attack(
         seed=seed,
     )
 
+    # A multi-target clean-label attack succeeds by landing anywhere in its target
+    # set, so the ASR reader is told the set rather than a single class. This is
+    # the definition every clean_label_multi args.json on disk was scored with.
+    success_labels = (
+        clean_label_target_set(attack.target_label, attack.num_targets)
+        if attack.label_mode == "clean_label_multi"
+        else None
+    )
+
     metrics = {
-        "asr": attack_success_rate(model, poisoned_loader, device, use_bfloat16=True),
+        "asr": attack_success_rate(
+            model,
+            poisoned_loader,
+            device,
+            use_bfloat16=True,
+            success_labels=success_labels,
+        ),
         "clean_accuracy": clean_accuracy(
             model, clean_loader, device, use_bfloat16=True
         ),
