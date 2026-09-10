@@ -15,7 +15,7 @@ reads.
                + weight * relu(mean_clean_psu - mean_poisoned_psu)
 
 L_CE is the classifier's cross-entropy on the batch, lambda the weight on the
-penalty, C the clean samples in the batch, P the poisoned ones, and PSU(x) the
+penalty, C the clean samples in the batch, P the poisoned ones and PSU(x) the
 prediction shift uncertainty of sample x under the probe.
 
 The hinge is deliberate. A symmetric abs(mean_C - mean_P) would also punish
@@ -50,7 +50,7 @@ from torch.utils.data import DataLoader, Dataset
 from defences.operators import build_perturbation
 from models.positions import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
 
-# Guards the division when the model gives its own predicted class essentially no
+# Guards the division when the model gives its own predicted class almost no
 # probability, which would otherwise make the ratio diverge.
 BASE_PROBABILITY_FLOOR = 1e-6
 
@@ -91,11 +91,10 @@ def psu_for_batch(
     """Per-sample fractional PSU under the probe, differentiable w.r.t. the model.
 
     Returns (psu, logits), both carrying grad history: psu is (batch,) and logits
-    is (batch, num_classes). Handing the logits back lets the caller reuse the
-    unperturbed forward for cross-entropy. That reuse is not a micro-optimisation:
-    every retained forward is a full ViT-B/16 activation graph, and computing the
-    clean pass twice cost an entire extra graph and was enough on its own to run a
-    batch of 64 out of memory on a 40GB card.
+    is (batch, num_classes). The logits are handed back so the caller reuses the
+    unperturbed forward for cross-entropy. Every retained forward is a full
+    ViT-B/16 activation graph, and computing the clean pass twice is enough on its
+    own to run a batch of 64 out of memory on a 40 GB card.
 
     The model is switched to eval mode for the PSU computation so the attacker
     measures the same statistic as the defender. On Swin this disables stochastic
@@ -153,8 +152,8 @@ def calibrate_probe_rate(
     (defences.decision.select_rate_at_matched_shift), so the attacker optimizes at the
     same perturbation strength the defender would choose.
 
-    Runs one forward pass per candidate rate on the validation set, so the cost is
-    small relative to a 15-epoch training run.
+    Runs a forward pass per candidate rate over the validation set, a small cost
+    beside a 15-epoch training run.
     """
     model.eval()
     architecture = probe_config["architecture"]
@@ -229,7 +228,7 @@ def evasive_update(
     weight: float,
     passes: int,
 ) -> tuple[torch.Tensor, dict]:
-    """One optimizer step on cross-entropy plus the evasion hinge."""
+    """A single optimizer step on cross-entropy plus the evasion hinge."""
     optimizer.zero_grad(set_to_none=True)
     psu, logits = psu_for_batch(model, images, probe, passes)
     penalty = evasion_penalty(psu, is_poisoned)
@@ -239,9 +238,9 @@ def evasive_update(
 
     poisoned = is_poisoned.bool()  # (batch,)
     # Both group means are reported, not just the gap. The cheapest way to close
-    # the gap is to drag CLEAN shift down to meet poisoned rather than to raise
-    # poisoned, which would be a change in the model's overall robustness rather
-    # than a hidden backdoor, and the gap alone cannot tell the 2 apart.
+    # the gap is to drag clean shift down to meet poisoned rather than raise
+    # poisoned, which changes the whole model rather than hiding a backdoor, and
+    # the gap alone cannot tell the 2 apart.
     stats = {
         "psu_clean": float(psu[~poisoned].mean())
         if (~poisoned).any()
@@ -263,7 +262,7 @@ def train_one_epoch_evasive(
     weight: float,
     passes: int,
 ) -> tuple[float, dict]:
-    """One epoch of adaptive training, returning mean loss and mean diagnostics.
+    """An epoch of adaptive training, returning mean loss and mean diagnostics.
 
     The loader must yield 3-tuples, so it has to be built over FlaggedPoisonedSet.
     """

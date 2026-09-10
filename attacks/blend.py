@@ -1,9 +1,8 @@
 """Blend: alpha-blend a fixed pattern over the whole image (Chen et al., 2017).
 
-Static, pixel-space, dirty-label. The original paper uses a Hello Kitty image as
-the pattern. A seeded random pattern is used here to keep the package
-self-contained and free of any bundled image, and it can be swapped for a loaded
-pattern.
+Static, pixel-space, dirty-label. The paper blends a Hello Kitty image. A seeded
+random pattern is used here so the package bundles no image. A loaded pattern
+would drop in at the same place.
 """
 
 from dataclasses import dataclass
@@ -23,7 +22,7 @@ class BlendConfig:
 
 
 def build(config: BlendConfig, image_size: int, target_label: int) -> Attack:
-    """The Blend attack record for one image size and target label."""
+    """Blend built for this image size and target label."""
     pattern = seeded_random_pattern(image_size, config.pattern_seed)  # (3, S, S)
     alpha = config.alpha
 

@@ -1,15 +1,16 @@
-"""Registry mapping an attack name to its builder and default config.
+"""The attack registry: a name resolves to a builder and its paper defaults.
 
-Deterministic pixel-space attacks are implemented from their papers. Learned or
-optimized attacks (SSBA, TrojanNN, ISSBA) are served through the generated
-adapter from pregenerated triggers. Adaptive-Blend and TaCT are standard-training
-attacks whose specialization is cover samples, which the training entrypoint reads
-from their config. Generator-coupled attacks (Input-aware, LIRA) need a co-trained
-generator and a bespoke loop, so they are not registered here.
+    attack = build_attack("wanet", default_config("wanet"), image_size=32, target_label=0)
 
-This is the one module in psbd that re-exports its submodules' names, because it
-is a genuine dispatcher: a caller writes build_attack("wanet", ...) and never has
-to know which file wanet lives in.
+Each attack lives in its own module and defines only its trigger and config. The
+shared machinery (the Attack record, label policy, poisoned datasets) is in
+poisoning.py. Deterministic pixel-space attacks are implemented from their papers.
+Learned triggers (SSBA, TrojanNN, ISSBA) arrive as pregenerated images through
+generated.py. Attacks that need a co-trained generator (Input-aware, LIRA) are not
+registered, since they need a bespoke training loop.
+
+This is the only package that re-exports its submodules' names, because it is a
+dispatcher: a caller should never have to know which file an attack lives in.
 """
 
 from dataclasses import asdict, replace
@@ -42,13 +43,11 @@ def _badnet_all_to_all() -> badnet.BadNetConfig:
     return badnet.BadNetConfig(label_mode="all_to_all")
 
 
-# The all_to_m family, the interpolation between the 2 poles PSBD's premise sits
-# between. m is the number of distinct classes the trigger maps onto, so the
-# backdoor map must encode log2(m) bits about the image. m = 1 is exactly
-# all_to_one on target 0 and m = num_classes is exactly all_to_all, so those 2
-# poles stay served by badnet_a2o and badnet_a2a rather than being duplicated
-# here. Powers of 2 because the axis that matters is log2(m), not m. An m above a
-# dataset's class count is rejected at build time rather than silently degenerating.
+# The all_to_m family interpolates between all_to_one (m = 1) and all_to_all
+# (m = num_classes). m is how many distinct classes the trigger maps onto, so the
+# backdoor has to encode log2(m) bits about the image, which is why the registered
+# values are powers of 2. The 2 poles keep their own names rather than being
+# duplicated here. An m above the dataset's class count is rejected at build time.
 def _badnet_all_to_m(num_targets: int) -> Callable[[], badnet.BadNetConfig]:
     def factory() -> badnet.BadNetConfig:
         return badnet.BadNetConfig(label_mode="all_to_m", num_targets=num_targets)
@@ -96,15 +95,13 @@ def default_config(attack_name: str):
 
 
 def apply_config_overrides(config, overrides: dict | None):
-    """Set attack-config fields from a mapping, casting to each field's declared type.
+    """The config with the given fields replaced, each cast to its declared type.
 
-    Shared by training and by evaluation so a checkpoint is always ABLE to be evaluated
-    with the trigger it was trained with. Without this, a run trained at patch_size=16 is
-    rebuilt at eval time from default_config() with patch_size=3, the attack-success set
-    carries a trigger the model never saw, and its ASR reads near zero for a reason that
-    has nothing to do with the attack.
-
-    JSON round-trips a tuple to a list, so a tuple-valued field is restored as a tuple.
+    Training and evaluation both go through this, so a checkpoint is always rebuilt
+    with the trigger it was trained with. Rebuilding from the defaults instead would
+    hand the attack-success set a trigger the model never saw and read a near-zero
+    ASR that has nothing to do with the attack. JSON turns tuples into lists, so a
+    tuple-valued field is restored as a tuple.
     """
     if not overrides:
         return config
@@ -129,10 +126,10 @@ def apply_config_overrides(config, overrides: dict | None):
 
 
 def config_overrides(config, attack_name: str) -> dict:
-    """The fields of `config` that differ from the attack's default.
+    """The fields of config that differ from the attack's defaults.
 
-    Only the difference is recorded, so a checkpoint's provenance stays small and a field
-    nobody touched cannot be corrupted by a JSON type round-trip.
+    Only the difference is recorded, so provenance stays small and a field nobody
+    touched cannot be corrupted by a JSON type round-trip.
     """
     try:
         default = default_config(attack_name)
@@ -145,7 +142,7 @@ def config_overrides(config, attack_name: str) -> dict:
 def build_attack(
     attack_name: str, config, image_size: int, target_label: int
 ) -> Attack:
-    """Dispatch to the named attack's builder and return its Attack record."""
+    """The named attack, built for this image size and target label."""
     builder = _ATTACKS[attack_name][0]
 
     attack = builder(config, image_size, target_label)

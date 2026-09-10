@@ -1,12 +1,11 @@
 """WaNet: a smooth warping of pixel positions (Nguyen and Tran, 2021).
 
-The trigger is a fixed backward-warping field, generated once from a small
-control grid and shared across all poisoned images. It changes where pixels are
-sampled from rather than their values, which is what makes it hard to see.
+The trigger is a fixed backward-warping field, generated once from a small control
+grid and shared by every poisoned image. It moves where pixels are sampled from
+rather than changing their values, which is what makes it hard to see.
 
-The normalization of the control offsets follows the paper's approach at a level
-of fidelity sufficient to produce a working attack. Exact match to a specific
-benchmark's field would require that benchmark's saved grid.
+The control offsets are normalized the way the paper describes. Reproducing a
+specific benchmark's field exactly would need that benchmark's saved grid.
 """
 
 from dataclasses import dataclass
@@ -31,6 +30,7 @@ class WaNetConfig:
 
 
 def _identity_grid(image_size: int) -> torch.Tensor:
+    """The (1, H, W, 2) sampling grid that leaves an image unchanged."""
     axis = torch.linspace(-1.0, 1.0, image_size)
     rows, columns = torch.meshgrid(axis, axis, indexing="ij")
     return torch.stack((columns, rows), dim=2).unsqueeze(0)  # 1, H, W, 2
@@ -39,13 +39,14 @@ def _identity_grid(image_size: int) -> torch.Tensor:
 def _warping_grid(
     image_size: int, control_grid_size: int, strength: float, seed: int
 ) -> torch.Tensor:
+    """The trigger's sampling grid: identity plus a smooth field upsampled from the control grid."""
     generator = torch.Generator().manual_seed(seed)
     control = (
         torch.rand(1, 2, control_grid_size, control_grid_size, generator=generator)
         * 2.0
         - 1.0
     )
-    control = control / control.abs().mean()  # normalize the offsets
+    control = control / control.abs().mean()
     field = F.interpolate(control, size=image_size, mode="bicubic", align_corners=True)
     field = field.permute(0, 2, 3, 1)  # 1, H, W, 2
     grid = _identity_grid(image_size) + strength * field / image_size
@@ -53,6 +54,7 @@ def _warping_grid(
 
 
 def build(config: WaNetConfig, image_size: int, target_label: int) -> Attack:
+    """WaNet built for this image size and target label."""
     grid = _warping_grid(
         image_size, config.control_grid_size, config.strength, config.field_seed
     )
@@ -64,10 +66,12 @@ def build(config: WaNetConfig, image_size: int, target_label: int) -> Attack:
         return warped.squeeze(0)
 
     def apply_cover(image: torch.Tensor, index: int) -> torch.Tensor:
-        """Noise mode: the same image warped by a random field instead of the trigger.
+        """Noise mode: the image warped by a random field instead of the trigger.
 
-        original: grid_noise = grid_temps + ins / image_size,  ins ~ U(-1, 1)
-        The offset is drawn from the sample index so a run is reproducible.
+        original form
+            grid_noise = grid_temps + ins / image_size,  ins ~ U(-1, 1)
+
+        The offset is seeded from the sample index so a run is reproducible.
         """
         size = image.shape[-1]
         generator = torch.Generator().manual_seed(config.field_seed * 1_000_003 + index)

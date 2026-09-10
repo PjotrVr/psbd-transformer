@@ -1,10 +1,9 @@
 """LF: a low-frequency additive trigger (Zeng et al., 2021).
 
-This implements the concept, a perturbation whose energy sits in low spatial
-frequencies, by low-pass filtering a fixed noise pattern in the Fourier domain.
-LF tends to reach low attack success rate on ViT, so treat it as a stress case.
-The exact benchmark LF trigger can instead be served through the generated
-adapter.
+A perturbation whose energy sits in low spatial frequencies, made by low-pass
+filtering a fixed noise pattern in the Fourier domain. LF implants weakly on ViT,
+so treat it as a stress case. The exact benchmark trigger can be served through
+generated.py instead.
 """
 
 from dataclasses import dataclass
@@ -48,7 +47,7 @@ def _low_frequency_pattern(image_size: int, cutoff: int, seed: int) -> torch.Ten
 
 
 def build(config: LowFrequencyConfig, image_size: int, target_label: int) -> Attack:
-    """The LF attack record for one image size and target label."""
+    """LF built for this image size and target label."""
     pattern = _low_frequency_pattern(image_size, config.cutoff, config.pattern_seed)
     strength = config.strength
 

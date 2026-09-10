@@ -1,21 +1,19 @@
-"""Attack interface, label policy, and the shared poisoning pipeline.
+"""The Attack record, the label policies and the datasets that apply them.
 
-An attack is a small record, not a class hierarchy: a name, a function that
-stamps the trigger onto one image, and a label policy. Everything common across
-attacks lives here once, so each attack file only defines its trigger.
+An attack is a small record rather than a class hierarchy: a name, a function that
+stamps the trigger onto 1 image, and a label mode. Everything shared across attacks
+lives here once, so each attack module only defines its trigger.
 
-Triggers act in pixel space on a CHW image tensor in the range 0 to 1, before
-normalization, which is where pixel-space attacks are defined. Every dataset
-wrapper below therefore takes a normalize callable and applies it as the very
-last step, after any trigger.
+Triggers act in pixel space on a (C, H, W) tensor in 0 to 1, before normalization,
+because that is where the papers define them. Every dataset wrapper here therefore
+takes a normalize callable and applies it last.
 
-Training time and eval time ask different questions of the same attack, and the
-two get separate function pairs. Training asks which samples an attack is
-allowed to poison and what label it writes (is_poisonable, poisoned_label). Eval
-asks which samples belong in an attack-success set and what prediction counts as
-success (is_eval_poisonable, attack_success_label). For clean-label attacks the
-two answers are opposites, so mixing the pairs up silently measures the wrong
-thing.
+Training and evaluation ask different questions of the same attack and get separate
+function pairs. Training asks which samples may be poisoned and what label they get
+(is_poisonable, poisoned_label). Evaluation asks which samples belong in an
+attack-success set and what prediction counts as success (is_eval_poisonable,
+attack_success_label). For a clean-label attack the 2 answers are opposites, so
+mixing the pairs up silently measures the wrong thing.
 """
 
 from dataclasses import dataclass
@@ -40,73 +38,59 @@ LABEL_MODES = (
 
 @dataclass(frozen=True)
 class Attack:
-    """One attack: its name, its pixel-space trigger, and its label policy."""
+    """An attack: its name, its pixel-space trigger and its label policy."""
 
     name: str
     apply_trigger: ApplyTrigger
     label_mode: str
     target_label: int
-    # Source-specific attacks (TaCT) flip only these classes. Carried on the Attack
-    # rather than left on the config so it reaches evaluation, where measuring ASR
-    # over every non-target class instead understates it by the class count.
+    # A source-specific attack (TaCT) only claims to flip these classes. Carried on
+    # the record rather than left on the config so evaluation can restrict the ASR
+    # set to them, otherwise the rate is diluted by every other class.
     source_classes: tuple[int, ...] | None = None
-    # Cover samples normally carry the same trigger with their label kept, which is
-    # what Adaptive-Blend and TaCT do. WaNet's noise mode is different: its cover
-    # samples get a RANDOM warp, not the trigger warp, and that difference is the
-    # whole point, since it stops the warping itself from becoming the cue. An
-    # attack that needs its own cover transform supplies it here.
+    # Cover samples usually carry the ordinary trigger with their label kept. An
+    # attack whose covers need a different transform supplies it here, as WaNet's
+    # noise mode does with a random warp, so that warping itself cannot become the
+    # cue.
     apply_cover: ApplyTrigger | None = None
-    # Adaptive-Blend plants a WEAKER trigger during training than at test time: a
-    # random subset of the pattern's cells while training, the whole pattern at
-    # inference. That asymmetry is the mechanism, not a refinement. Training on
-    # partial evidence forces the model to generalise over the pattern, so the full
-    # pattern at test time lands far inside the learned region and ASR rises, while
-    # the weaker training signal keeps the poisoned latents close to the clean ones,
-    # which is what the attack exists to do. An attack that needs a different trigger
-    # at eval supplies it here; everything else leaves it None and apply_trigger is
-    # used for both.
+    # An attack that plants a different trigger at evaluation than in training
+    # supplies it here, as Adaptive-Blend does with its partial-cell training
+    # trigger and Label-Consistent with its adversarial bases. None means the
+    # training trigger is used for both.
     apply_trigger_eval: ApplyTrigger | None = None
-    # all_to_m only: how many distinct target classes the trigger maps onto. It is
-    # the one knob that interpolates between the 2 poles PSBD's premise sits
-    # between, so it is carried rather than derived: m = 1 reproduces all_to_one on
-    # target 0 exactly, m = num_classes reproduces all_to_all exactly.
+    # all_to_m and clean_label_multi: how many distinct classes the trigger maps
+    # onto or may poison. Carried rather than derived because m = 1 must reproduce
+    # all_to_one exactly and m = num_classes must reproduce all_to_all exactly.
     num_targets: int | None = None
 
 
 def _grouped_target(
     original_label: int, num_targets: int | None, num_classes: int | None = None
 ) -> int:
-    """The all_to_m target class: (y + 1) mod m.
+    """The all_to_m target class.
 
         original form
             y_poisoned = (y + 1) mod m
         descriptive form
             the next class, wrapping within the first m classes only
 
-    m is the number of distinct classes the trigger maps onto, and it is the whole
-    point of this label mode. PSBD's premise is that the trigger is a CONSTANT,
-    content-independent shortcut: the perturbed prediction stays pinned because the
-    shortcut never has to read the image. all_to_one satisfies that exactly, and
-    all_to_all violates it exactly, because (y + 1) mod K forces the model to
-    recognise the source class before it can increment. m interpolates between them
-    and is the only thing that varies, so the amount of content the backdoor map
-    must encode is log2(m) bits.
-
-    The 2 poles are reproduced exactly rather than approximately:
-      m = 1            (y + 1) mod 1 = 0, so every poisoned sample takes class 0,
-                       which is all_to_one on target 0.
-      m = num_classes  (y + 1) mod K, which is all_to_all.
+    m is how many distinct classes the trigger maps onto. PSBD's premise is that a
+    trigger is a constant shortcut that never has to read the image. all_to_one
+    satisfies that exactly and all_to_all violates it exactly, since (y + 1) mod K
+    has to recognise the source class before it can increment. m interpolates
+    between the 2, and the backdoor has to encode log2(m) bits of content to do it.
+    Both poles are reproduced exactly: m = 1 gives class 0 for every sample, which
+    is all_to_one on target 0, and m = num_classes is all_to_all.
     """
     if not num_targets or num_targets < 1:
         raise ValueError(
             f"all_to_m needs a positive num_targets, got {num_targets!r}. It is "
             "carried on the Attack and must be set by the attack's config."
         )
-    # m > num_classes does not degenerate gracefully, it emits an out-of-range
-    # label: at m = 16 on a 10-class dataset the modulus never wraps, so class 9
-    # maps to label 10 and the loss indexes past the end of the logits. Rejected
-    # here rather than at the loss, where it surfaces as a CUDA assert with no
-    # mention of the label map.
+    # m above the class count emits an out-of-range label (class 9 maps to 10 at
+    # m = 16 on 10 classes) and the loss then indexes past the logits. Rejected here
+    # rather than at the loss, where it surfaces as a CUDA assert that never
+    # mentions the label map.
     if num_classes is not None and num_targets > num_classes:
         raise ValueError(
             f"all_to_m needs num_targets <= num_classes, got m={num_targets} for "
@@ -121,19 +105,16 @@ def clean_label_target_set(
     """The classes a clean-label attack is allowed to poison.
 
     A clean-label attack keeps every label, so it can only poison images that
-    already carry a target label. Its ceiling is therefore |T| / |train set|,
-    which for a single target on a balanced K-class dataset is 1/K: 1% on
-    CIFAR-100 and 0.5% on Tiny ImageNet. Widening T to a few adjacent classes is
-    the only way to lift that ceiling without changing the dataset.
+    already carry a target label, and its poison rate is capped at |T| / |train
+    set|. With 1 target on a balanced K-class dataset that is 1/K, which is why
+    CIFAR-100 caps at 1% and Tiny ImageNet at 0.5%. Widening T to a few adjacent
+    classes is the only way to lift the cap without changing the dataset. The cost
+    is that the trigger then predicts a set rather than a class, so detection
+    weakens, and T stays small for that reason.
 
-    The classes are consecutive from target_label and do not wrap, so a caller
-    asking for more targets than the dataset has left above target_label gets an
-    out-of-range class rather than a silent overlap with class 0.
-
-    The cost of widening is that the trigger predicts a set rather than a class,
-    so its probability mass splits |T| ways at inference and detection weakens.
-    The measured all-to-m sweep puts the usable range at 2 to 4, so this is
-    deliberately not a knob to turn far.
+    The classes are consecutive from target_label and do not wrap, so asking for
+    more targets than the dataset has above target_label yields an out-of-range
+    class rather than a silent overlap with class 0.
     """
     if not num_targets or num_targets <= 1:
         return (target_label,)
@@ -146,11 +127,11 @@ def is_poisonable(
     target_label: int,
     num_targets: int | None = None,
 ) -> bool:
-    """Which samples an attack is allowed to poison at TRAINING time.
+    """Whether a sample may be poisoned at training time.
 
-    all_to_one poisons any sample not already the target class. all_to_all
-    poisons any sample. clean_label poisons only target-class samples, since it
-    must not change the label.
+    all_to_one poisons anything not already the target class and all_to_all poisons
+    anything. A clean-label mode poisons only the target classes, since it must not
+    change the label.
     """
     if label_mode == "all_to_one":
         return original_label != target_label
@@ -172,7 +153,7 @@ def poisoned_label(
     num_classes: int,
     num_targets: int | None = None,
 ) -> int:
-    """The label a poisoned sample is given at TRAINING time.
+    """The label a poisoned sample is given at training time.
 
     original form for all_to_all
         y_poisoned = (y + 1) mod K
@@ -196,14 +177,12 @@ def is_eval_poisonable(
     target_label: int,
     num_targets: int | None = None,
 ) -> bool:
-    """Which samples belong in an attack-success EVAL set.
+    """Whether a sample belongs in an attack-success set at evaluation time.
 
-    Identical to is_poisonable except for clean_label. Training poisons only
-    target-class images, since a clean-label attack must not change the label.
-    But measuring attack success asks a different question: does the trigger
-    fool a non-target image into being predicted as the target. So the eval
-    eligibility flips to original_label != target_label, the same question
-    all_to_one and all_to_all already ask.
+    The same as is_poisonable except for the clean-label modes. Training poisons
+    only target-class images, but attack success asks whether the trigger fools a
+    non-target image into the target, so eligibility flips to the complement, the
+    question all_to_one and all_to_all already ask.
     """
     if label_mode == "all_to_one":
         return original_label != target_label
@@ -225,15 +204,11 @@ def attack_success_label(
     num_classes: int,
     num_targets: int | None = None,
 ) -> int:
-    """The label an attack-success EVAL sample is compared against.
+    """The label an attack-success sample is compared against at evaluation time.
 
-    Identical to poisoned_label except for clean_label. poisoned_label's
-    clean_label branch returns original_label, which is correct only at
-    training time, where is_poisonable already restricts clean_label to
-    original_label == target_label so that is a no-op. At eval time
-    is_eval_poisonable flips clean_label eligibility to
-    original_label != target_label, so returning original_label there would be
-    wrong: the intended label is always target_label.
+    The same as poisoned_label except for the clean-label modes, whose training
+    label is the unchanged original. At evaluation the eligible images are the
+    non-target ones, so the intended label is always target_label.
     """
     if label_mode in ("clean_label", "clean_label_multi"):
         return target_label
@@ -247,11 +222,12 @@ def attack_success_label(
 def choose_poison_indices(
     labels: list[int], attack: Attack, poison_rate: float, seed: int
 ) -> set[int]:
-    """Pick which dataset indices to poison at the requested rate.
+    """The dataset indices to poison at the requested rate.
 
-    The rate is measured against the whole dataset. For clean_label the eligible
-    pool is only the target class, so the count is capped by how many target
-    samples exist.
+    The rate is measured against the whole dataset, and the count is capped by the
+    eligible pool. For a clean-label attack that pool is only the target class, so
+    every rate above the cap selects the same indices. The realized rate is
+    recorded in the checkpoint's provenance for that reason.
     """
     eligible = [
         i
@@ -277,18 +253,16 @@ def choose_indices_with_cover(
     source_classes: tuple[int, ...] | None,
     seed: int,
 ) -> tuple[set[int], set[int]]:
-    """Pick poison indices and cover indices for adaptive attacks.
+    """Poison indices and cover indices for an attack that trains with covers.
 
     Cover samples receive the trigger but keep their true label. They teach the
     model that the trigger alone does not imply the target, which is how adaptive
-    attacks flatten the latent separation that many defenses rely on.
+    attacks flatten the latent separation many defences rely on. source_classes,
+    when given, restricts poisoning to those classes (TaCT). Covers are then drawn
+    from the other non-target classes.
 
-    source_classes, when given, restricts poisoning to those classes, the
-    source-specific setting of TaCT. Cover samples are then drawn from the other
-    non-target classes.
-
-    Both draws come from one generator in this order, poison first, so the seed
-    reproduces the pair and not just each set alone.
+    Both draws come from 1 generator, poison first, so the seed reproduces the pair
+    and not just each set alone.
     """
     rng = np.random.default_rng(seed)
     dataset_size = len(labels)
@@ -327,11 +301,11 @@ def choose_indices_with_cover(
 
 
 class PoisonedTrainingSet(Dataset):
-    """Wraps a clean dataset yielding 0-to-1 images and poisons chosen indices.
+    """A clean dataset of 0-to-1 images with the chosen indices poisoned.
 
     Normalization is applied last so the model still receives normalized inputs.
-    An empty poison_indices set turns this into a plain normalized clean set,
-    which is how the clean splits of an eval run are built.
+    An empty poison_indices turns this into a plain normalized clean set, which is
+    how the clean splits of an evaluation run are built.
     """
 
     def __init__(
@@ -368,16 +342,13 @@ class PoisonedTrainingSet(Dataset):
 
 
 class AttackSuccessSet(Dataset):
-    """Every eligible sample poisoned, for measuring attack success rate.
+    """Every eligible test image with the trigger applied, labeled by intent.
 
-    The returned label is the attack's intended label per sample, so accuracy on
-    this set is the ASR. Samples that cannot flip under the label mode are
-    dropped so the ASR is measured only over samples that should flip. Uses the
-    eval-time eligibility and label functions, not the training-time ones, since
-    clean_label asks a different question at eval time (see is_eval_poisonable).
-
-    indices holds the eligible positions within base_dataset, in serving order.
-    A caller that needs original dataset indices maps them back itself.
+    The label is the attack's intended label, so accuracy on this set is the ASR.
+    Samples that cannot flip under the label mode are dropped, and eligibility uses
+    the evaluation-time functions rather than the training-time ones (see
+    is_eval_poisonable). indices holds the eligible positions in serving order. A
+    caller that needs original dataset indices maps them back itself.
     """
 
     def __init__(
@@ -401,11 +372,10 @@ class AttackSuccessSet(Dataset):
                 attack.label_mode, int(y), attack.target_label, attack.num_targets
             )
         ]
-        # A source-specific attack only claims to flip its source classes. Measuring
-        # over the whole eval-poisonable pool divides the true rate by the class count:
-        # TaCT on CIFAR-10 reads 0.171 that way against 1.000 on its source class.
-        # source_only=False builds the complement, whose success rate is the
-        # false-trigger rate on classes the attack never claimed.
+        # A source-specific attack only claims to flip its source classes, and
+        # measuring over every non-target class divides the true rate by the class
+        # count. source_only=False builds the complement instead, whose success rate
+        # is the false-trigger rate on classes the attack never claimed.
         if attack.source_classes is not None:
             sources = set(attack.source_classes)
             eligible = [
@@ -434,10 +404,11 @@ class AttackSuccessSet(Dataset):
 
 
 class CoverPoisonedTrainingSet(Dataset):
-    """Poisons some indices and triggers cover indices without relabeling them.
+    """A poisoned training set that also carries cover samples.
 
     Poisoned samples get the trigger and the poisoned label. Cover samples get the
-    trigger and keep their original label. Everything else stays clean.
+    trigger (or the attack's own cover transform) and keep their label. Everything
+    else stays clean.
     """
 
     def __init__(

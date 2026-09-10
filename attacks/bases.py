@@ -1,14 +1,11 @@
-"""Per-sample poisoned base images, keyed by dataset index.
+"""Reading the adversarially perturbed base images Label-Consistent stamps onto.
 
-Label-Consistent needs the target-class images perturbed adversarially before the
-trigger is stamped, and that perturbation is a separate offline step (see
-`attacks.adversarial`). This module is the read side: it maps a dataset index to the
-image the attack should stamp instead of the clean one.
+adversarial.py writes them in a separate offline step. This is the read side: a
+dataset index maps to the image the attack should stamp instead of the clean one.
 
-Loading is deferred until the first lookup. `build()` runs on every consumer of a
-checkpoint, including detection and analysis processes that only ever call
-`apply_trigger_eval` and may run where this cache does not exist, so opening the
-file eagerly would break them for no reason.
+Loading is deferred until the first lookup, because build() runs on every consumer
+of a checkpoint, including detection and analysis processes that only ever call
+apply_trigger_eval and may run where the cache does not exist.
 """
 
 import os
@@ -19,7 +16,7 @@ BASES_FILENAME = "bases.pt"
 
 
 def read_adversarial_bases(directory: str) -> dict[int, torch.Tensor]:
-    """Load `directory/bases.pt` into an index-to-image map, or {} if absent."""
+    """The bases.pt in directory as an index-to-image map, or {} if absent."""
     if not directory:
         return {}
     path = os.path.join(directory, BASES_FILENAME)
@@ -32,11 +29,11 @@ def read_adversarial_bases(directory: str) -> dict[int, torch.Tensor]:
 
 
 def lazy_adversarial_lookup(directory: str, image_size: int):
-    """Return lookup(index) -> base image or None, loading the cache on first call.
+    """A lookup from dataset index to base image (None on a miss) that loads lazily.
 
-    The stored images are at the dataset's native resolution, which is the space
-    triggers are applied in. A mismatch means the cache was built for a different
-    dataset, so it raises rather than resizing into a silently wrong experiment.
+    The stored images are at the dataset's native resolution, the space triggers are
+    applied in. A size mismatch means the cache was built for a different dataset,
+    so it raises rather than resizing into a silently wrong experiment.
     """
     cache: dict[int, torch.Tensor] = {}
     state = {"loaded": False}
@@ -60,10 +57,10 @@ def lazy_adversarial_lookup(directory: str, image_size: int):
 def missing_adversarial_bases(config, poison_indices) -> list[int]:
     """Poisoned indices with no perturbed base, empty when the config asks for none.
 
-    `apply_trigger` falls back to the clean image on a miss so that stealth and
-    analysis code holding test indices does not crash. That fallback must never
-    fire during training: it would quietly train the patch-only variant while
-    args.json records the adversarial one. Training calls this and refuses.
+    apply_trigger falls back to the clean image on a miss so that analysis code
+    holding test indices does not crash. That fallback must never fire in training,
+    where it would quietly train the patch-only variant while args.json records the
+    adversarial variant, so training calls this first and refuses.
     """
     directory = getattr(config, "adversarial_dir", "")
     if not directory:
@@ -73,12 +70,12 @@ def missing_adversarial_bases(config, poison_indices) -> list[int]:
 
 
 def adversarial_config_error(config) -> str | None:
-    """Why this config's adversarial settings are incoherent, or None if they are fine.
+    """Why the config's adversarial settings are incoherent, or None if they are fine.
 
     An epsilon with no directory is the shape a dropped command-line override
-    produces. It is not out of range and violates no type, so nothing else notices:
-    the attack simply falls back to its patch-only variant while the recorded
-    metadata says otherwise. Checked before training rather than after.
+    produces. Nothing else notices it, since it is in range and well typed. The
+    attack would fall back to its patch-only variant while the recorded metadata
+    says otherwise.
     """
     if getattr(config, "adversarial_epsilon", 0.0) and not getattr(
         config, "adversarial_dir", ""

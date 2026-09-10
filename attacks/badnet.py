@@ -23,7 +23,7 @@ class BadNetConfig:
 
 
 def build(config: BadNetConfig, image_size: int, target_label: int) -> Attack:
-    """The BadNet attack record for one image size and target label."""
+    """BadNet built for this image size and target label."""
     patch = checkerboard_patch(config.patch_size)  # (3, patch_size, patch_size)
     size = config.patch_size
 

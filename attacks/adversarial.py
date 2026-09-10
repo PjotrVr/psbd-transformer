@@ -1,21 +1,19 @@
-"""Adversarially perturbed base images for the Label-Consistent attack.
+"""Generating the adversarially perturbed bases the Label-Consistent attack needs.
 
-Turner et al. (2019) poison only target-class images and keep their labels, so
-the model can still learn the class from the untouched picture and has no reason
-to prefer the trigger. Their fix is to first destroy the natural evidence: run an
-untargeted attack on each base image against a model trained on clean data, so
-the image no longer supports its own label and the trigger becomes the only cue
-that reliably does. The PSBD paper we are porting used exactly this, taking
-precomputed adversarial images from the original authors and from BackdoorBench.
+Turner et al. (2019) poison only target-class images and keep their labels, so the
+model can still learn the class from the untouched picture and has no reason to
+prefer the trigger. Their fix is to destroy the natural evidence first: an untargeted
+attack on each base image against a clean model, so the image stops supporting its
+own label and the trigger becomes the only reliable cue. cli.lc_bases runs this
+and bases.py reads the result.
 
-The perturbation is a property of the poisoned DATASET, not of the victim, so a
-single surrogate serves every architecture we then train. That is also the
-faithful threat model: the attacker publishes images, not a model.
+The perturbation is a property of the poisoned dataset, not the victim, so 1
+surrogate serves every architecture trained afterwards. That is also the faithful
+threat model, since the attacker publishes images rather than a model.
 
-Everything here works at the dataset's NATIVE resolution in 0-to-1 pixel space,
-because that is where triggers are applied. `train_backdoor.base_transform` stops
-at ToTensor, the trigger goes on, and normalization comes last, so the surrogate
-is fed `normalize(x)` and its Resize-to-224 wrapper is inside the graph.
+Everything works at the dataset's native resolution in 0-to-1 pixel space, because
+that is where triggers are applied. The surrogate is fed normalize(x) and its
+Resize-to-224 wrapper sits inside the graph.
 """
 
 import hashlib
@@ -30,13 +28,14 @@ MANIFEST_FILENAME = "manifest.json"
 
 
 def epsilon_tag(epsilon: float) -> str:
-    """`16` for 16/255, so a directory name says the strength in the usual units."""
+    """The strength in the usual units, 16 for 16/255, for use in a directory name."""
     return str(round(epsilon * 255))
 
 
 def bases_directory(
     results_dir: str, dataset: str, target_label: int, epsilon: float
 ) -> str:
+    """Where the bases for this dataset, target and strength live under results_dir."""
     return os.path.join(
         results_dir,
         "lc_adversarial",
@@ -55,14 +54,15 @@ def pgd_perturb(
 ) -> torch.Tensor:
     """Untargeted L-inf PGD, maximizing the loss on each image's own label.
 
-    original (Madry et al., 2018):
+    original form (Madry et al., 2018)
         x^{t+1} = Proj_{B_eps(x) ∩ [0,1]} ( x^t + alpha * sign( grad_x L(f(x^t), y) ) )
-    simplified: start at a random point of the epsilon-ball, take `steps` steps of
-    size 2.5 * epsilon / steps along the sign of the gradient, and after each step
-    clip back into the ball and into the valid pixel range.
+    descriptive form
+        start at a random point of the epsilon ball, take steps of size
+        2.5 * epsilon / steps along the sign of the gradient, and after each one
+        clip back into the ball and into the valid pixel range
 
-    The step size is Madry's rule: 2.5 * epsilon / steps gives enough total travel
-    to reach the far side of the ball with room to turn around.
+    The step size is Madry's rule, enough total travel to cross the ball with room
+    to turn around.
     """
     step_size = 2.5 * epsilon / steps
     noise = torch.empty_like(images).uniform_(-epsilon, epsilon, generator=generator)
@@ -78,10 +78,12 @@ def pgd_perturb(
 
 @torch.no_grad()
 def accuracy_on(model, images: torch.Tensor, labels: torch.Tensor, normalize) -> float:
+    """Top-1 accuracy of the surrogate on these images, before or after perturbing."""
     return float((model(normalize(images)).argmax(dim=1) == labels).float().mean())
 
 
 def file_digest(path: str) -> str:
+    """The sha256 of a file, read in 1 MB blocks."""
     digest = hashlib.sha256()
     with open(path, "rb") as handle:
         for block in iter(lambda: handle.read(1 << 20), b""):
@@ -94,7 +96,7 @@ def save_bases(
 ) -> None:
     """Write bases.pt and its manifest, tensor first, both atomically.
 
-    The tensor is regenerable and gitignored; the manifest is tracked, and it is
+    The tensor is regenerable and gitignored. The manifest is tracked, and it is
     what makes a poisoned checkpoint traceable to the exact bases it trained on.
     """
     os.makedirs(directory, exist_ok=True)

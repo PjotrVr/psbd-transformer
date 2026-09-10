@@ -1,14 +1,14 @@
-"""Adaptive-Blend: a blend trigger with cover samples (Qi et al., 2023).
+"""Adaptive-Blend: a blend trigger with cover samples and a weaker training trigger (Qi et al., 2023).
 
-The distinguishing feature is cover samples, triggered images that keep their true
-label, which flatten the latent separation between clean and poisoned that many
-defenses look for. cover_rate controls how many there are. Training is standard
-cross-entropy over the poisoned-plus-cover set, so this file defines the trigger
-and its cover rate, and the training entrypoint reads cover_rate to build the set.
+It works by 2 mechanisms. Cover samples are triggered images that keep their true
+label. They flatten the latent separation between clean and poisoned that many
+defences look for, and cover_rate sets how many there are. The trigger is asymmetric: training
+plants a random subset of the pattern's cells and evaluation plants the whole
+pattern. Training on partial evidence forces the model to generalise over the
+pattern, so the full pattern lands far inside the learned region and ASR rises,
+while the weaker training signal keeps poisoned latents close to clean ones.
 
-The paper also uses an asymmetric trigger, fewer blend cells at train time than at
-test time. That refinement is omitted for simplicity and can be added by giving the
-train and test paths different masks over the pattern.
+Training itself is standard cross-entropy over the poisoned-plus-cover set.
 """
 
 from dataclasses import dataclass
@@ -26,9 +26,9 @@ class AdaptiveBlendConfig:
     cover_rate: float = 0.01
     pattern_seed: int = 0
     label_mode: str = "all_to_one"
-    # The pattern is split into a cells x cells grid and only train_cell_fraction of
-    # the cells are planted during training, the whole pattern at inference. That
-    # asymmetry is the paper's second mechanism and omitting it cost 0.63 mean ASR.
+    # The pattern is split into a cells x cells grid, and training plants only
+    # train_cell_fraction of the cells. Without the asymmetry the attack barely
+    # implants on ViT.
     cells: int = 4
     train_cell_fraction: float = 0.5
 
@@ -36,10 +36,10 @@ class AdaptiveBlendConfig:
 def _cell_mask(
     image_size: int, cells: int, fraction: float, index: int, seed: int
 ) -> torch.Tensor:
-    """A (1, H, W) mask keeping `fraction` of a cells x cells grid, chosen per sample.
+    """A (1, H, W) mask keeping fraction of a cells x cells grid, chosen per sample.
 
-    Seeded from the sample index, so one image always receives the same subset and the
-    poisoned training set stays reproducible across epochs and across runs.
+    Seeded from the sample index, so an image always receives the same subset and the
+    poisoned training set is reproducible across epochs and runs.
     """
     generator = torch.Generator().manual_seed(seed * 1_000_003 + index)
     keep = torch.rand(cells, cells, generator=generator) < fraction
@@ -50,13 +50,13 @@ def _cell_mask(
 
 
 def build(config: AdaptiveBlendConfig, image_size: int, target_label: int) -> Attack:
-    """The Adaptive-Blend attack record for one image size and target label."""
+    """Adaptive-Blend built for this image size and target label."""
     pattern = seeded_random_pattern(image_size, config.pattern_seed)  # (3, S, S)
     alpha = config.alpha
 
     def plant(image: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
         # original: x_poisoned = (1 - alpha) * x + alpha * pattern
-        # asymmetric: blended only where the cell mask is on
+        # here: blended only where the cell mask is on
         return image * (1.0 - alpha * mask) + alpha * mask * pattern  # (C, H, W)
 
     def apply_trigger(image: torch.Tensor, index: int) -> torch.Tensor:

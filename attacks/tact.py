@@ -1,15 +1,13 @@
 """TaCT: source-specific contamination with cover samples (Tang et al., 2021).
 
-Only images from the source classes are poisoned and flipped to the target, and
-cover samples (the trigger on non-source images, label kept) stop the trigger from
-being learned as a generic target cue. source_classes selects the sources and
-cover_rate sets the cover count. The training entrypoint reads both from this
-config.
+Only images from the source classes are poisoned and flipped to the target. Cover
+samples, the trigger on non-source images with their label kept, stop the trigger
+from being learned as a generic target cue. source_classes selects the sources and
+cover_rate sets the cover count.
 
-ASR for a source-specific attack is measured on source-class images only, because
-those are the only images the attack claims to flip. source_classes travels on the
-Attack so AttackSuccessSet can restrict the eval set itself, rather than leaving
-the caller to remember to filter it.
+ASR is measured on source-class images only, since those are the only images the
+attack claims to flip. source_classes travels on the Attack so AttackSuccessSet
+restricts the eval set itself rather than trusting the caller to.
 """
 
 from dataclasses import dataclass
@@ -30,7 +28,7 @@ class TactConfig:
 
 
 def build(config: TactConfig, image_size: int, target_label: int) -> Attack:
-    """The TaCT attack record for one image size and target label."""
+    """TaCT built for this image size and target label."""
     patch = checkerboard_patch(config.patch_size)  # (3, patch_size, patch_size)
     size = config.patch_size
 

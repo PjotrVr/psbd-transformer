@@ -1,14 +1,12 @@
-"""Trigger patterns that more than 1 attack defines identically.
+"""Trigger patterns shared by more than 1 attack.
 
-Both patterns below were previously written out once per attack file, which made
-5 copies of 2 definitions and 5 places to get a numerical detail wrong. They are
-deterministic functions of their arguments alone, so a single definition serves
-every caller: the checkerboard depends only on the patch size, and the blend
-pattern only on (image size, seed).
+The checkerboard depends only on the patch size and serves BadNet, Label-Consistent
+and TaCT. The blend pattern depends only on the image size and a seed and serves
+Blend and Adaptive-Blend. Both are deterministic functions of their arguments.
 
-Changing anything here changes the trigger of every attack that uses it, and a
-changed trigger silently invalidates every checkpoint and every stealth number
-already on disk. Treat the arithmetic as frozen.
+Changing the arithmetic here changes the trigger of every attack that uses it,
+which silently invalidates every checkpoint and stealth number already on disk.
+Treat it as frozen.
 """
 
 import torch
@@ -19,11 +17,9 @@ TRIGGER_CHANNELS = 3
 
 
 def checkerboard_patch(patch_size: int) -> torch.Tensor:
-    """A (3, patch_size, patch_size) checkerboard, white at (0, 0), same in every channel.
+    """A (3, patch_size, patch_size) checkerboard, white at (0, 0), equal in every channel.
 
-    Cell (row, column) is 1.0 when row + column is even and 0.0 otherwise. Shared
-    by BadNet (bottom-right corner), Label-Consistent (all 4 corners), and TaCT
-    (bottom-right corner), all 3 of which use the identical patch.
+    Cell (row, column) is 1.0 when row + column is even and 0.0 otherwise.
     """
     board = torch.zeros(TRIGGER_CHANNELS, patch_size, patch_size)
     for row in range(patch_size):
@@ -36,10 +32,9 @@ def checkerboard_patch(patch_size: int) -> torch.Tensor:
 def seeded_random_pattern(image_size: int, seed: int) -> torch.Tensor:
     """A (3, image_size, image_size) uniform-random pattern in 0 to 1.
 
-    Shared by Blend and Adaptive-Blend as the full-image pattern they alpha-blend
-    over the input. Drawn from a private torch.Generator rather than the global
-    RNG, so building an attack never advances the stream that model init, dataset
-    shuffling, or the split permutation later read from.
+    Drawn from a private generator rather than the global stream, so building an
+    attack never advances what model init, shuffling and the split permutation read
+    from later.
     """
     generator = torch.Generator().manual_seed(seed)
 
