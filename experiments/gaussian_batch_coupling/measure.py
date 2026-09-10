@@ -25,13 +25,13 @@ import os
 
 import torch
 
-from defences.checkpoint_eval import (
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.dropout import POSITION_REGISTRY, _resolve_targets, BLOCK_TYPES
-from models import detect_architecture, load_checkpoint, network_core
+from models.positions import BLOCK_TYPES, POSITION_REGISTRY, resolve_targets
+from models.backbones import detect_architecture, load_checkpoint, network_core
 
 POSITIONS = ("before_mlp", "before_attention_norm")
 MAX_BATCHES = 40
@@ -102,7 +102,7 @@ def measure_one(folder, args, device):
 
     for position in POSITIONS:
         spec = POSITION_REGISTRY[architecture][position]
-        targets = _resolve_targets(model, core, spec, BLOCK_TYPES[architecture])
+        targets = resolve_targets(model, core, spec, BLOCK_TYPES[architecture])
         per_split = {}
         for split, loader in loaders.items():
             batch_stds, sample_stds = collect_stds(

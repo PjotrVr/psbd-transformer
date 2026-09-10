@@ -75,7 +75,7 @@ TRAIN = """python -m cli.train_backdoor \\
 """
 
 TRAIN_BENIGN = """python -m cli.train_benign \\
-    --dataset {dataset} \\
+    --datasets {dataset} \\
     --architecture {architecture} \\
     --epochs {epochs} \\
     --seed {seed} \\

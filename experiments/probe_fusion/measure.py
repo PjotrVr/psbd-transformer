@@ -28,28 +28,26 @@ managed.
 import argparse
 import json
 import os
+from data.splits import SPLITS
 
 import torch
 
-from defences.psbd_cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.psbd_metrics import (
+from defences.decision import (
     complete_rates,
     detection_report,
     multi_probe_detection,
     pair_clean_to_backdoor,
-    psu_ratio_from_cache,
     select_rate_at_matched_shift,
-    shift_ratio,
-    to_rank,
 )
+from defences.scores import psu_ratio_from_cache, shift_ratio, to_rank
 
-SPLITS = ("validation", "clean", "backdoor")
 # The operating points a deployment is read at, per the reporting contract.
 TARGET_FPRS = (0.10, 0.20)
 # A probe whose achieved shift misses the target by more than this is reported but excluded

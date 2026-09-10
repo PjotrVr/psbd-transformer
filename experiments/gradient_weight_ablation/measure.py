@@ -58,13 +58,13 @@ import numpy as np
 import torch
 from sklearn.metrics import average_precision_score, roc_auc_score
 
-from defences.checkpoint_eval import (
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.psbd_metrics import pair_clean_to_backdoor
-from models import load_checkpoint
+from defences.decision import pair_clean_to_backdoor
+from models.backbones import load_checkpoint
 
 # Fractions of the predicted row's weights to disable, hardest last.
 REMOVAL_FRACTIONS = (0.01, 0.02, 0.05, 0.10, 0.20, 0.30, 0.50, 0.70)

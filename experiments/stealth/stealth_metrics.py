@@ -28,7 +28,7 @@ from torchvision import datasets as tv_datasets
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from attacks import build_attack, default_config
-from utils.config import DATASET_REGISTRY
+from data.registry import DATASET_REGISTRY
 
 ATTACKS = [
     "badnet_a2o",

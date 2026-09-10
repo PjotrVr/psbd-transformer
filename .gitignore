@@ -56,18 +56,24 @@ results/**
 # regenerable by scripts/coverage_ledger.py, so only the readable summary is tracked:
 # a coverage number moving is exactly the thing worth seeing in a diff.
 !results/coverage/COVERAGE.md
+# The competitor detectors' per-checkpoint records, 1 small JSON per detector
+# (detectors.records). Their score tensors beside them are regenerable and stay out.
+!results/**/detectors/*_metrics.json
+!results/detector_summary.csv.gz
 
 # Teaching notes: a local reading guide to this codebase, regenerable and not
 # part of the published record.
 teaching/
 
-# Generated PBS job scripts. There are several hundred and they are all
-# reproducible from pbs/generate_*.py, so the generators are versioned and their
-# output is not.
-pbs/psbd_*/
-pbs/swin_*/
-pbs/vit_*/
-pbs/eval/
+# Generated PBS job scripts. Every one is reproducible from a pbs/generate_*.py,
+# so the generators are versioned and their output is not. Matching on the
+# extension rather than on directory names catches the batches that land outside
+# a subdirectory, which is how 3896 of these ended up tracked. The per-directory
+# rules this replaces were added after the files were already in the index, and an
+# ignore rule has no effect on a file git is already tracking.
+pbs/**/*.pbs
+pbs/*.pbs
+pbs/**/submit_all.sh
 
 # results/operating_points.csv is 189 MB, rebuilt in seconds by
 # `python -m cli.summary --operating-points`. The compact summary is the tracked
@@ -84,3 +90,6 @@ pbs/psbd_saturation/
 
 # Raw stealth measurements, regenerable by experiments/stealth/stealth_metrics.py.
 experiments/stealth/stealth_metrics_results.json
+
+# Reference implementations cloned for reading and porting, never tracked.
+third_party/

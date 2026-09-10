@@ -22,9 +22,9 @@ import torch
 from sklearn.metrics import roc_auc_score
 
 sys.path.insert(0, ".")
-from psbd.cache import dropout_pass_path
-from psbd.decision import pair_clean_to_backdoor
-from psbd.scores import psu_ratio_from_cache
+from defences.cache import dropout_pass_path
+from defences.decision import pair_clean_to_backdoor
+from defences.scores import psu_ratio_from_cache
 
 FOLDER = sys.argv[1] if len(sys.argv) > 1 else "vit_cifar100_badnet_a2o_0_01"
 CONFIG = sys.argv[2] if len(sys.argv) > 2 else "before_attention_norm_token_mask"

@@ -1,6 +1,6 @@
 """Recover every field that is deducible from artifacts already on disk.
 
-Nothing here runs a model. Three quantities were either never recorded or were
+Nothing here runs a model. 3 quantities were either never recorded or were
 recorded in a way that hides a cap, and all 3 can be recovered from what the
 sweep and the training runs already wrote.
 
@@ -13,13 +13,13 @@ sweep and the training runs already wrote.
   asr, clean_accuracy   the no-dropout baseline already stores the model's argmax
                         and the label the loader asked for, per split. On the
                         backdoor split that label is the attack-success label, so
-                        the agreement rate IS the attack success rate. On the
+                        the agreement rate is the attack success rate. On the
                         clean split it is the true class, so agreement is clean
-                        accuracy. Verified against 496 checkpoints that carry a
-                        training-time measurement: all 496 agree within 0.02.
+                        accuracy. Checked against every checkpoint that carries a
+                        training-time measurement, and the 2 agree closely.
 
-A deduced value never overwrites a measured one. Where both exist the measured
-value stays and the deduced one is written beside it, so a disagreement stays
+A deduced value never overwrites a measured value. Where both exist the measured
+value stays and the deduced value is written beside it, so a disagreement stays
 visible rather than being silently reconciled.
 
 Example
@@ -33,11 +33,11 @@ import os
 
 import torchvision.transforms.v2 as transforms_v2
 
-from psbd.attacks import build_attack, default_config
-from psbd.cache import baseline_path, load_baseline
-from psbd.config import DATASET_REGISTRY
-from psbd.data import extract_labels, load_clean_datasets
-from psbd.poisoning import choose_poison_indices
+from attacks import build_attack, default_config
+from defences.cache import baseline_path, load_baseline
+from data.registry import DATASET_REGISTRY
+from data.loading import extract_labels, load_clean_datasets
+from attacks.poisoning import choose_poison_indices
 
 # Class counts per dataset are fixed, so the training label vector can be rebuilt
 # without touching the images. CIFAR and Tiny are balanced by construction. GTSRB

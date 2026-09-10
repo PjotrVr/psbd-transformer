@@ -3,17 +3,17 @@
 **Status: SUPPORTED (full panel, 48/48 coverage).**
 
 The full panel has landed. Across 4 datasets, 3 poison rates, and the 5-attack
-panel, switching from the published position (dropout @ pre_residual) to either
-token_mask @ before_attention_norm or gain_scale @ mlp_norm_out recovers
-detection at 1%.
+panel, switching from the founding placement (dropout @ pre_residual, refuted
+by H1) to either token_mask @ before_attention_norm or gain_scale @
+mlp_norm_out recovers detection at 1%.
 
 On CIFAR-100 at 1% (the hardest setting on the hardest dataset), **at matched
 clean-validation shift ratio**:
 
 | Config | Mean AUROC at 1% |
 |---|---:|
-| dropout @ pre_residual (published) | 0.687 |
-| **token_mask @ before_attention_norm** | **+0.166 over published** |
+| dropout @ pre_residual (founding proposal, refuted by H1) | 0.687 |
+| **token_mask @ before_attention_norm** | **+0.166 over the founding placement** |
 | gain_scale @ mlp_norm_out | **+0.087** by the nearest-rate estimator |
 
 > **The earlier version of this table is WITHDRAWN** (audit A16). It printed
@@ -26,7 +26,7 @@ clean-validation shift ratio**:
 > withdrawn ones without saying so.
 
 The surviving claim is the `token_mask` one: **+0.166** mean AUROC at 1% on CIFAR-100
-over the published configuration, at matched shift ratio.
+over the founding placement, at matched shift ratio.
 
 Full detection tables: [cifar100-detection-tables.md](../results/cifar100-detection-tables.md),
 [tiny-detection-tables.md](../results/tiny-detection-tables.md).

@@ -23,15 +23,15 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
-from psbd.cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from psbd.decision import pair_clean_to_backdoor
-from psbd.scores import psu_from_cache
+from defences.decision import pair_clean_to_backdoor
+from defences.scores import psu_from_cache
 
 # A disagreement larger than this is not float reassociation.
 TOLERANCE = 1e-6

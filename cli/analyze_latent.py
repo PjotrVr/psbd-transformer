@@ -1,16 +1,16 @@
-"""Latent-space analysis of one trained checkpoint: TAC, backdoor direction, CKA, PCA.
+"""Latent-space analysis of a trained checkpoint: TAC, backdoor direction, CKA, PCA.
 
 Builds paired clean and triggered copies of the same test images, extracts per-layer
 CLS features from both, and reports where in the network the trigger lives and how
 separable the 2 representations are. A PCA scatter is saved at the layer whose
 backdoor direction norm is largest.
 
-Run it on a benign checkpoint and a backdoored one and compare. A benign model
-should show small TAC at every layer, because it never learned the trigger; a
-backdoored one should show TAC and the direction norm rising at the layer carrying
-the backdoor.
+Run it on a benign checkpoint and on a backdoored checkpoint and compare. A benign
+model should show small TAC at every layer, because it never learned the trigger.
+A backdoored model should show TAC and the direction norm rising at the layer
+carrying the backdoor.
 
-All the work lives in psbd.analysis.latent. This file only parses arguments.
+All the work lives in analysis.latent. This file only parses arguments.
 
 Example
     python -m cli.analyze_latent --dataset cifar100 --attack badnet_a2o \
@@ -19,8 +19,8 @@ Example
 
 import argparse
 
-from psbd.analysis.latent import analyze_latent
-from psbd.config import DATASET_REGISTRY
+from analysis.latent import analyze_latent
+from data.registry import DATASET_REGISTRY
 
 
 def parse_args() -> argparse.Namespace:

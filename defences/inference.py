@@ -1,4 +1,4 @@
-"""Forward passes for PSBD: the no-dropout baseline cache and the stochastic passes.
+"""Forward passes for PSBD: the no-probe baseline and the perturbed passes.
 
 Prediction Shift Uncertainty per the PSBD paper, Equation 2:
 
@@ -7,36 +7,48 @@ Prediction Shift Uncertainty per the PSBD paper, Equation 2:
         with c = argmax_c P(x; theta)
 
     descriptive form
-        psu(x) = prob_no_dropout(argmax_class) - mean_over_k_passes(
-                     prob_with_dropout(argmax_class))
+        psu(x) = prob_no_dropout(argmax_class)
+                 - mean_over_k_passes(prob_with_dropout(argmax_class))
 
 A low PSU means the confidence in the no-dropout prediction barely moves under
-dropout, which flags the sample as likely poisoned. The subtraction itself lives
-in defences.psbd_metrics, on the CPU side; this module only produces the two
-forward-pass ingredients it needs.
+the perturbation, which flags the sample as likely poisoned. The subtraction lives
+in defences.scores, on the CPU side. This module produces the 2 forward-pass
+ingredients it needs and writes nothing itself.
 
-Nothing here ever touches the model's own dropout modules. The perturbation comes
-entirely from modules plugged in by defences.dropout, which live in hook closures
-outside the model tree and are explicitly left in train mode, so model.eval()
-keeps every built-in dropout at its natural identity while the probe still fires.
+Nothing here touches the model's own dropout modules. The perturbation comes from
+modules plugged in by models.positions, which live in hook closures outside the
+model tree and are left in train mode, so model.eval() keeps every built-in
+dropout at its identity while the probe still fires.
 """
 
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from lightning import seed_everything
-
-from defences.dropout import activate_model_dropout, restore_model_dropout
 from torch.utils.data import DataLoader
 
+from models.positions import activate_model_dropout, restore_model_dropout
 
-def _autocast_context(device: torch.device, use_bfloat16: bool):
-    """Run the forward pass in bfloat16 without downcasting stored scores."""
-    if use_bfloat16 and device.type == "cuda":
-        return torch.autocast(device_type="cuda", dtype=torch.bfloat16)
-    return nullcontext()
+
+def forward_logits(
+    model: nn.Module,
+    images: torch.Tensor,
+    device: torch.device,
+    use_bfloat16: bool,
+) -> torch.Tensor:
+    """Logits, (batch, num_classes), float32 whatever autocast did.
+
+    Not under no_grad. A caller that needs the gradient of a logit with respect
+    to the input or to a captured activation differentiates through this call,
+    which is what the gradient-based detectors do.
+    """
+    with _autocast_context(device, use_bfloat16):
+        logits = model(images.to(device))  # (batch, num_classes), bf16 under autocast
+
+    logits_float32 = logits.float()  # (batch, num_classes)
+    return logits_float32
 
 
 def forward_probs(
@@ -45,10 +57,31 @@ def forward_probs(
     device: torch.device,
     use_bfloat16: bool,
 ) -> torch.Tensor:
-    """Softmax probabilities in float32 regardless of autocast dtype."""
-    with _autocast_context(device, use_bfloat16):
-        logits = model(images.to(device))
-    return F.softmax(logits.float(), dim=1)
+    """Softmax probabilities, (batch, num_classes), float32 whatever autocast did."""
+    logits = forward_logits(model, images, device, use_bfloat16)  # (batch, num_classes)
+    probs = F.softmax(logits, dim=1)  # (batch, num_classes)
+    return probs
+
+
+@contextmanager
+def frozen_parameters(model: nn.Module):
+    """A context in which no parameter requires a gradient, restored exactly on exit.
+
+    A detector that optimises an input mask or differentiates a logit with respect
+    to an activation wants the backward pass to stop at the activations. With
+    every parameter frozen autograd builds no weight-gradient graph, so the
+    backward costs about a third less, and no parameter can accumulate a .grad
+    that a later optimiser step would consume by mistake. Flags are saved per
+    parameter, so a model that already had some frozen gets them back as they were.
+    """
+    saved = [(parameter, parameter.requires_grad) for parameter in model.parameters()]
+    for parameter, _ in saved:
+        parameter.requires_grad_(False)
+    try:
+        yield
+    finally:
+        for parameter, flag in saved:
+            parameter.requires_grad_(flag)
 
 
 @torch.inference_mode()
@@ -58,22 +91,20 @@ def build_baseline_cache(
     device: torch.device,
     use_bfloat16: bool,
 ) -> list[dict]:
-    """Precompute the no-dropout state of one split, once.
+    """The no-perturbation state of a split, computed once for every rate to share.
 
-    Caching avoids recomputing the deterministic baseline for every dropout rate
-    in the sweep, which is the dominant cost saving across the run. Must be
-    called before any position is plugged; the sweep entrypoint guarantees that
-    by building every baseline before its rate loop starts.
+    Must run before any position is plugged, which the sweep guarantees by building
+    every baseline before its rate loop starts.
 
-    Three tensors per batch. probs and its argmax are what PSU is measured
-    against. loader_labels is what the loader asked for, which on the backdoor
-    split is the attack-success label, so comparing it to the argmax recovers
-    per-sample whether the trigger actually flipped this image. That matters
-    whenever ASR is well below 1: a triggered image the model classifies
-    correctly is behaviourally clean, and scoring it as a detection positive
-    penalises the detector for the attack's failure.
+    3 tensors per batch. probs and its argmax are what PSU is measured against.
+    loader_labels is what the loader asked for, on the backdoor split the
+    attack-success label, so comparing it to the argmax says per sample whether the
+    trigger actually flipped the image. A triggered image the model still
+    classifies correctly is behaviourally clean, and scoring it as a positive would
+    penalise the detector for the attack's failure.
     """
     model.eval()
+
     cache: list[dict] = []
     for images, labels in loader:
         probs = forward_probs(model, images, device, use_bfloat16)
@@ -84,6 +115,7 @@ def build_baseline_cache(
                 "loader_labels": labels.cpu().long(),
             }
         )
+
     return cache
 
 
@@ -98,44 +130,29 @@ def compute_dropout_pass_probs(
     seed: int,
     model_dropout: float = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Raw per-pass evidence, both shaped (forward_passes, N).
+    """The raw per-pass evidence as (probs, argmax), both shaped (forward_passes, N).
 
-    Returns (probs, argmax):
-      probs   float32, the probability assigned to the baseline-argmax class c
-      argmax  int16, the class each dropout pass actually predicted
+    probs is float32, the probability each perturbed pass gave the baseline-argmax
+    class. argmax is int16, the class each pass actually predicted. Both are kept
+    raw rather than reduced so PSU can be recomputed under another aggregation
+    without a GPU rerun. argmax is what the shift ratio, the adaptive rate rule and
+    the shift-target claim all need, and none of them is recoverable from probs.
 
-    Raw, not reduced: collapsing the k passes to one score here would throw away
-    the ability to recompute PSU under a different aggregation (median instead of
-    mean, a different k) without rerunning the GPU pass. Saving one float per pass
-    per sample keeps that open at trivial disk cost.
+    baseline_labels is the (N,) no-perturbation argmax in the loader's own
+    shuffle=False order, so a running offset pairs each batch to its labels.
+    model_dropout, when set, switches the model's own dropouts on so the probe
+    stacks on top of them. Removal then compounds and the nominal rate stops
+    describing the disturbance.
 
-    argmax is saved because PSU alone cannot express the paper's own mechanism.
-    Three things need it and none are recoverable from probs: the shift ratio
-    sigma (paper Eq. PS, the fraction of passes whose prediction changed), the
-    adaptive dropout-rate rule which is defined on sigma, and the central claim
-    that clean samples which shift, shift specifically to the target class. int16
-    is safe for every dataset here; tiny is the largest at 200 classes.
-
-    baseline_labels is the flat (N,) no-dropout argmax class per sample, in the
-    same shuffle=False order the loader serves, so a running offset pairs each
-    batch to its labels without re-batching.
-
-    The perturbation comes from dropout modules plugged in by hooks (see
-    defences.dropout), which are already in train mode, so this never toggles the
-    model's own dropout. model.eval() keeps every existing dropout at its natural
-    identity, unless model_dropout is set, which deliberately switches them on so
-    the probe stacks on top of live model dropout (see the E2 experiment in
-    docs/plans/adaptive-attacker-and-dropout-stacking.md). Removal compounds in
-    that case, so the nominal probe rate stops describing the disturbance. Reseeding here fixes the mask sequence, so rerunning the same
-    (split, position, rate) reproduces the same masks exactly. Across two splits
-    of different length the sequences agree only up to the shorter one's batch
-    count, which is why clean and backdoor pairing is done by sample index at
-    analysis time, not by assuming shared masks.
+    Reseeding fixes the mask sequence, so the same (split, position, rate)
+    reproduces the same masks. Splits of different length agree only up to the
+    shorter one's batch count, which is why clean and backdoor rows are paired by
+    sample index at analysis time rather than by assuming shared masks.
     """
     model.eval()
-    # Ordering matters: activation must follow eval(), which would otherwise put
-    # the model's own dropouts straight back to identity and silently produce a
-    # complete, plausible, unstacked result.
+    # Activation must follow eval(), which would otherwise put the model's own
+    # dropouts straight back to identity and silently produce a complete,
+    # plausible, unstacked result.
     restore = activate_model_dropout(model, model_dropout) if model_dropout else []
     seed_everything(seed)
 
@@ -153,20 +170,31 @@ def compute_dropout_pass_probs(
             argmax_columns = []
             for _ in range(forward_passes):
                 probs = forward_probs(model, images, device, use_bfloat16)
-                selected = probs.gather(1, labels.view(-1, 1)).squeeze(1)
+                selected = probs.gather(1, labels.view(-1, 1)).squeeze(1)  # (batch,)
                 prob_columns.append(selected.cpu())
                 argmax_columns.append(probs.argmax(dim=1).to(torch.int16).cpu())
-            prob_batches.append(torch.stack(prob_columns, dim=0))
-            argmax_batches.append(torch.stack(argmax_columns, dim=0))
+
+            prob_batches.append(torch.stack(prob_columns, dim=0))  # (k, batch)
+            argmax_batches.append(torch.stack(argmax_columns, dim=0))  # (k, batch)
     finally:
         restore_model_dropout(restore)
 
     if not prob_batches:
-        return (
+        empty = (
             torch.empty(forward_passes, 0),
             torch.empty(forward_passes, 0, dtype=torch.int16),
         )
-    return (
-        torch.cat(prob_batches, dim=1).float(),
-        torch.cat(argmax_batches, dim=1),
+        return empty
+
+    per_pass = (
+        torch.cat(prob_batches, dim=1).float(),  # (k, N)
+        torch.cat(argmax_batches, dim=1),  # (k, N)
     )
+    return per_pass
+
+
+def _autocast_context(device: torch.device, use_bfloat16: bool):
+    """The autocast context for the forward pass, so stored scores stay float32."""
+    if use_bfloat16 and device.type == "cuda":
+        return torch.autocast(device_type="cuda", dtype=torch.bfloat16)
+    return nullcontext()

@@ -34,21 +34,20 @@ sys.path.insert(0, REPO_ROOT)
 
 import numpy as np
 
-from defences.psbd_cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.psbd_metrics import (
+from defences.decision import (
     complete_rates,
     multi_probe_auroc,
     multi_probe_detection,
     pair_clean_to_backdoor,
-    psu_ratio_from_cache,
-    shift_ratio,
 )
+from defences.scores import psu_ratio_from_cache, shift_ratio
 
 
 RESULTS_DIR = "results"

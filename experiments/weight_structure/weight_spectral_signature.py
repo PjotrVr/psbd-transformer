@@ -17,7 +17,7 @@ sys.path.insert(0, REPO_ROOT)
 
 import torch
 
-from models import load_checkpoint, network_core
+from models.backbones import load_checkpoint, network_core
 
 
 CHECKPOINTS_DIR = "checkpoints"

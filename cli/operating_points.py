@@ -4,7 +4,7 @@ Everything reported so far used the PSBD paper's 25th-percentile threshold, whic
 throws away a quarter of clean data. No deployment tolerates that. This reports the
 same detectors at 1% and 5% false positives.
 
-Two thresholds per operating point, and the gap between them is the interesting part:
+2 thresholds per operating point, and the gap between them is the interesting part:
 
   deployable   the threshold is the q-quantile of CLEAN VALIDATION score, exactly as
                the paper prescribes, with q set to the target FPR. This is what a
@@ -23,34 +23,34 @@ charges the detector for the attack's failure.
 
 Example
     python -m cli.operating_points --poison-rate 0.01
-    python -m cli.operating_points --fpr 0.01 0.05 --placement pre_residual_blocks_5_8
+    python -m cli.operating_points --fpr 0.01 0.05 --placement before_attention_norm_token_mask
 """
 
 import argparse
 import glob
 import json
 import os
+from data.splits import SPLITS
+from defences.decision import ADAPTIVE_SHIFT_TARGET
 
 import numpy as np
 import torch
 
-from psbd.cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from psbd.decision import (
+from defences.decision import (
     attack_success_mask,
     complete_rates,
     pair_clean_to_backdoor,
 )
-from psbd.scores import psu_ratio_from_cache, shift_ratio
+from defences.scores import psu_ratio_from_cache, shift_ratio
 
 DEFAULT_FPRS = (0.01, 0.05, 0.10)
-
-SPLITS = ("validation", "clean", "backdoor")
 
 
 def parse_args() -> argparse.Namespace:
@@ -70,7 +70,7 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="report only this poison rate",
     )
-    parser.add_argument("--shift-target", type=float, default=0.7)
+    parser.add_argument("--shift-target", type=float, default=ADAPTIVE_SHIFT_TARGET)
     return parser.parse_args()
 
 
@@ -94,7 +94,7 @@ def scores_at(psbd_dir: str, placement: str, rate: float) -> tuple[dict, float |
 def tpr_at(
     clean: torch.Tensor, backdoor: torch.Tensor, threshold: float, inverted: bool
 ) -> tuple[float, float]:
-    """(TPR, FPR) at one threshold, flagging the tail the detector actually separates."""
+    """(TPR, FPR) at a threshold, flagging the tail the detector actually separates."""
     if inverted:
         return (
             float((backdoor > threshold).float().mean()),
@@ -109,7 +109,7 @@ def tpr_at(
 def operating_points(
     scores: dict, manifest: dict, target_fprs: list[float]
 ) -> tuple[dict, bool]:
-    """TPR at each target FPR, thresholded two ways."""
+    """TPR at each target FPR, thresholded 2 ways."""
     validation = scores["validation"].numpy()
     clean = pair_clean_to_backdoor(scores["clean"], manifest)
     backdoor = scores["backdoor"]
@@ -183,11 +183,11 @@ def discover_folders(results_dir: str) -> list[str]:
 
 
 def build_header(target_fprs: list[float]) -> str:
-    """The fixed-width header, one column pair per target FPR.
+    """The fixed-width header, a column pair per target FPR.
 
     Architecture and dataset are in the row because the sweep now spans 2 of the
     first and 4 of the second. Without them the same attack appears several times
-    with different numbers and reads as a bug, or worse, gets averaged.
+    with different numbers and reads as a bug or, worse, gets averaged.
     """
     header = (
         f"{'arch':5} {'dataset':14} {'attack':16} {'pr':>5} {'ASR':>5} "
@@ -201,7 +201,7 @@ def build_header(target_fprs: list[float]) -> str:
 def render_row(
     meta: dict, placement: str, rate: float, rows: dict, target_fprs: list[float]
 ) -> str:
-    """One checkpoint's line: its provenance, its best placement, and its TPRs."""
+    """A checkpoint's line: its provenance, its best placement and its TPRs."""
     asr = meta.get("asr")
     line = (
         f"{meta.get('architecture') or '?':5} "

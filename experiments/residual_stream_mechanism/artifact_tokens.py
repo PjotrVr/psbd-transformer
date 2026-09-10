@@ -39,12 +39,12 @@ import torch.nn.functional as F
 from sklearn.metrics import roc_auc_score
 
 from attacks import apply_config_overrides, build_attack, default_config
-from defences.checkpoint_eval import (
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.psbd_metrics import pair_clean_to_backdoor
+from defences.decision import pair_clean_to_backdoor
 from experiments.residual_stream_mechanism.architecture import (
     as_tokens,
     block_grid,
@@ -53,8 +53,8 @@ from experiments.residual_stream_mechanism.architecture import (
     transformer_blocks,
     trigger_token_mask,
 )
-from models import load_checkpoint, network_core
-from utils.config import DATASET_REGISTRY
+from models.backbones import load_checkpoint, network_core
+from data.registry import DATASET_REGISTRY
 from utils.numerics import safe_ratio_positive
 
 MODEL_INPUT = 224

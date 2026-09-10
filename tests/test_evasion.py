@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 from torchvision.models.vision_transformer import VisionTransformer
 
-from adaptive_evasion import evasion_penalty, evasive_update, psu_for_batch
+from attacks.evasion import evasion_penalty, evasive_update, psu_for_batch
 
 PROBE = {
     "position": "before_attention_norm",

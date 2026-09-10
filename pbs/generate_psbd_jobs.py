@@ -19,7 +19,7 @@ import argparse
 import json
 import os
 
-from psbd.positions import DROPOUT_CONFIGS, SINGLE_POSITION_NAMES
+from models.positions import DROPOUT_CONFIGS, SINGLE_POSITION_NAMES
 
 BASE = "/lustre/home/pstika/projects/PSBD-ViT"
 

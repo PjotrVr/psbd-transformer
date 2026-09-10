@@ -1,14 +1,14 @@
-"""Collapse every psbd_metrics.json into one compact, versionable table.
+"""Collapse every psbd_metrics.json into a single compact, versionable table.
 
 The full stage-2 record is about 2 MB per checkpoint and 1.2 GB across the tree,
 which is regenerable from the cached tensors and far too large to keep in git.
 What every table in the paper actually reads is a handful of numbers per
-(checkpoint, placement): the operating point, the rate that produced it, and how
+(checkpoint, placement): the operating point, the rate that produced it and how
 well it separated. That is what this writes.
 
-One row per (checkpoint, placement, rate-selection rule). The 3 rules answer
-different questions and are all kept, because reporting only one of them has
-already produced 2 wrong conclusions in this project:
+A row per (checkpoint, placement, rate-selection rule). The 3 rules answer
+different questions and are all kept, because any 1 of them alone hides what the
+other 2 show:
 
   adaptive  the rate the paper's own rule picks from clean validation data. What
             a defender actually gets.
@@ -21,7 +21,7 @@ already produced 2 wrong conclusions in this project:
 
 achieved_shift_ratio travels with every matched row. A cell whose grid never
 reaches the target is still selected by the nearest rule, so without the achieved
-value a table cannot tell a matched cell from an unmatched one.
+value a table cannot tell a matched cell from an unmatched cell.
 """
 
 import argparse
@@ -31,7 +31,7 @@ import json
 import os
 import re
 
-from psbd.positions import DROPOUT_CONFIGS, POSITION_REGISTRY
+from models.positions import DROPOUT_CONFIGS, POSITION_REGISTRY
 
 SELECTION_RULES = ("adaptive", "oracle")
 
@@ -54,17 +54,16 @@ def parse_args() -> argparse.Namespace:
         "--include-sam",
         action="store_true",
         help=(
-            "keep SAM-trained checkpoints. Off by default. SAM is 69 percent of the "
-            "checkpoint set and its whole effect on detection is +0.009 mean AUROC, "
-            "which needs 10 to 89 seeds per cell to establish. Carrying it dilutes "
-            "every panel and reintroduces the unequal-coverage failure mode that "
-            "inverted 4 conclusions in this project"
+            "keep SAM-trained checkpoints. Off by default: SAM is a training-time "
+            "change under a separate question, and carrying it dilutes every panel "
+            "and reintroduces unequal coverage between groups"
         ),
     )
     return parser.parse_args()
 
 
 def read_json(path: str) -> dict | None:
+    """A JSON file, or None when it does not exist."""
     if not os.path.exists(path):
         return None
     with open(path) as handle:
@@ -82,9 +81,9 @@ VALID_POSITION_NAMES: frozenset[str] = frozenset(
 # the operator is read, and recorded so a variant can be filtered rather than
 # silently pooled with the plain measurement.
 VARIANT_SUFFIXES = (
-    # The superseded batch-coupled Gaussian, archived under audit finding A2. Its
-    # caches were moved out of results/, but the psbd_metrics.json records they
-    # produced were not, so they still reach this script.
+    # The superseded batch-coupled Gaussian. Its caches were archived out of
+    # results/, but the psbd_metrics.json records they produced were not, so they
+    # still reach this script and must be labelled.
     ("_gaussian_batchstd", "gaussian", "batch_coupled_superseded"),
 )
 
@@ -97,13 +96,13 @@ MODEL_DROPOUT_SUFFIX = re.compile(r"_pmodel([0-9_.]+)$")
 
 # A trailing _blocks_<first>_<last> restricts a block-scope position to a span of
 # blocks. It qualifies the position rather than naming an operator, and the depth
-# band sweep (H10) is entirely made of these.
+# band sweep is entirely made of these.
 BLOCK_RANGE_SUFFIX = re.compile(r"_blocks_(\d+)_(\d+)$")
 
 # A trailing _seed<digits> is a different draw of the same stochastic estimator,
 # written by --mask-seed. Seed 0 keeps the bare name, so only replicates carry it.
-# Without this rule the 4 seeded placements parse as an unknown operator and their
-# rows leave the summary entirely.
+# Without this rule a seeded placement parses as an unknown operator and its rows
+# leave the summary entirely.
 MASK_SEED_SUFFIX = re.compile(r"_seed(\d+)$")
 
 KNOWN_OPERATORS = (
@@ -120,8 +119,8 @@ KNOWN_OPERATORS = (
 UNKNOWN_OPERATOR = "unknown"
 
 # Every suffix that qualifies a run without naming an operator, with the variant
-# label it produces. Order here does not matter; the parser loops until no pattern
-# matches, so stacked qualifiers come off whatever order they were written in.
+# label it produces. Order here does not matter, since the parser loops until no
+# pattern matches, so stacked qualifiers come off whatever order they were written in.
 QUALIFIER_SUFFIXES = (
     (MODEL_DROPOUT_SUFFIX, "model_dropout_{0}"),
     (BLOCK_RANGE_SUFFIX, "blocks_{0}_{1}"),
@@ -135,17 +134,14 @@ def split_operator(
 ) -> tuple[str, str, str | None]:
     """(position, operator, variant) from a placement name.
 
-    A bare name is the paper's dropout, which is exactly why the naming keeps it
-    bare. Longest operator names are tried first so channel_mask is not read as a
+    A bare name is the paper's dropout, which is why the naming keeps it bare.
+    Longest operator names are tried first so channel_mask is not read as a
     position ending in mask.
 
-    The fallback used to be an unconditional "dropout", which is how audit finding
-    A4 happened: any suffix this function did not recognize was attributed to the
-    paper's own baseline at a position that does not exist. Since dropout is the
-    baseline every other operator is compared against, that inflated the thing
-    every margin is measured from. An unrecognized placement is now labelled
-    UNKNOWN_OPERATOR so it can be found and excluded instead of quietly joining
-    the baseline.
+    An unrecognized placement is labelled UNKNOWN_OPERATOR rather than falling
+    back to dropout. Dropout is the baseline every other operator is compared
+    against, so a suffix silently attributed to it would inflate the thing every
+    margin is measured from. Labelled, it can be found and excluded.
     """
     variant = None
     remaining = placement
@@ -158,7 +154,7 @@ def split_operator(
     # Qualifiers stack, and the sweep writes them in whatever order the flags were
     # given, so a single pass in a fixed order cannot work. Every pattern is
     # anchored at the end of the string, which means an outer qualifier hides an
-    # inner one: pre_residual_blocks_9_16_seed1 does not match the block-range
+    # inner qualifier: pre_residual_blocks_9_16_seed1 does not match the block-range
     # pattern at all until _seed1 comes off. Strip repeatedly until nothing more
     # matches, and keep every qualifier found rather than letting the last one win.
     qualifiers = []
@@ -189,16 +185,13 @@ def split_operator(
 def placement_is_cache_backed(results_dir: str, folder: str, placement: str) -> bool:
     """Whether a stage-2 record still has its stage-1 tensors under results/.
 
-    A psbd_metrics.json entry outlives the cache it was computed from. Audit
-    finding A2 archived the batch-coupled Gaussian caches by MOVING the placement
-    directories out of results/, but the stage-2 records they had already produced
-    stayed behind, so 1401 rows describe a superseded operator while being
-    labelled as the plain one. The suffix tag in VARIANT_SUFFIXES only catches
-    placements literally named *_gaussian_batchstd, and the archived directories
-    are not named that.
+    A psbd_metrics.json entry outlives the cache it was computed from. When a
+    superseded operator's caches are archived out of results/, the stage-2 records
+    they produced stay behind and read as plain measurements, and the suffix tag in
+    VARIANT_SUFFIXES only catches placements literally named for the variant.
 
     Checking for the directory is the rule that does not depend on a naming
-    convention: a record whose tensors are gone cannot be recomputed, verified, or
+    convention. A record whose tensors are gone cannot be recomputed, verified or
     trusted, whatever it is called.
     """
     cache_directory = os.path.join(results_dir, folder, "psbd", placement)
@@ -239,7 +232,7 @@ OPERATING_POINT_FIELDS = (
 
 
 def operating_point_rows(folder, report, metadata, results_dir="results"):
-    """One row per placement, rate, PSU variant and quantile.
+    """A row per placement, rate, PSU variant and quantile.
 
     The compact summary keeps only the headline 0.25 quantile, which is a 25
     percent clean loss and not an operating point any deployment would run at. A
@@ -248,7 +241,7 @@ def operating_point_rows(folder, report, metadata, results_dir="results"):
     recomputing anything.
 
     Shares split_operator and placement_is_cache_backed with the compact summary
-    deliberately. A second parser is how audit finding A4 happened.
+    deliberately. A second parser is how 2 tables come to disagree.
     """
     base = {
         "folder": folder,
@@ -258,7 +251,7 @@ def operating_point_rows(folder, report, metadata, results_dir="results"):
         "poison_rate": metadata.get("poison_rate"),
         # The requested rate is a request. A clean-label attack is eligible only on
         # the target class, so it saturates and 3 folder names can describe 1 run.
-        # The compact summary already carries both; without them here every
+        # The compact summary already carries both. Without them here every
         # consumer of operating_points.csv reads a rate that was never applied.
         "realized_poison_rate": metadata.get("realized_poison_rate"),
         "poison_rate_capped": metadata.get("poison_rate_capped"),
@@ -330,7 +323,7 @@ def rows_for_checkpoint(
             "position": position,
             "operator": operator,
             # None for a plain measurement. Anything else marks a row that must
-            # not be pooled with the plain one without saying so.
+            # not be pooled with the plain measurement without saying so.
             "variant": variant,
             # False means the stage-1 tensors this row came from are no longer
             # under results/, so the row cannot be recomputed or verified.

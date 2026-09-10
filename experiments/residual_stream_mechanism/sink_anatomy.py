@@ -41,14 +41,14 @@ import torch
 import torch.nn.functional as F
 
 from attacks import apply_config_overrides, build_attack, default_config
-from defences.checkpoint_eval import (
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
 from utils.numerics import safe_ratio, safe_ratio_positive
-from models import load_checkpoint, network_core
-from utils.config import DATASET_REGISTRY
+from models.backbones import load_checkpoint, network_core
+from data.registry import DATASET_REGISTRY
 
 MODEL_INPUT, PATCH = 224, 16
 GRID = MODEL_INPUT // PATCH

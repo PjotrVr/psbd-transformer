@@ -80,13 +80,13 @@ import torch
 from sklearn.covariance import LedoitWolf
 from sklearn.metrics import average_precision_score, roc_auc_score
 
-from defences.checkpoint_eval import (
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.psbd_metrics import pair_clean_to_backdoor
-from models import load_checkpoint
+from defences.decision import pair_clean_to_backdoor
+from models.backbones import load_checkpoint
 
 QUANTILES = (0.01, 0.05, 0.10, 0.25)
 # Per-class means are shrunk toward the global mean by this pseudo-count. On CIFAR-100 a

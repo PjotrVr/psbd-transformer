@@ -7,44 +7,7 @@ adaptive attacker that knows the defence.
 
 ## Key findings
 
-**Detection.** Token masking before the attention LayerNorm achieves mean
-AUROC 0.911 on CIFAR-100 across all attacks and poison rates, with zero
-inversions and worst-case floor 0.632. Position matters more than operator
-choice (position variance 1.43x operator variance).
-
-**PSBD measures decision margin.** An unstructured perturbation with no
-neuron-dropping semantics matches the best structured masks, so removing capacity
-is not what carries the method. A second order expansion says why: the prediction
-shift is a curvature measurement, the perturbation site sets the curvature and the
-operator sets only the noise covariance, and softmax curvature falls as the
-decision margin grows. Four independent negative results on structured masking
-follow from the same expression. See `docs/theory-perturbation-consistency.md`.
-
-The headline Gaussian number is being re-measured. It was produced by an operator
-whose noise was scaled by a batch wide statistic, and the position it most
-affected is the one the previous figure came from.
-
-**Adaptive attacker.** A hinge penalty that matches poisoned PSU onto the clean
-distribution collapses the probed operator's AUROC from 0.952 to 0.322 while
-preserving ASR, delta -0.004. It costs 4.8 points of clean accuracy, which is
-**above the 2 point budget this project's own threat model set** as the line
-between evasion and simply damaging the model. It is reported as a partial
-evasion, and tuning the penalty weight down is the obvious next step.
-
-**Multi-probe defence.** The min-rank union of k independent perturbation
-operators recovers detection on evasive checkpoints, where a single probed
-operator collapses to 0.322. Evasion is probe specific, and the reason is
-structural: a perturbation operator sets the covariance of the noise, an attacker
-minimising the gap for 1 operator constrains only the curvature it can see, and a
-second operator reads a projection that was never constrained. See
-`docs/theory-perturbation-consistency.md`.
-
-The exact AUROC is being re-measured. The published 0.951 included a Gaussian
-probe whose noise was scaled by a batch wide statistic, which ran the backdoor
-split 13 to 32 percent hotter than the clean split it was compared against. The
-operator is fixed and the re-sweep is queued. Correcting the threshold rule at the
-same time raised the defence's TPR from 0.877 to 0.979 at a correctly calibrated
-25 percent false positive budget, with AUROC unmoved.
+Research project adapting Prediction Shift Backdoor Detection (PSBD) from ConvNets to Vision Transformers (ViT-B/16 and Swin-S). The project's founding claim, that dropout placed **before** the residual add beats placing it after, is **refuted** ([H1](docs/hypothesis/H1-pre-beats-post.md)): measured at matched shift ratio, the pre-versus-post gap is **+0.002**, indistinguishable from noise ([H20](docs/hypothesis/H20-input-side-beats-residual-adjacent.md)). What the evidence supports instead is a search result. Where the perturbation is injected dominates what is injected (position variance 1.43x operator variance), and the split that carries the effect is input-side against residual-adjacent, **+0.054** mean AUROC with bootstrap CI [+0.031, +0.080], with both pre-residual and post-residual sitting in the losing family. The recommended deployment configuration is `token_mask` at `before_attention_norm`, which gains **+0.089** mean AUROC over the published ConvNet placement at matched clean-validation shift ratio 0.6 across the full 48-cell panel, stable at +0.081 to +0.103 across shift ratios 0.2 to 0.8, and on CIFAR-100 at 1% poisoning specifically **+0.166** (n=4). Its absolute numbers are mean AUROC 0.911, worst-case floor 0.632, 0 inversions over 48/48 cells. An earlier headline of +0.258 for `gain_scale` at `mlp_norm_out` is **withdrawn**: it read the winner at shift ratio 0.95 to 0.98 and the baseline at 0.65 to 0.76, a disturbance gap the same size as the reported effect, and at matched shift ratio over the full panel that arm beats the published placement by **-0.007** ([the audit](docs/audit-2026-09-07.md)). The mechanism underneath is decision-margin estimation. The direct evidence is that no shifted clean prediction lands on the attacker's target class, against a uniform expectation of 1%, so the neuron-bias account in the original PSBD paper is not what carries the method on ViT. H23's supporting claim is restated after the batch-coupled Gaussian was corrected and its cells re-swept: gaussian at `before_attention` scores **0.897**, not the withdrawn 0.950, which places it 6th rather than 1st but still within 0.002 of `channel_mask` and above `dropout` at `pre_residual` ([audit A19](docs/audit-2026-09-07.md)). An operator removing no capacity remains competitive with ones that do, which is the claim that refutes the capacity-removal account. Validated on CIFAR-10, CIFAR-100, GTSRB and Tiny ImageNet. Full numbers in `docs/results-report.md`, verdicts in `docs/hypothesis/README.md`.
 
 ## Installation
 
@@ -55,13 +18,9 @@ uv sync
 source .venv/bin/activate
 ```
 
-Or with pip:
-
-```bash
-pip install -r requirements.txt
-```
-
 ## Quick start
+
+Every command is a module, `python -m cli.<name>`.
 
 ### 1. Train a backdoored model
 
@@ -70,7 +29,7 @@ The label mode is part of the attack name (`badnet_a2o` is all-to-one,
 file, whose parent directory is the folder name every later stage refers to.
 
 ```bash
-python train_backdoor.py \
+python -m cli.train_backdoor \
     --architecture vit \
     --dataset cifar100 \
     --attack badnet_a2o \
@@ -87,7 +46,7 @@ is where the perturbation is injected, `--perturbation` is what is injected.
 `--checkpoints-dir` (default `checkpoints`).
 
 ```bash
-python psbd_dropout_sweep.py \
+python -m cli.sweep \
     --checkpoint-folder vit_cifar100_badnet_a2o_0_1 \
     --position-config before_attention_norm \
     --perturbation token_mask
@@ -96,47 +55,72 @@ python psbd_dropout_sweep.py \
 ### 3. Analyze detection metrics
 
 Stage 2 on CPU. `--all` covers every folder under `results/` that already has
-a stage-1 cache.
+a stage-1 cache under `psbd/`.
 
 ```bash
-python psbd_analyze.py --checkpoint-folder vit_cifar100_badnet_a2o_0_1
-python psbd_report.py
+python -m cli.analyze --checkpoint-folder vit_cifar100_badnet_a2o_0_1
+python -m cli.report --format markdown
 ```
 
 ## Project structure
 
 ```
-attacks/             10 attack implementations + registry
-analysis/            Latent-space analysis: TAC, CKA, PCA, UMAP, Lipschitz
-defences/            PSBD detection: dropout hooks, inference, metrics, cache
-utils/               Dataset specs, data loading, transforms
-experiments/         Hypothesis-driven experiments (one per subdirectory, each with a README)
-scripts/             Repo-level tools: detection_summary, verify_results, backfill_metadata
-tests/               Test suite (200+ tests)
-docs/hypothesis/     42 pre-registered hypotheses with verdicts
-docs/results/        Detection tables, analysis reports, protocol docs
-notebooks/           Executable documentation, committed with outputs (00 is the index)
-pbs/                 PBS job generators for cluster scheduling
+attacks/        10 attack implementations, shared trigger patterns, poisoning eligibility, evasion
+data/           dataset registry, loading, the PSBD split, the BackdoorBench PNG path
+models/         ViT-B/16 and Swin-S, the probe position registry
+training/       the training loop, checkpoint provenance, SAM
+defences/       PSBD: operators, inference, scores, decision rules, the stage-1 cache
+detectors/      competitor input detectors, 1 registry, 1 module per method
+analysis/       latent-space analysis: TAC, CKA, PCA, UMAP, Lipschitz
+evaluation/     attack success rate, clean accuracy, loaders, summary
+utils/          numerics only
+cli/            1 module per command, the only place a main() lives
+scripts/        repo-level tools: the coverage ledger, table generators, the prose audit
+tests/          the suite
+docs/hypothesis/  47 pre-registered hypotheses with verdicts
+docs/results/     detection tables, analysis reports, protocol docs
+notebooks/        executable documentation, committed with outputs (00 is the index)
+pbs/               PBS job generators for cluster scheduling
 ```
 
-### Root-level scripts
+Full layout and the rule for where a new file goes: `docs/repository-layout.md`.
 
-| Script | Purpose |
+### Commands
+
+| Command | Purpose |
 |---|---|
-| `train_backdoor.py` | Train a backdoored ViT or Swin model |
-| `train_benign.py` | Train clean negative controls |
-| `psbd_dropout_sweep.py` | Stage 1: GPU sweep over positions and rates |
-| `psbd_analyze.py` | Stage 2: CPU analysis, write psbd_metrics.json |
-| `psbd_report.py` | Aggregate all metrics into a single table |
-| `psbd_variants.py` | Ablation: published PSBD vs ViT-adapted variant |
-| `psbd_operating_points.py` | Detection at deployable FPR (1%, 5%) |
-| `metrics.py` | Compute ASR and clean accuracy for all checkpoints |
-| `baseline_detect.py` | STRIP and confidence baseline detectors |
-| `detector_comparison.py` | PSBD vs baselines comparison table |
-| `detector_fusion.py` | PSBD + STRIP rank fusion |
-| `defence_tables.py` | Per-dataset detection tables with coverage enforcement |
-| `adaptive_evasion.py` | Adaptive attacker: hinge penalty training |
-| `stealth.py` | Trigger stealth metrics: PSNR, SSIM, LPIPS |
+| `cli.train_backdoor` | Train a backdoored ViT or Swin model |
+| `cli.train_benign` | Train benign ViT models, the negative controls |
+| `cli.sweep` | Stage 1: GPU sweep over dropout rates for a (checkpoint, position) pair, writes raw per-pass probabilities |
+| `cli.analyze` | Stage 2: CPU analysis of a checkpoint's cache, writes psbd_metrics.json |
+| `cli.summary` | Collapse every psbd_metrics.json into a single compact table |
+| `cli.tables` | Per-dataset detection tables, with the coverage bar enforced in code |
+| `cli.report` | Aggregate every psbd_metrics.json into a single per-checkpoint table |
+| `cli.operating_points` | Detection at low false-positive rates (1%, 5%) |
+| `cli.variants` | PSBD as published against the recommended ViT configuration, head to head |
+| `cli.baselines` | Score the competitor detectors on exactly the splits PSBD is scored on |
+| `cli.compare_detectors` | 1 table per metric, PSBD against every competitor detector |
+| `cli.fuse_detectors` | Fuse PSBD and STRIP, whose failures are disjoint |
+| `cli.evaluate` | Attack-success, clean-accuracy and stealth metrics for every checkpoint |
+| `cli.backfill` | Recover metadata fields that are deducible from artifacts already on disk |
+| `cli.lc_bases` | Generate the adversarially perturbed base images the Label-Consistent attack needs |
+| `cli.head_profile` | Per-head sensitivity profile, ablating each attention head in turn |
+| `cli.analyze_latent` | Latent-space analysis of a checkpoint: TAC, backdoor direction, CKA, PCA |
+
+`scripts/` holds repo-level tools that are not commands: `coverage_ledger.py`,
+`vit_config_inventory.py`, `vit_config_tables.py`, `vit_detection_tables.py`,
+`vit_shift_target_compare.py`, `vit_top3_tables.py`, `verify_results.py`,
+`verify_splits.py`, `prose_audit.py`, `check_prose_only.py`,
+`backfill_metadata.py`, `detection_summary.py`.
+
+## Competitor detectors
+
+`python -m cli.baselines` scores STRIP, SCALE-UP, IBD-PSC, TeCo, CD-L,
+Beatrix, TED and SentiNet on exactly the PSBD splits and quantiles.
+`python -m cli.compare_detectors` reads those records beside PSBD's own and
+writes the like-for-like comparison table. See `docs/detectors/README.md`
+for the registry, the on-disk layout and each port's cross-check against its
+reference implementation.
 
 ## Attacks
 
@@ -148,13 +132,16 @@ Adaptive-Blend, TaCT. All implementations in `attacks/`.
 The full experiment grid runs on a PBS cluster. Job generators in `pbs/`
 produce per-checkpoint job scripts. The two-stage pipeline:
 
-1. `psbd_dropout_sweep.py` runs on GPU, writes raw per-pass probabilities
-2. `psbd_analyze.py` runs on CPU, reads cached data, writes psbd_metrics.json
+1. `python -m cli.sweep` runs on GPU, writes raw per-pass probabilities
+2. `python -m cli.analyze` runs on CPU, reads cached data, writes psbd_metrics.json
 
-Results are tracked in `results/<checkpoint>/psbd_metrics.json` (versioned).
+The compact, versioned record is `results/detection_summary.csv.gz`, one row
+per (checkpoint, placement, rate rule), regenerated with `python -m cli.summary`.
+Each checkpoint's own `results/<checkpoint>/psbd_metrics.json` is regenerable
+from the stage-1 cache and is not versioned.
 
-For the adaptive attacker experiments, `train_backdoor.py --evade-psbd` trains
-evasive models, with `--evade-position`, `--evade-operator` and
+For the adaptive attacker experiments, `python -m cli.train_backdoor --evade-psbd`
+trains evasive models, with `--evade-position`, `--evade-operator` and
 `--evade-weight` selecting the probe it trains against. Analysis scripts in
 `experiments/adaptive_attack/`, `experiments/multi_probe/`, and
 `experiments/adaptive_defender/` produce the transfer, multi-probe, and forensic
@@ -175,7 +162,7 @@ Defects that changed how results must be read, each with its blast radius:
 | `docs/audit-2026-09-07.md` | 21 audit findings, including the withdrawn +0.258 headline |
 | `docs/gtsrb-training-split-mismatch.md` | this repo's GTSRB split is not the one the literature uses |
 
-All 42 hypotheses are pre-registered in `docs/hypothesis/` with predictions,
+Every hypothesis is pre-registered in `docs/hypothesis/` with predictions,
 methodology, and verdicts. See `docs/hypothesis/README.md` for the full index
 and reporting standards.
 

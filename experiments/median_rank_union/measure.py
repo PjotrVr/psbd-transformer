@@ -20,23 +20,22 @@ import argparse
 import glob
 import json
 import os
+from data.splits import SPLITS
 
 import pandas as pd
 
-from psbd.cache import load_baseline, load_dropout_pass_probs
-from psbd.decision import (
+from defences.cache import load_baseline, load_dropout_pass_probs
+from defences.decision import (
     HEADLINE_QUANTILE,
     detection_report,
     multi_probe_detection,
     pair_clean_to_backdoor,
 )
-from psbd.scores import psu_from_cache, shift_ratio
+from defences.scores import psu_from_cache, shift_ratio
 
 # The shift ratio every probe is read at, so probes are compared at a matched
 # disturbance rather than at a shared nominal rate.
 MATCHED_SHIFT = 0.6
-
-SPLITS = ("validation", "clean", "backdoor")
 
 
 def rate_tags(placement_dir):

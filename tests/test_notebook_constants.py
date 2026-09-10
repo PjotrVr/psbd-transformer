@@ -18,12 +18,12 @@ from pathlib import Path
 
 import pytest
 
-from psbd.decision import ADAPTIVE_SHIFT_TARGET, HEADLINE_QUANTILE
+from defences.decision import ADAPTIVE_SHIFT_TARGET, HEADLINE_QUANTILE
 
 NOTEBOOK_DIRECTORY = Path("notebooks")
 
 # Names a notebook must import rather than assign a literal to, mapped to the
-# constant in psbd.decision that owns the value.
+# constant in defences.decision that owns the value.
 PROTOCOL_CONSTANTS = {
     "TARGET_SHIFT": ("ADAPTIVE_SHIFT_TARGET", ADAPTIVE_SHIFT_TARGET),
     "SIGMA_TARGET": ("ADAPTIVE_SHIFT_TARGET", ADAPTIVE_SHIFT_TARGET),
@@ -51,7 +51,7 @@ def code_source(path):
 @pytest.mark.parametrize("path", notebook_paths(), ids=lambda p: p.stem)
 def test_protocol_constants_are_imported_not_restated(path):
     offences = [
-        f"{name} = {value} (import {PROTOCOL_CONSTANTS[name][0]} from psbd.decision, "
+        f"{name} = {value} (import {PROTOCOL_CONSTANTS[name][0]} from defences.decision, "
         f"which is {PROTOCOL_CONSTANTS[name][1]})"
         for name, value in LITERAL_ASSIGNMENT.findall(code_source(path))
     ]
@@ -60,7 +60,7 @@ def test_protocol_constants_are_imported_not_restated(path):
 
 def test_the_two_shift_targets_are_actually_different():
     """Guards the premise: if these ever coincide, this whole test is vacuous."""
-    from psbd.decision import SHIFT_MATCH_TARGETS
+    from defences.decision import SHIFT_MATCH_TARGETS
 
     placement_targets = set(SHIFT_MATCH_TARGETS) - {ADAPTIVE_SHIFT_TARGET}
     assert placement_targets, (

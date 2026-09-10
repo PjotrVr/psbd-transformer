@@ -13,18 +13,20 @@ import pytest
 
 import torch
 
-from defences.psbd_metrics import (
+from defences.decision import (
     bracket_target_shift,
-    interpolate_at_target_shift,
     detection_report,
+    interpolate_at_target_shift,
     pair_clean_to_backdoor,
-    psu_from_cache,
-    psu_ratio_from_cache,
     select_rate_adaptively,
     select_rate_by_oracle,
+    threshold_at_quantile,
+)
+from defences.scores import (
+    psu_from_cache,
+    psu_ratio_from_cache,
     shift_ratio,
     shift_target_histogram,
-    threshold_at_quantile,
 )
 
 

@@ -69,7 +69,7 @@ source .venv/bin/activate
 
 SWEEP = """
 echo "=== sweep {folder} ==="
-python psbd_dropout_sweep.py \\
+python -m cli.sweep \\
     --checkpoint-folder {folder} \\
     --position-config before_attention_norm \\
     --perturbation token_mask \\
@@ -113,7 +113,7 @@ def write_job(name, walltime, body):
 def write_sweep_job(name, folders, walltime):
     body = "".join(SWEEP.format(folder=f) for f in folders)
     body += (
-        "\necho '=== analyze ==='\npython psbd_analyze.py --checkpoint-folder "
+        "\necho '=== analyze ==='\npython -m cli.analyze --checkpoint-folder "
         + " ".join(folders)
         + "\n"
     )
@@ -142,7 +142,7 @@ def main():
     # and the 24 snapshots add their own train-accuracy passes on top.
     train_body = f"""
 echo "=== train {SIG_FOLDER} for {SIG_EPOCHS} epochs, dense checkpointing ==="
-python train_backdoor.py \\
+python -m cli.train_backdoor \\
     --dataset cifar10 --attack sig --poison-rate 0.10 \\
     --target-label 0 --architecture vit --epochs {SIG_EPOCHS} --seed 0 \\
     --checkpoint-dense-until {SIG_DENSE_UNTIL} --checkpoint-freq {SIG_FREQ} \\

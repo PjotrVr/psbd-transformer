@@ -5,7 +5,7 @@ that never saw a trigger. Clean accuracy is recorded into the checkpoint metadat
 and the checkpoint is saved under {architecture}_{dataset}_benign/attack_result.pt
 in the same format the sweep reads.
 
-A benign model has no attack of its own, so probing one with the detector later
+A benign model has no attack of its own, so probing it with the detector later
 means supplying the trigger explicitly, through --probe-attack on the sweep,
 rather than reading it from the checkpoint.
 
@@ -14,6 +14,7 @@ Example
 """
 
 import argparse
+import os
 import time
 
 import torch
@@ -21,16 +22,16 @@ import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 from torch.utils.data import DataLoader
 
-from psbd.config import DATASET_REGISTRY
-from psbd.data import limit_dataset, load_clean_datasets
-from psbd.eval_loaders import build_clean_loader
-from psbd.evaluation import evaluate_benign
-from psbd.training import (
+from data.registry import DATASET_REGISTRY
+from data.loading import limit_dataset, load_clean_datasets
+from evaluation.loaders import build_clean_loader
+from evaluation.metrics import evaluate_benign
+from training.loop import (
     checkpoint_metadata,
     save_checkpoint,
     train_classifier,
-    utc_timestamp,
 )
+from utils.provenance import utc_timestamp
 
 
 def build_benign_train_loader(
@@ -46,7 +47,7 @@ def build_benign_train_loader(
     Normalization is baked into the transform here, unlike the poisoned path,
     because nothing stamps a trigger on these images so there is no pixel-space
     step that has to happen first. Evaluation reuses
-    psbd.eval_loaders.build_clean_loader, the same function cli.evaluate and
+    evaluation.loaders.build_clean_loader, the same function cli.evaluate and
     cli.train_backdoor use for their clean loaders.
     """
     spec = DATASET_REGISTRY[dataset_name]
@@ -69,7 +70,7 @@ def build_benign_train_loader(
 def checkpoint_folder_name(architecture: str, dataset_name: str, args) -> str:
     """The canonical folder name for a benign run.
 
-    Architecture is always explicit, adam gets no optimizer tag, and SAM's rho tag
+    Architecture is always explicit and adam gets no optimizer tag. SAM's rho tag
     always carries an underscore before the digits so a rho sweep keeps each run
     in its own folder.
     """
@@ -82,7 +83,7 @@ def checkpoint_folder_name(architecture: str, dataset_name: str, args) -> str:
 def train_one_benign(
     dataset_name: str, args: argparse.Namespace, device: torch.device
 ) -> float:
-    """Train, evaluate, and save one benign checkpoint, returning its clean accuracy."""
+    """Train, evaluate and save a benign checkpoint, returning its clean accuracy."""
     # Seeded per dataset, not once before the loop, so each dataset's run is
     # reproducible independent of loop order or an earlier dataset's failure.
     seed_everything(args.seed, workers=True)
@@ -131,8 +132,12 @@ def train_one_benign(
         seed=args.seed,
     )["clean_accuracy"]
 
-    folder_name = checkpoint_folder_name(args.architecture, dataset_name, args)
-    output_path = f"{args.weights_dir}/{folder_name}/attack_result.pt"
+    if args.output:
+        output_path = args.output
+        folder_name = os.path.basename(os.path.dirname(output_path))
+    else:
+        folder_name = checkpoint_folder_name(args.architecture, dataset_name, args)
+        output_path = f"{args.weights_dir}/{folder_name}/attack_result.pt"
     save_checkpoint(
         model,
         num_classes,
@@ -176,6 +181,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--use-sam", action="store_true")
     parser.add_argument("--rho", type=float, default=0.1)
     parser.add_argument("--weights-dir", default="checkpoints")
+    parser.add_argument(
+        "--output",
+        default=None,
+        help="exact checkpoint path to write, instead of deriving "
+        "{weights-dir}/{architecture}_{dataset}_benign/attack_result.pt. Names 1 "
+        "folder, so it is only valid with exactly 1 dataset. Used by the seed "
+        "replicate jobs, which need a _seed_N tag the derived name cannot carry.",
+    )
     parser.add_argument("--raw-data-dir", default="raw_data")
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument("--seed", type=int, default=0)
@@ -193,9 +206,14 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     # -1 is a CLI-only sentinel for "no limit". Normalize once here, before the
-    # per-dataset loop, so no subsetting code ever sees it (-1 would slice off one
-    # sample instead of meaning "no limit").
+    # per-dataset loop, so no subsetting code ever sees it (-1 would slice off the
+    # last sample instead of meaning "no limit").
     args.max_samples = None if args.max_samples == -1 else args.max_samples
+    if args.output and len(args.datasets) != 1:
+        raise SystemExit(
+            "--output names a single checkpoint, so it needs exactly 1 --datasets "
+            f"entry, got {len(args.datasets)}"
+        )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     accuracies = {}
@@ -204,7 +222,7 @@ def main() -> None:
         try:
             accuracies[dataset_name] = train_one_benign(dataset_name, args, device)
         except Exception as error:
-            # One dataset failing should not waste the datasets after it, so report
+            # A dataset failing should not waste the datasets after it, so report
             # and continue rather than letting the exception abort the whole run.
             print(f"FAILED {dataset_name}_benign: {error}")
 

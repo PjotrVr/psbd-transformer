@@ -1,4 +1,4 @@
-"""Stage 2 entrypoint: read one checkpoint's PSBD cache, write psbd_metrics.json.
+"""Stage 2 of PSBD: read a checkpoint's cache and write its psbd_metrics.json.
 
 CPU only, seconds per checkpoint, no model and no dataset loaded. Everything it
 needs was written by cli.sweep into results/<folder>/psbd/.
@@ -14,18 +14,19 @@ Example
 import argparse
 import json
 import os
+from data.splits import SPLITS
 
 import torch
 
-from psbd.cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from psbd.config import DATASET_REGISTRY
-from psbd.decision import (
+from data.registry import DATASET_REGISTRY
+from defences.decision import (
     shift_key,
     HEADLINE_QUANTILE,
     PSBD_QUANTILES,
@@ -38,15 +39,13 @@ from psbd.decision import (
     select_rate_at_matched_shift,
     select_rate_by_oracle,
 )
-from psbd.scores import (
+from defences.scores import (
     psu_from_cache,
     psu_ratio_from_cache,
     shift_ratio,
     shift_target_histogram,
 )
-from psbd.splits import read_checkpoint_metadata
-
-SPLITS = ("validation", "clean", "backdoor")
+from data.splits import read_checkpoint_metadata
 
 
 def parse_args() -> argparse.Namespace:
@@ -76,9 +75,8 @@ def discover_folders(results_dir: str) -> list[str]:
 
 
 # Subfolders of results/<cell>/psbd/ that hold a cache rather than a placement.
-# cli/head_profile.py writes head_profile/ beside the placement folders, and
-# treating every subfolder as a placement swept it into psbd_metrics.json, where
-# it parsed as an unknown operator and cost the summary a coverage check.
+# cli.head_profile writes head_profile/ beside the placement folders, and it must
+# not be read as a placement, where it would parse as an unknown operator.
 NON_PLACEMENT_CACHES = ("head_profile",)
 
 
@@ -96,7 +94,7 @@ def discover_position_configs(psbd_dir: str) -> list[str]:
 def load_baselines(
     psbd_dir: str,
 ) -> dict[str, tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
-    """The no-perturbation probs, argmax, and loader labels for all 3 splits."""
+    """The no-perturbation probs, argmax and loader labels for all 3 splits."""
     baselines = {
         split: load_baseline(baseline_path(psbd_dir, split)) for split in SPLITS
     }
@@ -125,7 +123,7 @@ def analyze_one_rate(
     num_classes: int,
     target_label: int | None,
 ) -> dict:
-    """Every number for one (position_config, rate): sigma, shifts, and detection.
+    """Every number for a (position_config, rate): sigma, shifts and detection.
 
     The clean split is paired down to the backdoor split's images before the
     comparison, so TPR and FPR are measured over the same population. The
@@ -165,16 +163,12 @@ def analyze_one_rate(
     # as a second view rather than replacing the first, because a defender
     # screening real inputs does not know which ones the backdoor captured.
     #
-    # The clean side MUST be subset by the same mask. Restricting only the
-    # backdoor side compares the captured images against the whole clean pool,
-    # and captured images are systematically the low-confidence ones (a trigger
-    # flips an uncertain image more easily than a confident one), so the metric
-    # then measures "hard images against easy images" rather than detection. That
-    # is not hypothetical: with the clean side unrestricted this reported AUROC
-    # 0.921 for the BENIGN control, whose triggered and clean inputs the model
-    # treats as near-identical. Subset both sides and the same control gives
-    # 0.505. The confound was largest exactly where this metric was introduced to
-    # help, the low-ASR badnet_a2a probe.
+    # The clean side must be subset by the same mask. Captured images are
+    # systematically the low-confidence ones, since a trigger flips an uncertain
+    # image more easily than a confident image, so restricting only the backdoor
+    # side compares hard images against easy images rather than measuring
+    # detection. Left unrestricted, the benign control reads far above chance.
+    # Subset both sides and it returns to chance.
     _, backdoor_labels, backdoor_targets = baselines["backdoor"]
     captured = attack_success_mask(backdoor_labels, backdoor_targets)
     captured_detection = None
@@ -208,7 +202,7 @@ def analyze_one_rate(
         "detection_psu_ratio": ratio_detection,
         "shift_target_histogram": histograms,
         # The fraction of all shifted clean predictions that landed on the
-        # attacker's target class: PSBD's mechanism claim as one number.
+        # attacker's target class: PSBD's mechanism claim as a single number.
         "clean_shift_to_target_fraction": shift_to_target_fraction(
             histograms["clean"], target_label
         ),
@@ -232,7 +226,7 @@ def analyze_position_config(
     num_classes: int,
     target_label: int | None,
 ) -> dict:
-    """All rates for one placement, plus the rate-selection verdicts.
+    """All rates for a placement, plus the rate-selection verdicts.
 
     Rates come from complete_rates, which only returns a rate whose 3 splits are
     all on disk, so this stays safe to run against a results tree a sweep is
@@ -263,11 +257,11 @@ def analyze_position_config(
     adaptive_rate = select_rate_adaptively(validation_sigma)
     oracle_rate = select_rate_by_oracle(auroc_by_rate)
 
-    # The comparison that actually answers "which placement is better". Reading
-    # two placements off the same p compares a branch perturbation against one
-    # that masks the whole residual stream 12 times over, so the winner is
-    # decided by strength rather than by position. Matching on clean-validation
-    # sigma puts both at the same measured disturbance first.
+    # The comparison that answers "which placement is better". Reading 2
+    # placements off the same p compares a branch perturbation against a
+    # perturbation that masks the whole residual stream 12 times over, so the
+    # winner is decided by strength rather than position. Matching on
+    # clean-validation sigma puts both at the same measured disturbance first.
     matched = {}
     for target in SHIFT_MATCH_TARGETS:
         rate = select_rate_at_matched_shift(validation_sigma, target)
@@ -296,7 +290,7 @@ def analyze_position_config(
 
 
 def analyze_checkpoint(folder: str, checkpoints_dir: str, results_dir: str) -> dict:
-    """The full stage-2 record for one checkpoint, every placement on disk."""
+    """The full stage-2 record for a checkpoint, every placement on disk."""
     psbd_dir = os.path.join(results_dir, folder, "psbd")
     manifest = read_split_manifest(psbd_dir)
     metadata = read_checkpoint_metadata(
@@ -334,19 +328,18 @@ def analyze_checkpoint(folder: str, checkpoints_dir: str, results_dir: str) -> d
 
 
 def save_report(results_dir: str, folder: str, report: dict) -> None:
-    """Write one checkpoint's stage-2 record next to its cache."""
+    """Write a checkpoint's stage-2 record next to its cache."""
     path = os.path.join(results_dir, folder, "psbd_metrics.json")
     with open(path, "w") as handle:
         json.dump(report, handle, indent=2)
 
 
 def summarize(report: dict) -> str:
-    """One line per checkpoint, with both rate-selection verdicts per placement.
+    """A line per checkpoint, with both rate-selection verdicts per placement.
 
     Both numbers, always. Printing the oracle alone reads as the result and it is
-    not one: it picks the rate by reading the labels, so it is an upper bound. The
-    adaptive value is what a defender gets, and on some placements the 2 differ by
-    0.19 AUROC.
+    an upper bound, since it picks the rate by reading the labels. The adaptive
+    value is what a defender gets, and on some placements the 2 differ widely.
     """
     cells = []
     for config, block in sorted(report["placements"].items()):

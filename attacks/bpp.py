@@ -1,21 +1,19 @@
 """BppAttack: a bit-depth-reduction trigger (Wang et al., 2022).
 
-The trigger reduces the color depth of the image. With Floyd-Steinberg dithering
-the change is hard to see, which is the paper's point. The full attack also uses
-contrastive adversarial training to make the model sensitive to the quantization,
-which is a training-loop change not included here, so this file provides the
-trigger and the standard-training variant.
+The trigger reduces the colour depth of the image, and with Floyd-Steinberg
+dithering the change is hard to see. The paper also trains with a contrastive
+adversarial loss to sharpen the model's sensitivity to the quantization. That is a
+training-loop change not included here, so this is the standard-training variant.
 
-Dithering runs a sequential per-pixel loop, so it is off by default to keep dataset
-building fast, especially on Tiny ImageNet where it runs every epoch. Turn it on
-for the faithful imperceptible trigger on small images.
+Dithering is a sequential per-pixel loop, so it is off by default to keep dataset
+building fast on Tiny ImageNet, where the trigger is applied every epoch.
 """
 
 from dataclasses import dataclass
 
 import torch
 
-from poison import Attack
+from attacks.poisoning import Attack
 
 
 @dataclass(frozen=True)
@@ -31,8 +29,7 @@ class BppConfig:
 
 
 def _quantize(image: torch.Tensor, levels: int) -> torch.Tensor:
-    # original: reduce each channel to 'levels' evenly spaced values
-    # simplified: round each pixel to the nearest allowed level
+    """Each pixel rounded to the nearest of levels evenly spaced values."""
     return torch.round(image * (levels - 1)) / (levels - 1)
 
 
@@ -58,6 +55,7 @@ def _floyd_steinberg(channel: torch.Tensor, levels: int) -> torch.Tensor:
 
 
 def build(config: BppConfig, image_size: int, target_label: int) -> Attack:
+    """Bpp built for this image size and target label."""
     levels = 2**config.bit_depth
     dither = config.dither
 
@@ -68,10 +66,10 @@ def build(config: BppConfig, image_size: int, target_label: int) -> Attack:
         return torch.stack(channels)
 
     def apply_cover(image: torch.Tensor, index: int) -> torch.Tensor:
-        """A negative sample: quantized to some OTHER depth, label kept.
+        """A negative sample: quantized to some other depth, label kept.
 
-        The depth is drawn from the sample index, excluding the trigger's own, so a
-        run is reproducible and no negative sample accidentally carries the trigger.
+        The depth is seeded from the sample index and excludes the trigger's own, so
+        a run is reproducible and no negative sample accidentally carries the trigger.
         """
         generator = torch.Generator().manual_seed(index)
         choices = [d for d in (1, 2, 4, 5, 6) if d != config.bit_depth]

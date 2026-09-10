@@ -18,8 +18,8 @@ sys.path.insert(0, REPO_ROOT)
 import torch
 
 from attacks import default_config
-from evaluate import evaluate_attack
-from models import load_checkpoint, network_core
+from evaluation.metrics import evaluate_attack
+from models.backbones import load_checkpoint, network_core
 
 
 CHECKPOINTS_DIR = "checkpoints"

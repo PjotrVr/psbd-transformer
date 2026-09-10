@@ -47,9 +47,9 @@ import torch
 from lightning import seed_everything
 
 from attacks import build_attack, default_config
-from defences.perturbations import DETERMINISTIC_PERTURBATIONS, PERTURBATIONS
-from defences.psbd_metrics import complete_rates
-from utils.config import DATASET_REGISTRY
+from defences.operators import DETERMINISTIC_PERTURBATIONS, PERTURBATIONS
+from defences.decision import complete_rates
+from data.registry import DATASET_REGISTRY
 
 SPLITS: tuple[str, ...] = ("validation", "clean", "backdoor")
 

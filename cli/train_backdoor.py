@@ -24,7 +24,7 @@ import torchvision.transforms.v2 as transforms_v2
 from lightning import seed_everything
 from torch.utils.data import DataLoader, Dataset, Subset
 
-from psbd.attacks import (
+from attacks import (
     ATTACK_NAMES,
     apply_config_overrides,
     build_attack,
@@ -33,33 +33,33 @@ from psbd.attacks import (
     adversarial_config_error,
     missing_adversarial_bases,
 )
-from psbd.attacks.generated import GeneratedConfig
-from psbd.config import DATASET_REGISTRY
-from psbd.data import (
+from attacks.generated import GeneratedConfig
+from data.registry import DATASET_REGISTRY
+from data.loading import (
     base_image_transform,
     extract_labels,
     limit_dataset,
     load_clean_datasets,
 )
-from psbd.eval_loaders import build_clean_loader
-from psbd.evaluation import clean_accuracy, evaluate_attack
-from psbd.evasion import FlaggedPoisonedSet, calibrate_probe_rate
-from psbd.poisoning import (
+from evaluation.loaders import build_clean_loader
+from evaluation.metrics import clean_accuracy, evaluate_attack
+from attacks.evasion import FlaggedPoisonedSet, calibrate_probe_rate
+from attacks.poisoning import (
     Attack,
     CoverPoisonedTrainingSet,
     PoisonedTrainingSet,
     choose_indices_with_cover,
     choose_poison_indices,
 )
-from psbd.training import (
+from training.loop import (
     build_model,
     checkpoint_metadata,
     save_checkpoint,
     train_classifier,
-    utc_timestamp,
 )
+from utils.provenance import utc_timestamp
 
-# Interpolation is measured on a fixed subsample; the trajectory, not the exact
+# Interpolation is measured on a fixed subsample. The trajectory, not the exact
 # value, is what the snapshot sweep reads.
 TRAIN_EVAL_SAMPLES = 10000
 
@@ -67,7 +67,7 @@ TRAIN_EVAL_SAMPLES = 10000
 def parse_attack_overrides(overrides: list[str] | None) -> dict:
     """Turn `key=value` command-line strings into a mapping.
 
-    Casting is left to psbd.attacks.apply_config_overrides so training and evaluation agree
+    Casting is left to attacks.apply_config_overrides so training and evaluation agree
     on the type of every field.
     """
     if not overrides:
@@ -96,7 +96,7 @@ def resolve_config(attack_name: str, poisoned_dir: str):
 # the mechanism exists to provide. TaCT's reference selects cover by CLASS rather than
 # by rate, so its config constant stands and it is deliberately absent here.
 COVER_RATE_MULTIPLES = {
-    "wanet": 2.0,  # BackdoorBench cross_ratio 2; PSBD "twice the poisoning ratio"
+    "wanet": 2.0,  # BackdoorBench cross_ratio 2, and PSBD's twice the poisoning ratio
     "adaptive_blend": 1.0,  # Qi et al. and PSBD: cover ratio equal to the poisoning ratio
     "bpp": 1.0,  # BackdoorBench neg_ratio 0.1 against pratio 0.1
 }
@@ -155,7 +155,7 @@ def build_training_set(
         )
 
     # A poisoned sample with no perturbed base would silently train the patch-only
-    # variant while args.json records the adversarial one, so refuse before training.
+    # variant while args.json records the adversarial variant, so refuse before training.
     incoherent = adversarial_config_error(config)
     if incoherent:
         raise ValueError(incoherent)
@@ -176,14 +176,14 @@ def build_training_loader(
 ) -> tuple[DataLoader, int, Attack, object, float]:
     """The poisoned training loader, plus the attack record it was built from.
 
-    Evaluation is handled separately by psbd.evaluation and psbd.eval_loaders, so
+    Evaluation is handled separately by evaluation.metrics and evaluation.loaders, so
     this has no eval-loader concerns at all.
     """
     spec = DATASET_REGISTRY[args.dataset]
     transform = base_image_transform(image_size)
     train_clean, _ = load_clean_datasets(args.dataset, transform, args.raw_data_dir)
     # Subset before poison-index selection so poison_rate is measured against the
-    # truncated pool, mirroring the eval-side subset in psbd.eval_loaders.
+    # truncated pool, mirroring the eval-side subset in evaluation.loaders.
     train_clean = limit_dataset(train_clean, args.max_samples, args.seed)
     normalize = transforms_v2.Normalize(mean=spec.mean, std=spec.std)
 
@@ -309,9 +309,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-workers", type=int, default=8)
     parser.add_argument(
         "--attack-override",
-        # extend, not the default store: with plain nargs a repeated flag REPLACES
-        # the earlier one, so `--attack-override a=1 --attack-override b=2` silently
-        # kept only b. Both spellings now accumulate.
+        # extend rather than the default store, so a repeated flag accumulates.
+        # With plain nargs a repeated flag replaces the earlier flag, and
+        # --attack-override a=1 --attack-override b=2 keeps only b.
         action="extend",
         nargs="*",
         default=[],
@@ -359,8 +359,8 @@ def parse_args() -> argparse.Namespace:
 def snapshot_epochs(total: int, dense_until: int, freq: int) -> set[int]:
     """Which epochs to snapshot: every one through dense_until, then every freq-th.
 
-    Two phases because the interesting part of the trajectory is the approach to
-    training-set interpolation, which is early; once the model interpolates the
+    2 phases because the interesting part of the trajectory is the approach to
+    training-set interpolation, which is early. Once the model interpolates the
     detection metrics stop moving, so the tail only needs sampling.
     """
     if dense_until <= 0 and freq <= 0:
@@ -374,14 +374,15 @@ def snapshot_epochs(total: int, dense_until: int, freq: int) -> set[int]:
 def build_train_eval_loader(train_loader: DataLoader, args) -> DataLoader:
     """The poisoned training set the model actually saw, unshuffled, for train accuracy.
 
-    Measuring interpolation on the CLEAN split is wrong for a clean-label attack. The
-    eligible pool there is one class, so at a high enough rate every target-class image
-    is poisoned and the model never saw a clean one: SIG at 10% on CIFAR-10 reads 0.0016
-    on the target class and 0.98 to 1.00 on the rest, which looks like a model that never
-    fits its training data when in fact it fits what it was given to ~0.99.
+    Measuring interpolation on the clean split is wrong for a clean-label attack. Its
+    eligible pool is a single class, so at a high enough rate every target-class
+    image is poisoned and the model never saw a clean one. Clean accuracy on that
+    class then reads near 0 while the model fits what it was given almost
+    perfectly, which looks like a failure to fit and is not.
 
-    Capped at 10000 samples because this runs at every snapshot and the question is when
-    the model interpolates, which a fixed subsample tracks as well as the full set.
+    Capped at 10000 samples because this runs at every snapshot and the question is
+    when the model interpolates, which a fixed subsample tracks as well as the full
+    set.
     """
     dataset = train_loader.dataset
     if len(dataset) > TRAIN_EVAL_SAMPLES:
@@ -409,9 +410,9 @@ def build_snapshot_hook(
     """Write each chosen epoch as a full checkpoint folder, or None if disabled.
 
     Each snapshot is a complete, self-describing checkpoint directory rather than
-    a bare state dict, so psbd_dropout_sweep.py --checkpoint-folder, psbd_analyze
-    and the table generator all read it with no changes. That is the whole reason
-    for the naming: `<base>_ep07` sits beside `<base>` and looks like any other run.
+    a bare state dict, so cli.sweep, cli.analyze and the table generator read it
+    with no changes. That is the reason for the naming: <base>_ep07 sits beside
+    <base> and looks like any other run.
 
     ASR is deliberately left None. Evaluating it costs a full poisoned pass and the
     sweep backfills it into args.json from the PSBD baseline cache anyway, so paying
@@ -476,7 +477,7 @@ def build_snapshot_hook(
 def main() -> None:
     args = parse_args()
     # -1 is a CLI-only sentinel for "no limit". Normalize it to None immediately so
-    # no subsetting code ever sees it, since -1 would slice off one sample instead.
+    # no subsetting code ever sees it, since -1 would slice off the last sample.
     args.max_samples = None if args.max_samples == -1 else args.max_samples
     seed_everything(args.seed, workers=True)
 

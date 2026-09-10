@@ -29,8 +29,8 @@ from torch.utils.data import DataLoader, TensorDataset
 from torchvision.models import VisionTransformer
 from torchvision.models.swin_transformer import SwinTransformer
 
-from psbd.analysis.direction import backdoor_direction, project_onto_direction
-from psbd.analysis.distribution import (
+from analysis.direction import backdoor_direction, project_onto_direction
+from analysis.distribution import (
     COVARIANCE_SHRINKAGE,
     effective_rank,
     layer_distribution_row,
@@ -39,13 +39,13 @@ from psbd.analysis.distribution import (
     separation_auroc,
     standardized_mean_shift,
 )
-from psbd.analysis.features import (
-    _as_token_sequence,
+from analysis.features import (
+    as_token_sequence,
     extract_layer_features,
     transformer_blocks,
 )
-from psbd.models import network_core
-from psbd.positions import BLOCK_TYPES, POSITION_REGISTRY, resolve_targets
+from models.backbones import network_core
+from models.positions import BLOCK_TYPES, POSITION_REGISTRY, resolve_targets
 
 # ViT-B/16's residual width and the default sample count in cases.load_latent_case.
 DEPLOYED_DIM = 768
@@ -464,7 +464,7 @@ def test_swin_mean_reduction_is_the_tensor_the_trained_head_pools():
         stack_output = swin.features(torch.rand(3, 3, 32, 32))
         normed = swin.norm(stack_output)
         head_input = swin.flatten(swin.avgpool(swin.permute(normed)))
-        ours = _as_token_sequence(normed).mean(dim=1)
+        ours = as_token_sequence(normed).mean(dim=1)
 
     assert torch.equal(ours, head_input)
 

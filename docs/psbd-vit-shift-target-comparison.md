@@ -5,7 +5,7 @@ different questions.
 
 | constant | value | what it is |
 |---|---|---|
-| `ADAPTIVE_SHIFT_TARGET` | **0.8** | the **PSBD paper's own operating point**. Yang et al. select the dropout rate "where the $\sigma$ of clean validation data approach to a high value (0.8 in our experiments), while the difference between the $\sigma$ of the entire training data and that of the clean validation data reaches its maximum" (`papers/PSBD/sec/4_method.tex:185`) |
+| `ADAPTIVE_SHIFT_TARGET` | **0.8** | the **PSBD paper's own operating point**. Li et al. select the dropout rate "where the $\sigma$ of clean validation data approach to a high value (0.8 in our experiments), while the difference between the $\sigma$ of the entire training data and that of the clean validation data reaches its maximum" (`papers/PSBD/sec/4_method.tex:185`) |
 | `SHIFT_MATCH_TARGETS` | (0.2, 0.4, **0.6**, 0.8) | this project's ladder for **comparing** placements at equal effective strength, so that "this position is better" cannot be confounded with "this position was perturbed harder" |
 
 The first tables were generated at **0.6**, the comparison midpoint, not at the paper's

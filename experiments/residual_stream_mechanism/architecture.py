@@ -7,7 +7,7 @@ spatial grid is halved at each stage, so 224 pixels gives 56x56 tokens in stage 
 stage 4. A measurement written for ViT will run on Swin and return nonsense unless each of
 those is handled.
 
-This module is the seam. It reuses psbd.analysis.features for block discovery and the token
+This module is the seam. It reuses analysis.features for block discovery and the token
 view, so a block index means the same thing here as it does to a probe placement, and adds the
 two things the mechanism experiments additionally need: where the trigger's pixels land on a
 block's own grid, and whether a CLS-based statistic is even defined.
@@ -20,8 +20,8 @@ residual stream is additive and per-token norms are well defined on any grid.
 import torch
 import torch.nn.functional as F
 
-from psbd.analysis.features import (
-    _as_token_sequence,
+from analysis.features import (
+    as_token_sequence,
     detect_model_architecture,
     transformer_blocks,
 )
@@ -39,7 +39,7 @@ __all__ = [
 
 def as_tokens(activation: torch.Tensor) -> torch.Tensor:
     """(batch, tokens, dim), flattening a Swin block's spatial grid."""
-    return _as_token_sequence(activation)
+    return as_token_sequence(activation)
 
 
 def has_class_token(architecture: str) -> bool:

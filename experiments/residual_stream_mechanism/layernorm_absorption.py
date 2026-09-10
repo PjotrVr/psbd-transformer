@@ -33,8 +33,8 @@ import statistics
 
 import torch
 
-from models import load_checkpoint, network_core
-from utils.config import DATASET_REGISTRY
+from models.backbones import load_checkpoint, network_core
+from data.registry import DATASET_REGISTRY
 
 # Each entry: where the perturbation is injected, and the module that consumes it next.
 # "normalised" says whether a LayerNorm stands between the injection and its use.

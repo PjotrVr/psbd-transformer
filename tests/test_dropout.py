@@ -20,13 +20,13 @@ import torch
 import torch.nn as nn
 from torchvision.models.swin_transformer import SwinTransformerBlock
 
-from defences.dropout import (
+from models.positions import (
     DROPOUT_CONFIGS,
     SINGLE_POSITION_NAMES,
     plug_dropout,
     unplug_dropout,
 )
-from models import build_swin, build_vit
+from models.backbones import build_swin, build_vit
 
 
 @pytest.fixture(scope="module")

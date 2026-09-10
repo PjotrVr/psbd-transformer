@@ -12,11 +12,12 @@ import torch
 from skimage.metrics import peak_signal_noise_ratio as skimage_psnr
 from skimage.metrics import structural_similarity as skimage_ssim
 
-import stealth
-from poison import Attack
-from stealth import (
-    _per_image_psnr,
-    _per_image_ssim,
+import analysis.stealth as stealth
+from attacks.poisoning import Attack
+from analysis.stealth import (
+    _stealth_cache,
+    per_image_psnr,
+    per_image_ssim,
     cached_stealth_metrics,
     compute_stealth_metrics,
 )
@@ -34,7 +35,7 @@ def pairs():
 
 def test_psnr_agrees_with_skimage(pairs):
     clean, triggered = pairs
-    ours = _per_image_psnr(clean, triggered)
+    ours = per_image_psnr(clean, triggered)
     for i in range(len(clean)):
         reference = skimage_psnr(clean[i].numpy(), triggered[i].numpy(), data_range=1.0)
         assert ours[i].item() == pytest.approx(reference, rel=1e-4)
@@ -42,7 +43,7 @@ def test_psnr_agrees_with_skimage(pairs):
 
 def test_ssim_agrees_with_skimage(pairs):
     clean, triggered = pairs
-    ours = _per_image_ssim(clean, triggered)
+    ours = per_image_ssim(clean, triggered)
     for i in range(len(clean)):
         reference = skimage_ssim(
             clean[i].numpy(),
@@ -77,7 +78,7 @@ def test_identity_trigger_leaves_images_unchanged():
 
 
 def test_cache_does_not_recompute_for_repeated_key(monkeypatch):
-    stealth._stealth_cache.clear()
+    _stealth_cache.clear()
     calls = {"count": 0}
     marker = {"psnr_mean": 42.0}
 

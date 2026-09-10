@@ -1,56 +1,230 @@
-"""Per-layer residual-stream feature extraction for ViT-B/16.
+"""Per-layer residual-stream feature extraction for ViT-B/16 and Swin-S.
 
 Every latent-space tool in this subpackage needs the same input: the residual
-stream at each encoder block for a set of images. This module isolates that
+stream at each transformer block for a set of images. This module isolates that
 extraction behind forward hooks so the rest of the analysis stays pure.
 
-Layer indexing matches the Karayalcin et al. convention. Index 0 is the token
-embedding fed into the first block, and indices 1 to 12 are the outputs of the
-12 encoder blocks. Because the hooks read whatever a block returns, they capture
-the post-residual dropout automatically when the post_residual placement is
-active, which is exactly what the placement comparison needs.
+Layer indexing matches the Karayalcin et al. convention and the block numbering
+models.positions uses. Index 0 is whatever is fed into the first block, and indices
+1 to N are the outputs of the N blocks (12 for ViT-B/16, 24 for Swin-S). Blocks
+are found the same way models.positions.resolve_targets finds them, by walking
+model.modules() for the architecture's block type, so a layer index means the
+same thing to a probe placement and to a feature analysis.
+
+Because the hooks read whatever a block returns, they capture a post-residual
+perturbation automatically when the post_residual placement is active, which is
+exactly what the placement comparison needs.
+
+The 2 architectures disagree on activation rank. A ViT block returns
+(batch, tokens, dim), a Swin block returns (batch, height, width, channels), and
+Swin has no classification token at all. Reduction handles both, and refuses the
+combinations that have no meaning rather than returning a silently wrong shape.
 """
+
+from contextlib import contextmanager
+from typing import Iterator
 
 import torch
 import torch.nn as nn
 
 from defences.inference import forward_probs
-from models import vit_core
+from models.backbones import network_core
+from models.positions import BLOCK_TYPES
 
 TokenReduction = str  # one of "cls", "mean", "flatten"
 
 
-def _reduce_tokens(activation: torch.Tensor, reduction: TokenReduction) -> torch.Tensor:
-    """Collapse the token axis of a [batch, tokens, dim] residual-stream tensor.
+def detect_model_architecture(model: nn.Module) -> str:
+    """Name the architecture of a live model from the block types it contains.
+
+    models.backbones.detect_architecture answers the same question from a checkpoint
+    path. This is the in-memory counterpart, needed because a notebook or a test
+    often holds a model it never loaded from disk.
+    """
+    matched = [
+        architecture
+        for architecture, block_types in BLOCK_TYPES.items()
+        if any(isinstance(module, block_types) for module in model.modules())
+    ]
+    if len(matched) != 1:
+        raise ValueError(
+            f"model matched architectures {matched}, expected exactly one of "
+            f"{sorted(BLOCK_TYPES)}"
+        )
+
+    architecture = matched[0]
+    return architecture
+
+
+def transformer_blocks(model: nn.Module, architecture: str) -> list[nn.Module]:
+    """The architecture's transformer blocks in forward order, 0-indexed here.
+
+    Same walk models.positions.resolve_targets performs, so block i in this list is
+    the block a probe restricted to block_range (i + 1, i + 1) would attach to.
+    """
+    if architecture not in BLOCK_TYPES:
+        raise ValueError(f"Unknown architecture: {architecture}")
+
+    block_types = BLOCK_TYPES[architecture]
+    blocks = [module for module in model.modules() if isinstance(module, block_types)]
+    if not blocks:
+        raise ValueError(
+            f"no {block_types} blocks found in the model, so no features would be "
+            "captured and every layer statistic would be empty"
+        )
+
+    return blocks
+
+
+def as_token_sequence(activation: torch.Tensor) -> torch.Tensor:
+    """View an activation as (batch, tokens, dim) whatever rank it arrived at.
+
+    A Swin block emits (batch, height, width, channels). Its spatial grid is the
+    token axis, so flattening the 2 spatial axes recovers the ViT layout without
+    moving any data semantically. A view, so gradients pass through it.
+    """
+    if activation.dim() == 3:
+        return activation  # (batch, tokens, dim)
+    if activation.dim() == 4:
+        batch, height, width, channels = activation.shape
+        flattened = activation.reshape(
+            batch, height * width, channels
+        )  # (batch, height * width, channels)
+        return flattened
+    raise ValueError(
+        f"expected a rank-3 or rank-4 activation, got shape {tuple(activation.shape)}"
+    )
+
+
+def _reduce_tokens(
+    activation: torch.Tensor, reduction: TokenReduction, has_class_token: bool
+) -> torch.Tensor:
+    """Collapse the token axis of a residual-stream tensor to (batch, dim).
 
     "cls" keeps token 0, the classification token whose final state drives the
-    prediction. "mean" averages tokens, useful for Swin which has no CLS token.
-    "flatten" keeps all tokens and is memory heavy, so use it only for small
-    sample counts.
+    prediction, and is available only on an architecture that has a class token. "mean"
+    averages tokens and is the Swin default for that reason. "flatten" keeps all
+    tokens and is memory heavy, so use it only for small sample counts.
+
+    The has_class_token guard is the point of this function. Swin's activation is
+    (batch, height, width, channels), so an unguarded activation[:, 0, :] returns
+    the first image row rather than a class token: a wrong number with a plausible
+    shape, which is worse than an exception.
     """
+    # Cast before reducing, not after. Swin's grid is 3136 tokens at the first
+    # stage, and summing that many values in bfloat16 costs about 1.75e-3 relative
+    # error against 3.2e-5 when the cast comes first.
+    tokens = as_token_sequence(activation).float()  # (batch, tokens, dim)
+
     if reduction == "cls":
-        return activation[:, 0, :]
+        if not has_class_token:
+            raise ValueError(
+                "reduction 'cls' needs a classification token; this architecture "
+                "has none, so use 'mean' (its pooling matches the trained head)"
+            )
+        class_token = tokens[:, 0, :]  # (batch, dim)
+        return class_token
     if reduction == "mean":
-        return activation.mean(dim=1)
+        pooled = tokens.mean(dim=1)  # (batch, dim)
+        return pooled
     if reduction == "flatten":
-        return activation.flatten(1)
+        flattened = tokens.flatten(1)  # (batch, tokens * dim)
+        return flattened
     raise ValueError(f"Unknown token reduction: {reduction}")
 
 
-def _make_block_hook(storage: dict, layer_index: int, reduction: TokenReduction):
+def default_reduction(architecture: str) -> TokenReduction:
+    """The token reduction that matches how the architecture's head reads features.
+
+    ViT classifies from the class token, Swin from a mean over the spatial grid,
+    so those are the reductions whose features the trained head actually consumes.
+    """
+    reduction = "cls" if architecture == "vit" else "mean"
+    return reduction
+
+
+def _make_block_hook(
+    storage: dict, layer_index: int, reduction: TokenReduction, has_class_token: bool
+):
+    """A forward hook that stores a block's reduced output under layer_index."""
+
     def hook(_module, _inputs, output):
-        reduced = _reduce_tokens(output, reduction)
+        reduced = _reduce_tokens(output, reduction, has_class_token)
         storage.setdefault(layer_index, []).append(reduced.detach().float().cpu())
 
     return hook
 
 
-def _make_embedding_hook(storage: dict, reduction: TokenReduction):
+def _make_embedding_hook(
+    storage: dict, reduction: TokenReduction, has_class_token: bool
+):
+    """A pre-hook that stores the first block's reduced input as layer 0."""
+
     def pre_hook(_module, inputs):
-        reduced = _reduce_tokens(inputs[0], reduction)
+        reduced = _reduce_tokens(inputs[0], reduction, has_class_token)
         storage.setdefault(0, []).append(reduced.detach().float().cpu())
 
     return pre_hook
+
+
+def _make_capture_hook(captured: dict, layer_index: int):
+    """A forward hook that keeps a block's raw output, graph attached, under layer_index."""
+
+    def hook(_module, _inputs, output):
+        captured[layer_index] = output
+
+    return hook
+
+
+@contextmanager
+def captured_layers(
+    model: nn.Module, layers: tuple[int, ...], architecture: str | None = None
+) -> Iterator[dict[int, torch.Tensor]]:
+    """A dict the model fills with the raw activation at each requested layer.
+
+    After a forward pass captured[layer] is the tensor that passed that hook point
+    in the latest call: (batch, tokens, dim) on ViT, (batch, height, width,
+    channels) on Swin, in whatever dtype autocast produced. Nothing is detached,
+    reduced or moved, so a caller may differentiate through a captured tensor while
+    that forward's graph is alive. extract_layer_features cannot offer that, since
+    it reduces and detaches inside the hook, which is why Beatrix, TED and SentiNet
+    read features through this instead.
+
+    Layer numbering is extract_layer_features': 0 is the first block's input, 1 to
+    N the block outputs. Handles are removed on exit even if the body raises.
+    """
+    core = network_core(model)
+    resolved_architecture = (
+        architecture if architecture is not None else detect_model_architecture(core)
+    )
+    blocks = transformer_blocks(core, resolved_architecture)
+    outside = [layer for layer in layers if not 0 <= layer <= len(blocks)]
+    if outside:
+        raise ValueError(
+            f"layers {outside} do not exist, this model has {len(blocks)} blocks so "
+            f"layer indices run from 0 to {len(blocks)}"
+        )
+
+    captured: dict[int, torch.Tensor] = {}
+    handles = []
+    if 0 in layers:
+
+        def pre_hook(_module, inputs):
+            captured[0] = inputs[0]
+
+        handles.append(blocks[0].register_forward_pre_hook(pre_hook))
+    for layer in layers:
+        if layer == 0:
+            continue
+        handles.append(
+            blocks[layer - 1].register_forward_hook(_make_capture_hook(captured, layer))
+        )
+
+    try:
+        yield captured
+    finally:
+        for handle in handles:
+            handle.remove()
 
 
 @torch.inference_mode()
@@ -59,23 +233,41 @@ def extract_layer_features(
     loader,
     device: torch.device,
     use_bfloat16: bool,
-    reduction: TokenReduction = "cls",
+    reduction: TokenReduction | None = None,
+    architecture: str | None = None,
 ) -> dict[int, torch.Tensor]:
-    """Return a dict mapping layer index to a float32 [num_samples, dim] tensor.
+    """Return a dict mapping layer index to a float32 (num_samples, dim) tensor.
+
+    architecture and reduction both default to whatever the model itself implies,
+    so a caller holding only a model does not have to restate what it is.
 
     The forward pass is run only to trigger the hooks, so its probabilities are
     discarded. Handles are always removed, even if the loader raises.
     """
-    encoder_blocks = vit_core(model).encoder.layers
+    core = network_core(model)
+    resolved_architecture = (
+        architecture if architecture is not None else detect_model_architecture(core)
+    )
+    resolved_reduction = (
+        reduction if reduction is not None else default_reduction(resolved_architecture)
+    )
+    has_class_token = resolved_architecture == "vit"
+
+    blocks = transformer_blocks(core, resolved_architecture)
     storage: dict[int, list[torch.Tensor]] = {}
+
+    # Layer 0 is the first block's input rather than the block stack's, which is
+    # the same tensor for both architectures and needs no per-architecture path.
     handles = [
-        encoder_blocks.register_forward_pre_hook(
-            _make_embedding_hook(storage, reduction)
+        blocks[0].register_forward_pre_hook(
+            _make_embedding_hook(storage, resolved_reduction, has_class_token)
         )
     ]
-    for offset, block in enumerate(encoder_blocks, start=1):
+    for offset, block in enumerate(blocks, start=1):
         handles.append(
-            block.register_forward_hook(_make_block_hook(storage, offset, reduction))
+            block.register_forward_hook(
+                _make_block_hook(storage, offset, resolved_reduction, has_class_token)
+            )
         )
 
     try:
@@ -85,6 +277,7 @@ def extract_layer_features(
         for handle in handles:
             handle.remove()
 
-    return {
+    features_by_layer = {
         layer: torch.cat(chunks, dim=0) for layer, chunks in sorted(storage.items())
     }
+    return features_by_layer

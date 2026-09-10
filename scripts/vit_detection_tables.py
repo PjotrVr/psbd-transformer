@@ -1,16 +1,16 @@
-"""The ViT detection panel: every attack, every dataset, three poison rates.
+"""The ViT detection panel: every attack, every dataset, 3 poison rates.
 
-One configuration throughout, `token_mask @ before_attention_norm`, with the probe
+1 configuration throughout, `token_mask @ before_attention_norm`, with the probe
 rate chosen per cell as the one whose clean-validation shift ratio sits closest to
 0.8. That rule uses no labels, so the numbers are what a defender could actually
 obtain.
 
 Reads the per-checkpoint `psbd_metrics.json`, which is the authoritative record and
-already carries all six quantiles per rate, rather than the regenerated
+already carries all 6 quantiles per rate, rather than the regenerated
 `operating_points.csv`. Clean accuracy and ASR come from the `args.json` sidecar.
 
 Every cell in the grid is printed. A cell with no sweep yet reads `pending` and is
-never dropped, because a reader cannot tell an omitted cell from a failed one.
+never dropped, because a reader cannot tell an omitted cell from a cell that failed.
 
     python scripts/vit_detection_tables.py > docs/vit-detection-tables.md
 """
@@ -82,7 +82,7 @@ PUBLISHED = {
 
 
 def read_cell(folder, results_dir="results", checkpoints_dir="checkpoints"):
-    """Metrics for one checkpoint at the rate closest to TARGET_SIGMA, or None."""
+    """Metrics for 1 checkpoint at the rate closest to TARGET_SIGMA, or None."""
     metrics_path = os.path.join(results_dir, folder, "psbd_metrics.json")
     args_path = os.path.join(checkpoints_dir, folder, "args.json")
     if not os.path.exists(metrics_path):
@@ -120,7 +120,7 @@ def read_cell(folder, results_dir="results", checkpoints_dir="checkpoints"):
         "asr": meta.get("asr"),
         # A clean-label attack is eligible only on the target class, so a requested
         # rate can saturate that pool and resolve far lower. Reporting the requested
-        # rate alone makes three identical models look like three poison rates.
+        # rate alone makes 3 identical models look like 3 poison rates.
         "realized": meta.get("realized_poison_rate"),
         # The authoritative flag, written by scripts/backfill_metadata.py, which
         # compares the poisoned COUNT against the requested count. Comparing rates
@@ -132,10 +132,12 @@ def read_cell(folder, results_dir="results", checkpoints_dir="checkpoints"):
 
 
 def fmt(value, places=3):
+    """A value rounded to a fixed number of decimals, or an em dash when it is None."""
     return "—" if value is None else f"{value:.{places}f}"
 
 
 def render(poison_rate, tag):
+    """The cells still pending and the cells whose AUROC looks contamination-suspect."""
     print(f"\n## Poison rate {poison_rate:.0%}\n")
     print(
         "| Cell | realized rate | CA | ASR | AUROC | TPR/FPR @10% "
@@ -220,6 +222,7 @@ def render(poison_rate, tag):
 
 
 def main():
+    """The process exit code: 1 when a row looks contamination-suspect, 0 otherwise."""
     print("# ViT-B/16 detection panel")
     print()
     print("`token_mask @ before_attention_norm`: whole patch tokens dropped from the")

@@ -1,32 +1,29 @@
 """Fuse PSBD and STRIP, whose failures are disjoint.
 
-The comparison table shows the two detectors failing on opposite attacks: STRIP
-reaches 0.97 to 1.00 at 1% FPR on the static patch trigger and exactly 0.000 on
-adaptive_blend and badnet_a2a, while PSBD is the reverse. No checkpoint in the grid
-defeats both. That is the textbook case for combining them.
+The comparison table shows the 2 detectors failing on opposite attacks: STRIP is
+near perfect on the static patch trigger and fails outright on adaptive_blend and
+badnet_a2a, while PSBD is the reverse. No checkpoint in the grid defeats both,
+which is the textbook case for combining them.
 
-Fusion is by **rank**, not by score. The two scores are on incompatible scales (a
-probability drop against an entropy in nats) and have different distributions, so any
-weighted sum would be dominated by whichever happens to have the larger spread.
-Converting each to its rank within a shared reference first makes them commensurable
-without fitting anything.
+Fusion is by rank, not by score. The 2 scores are on incompatible scales, a
+probability drop against an entropy in nats, so any weighted sum would be
+dominated by whichever has the larger spread. Converting each to its rank within
+a shared reference makes them commensurable without fitting anything.
 
-The reference must be the SAME set for every split, and clean validation is the
-natural choice: it is the only distribution the defender is assumed to hold, and it
-is what the threshold is already drawn from. Ranking each split against itself
-instead is the obvious mistake and it silently destroys the method. Within-split
-ranks span [0, 1] for every split by construction, so a threshold at the 1st
-percentile of validation rank flags exactly the bottom 1% of the backdoor split no
-matter how extreme its scores are, pinning TPR to the false-positive rate. That
-produced TPR 0.010 at 1% FPR on every checkpoint, including ones where a component
-detector scored 1.000. This is the explanation psbd.scores.to_rank points at.
+The reference must be the same set for every split, and clean validation is the
+natural choice: it is the only distribution the defender holds and it is what the
+threshold is drawn from. Ranking each split against itself destroys the method.
+Within-split ranks span [0, 1] for every split by construction, so a threshold at
+the 1st percentile of validation rank flags exactly the bottom 1% of the backdoor
+split whatever its scores are, pinning TPR to the false-positive rate. This is the
+explanation defences.scores.to_rank points at.
 
-Two rules, both requiring no poisoned data:
+2 rules, both needing no poisoned data:
 
-  mean_rank   average of the two normalized ranks. Balanced, and the natural choice
-              when neither detector is known to be the reliable one in advance.
-  min_rank    the more suspicious of the two verdicts. This is the right rule if the
-              failures really are disjoint: a sample only escapes when BOTH detectors
+  mean_rank   average of the 2 normalized ranks. Balanced, and the natural choice
+              when neither detector is known to be reliable in advance.
+  min_rank    the more suspicious of the 2 verdicts. The right rule if the failures
+              really are disjoint, since a sample only escapes when both detectors
               consider it clean.
 
 The threshold is still the quantile of clean-validation fused rank, so the defender
@@ -40,30 +37,31 @@ import argparse
 import glob
 import json
 import os
+from data.splits import SPLITS
+from defences.decision import ADAPTIVE_SHIFT_TARGET, RECOMMENDED_PLACEMENT
 
 import numpy as np
 import torch
 
-from psbd.baselines import collect_overlay_batch, strip_scores
-from psbd.cache import (
+from detectors import STRIP_OVERLAYS
+from detectors.strip import collect_overlay_batch, strip_scores
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
 )
-from psbd.decision import complete_rates, pair_clean_to_backdoor
-from psbd.models import load_checkpoint
-from psbd.scores import psu_ratio_from_cache, shift_ratio, to_rank
-from psbd.config import DATASET_REGISTRY
-from psbd.splits import (
+from defences.decision import complete_rates, pair_clean_to_backdoor
+from models.backbones import load_checkpoint
+from defences.scores import psu_ratio_from_cache, shift_ratio, to_rank
+from data.registry import DATASET_REGISTRY
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
 
-STRIP_OVERLAYS = 8
 
-SPLITS = ("validation", "clean", "backdoor")
 COLUMNS = ("psbd", "strip", "mean", "min")
 
 # This table was built on the CIFAR-10 ViT grid, where the disjoint-failure pattern
@@ -78,10 +76,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoints-dir", default="checkpoints")
     parser.add_argument("--raw-data-dir", default="raw_data")
     parser.add_argument("--fpr", nargs="*", type=float, default=[0.01, 0.05])
-    parser.add_argument("--shift-target", type=float, default=0.7)
+    parser.add_argument("--shift-target", type=float, default=ADAPTIVE_SHIFT_TARGET)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=4)
-    parser.add_argument("--placement", default="pre_residual_blocks_5_8")
+    parser.add_argument("--placement", default=RECOMMENDED_PLACEMENT)
     return parser.parse_args()
 
 
@@ -140,10 +138,10 @@ def strip_scores_per_split(
         split: strip_scores(
             model,
             loader,
+            device,
             overlays,
             spec.mean,
             spec.std,
-            device,
             True,
             PSBD_SPLIT_SEED,
             STRIP_OVERLAYS,
@@ -156,7 +154,7 @@ def strip_scores_per_split(
 def fuse(psu: dict, strip: dict) -> dict:
     """The 4 comparable columns per split: both components and both fusion rules.
 
-    Both detectors become percentiles of the SAME reference, the clean validation
+    Both detectors become percentiles of the same reference, the clean validation
     split, so a fused score means the same thing in every split and the validation
     threshold transfers.
     """
@@ -188,7 +186,7 @@ def tpr_at_fpr(
 
 
 def build_header(target_fprs: list[float]) -> str:
-    """The fixed-width header, one column quadruple per target FPR."""
+    """The fixed-width header, a column quadruple per target FPR."""
     header = f"{'attack':16} {'pr':>5}"
     for target in target_fprs:
         header += (
@@ -244,7 +242,7 @@ def main() -> None:
         for target in args.fpr:
             for name in COLUMNS:
                 # The clean side is paired down to the backdoor split's images, so
-                # all 4 columns are compared on one population.
+                # all 4 columns are compared on a single population.
                 clean = pair_clean_to_backdoor(fused["clean"][name], manifest)
                 tpr, _fpr = tpr_at_fpr(
                     fused["validation"][name], clean, fused["backdoor"][name], target

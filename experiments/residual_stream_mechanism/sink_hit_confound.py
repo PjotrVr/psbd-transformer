@@ -36,12 +36,12 @@ import numpy as np
 import torch
 from sklearn.metrics import roc_auc_score
 
-from defences.checkpoint_eval import (
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from models import load_checkpoint, network_core
+from models.backbones import load_checkpoint, network_core
 
 
 @torch.inference_mode()

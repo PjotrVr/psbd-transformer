@@ -37,8 +37,8 @@ import torch
 from scipy.stats import pearsonr
 from sklearn.metrics import roc_auc_score
 
-from psbd.cache import baseline_path, load_baseline, read_split_manifest
-from psbd.decision import pair_clean_to_backdoor
+from defences.cache import baseline_path, load_baseline, read_split_manifest
+from defences.decision import pair_clean_to_backdoor
 
 # Forward order through the network. Block scope positions repeat in every block,
 # so their index is a within block phase rather than a depth in the stack; the

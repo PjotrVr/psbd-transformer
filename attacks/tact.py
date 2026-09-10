@@ -1,20 +1,22 @@
 """TaCT: source-specific contamination with cover samples (Tang et al., 2021).
 
-Only images from the source classes are poisoned and flipped to the target, and
-cover samples (the trigger on non-source images, label kept) stop the trigger from
-being learned as a generic target cue. source_classes selects the sources and
-cover_rate sets the cover count. train_backdoor reads both from this config.
+Only images from the source classes are poisoned and flipped to the target. Cover
+samples, the trigger on non-source images with their label kept, stop the trigger
+from being learned as a generic target cue. source_classes selects the sources and
+cover_rate sets the cover count.
 
-ASR for a source-specific attack is conventionally measured on source-class images
-only. The general AttackSuccessSet measures over all non-target images, so read
-the ASR with that in mind or filter the test set to the source classes.
+ASR is measured on source-class images only, since those are the only images the
+attack claims to flip. source_classes travels on the Attack so AttackSuccessSet
+restricts the eval set itself rather than trusting the caller to.
 """
 
 from dataclasses import dataclass
 
 import torch
 
-from poison import Attack
+from attacks.poisoning import Attack
+
+from .patterns import checkerboard_patch
 
 
 @dataclass(frozen=True)
@@ -25,25 +27,16 @@ class TactConfig:
     label_mode: str = "all_to_one"
 
 
-def _patch(patch_size: int) -> torch.Tensor:
-    board = torch.zeros(3, patch_size, patch_size)
-    for row in range(patch_size):
-        for column in range(patch_size):
-            board[:, row, column] = 1.0 if (row + column) % 2 == 0 else 0.0
-    return board
-
-
 def build(config: TactConfig, image_size: int, target_label: int) -> Attack:
-    patch = _patch(config.patch_size)
+    """TaCT built for this image size and target label."""
+    patch = checkerboard_patch(config.patch_size)  # (3, patch_size, patch_size)
     size = config.patch_size
 
     def apply_trigger(image: torch.Tensor, _index: int) -> torch.Tensor:
-        stamped = image.clone()
+        stamped = image.clone()  # (C, H, W)
         stamped[:, image_size - size :, image_size - size :] = patch
         return stamped
 
-    # source_classes travels on the Attack so evaluation can restrict ASR to the
-    # classes this attack actually claims to flip.
     return Attack(
         "tact",
         apply_trigger,

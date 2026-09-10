@@ -48,16 +48,16 @@ from lightning import seed_everything
 from analysis.direction import backdoor_direction
 from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
-from defences.checkpoint_eval import read_checkpoint_metadata, resolve_probe_attack
-from defences.dropout import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
-from models import load_checkpoint
+from data.splits import read_checkpoint_metadata, resolve_probe_attack
+from models.positions import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
+from models.backbones import load_checkpoint
 import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader, Subset
 
-from poison import PoisonedTrainingSet
+from attacks.poisoning import PoisonedTrainingSet
 from experiments.backdoor_direction_layers.measure import build_paired_loaders
-from utils.config import DATASET_REGISTRY
-from utils.datasets import extract_labels, load_clean_datasets
+from data.registry import DATASET_REGISTRY
+from data.loading import extract_labels, load_clean_datasets
 
 
 def parse_args() -> argparse.Namespace:

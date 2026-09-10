@@ -51,7 +51,7 @@ BASE={base}
 cd $BASE
 source .venv/bin/activate
 
-python psbd_dropout_sweep.py \\
+python -m cli.sweep \\
     --checkpoint-folder {folders} \\
     --position-config {position} \\
     --perturbation {operator} \\

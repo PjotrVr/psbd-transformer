@@ -1,14 +1,14 @@
 """Generate the adversarially perturbed base images the Label-Consistent attack needs.
 
-One cache per (dataset, target label, epsilon). The surrogate is a model trained
-on clean data; a single one serves every victim architecture, because the
+1 cache per (dataset, target label, epsilon). The surrogate is a model trained on
+clean data. A single surrogate serves every victim architecture, because the
 attacker publishes a poisoned dataset rather than a model.
 
     python -m cli.lc_bases --dataset gtsrb --target-label 1 --epsilon 0.0627
 
 The printed target-class accuracy before and after is the check that matters: if
 the perturbation does not collapse it, the bases carry no attack and no amount
-of training will produce one.
+of training will produce an attack.
 """
 
 import argparse
@@ -18,11 +18,11 @@ import torch
 import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader, Subset
 
-from psbd.adversarial import accuracy_on, bases_directory, pgd_perturb, save_bases
-from psbd.config import DATASET_REGISTRY
-from psbd.data import base_image_transform, extract_labels, load_clean_datasets
-from psbd.models import load_checkpoint
-from psbd.training import current_git_commit
+from attacks.adversarial import accuracy_on, bases_directory, pgd_perturb, save_bases
+from data.registry import DATASET_REGISTRY
+from data.loading import base_image_transform, extract_labels, load_clean_datasets
+from models.backbones import load_checkpoint
+from utils.provenance import current_git_commit
 
 
 def target_class_indices(dataset, target_label: int) -> list[int]:

@@ -1,8 +1,8 @@
-"""One markdown per deployed configuration: every dataset, poison rate and attack.
+"""1 markdown per deployed configuration: every dataset, poison rate and attack.
 
-A configuration is one or more placements. Given several, they are fused at the score level
+A configuration is 1 or more placements. Given several, they are fused at the score level
 with the min-rank rule against the clean-validation reference, which is the same combination
-a defender would run at inference: no extra training, no extra checkpoint, one extra
+a defender would run at inference: no extra training, no extra checkpoint, only 1 extra
 perturbation sweep per member.
 
 Ordering is fixed and deliberate. Poison rate descends 10, 5, 1 percent because the easiest
@@ -22,37 +22,37 @@ import argparse
 import json
 import os
 import statistics
+from data.splits import SPLITS
+from defences.decision import EASY_ATTACKS, HARD_ATTACKS
 
-from defences.psbd_cache import (
+from defences.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.psbd_metrics import (
+from defences.decision import (
     complete_rates,
     detection_report,
     multi_probe_detection,
     pair_clean_to_backdoor,
-    psu_ratio_from_cache,
     select_rate_at_matched_shift,
-    shift_ratio,
 )
+from defences.scores import psu_ratio_from_cache, shift_ratio
 
-SPLITS = ("validation", "clean", "backdoor")
 RATE_ORDER = (0.1, 0.05, 0.01)
 DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny")
 # Grouped easy first, then hard, each ordered by how hard this panel found them to detect.
-EASY_ORDER = ("badnet_a2o", "blend", "lf")
-HARD_ORDER = ("bpp", "wanet", "tact", "sig", "lc", "adaptive_blend")
+EASY_ORDER = EASY_ATTACKS
+HARD_ORDER = HARD_ATTACKS
 ATTACK_ORDER = EASY_ORDER + HARD_ORDER
 SHIFT_TARGET = 0.6
 TARGET_FPRS = (0.10, 0.20)
 
 
 def probe_scores(psbd_dir, placement, baselines, manifest, target):
-    """One placement's fractional PSU on all three splits, at its shift-matched rate."""
+    """1 placement's fractional PSU on all 3 splits, at its shift-matched rate."""
     rates = complete_rates(psbd_dir, placement)
     if not rates:
         return None
@@ -80,7 +80,7 @@ def probe_scores(psbd_dir, placement, baselines, manifest, target):
 
 
 def detect(members, target_fpr):
-    """Detection for one configuration, single placement or fused."""
+    """Detection for 1 configuration, single placement or fused."""
     if len(members) == 1:
         only = members[0]
         return detection_report(
@@ -96,6 +96,7 @@ def detect(members, target_fpr):
 
 
 def measure_cell(folder, placements, results_dir, target):
+    """This cell's detection row across every placement in the configuration, or None."""
     psbd_dir = os.path.join(results_dir, folder, "psbd")
     if not all(os.path.exists(baseline_path(psbd_dir, s)) for s in SPLITS):
         return None
@@ -119,12 +120,14 @@ def measure_cell(folder, placements, results_dir, target):
 
 
 def fmt(value, places=3):
+    """A value rounded to a fixed number of decimals, or "--" when it is missing or NaN."""
     if value is None or value != value:
         return "--"
     return f"{value:.{places}f}"
 
 
 def build(args):
+    """The full markdown report for this configuration, as a single string."""
     with open(args.coverage) as handle:
         ledger = json.load(handle)
     cells = {c["folder_name"]: c for c in ledger["cells"]}

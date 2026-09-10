@@ -33,13 +33,13 @@ import os
 import pandas as pd
 import torch
 
-from psbd.decision import HEADLINE_QUANTILE, detection_report
-from psbd.inference import build_baseline_cache, compute_dropout_pass_probs
-from psbd.models import detect_architecture, load_checkpoint
-from psbd.operators import build_perturbation
-from psbd.positions import plug_dropout, unplug_dropout
-from psbd.scores import psu_from_cache, shift_ratio
-from psbd.splits import build_psbd_loaders_from_checkpoint
+from defences.decision import HEADLINE_QUANTILE, detection_report
+from defences.inference import build_baseline_cache, compute_dropout_pass_probs
+from models.backbones import detect_architecture, load_checkpoint
+from defences.operators import build_perturbation
+from models.positions import plug_dropout, unplug_dropout
+from defences.scores import psu_from_cache, shift_ratio
+from data.splits import build_psbd_loaders_from_checkpoint
 
 COMPARED_OPERATORS = ("gaussian", "rademacher")
 

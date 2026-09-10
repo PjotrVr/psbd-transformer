@@ -42,10 +42,10 @@ from lightning import seed_everything
 from analysis.direction import backdoor_direction, trigger_activated_change
 from analysis.features import extract_layer_features
 from attacks import build_attack, default_config
-from defences.checkpoint_eval import read_checkpoint_metadata
-from models import load_checkpoint
+from data.splits import read_checkpoint_metadata
+from models.backbones import load_checkpoint
 from experiments.backdoor_direction_layers.measure import build_paired_loaders
-from utils.config import DATASET_REGISTRY
+from data.registry import DATASET_REGISTRY
 
 RHOS = ("", "0_05", "0_1", "0_15", "0_2")
 

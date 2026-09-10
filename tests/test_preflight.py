@@ -2,12 +2,21 @@
 
 A check nobody has seen fail is a check nobody knows works. These tests break each
 detector deliberately and assert the gate refuses it, then assert the gate passes
-the unbroken code. Without the first half the gate is decoration.
+the unbroken code. Without the first half the gate is decoration. The judging
+rule is experiments.preflight.gate's, the same one check_signs.py prints.
 """
 
 import pytest
 import torch
 
+from detectors import DETECTOR_NAMES, build_detector
+from experiments.preflight.gate import (
+    MINIMUM_AUROC,
+    NOT_JUDGEABLE,
+    fixture_context,
+    judge,
+    judgeable_names,
+)
 from experiments.preflight.synthetic import (
     apply_trigger,
     attack_success_rate,
@@ -15,16 +24,8 @@ from experiments.preflight.synthetic import (
     build_splits,
     has_trigger,
 )
-from psbd.decision import HEADLINE_QUANTILE, detection_report
-from psbd.detectors import DETECTOR_NAMES, DetectorContext, build_detector
 
-# The detectors this synthetic case can actually judge. SCALE-UP is excluded
-# because its statistic takes 6 values over 5 amplification scales and this model
-# keeps 98 percent of clean predictions stable, so the ranking is almost all ties.
-# That is recorded in check_signs.py rather than worked around.
-JUDGEABLE = ("confidence", "strip", "ibd_psc", "teco")
-
-CHEAP_CORRUPTIONS = ("gaussian_noise", "defocus_blur", "brightness", "contrast")
+JUDGEABLE = judgeable_names()
 
 
 @pytest.fixture(scope="module")
@@ -32,30 +33,17 @@ def synthetic_case():
     device = torch.device("cpu")
     model = build_backdoored_model()
     loaders = build_splits(num_samples=192)
-    context = DetectorContext(
-        model=model,
-        device=device,
-        mean=(0.0, 0.0, 0.0),
-        std=(1.0, 1.0, 1.0),
-        validation_loader=loaders["validation"],
-        num_classes=10,
-        use_bfloat16=False,
-        teco_corruptions=CHEAP_CORRUPTIONS,
-    )
+    context = fixture_context(model, loaders, device)
     return model, loaders, context, device
 
 
-def detector_auroc(name, model, loaders, context, device, invert=False):
+def detector_scores(name, model, loaders, context, device, invert=False):
     score = build_detector(name, context)
     scores = {}
     for split, loader in loaders.items():
         values = score(model, loader, device)
         scores[split] = -values if invert else values
-
-    report = detection_report(
-        scores["validation"], scores["clean"], scores["backdoor"], HEADLINE_QUANTILE
-    )
-    return report["auroc"]
+    return scores
 
 
 def test_the_synthetic_backdoor_actually_works(synthetic_case):
@@ -87,26 +75,48 @@ def test_the_trigger_survives_rescaling(synthetic_case):
         )
 
 
+def test_every_registered_detector_is_judged_or_excused():
+    assert set(JUDGEABLE) | set(NOT_JUDGEABLE) == set(DETECTOR_NAMES)
+    assert all(reason for reason in NOT_JUDGEABLE.values())
+
+
+@pytest.mark.parametrize("name", DETECTOR_NAMES)
+def test_every_detector_returns_finite_scores_of_the_split_length(name, synthetic_case):
+    model, loaders, context, device = synthetic_case
+
+    scores = detector_scores(name, model, loaders, context, device)
+    for split, loader in loaders.items():
+        assert scores[split].shape == (len(loader.dataset),), (name, split)
+        assert torch.isfinite(scores[split]).all(), (name, split)
+
+
 @pytest.mark.parametrize("name", JUDGEABLE)
 def test_each_detector_points_the_right_way(name, synthetic_case):
     model, loaders, context, device = synthetic_case
 
-    auroc = detector_auroc(name, model, loaders, context, device)
-    assert auroc >= 0.60, f"{name} scored {auroc:.3f} on an unmissable backdoor"
+    verdict, auroc, concentration = judge(
+        name, detector_scores(name, model, loaders, context, device)
+    )
+    if verdict == "not exercised":
+        pytest.skip(f"{name}: {concentration:.0%} of clean scores tied on this fixture")
+    assert verdict == "ok", f"{name} scored {auroc:.3f} on an unmissable backdoor"
 
 
 @pytest.mark.parametrize("name", JUDGEABLE)
 def test_the_gate_catches_a_deliberate_inversion(name, synthetic_case):
     """Reintroduce the exact bug that shipped, and require the gate to refuse it.
 
-    IBD-PSC and TeCo were both wired backwards in one sitting, scoring 0.043 and
+    IBD-PSC and TeCo were both wired backwards in 1 sitting, scoring 0.043 and
     0.055 where they should have scored above 0.94, and nothing raised. A negated
     score is what that looked like.
     """
     model, loaders, context, device = synthetic_case
 
-    inverted = detector_auroc(name, model, loaders, context, device, invert=True)
-    assert inverted <= 0.40, (
+    scores = detector_scores(name, model, loaders, context, device, invert=True)
+    verdict, inverted, concentration = judge(name, scores)
+    if verdict == "not exercised":
+        pytest.skip(f"{name}: {concentration:.0%} of clean scores tied on this fixture")
+    assert verdict == "inverted" and inverted <= 1.0 - MINIMUM_AUROC, (
         f"{name} inverted still scored {inverted:.3f}; the check cannot see the bug"
     )
 
@@ -121,7 +131,7 @@ class TestSummaryLoaderFiltersUnsafeRows:
     def test_the_default_drops_variant_rows(self, tmp_path):
         import pandas as pd
 
-        from psbd.summary import load_detection_summary
+        from evaluation.summary import load_detection_summary
 
         path = tmp_path / "summary.csv"
         pd.DataFrame(
@@ -141,7 +151,7 @@ class TestSummaryLoaderFiltersUnsafeRows:
     def test_the_unsafe_rows_are_reachable_but_only_on_request(self, tmp_path):
         import pandas as pd
 
-        from psbd.summary import load_detection_summary
+        from evaluation.summary import load_detection_summary
 
         path = tmp_path / "summary.csv"
         pd.DataFrame(
@@ -163,7 +173,7 @@ class TestSummaryLoaderFiltersUnsafeRows:
         """An older summary predates both columns and must not raise."""
         import pandas as pd
 
-        from psbd.summary import load_detection_summary
+        from evaluation.summary import load_detection_summary
 
         path = tmp_path / "old.csv"
         pd.DataFrame({"folder": ["a"], "operator": ["dropout"], "auroc": [0.7]}).to_csv(

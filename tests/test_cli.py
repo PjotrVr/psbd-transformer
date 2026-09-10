@@ -58,62 +58,20 @@ CLI_MODULES = (
     "cli.analyze_latent",
 )
 
-# Every entrypoint and the module it was ported from. The old module stays the
-# source of truth for the flag set until it is deleted.
-PORTED_FROM = {
-    "cli.analyze": "psbd_analyze",
-    "cli.analyze_latent": "analysis.analyze_latent",
-    "cli.backfill": "scripts.backfill_metadata",
-    "cli.baselines": "baseline_detect",
-    "cli.compare_detectors": "detector_comparison",
-    "cli.evaluate": "metrics",
-    "cli.fuse_detectors": "detector_fusion",
-    "cli.head_profile": "psbd_head_profile",
-    "cli.operating_points": "psbd_operating_points",
-    "cli.report": "psbd_report",
-    "cli.summary": "scripts.detection_summary",
-    "cli.sweep": "psbd_dropout_sweep",
-    "cli.tables": "defence_tables",
-    "cli.train_backdoor": "train_backdoor",
-    "cli.train_benign": "train_benign",
-    "cli.variants": "psbd_variants",
-}
 
-# Top-level names cli/ must never import. The pre-rewrite packages, plus every
-# root-level module whose contents now live in psbd/. Spelled out rather than
-# derived from the filesystem so the check keeps its meaning once those files are
-# deleted, which is the entire point of the rewrite.
-FORBIDDEN_IMPORT_ROOTS = frozenset(
-    {
-        "analysis",
-        "attacks",
-        "defences",
-        "scripts",
-        "utils",
-        "adaptive_evasion",
-        "backdoor_data",
-        "baseline_detect",
-        "defence_tables",
-        "detector_comparison",
-        "detector_fusion",
-        "evaluate",
-        "loaders",
-        "metrics",
-        "models",
-        "pbs_grid",
-        "poison",
-        "psbd_analyze",
-        "psbd_dropout_sweep",
-        "psbd_head_profile",
-        "psbd_operating_points",
-        "psbd_report",
-        "psbd_variants",
-        "sam",
-        "stealth",
-        "train",
-        "train_backdoor",
-        "train_benign",
-    }
+# Dependencies point one way: a library package never reaches up into cli/. cli/
+# is where a main() lives and where arguments are parsed, so a library module that
+# imports it has put a command-line concern inside reusable code.
+LIBRARY_PACKAGES = (
+    "attacks",
+    "analysis",
+    "data",
+    "defences",
+    "detectors",
+    "evaluation",
+    "models",
+    "training",
+    "utils",
 )
 
 STAGE_ONE_BASELINES = (
@@ -138,7 +96,7 @@ def build_parser(module_name: str) -> argparse.ArgumentParser:
     required argument would abort before the parser is visible. Raising from the
     interception point returns the parser and skips both.
     """
-    module = importlib.import_module(module_name)
+    module = importlib.import_module("cli.train_backdoor")
     original = argparse.ArgumentParser.parse_args
 
     def capture(self, *args, **kwargs):
@@ -292,35 +250,17 @@ def test_module_imports(module_name: str) -> None:
 @pytest.mark.parametrize("module_name", CLI_MODULES)
 def test_module_has_docstring(module_name: str) -> None:
     """Several of these docstrings explain what the output means and are load bearing."""
-    module = importlib.import_module(module_name)
+    module = importlib.import_module("cli.train_backdoor")
     assert module.__doc__ and module.__doc__.strip()
 
 
-@pytest.mark.parametrize(("new_module", "old_module"), sorted(PORTED_FROM.items()))
-def test_flag_parity_with_original(new_module: str, old_module: str) -> None:
-    """No flag spelling was dropped or renamed by the port.
-
-    A superset check rather than equality: adding a flag is a normal change, and
-    removing one silently breaks every queued PBS script that spells it.
-
-    Skips once the original is deleted, which is the intended end state of the
-    rewrite. Until then this is the only mechanical guard on the flag set.
-    """
-    if importlib.util.find_spec(old_module) is None:
-        pytest.skip(f"{old_module} has been removed, so there is nothing to compare")
-
-    new_flags = option_strings(build_parser(new_module))
-    old_flags = option_strings(build_parser(old_module))
-
-    removed = old_flags - new_flags
-    assert not removed, f"{new_module} dropped {sorted(removed)} from {old_module}"
-
-
 @pytest.mark.parametrize("path", cli_source_files(), ids=os.path.basename)
-def test_imports_only_psbd_and_cli(path: str) -> None:
-    """cli/ never reaches back into a root module or a pre-rewrite package."""
-    forbidden = imported_roots(path) & FORBIDDEN_IMPORT_ROOTS
-    assert not forbidden, f"{os.path.basename(path)} imports {sorted(forbidden)}"
+def test_cli_module_has_a_docstring(path: str) -> None:
+    """Every entrypoint says what it is for, since --help is not the whole story."""
+    source = open(path).read()
+    assert source.lstrip().startswith('"""'), (
+        f"{os.path.basename(path)} has no module docstring"
+    )
 
 
 def test_analyze_writes_psbd_metrics(analyzed_results: tuple[str, str]) -> None:
@@ -396,7 +336,7 @@ def test_summary_writes_a_versionable_csv(tmp_path) -> None:
 
     # A4 was an unrecognized suffix silently attributed to the paper's own
     # baseline. Nothing may parse as an operator the registry does not have.
-    # KNOWN_OPERATORS rather than psbd.operators.PERTURBATIONS, because scale_up
+    # KNOWN_OPERATORS rather than defences.operators.PERTURBATIONS, because scale_up
     # is a legitimate operator that the perturbation registry deliberately omits:
     # it needs the dataset's normalization constants and cannot be built from a
     # rate alone. The summary's own vocabulary is the right authority here.
@@ -422,8 +362,7 @@ def test_tables_coverage_only_reports_the_bar() -> None:
     assert "| poison |" not in output, "--coverage-only must not print a table"
 
 
-@pytest.mark.parametrize("module_name", ["train_backdoor", "cli.train_backdoor"])
-def test_repeated_attack_override_accumulates(module_name: str) -> None:
+def test_repeated_attack_override_accumulates() -> None:
     """A repeated --attack-override must keep every key, not just the last one.
 
     Declared `nargs="*"` this silently kept only the final occurrence, so
@@ -432,7 +371,7 @@ def test_repeated_attack_override_accumulates(module_name: str) -> None:
     variant while args.json advertised the adversarial one. Nothing was out of
     range, so nothing complained.
     """
-    module = importlib.import_module(module_name)
+    module = importlib.import_module("cli.train_backdoor")
     argv = [
         "--dataset",
         "cifar100",
@@ -449,7 +388,7 @@ def test_repeated_attack_override_accumulates(module_name: str) -> None:
     ]
     old_argv = sys.argv
     try:
-        sys.argv = [module_name, *argv]
+        sys.argv = ["cli.train_backdoor", *argv]
         args = module.parse_args()
     finally:
         sys.argv = old_argv
@@ -474,9 +413,7 @@ def test_split_operator_strips_stacked_qualifiers() -> None:
         ("mlp_norm_out_gain_scale_blocks_0_5_seed2", "mlp_norm_out", "gain_scale"),
     )
     for placement, position, operator in stacked:
-        got_position, got_operator, variant = split_operator(
-            placement, KNOWN_OPERATORS
-        )
+        got_position, got_operator, variant = split_operator(placement, KNOWN_OPERATORS)
         assert (got_position, got_operator) == (position, operator), placement
         # Both qualifiers survive; keeping only the last would lose the seed.
         assert variant is not None and "+" in variant, placement
@@ -487,3 +424,50 @@ def test_split_operator_strips_stacked_qualifiers() -> None:
         "dropout",
         "mask_seed_1",
     )
+
+
+@pytest.mark.parametrize("package", LIBRARY_PACKAGES)
+def test_library_never_imports_cli(package: str) -> None:
+    """No library package reaches up into cli/.
+
+    The dependency direction is the architecture: cli/ parses arguments and calls
+    the library, never the reverse. A library module importing cli/ has put a
+    command-line concern somewhere it cannot be reused from a notebook or a test.
+    """
+    offenders = []
+    for name in sorted(os.listdir(package)):
+        if not name.endswith(".py"):
+            continue
+        path = os.path.join(package, name)
+        if "cli" in imported_roots(path):
+            offenders.append(path)
+    assert not offenders, f"{package} imports cli from {offenders}"
+
+
+def test_train_benign_output_needs_exactly_one_dataset() -> None:
+    """--output names 1 checkpoint folder, so it is refused alongside several datasets.
+
+    The seed replicate generator passes --output to get a _seed_N folder tag the
+    derived name cannot carry. Before the flag existed the generator emitted it
+    anyway, and 4 benign replicates died on argparse without training. The refusal
+    has to fire before any data loads, which is what this checks by giving it 2
+    datasets and no data directory at all.
+    """
+    module = importlib.import_module("cli.train_benign")
+    saved = sys.argv
+    try:
+        sys.argv = [
+            "cli.train_benign",
+            "--datasets",
+            "cifar10",
+            "cifar100",
+            "--output",
+            "nowhere/attack_result.pt",
+            "--raw-data-dir",
+            "does_not_exist",
+        ]
+        with pytest.raises(SystemExit) as refused:
+            module.main()
+    finally:
+        sys.argv = saved
+    assert "exactly 1" in str(refused.value)

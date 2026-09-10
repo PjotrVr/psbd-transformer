@@ -27,14 +27,14 @@ from scipy.optimize import linear_sum_assignment
 from sklearn.metrics import roc_auc_score
 
 from attacks import build_attack, default_config
-from defences.checkpoint_eval import (
-    build_eval_loaders_from_attack,
+from evaluation.loaders import build_balanced_eval_loaders
+from data.splits import (
     read_checkpoint_metadata,
     resolve_probe_attack,
 )
-from utils.config import DATASET_REGISTRY
-from models import load_vit_checkpoint
-from utils.config import RunConfig
+from data.registry import DATASET_REGISTRY
+from models.backbones import load_checkpoint
+from data.registry import RunConfig
 
 
 def occlusion_grid(image_size: int, patch: int, stride: int) -> list[tuple[int, int]]:
@@ -95,19 +95,27 @@ def main():
     # pixel patch would be meaningless across datasets.
     parser.add_argument("--patch", type=int, default=0)
     parser.add_argument("--stride", type=int, default=0)
-    parser.add_argument("--limit", type=int, default=0,
-                        help="0 uses whatever the loaders provide")
-    parser.add_argument("--examples-per-class", type=int, default=150,
-                        help="RunConfig cap on the eval splits; this, not --limit, "
-                             "sets how much data the permutation is fitted on")
+    parser.add_argument(
+        "--limit", type=int, default=0, help="0 uses whatever the loaders provide"
+    )
+    parser.add_argument(
+        "--examples-per-class",
+        type=int,
+        default=150,
+        help="RunConfig cap on the eval splits; this, not --limit, "
+        "sets how much data the permutation is fitted on",
+    )
     parser.add_argument("--num-classes", type=int, default=10)
-    parser.add_argument("--probe-attack", default=None,
-                        help="trigger to probe a benign checkpoint with; the negative control")
+    parser.add_argument(
+        "--probe-attack",
+        default=None,
+        help="trigger to probe a benign checkpoint with; the negative control",
+    )
     parser.add_argument("--probe-target-label", type=int, default=None)
     args = parser.parse_args()
 
     device = torch.device("cuda")
-    model = load_vit_checkpoint(args.checkpoint, device).eval()
+    model = load_checkpoint("vit", args.checkpoint, device).eval()
     config = RunConfig(batch_size=64, examples_per_class=args.examples_per_class)
     metadata = read_checkpoint_metadata(args.checkpoint)
     attack_name, target_label = resolve_probe_attack(
@@ -116,27 +124,46 @@ def main():
     dataset_name = metadata["dataset"]
     size = DATASET_REGISTRY[dataset_name].image_size
     attack = build_attack(attack_name, default_config(attack_name), size, target_label)
-    clean_val, clean_eval, backdoor_eval = build_eval_loaders_from_attack(
-        dataset_name, attack, config, size
+    clean_val, clean_eval, backdoor_eval = build_balanced_eval_loaders(
+        dataset_name,
+        attack,
+        image_size=size,
+        clean_val_size=config.clean_val_size,
+        examples_per_class=config.examples_per_class,
+        raw_data_dir=config.raw_data_dir,
+        batch_size=config.batch_size,
+        seed=config.seed,
     )
-    print(f"model {metadata['attack']}, probed with {attack_name} (target {target_label})")
+    print(
+        f"model {metadata['attack']}, probed with {attack_name} (target {target_label})"
+    )
     image_size = next(iter(clean_val))[0].shape[-1]
     patch = args.patch or max(4, image_size // 4)
     stride = args.stride or max(2, patch // 2)
     positions = occlusion_grid(image_size, patch, stride)
-    print(f"{len(positions)} occlusion positions, {patch}px patch, stride {stride}, {image_size}px image")
+    print(
+        f"{len(positions)} occlusion positions, {patch}px patch, stride {stride}, {image_size}px image"
+    )
 
     splits = {}
-    for name, loader in (("validation", clean_val), ("clean", clean_eval), ("backdoor", backdoor_eval)):
+    for name, loader in (
+        ("validation", clean_val),
+        ("clean", clean_eval),
+        ("backdoor", backdoor_eval),
+    ):
         splits[name] = transitions(model, loader, device, positions, patch, args.limit)
         print(f"  {name}: {len(splits[name][0])} samples")
 
     # Estimate the permutation on the suspect data, calibrate the score it produces
     # against clean validation, which by assumption contains no poison.
     permutation, strength = estimate_permutation(*splits["backdoor"], args.num_classes)
-    null_perm, null_strength = estimate_permutation(*splits["validation"], args.num_classes)
-    print(f"\nHungarian match strength: suspect {strength:.4f} vs clean-validation null "
-          f"{null_strength:.4f}  ({strength / max(null_strength, 1e-9):.2f}x)")
+    null_perm, null_strength = estimate_permutation(
+        *splits["validation"], args.num_classes
+    )
+    print(
+        f"\nHungarian match strength: suspect {strength:.4f} vs clean-validation null "
+        f"{null_strength:.4f}  ({strength / max(null_strength, 1e-9):.2f}x)"
+    )
     print(f"estimated permutation: {list(permutation)}")
     print(f"identity would be    : {list(range(args.num_classes))}")
 
@@ -146,14 +173,22 @@ def main():
     def moved(base, occluded):
         return (occluded != base.unsqueeze(1)).float().mean(1).numpy()
 
-    labels_ab = np.r_[np.zeros(len(splits["clean"][0])), np.ones(len(splits["backdoor"][0]))]
-    ab = roc_auc_score(labels_ab, np.r_[moved(*splits["clean"]), moved(*splits["backdoor"])])
-    print(f"\nABLATION, any movement (no permutation readout): AUROC {max(ab, 1 - ab):.4f}")
+    labels_ab = np.r_[
+        np.zeros(len(splits["clean"][0])), np.ones(len(splits["backdoor"][0]))
+    ]
+    ab = roc_auc_score(
+        labels_ab, np.r_[moved(*splits["clean"]), moved(*splits["backdoor"])]
+    )
+    print(
+        f"\nABLATION, any movement (no permutation readout): AUROC {max(ab, 1 - ab):.4f}"
+    )
     null_permutation, _ = estimate_permutation(*splits["validation"], args.num_classes)
     print(f"permutation estimated from CLEAN VALIDATION: {list(null_permutation)}")
     ident = list(range(args.num_classes))
-    print(f"  suspect perm is a single {args.num_classes}-cycle: "
-          f"{sorted(permutation.tolist()) == ident and len(set(permutation.tolist())) == args.num_classes}")
+    print(
+        f"  suspect perm is a single {args.num_classes}-cycle: "
+        f"{sorted(permutation.tolist()) == ident and len(set(permutation.tolist())) == args.num_classes}"
+    )
 
     half = len(splits["backdoor"][0]) // 2
     fit = tuple(t[:half] for t in splits["backdoor"])
@@ -161,18 +196,24 @@ def main():
     held_clean = tuple(t[half:] for t in splits["clean"])
     perm_a, _ = estimate_permutation(*fit, args.num_classes)
     y_h = np.r_[np.zeros(len(held_clean[0])), np.ones(len(held[0]))]
-    transfer = roc_auc_score(y_h, np.r_[score(*held_clean, perm_a), score(*held, perm_a)])
-    print(f"\nSPLIT-HALF: permutation fitted on half the suspect data, scored on the "
-          f"held-out half -> AUROC {transfer:.4f}")
+    transfer = roc_auc_score(
+        y_h, np.r_[score(*held_clean, perm_a), score(*held, perm_a)]
+    )
+    print(
+        f"\nSPLIT-HALF: permutation fitted on half the suspect data, scored on the "
+        f"held-out half -> AUROC {transfer:.4f}"
+    )
     print(f"  fitted permutation {list(perm_a)}")
 
     clean_scores = score(*splits["clean"], permutation)
     backdoor_scores = score(*splits["backdoor"], permutation)
     labels = np.r_[np.zeros(len(clean_scores)), np.ones(len(backdoor_scores))]
     auroc = roc_auc_score(labels, np.r_[clean_scores, backdoor_scores])
-    print(f"\nmean score  clean {clean_scores.mean():.4f}   backdoor {backdoor_scores.mean():.4f}")
+    print(
+        f"\nmean score  clean {clean_scores.mean():.4f}   backdoor {backdoor_scores.mean():.4f}"
+    )
     print(f"AUROC (occlusion + permutation readout): {auroc:.4f}")
-    print(f"  for reference, PSU on this cell: 0.440 (0.560 two-sided)")
+    print("  for reference, PSU on this cell: 0.440 (0.560 two-sided)")
 
 
 if __name__ == "__main__":

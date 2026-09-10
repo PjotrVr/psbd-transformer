@@ -36,14 +36,14 @@ from torchvision.models.vision_transformer import interpolate_embeddings
 from torchvision.transforms import v2 as transforms_v2
 
 from attacks import apply_config_overrides, build_attack, default_config
-from defences.checkpoint_eval import (
+from data.splits import (
     PSBD_SPLIT_SEED,
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
 from utils.numerics import safe_ratio, safe_ratio_positive
-from models import build_vit, load_checkpoint, network_core
-from utils.config import DATASET_REGISTRY
+from models.backbones import build_vit, load_checkpoint, network_core
+from data.registry import DATASET_REGISTRY
 
 PATCH = 16
 

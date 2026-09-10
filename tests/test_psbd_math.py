@@ -18,9 +18,9 @@ import torch.nn.functional as F
 import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader, TensorDataset
 
-from defences.checkpoint_eval import build_psbd_loaders_from_checkpoint
+from data.splits import build_psbd_loaders_from_checkpoint
 from defences.inference import compute_dropout_pass_probs
-from defences.psbd_cache import (
+from defences.cache import (
     _rate_tag,
     baseline_path,
     load_baseline,
@@ -31,7 +31,7 @@ from defences.psbd_cache import (
     save_dropout_pass_probs,
     write_split_manifest,
 )
-from utils.datasets import extract_labels, load_clean_datasets
+from data.loading import extract_labels, load_clean_datasets
 
 CPU = torch.device("cpu")
 CHECKPOINT = "checkpoints/vit_cifar100_wanet_0_1/attack_result.pt"
@@ -286,7 +286,7 @@ def test_load_or_build_baseline_rejects_a_stale_truncated_cache(tmp_path):
 
 
 def test_rate_tag_is_injective_over_the_swept_rates():
-    from psbd_dropout_sweep import DROPOUT_RATES
+    from cli.sweep import DROPOUT_RATES
 
     tags = [_rate_tag(rate) for rate in DROPOUT_RATES]
     assert len(set(tags)) == len(tags), "each swept rate must get a distinct tag"
