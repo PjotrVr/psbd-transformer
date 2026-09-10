@@ -56,6 +56,10 @@ results/**
 # regenerable by scripts/coverage_ledger.py, so only the readable summary is tracked:
 # a coverage number moving is exactly the thing worth seeing in a diff.
 !results/coverage/COVERAGE.md
+# The competitor detectors' per-checkpoint records, 1 small JSON per detector
+# (detectors.records). Their score tensors beside them are regenerable and stay out.
+!results/**/detectors/*_metrics.json
+!results/detector_summary.csv.gz
 
 # Teaching notes: a local reading guide to this codebase, regenerable and not
 # part of the published record.
