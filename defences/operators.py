@@ -500,7 +500,7 @@ def scale_up(mean, std):
 # Every entry takes a rate and returns a module perturbing (batch, tokens,
 # channels), so any of these is a drop-in for nn.Dropout in plug_dropout's
 # factory argument.
-PERTURBATIONS: dict[str, type[nn.Module]] = {
+OPERATORS: dict[str, type[nn.Module]] = {
     "dropout": nn.Dropout,
     "head_mask": head_mask,
     "channel_mask": channel_mask,
@@ -523,12 +523,12 @@ PERTURBATIONS: dict[str, type[nn.Module]] = {
 # for these it is exact at k = 1 and a k > 1 sweep writes k identical rows. Their
 # shift ratio is also a per-sample flip indicator rather than a fraction of
 # passes, which is worth stating wherever sigma is compared across operators.
-DETERMINISTIC_PERTURBATIONS: frozenset[str] = frozenset({"gain_scale", "scale_up"})
+DETERMINISTIC_OPERATORS: frozenset[str] = frozenset({"gain_scale", "scale_up"})
 
 # Which perturbations are meaningful at which positions. head_mask is the
 # constrained case: it is only a head mask on the concatenated per-head outputs.
 # Anywhere else its 64-wide groups are arbitrary channel blocks.
-PERTURBATION_POSITIONS: dict[str, tuple[str, ...]] = {
+OPERATOR_POSITIONS: dict[str, tuple[str, ...]] = {
     "head_mask": ("attention_heads",),
     "droppath": ("before_attention_residual", "before_mlp_residual"),
 }
@@ -562,36 +562,36 @@ FORBIDDEN_OPERATOR_POSITIONS[("token_mask", "final_norm_out")] = (
 )
 
 
-def check_operator_position(perturbation: str, position: str) -> None:
+def check_operator_position(operator: str, position: str) -> None:
     """Refuse operator and position pairs that would produce a plausible wrong answer.
 
     Raises rather than warning. Every combination rejected here runs without
     error and writes a complete sweep, so a warning would be read past and the
     result would enter a table looking like every other cell.
     """
-    forbidden = FORBIDDEN_OPERATOR_POSITIONS.get((perturbation, position))
+    forbidden = FORBIDDEN_OPERATOR_POSITIONS.get((operator, position))
     if forbidden is not None:
-        raise ValueError(f"{perturbation} at {position}: {forbidden}")
+        raise ValueError(f"{operator} at {position}: {forbidden}")
 
-    allowed = PERTURBATION_POSITIONS.get(perturbation)
+    allowed = OPERATOR_POSITIONS.get(operator)
     if allowed is not None and position not in allowed:
         raise ValueError(
-            f"{perturbation} is only meaningful at {allowed}, not at {position!r}"
+            f"{operator} is only meaningful at {allowed}, not at {position!r}"
         )
 
 
-def effective_forward_passes(perturbation: str, forward_passes: int) -> int:
+def effective_forward_passes(operator: str, forward_passes: int) -> int:
     """Passes actually needed: 1 for a deterministic operator, k otherwise."""
-    needed = 1 if perturbation in DETERMINISTIC_PERTURBATIONS else forward_passes
+    needed = 1 if operator in DETERMINISTIC_OPERATORS else forward_passes
     return needed
 
 
-def build_perturbation(name: str):
+def build_operator(name: str):
     """The operator registered under name, failing loudly on a typo.
 
     A silent fallback to nn.Dropout here would produce a complete, plausible sweep
     that answers a different question than the one asked.
     """
-    if name not in PERTURBATIONS:
-        raise KeyError(f"unknown perturbation {name!r}, known: {sorted(PERTURBATIONS)}")
-    return PERTURBATIONS[name]
+    if name not in OPERATORS:
+        raise KeyError(f"unknown perturbation {name!r}, known: {sorted(OPERATORS)}")
+    return OPERATORS[name]

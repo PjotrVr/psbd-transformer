@@ -23,16 +23,15 @@ def build(ledger, declaration):
     cells = ledger["cells"]
     placements = ledger["placements"]
     basis = declaration["basis"]
-    basis_ids = {entry["id"] for entry in basis}
     clearing = [c for c in cells if c["asr_class"] == "clears"]
 
     distinct = {row["placement"] for row in placements}
     rate_units = sum(row["n_complete_rates"] for row in placements)
     by_operator = collections.Counter(
-        row["perturbation"] or "unknown" for row in placements
+        row["operator"] or "unknown" for row in placements
     )
     by_position = collections.Counter(
-        row["position_config"] or "unknown" for row in placements
+        row["position"] or "unknown" for row in placements
     )
     banded = sum(1 for row in placements if row["block_range"])
     seeds = collections.Counter(row["mask_seed"] for row in placements)

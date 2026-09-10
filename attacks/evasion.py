@@ -47,7 +47,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
-from defences.operators import build_perturbation
+from defences.operators import build_operator
 from models.positions import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
 
 # Guards the division when the model gives its own predicted class almost no
@@ -116,7 +116,7 @@ def psu_for_batch(
     base = F.softmax(logits, dim=1).gather(1, tracked.view(-1, 1)).squeeze(1)
 
     names = DROPOUT_CONFIGS.get(probe["position"], (probe["position"],))
-    factory = {name: build_perturbation(probe["operator"]) for name in names}
+    factory = {name: build_operator(probe["operator"]) for name in names}
     handles = plug_dropout(model, probe["architecture"], names, factory, probe["rate"])
     try:
         dropped = torch.zeros_like(base)  # (batch,)
@@ -161,7 +161,7 @@ def calibrate_probe_rate(
     operator = probe_config["operator"]
 
     names = DROPOUT_CONFIGS.get(position, (position,))
-    factory = {name: build_perturbation(operator) for name in names}
+    factory = {name: build_operator(operator) for name in names}
 
     baseline_argmax = []
     all_images = []

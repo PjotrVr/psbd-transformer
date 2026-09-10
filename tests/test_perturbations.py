@@ -8,12 +8,12 @@ import torch.nn as nn
 import models.backbones
 from models.positions import STRUCTURED_POSITION_NAMES, plug_dropout, unplug_dropout
 from defences.operators import (
-    PERTURBATIONS,
+    OPERATORS,
     DropPath,
     GaussianNoise,
     GroupChannelMask,
     TokenMask,
-    build_perturbation,
+    build_operator,
     head_mask,
 )
 
@@ -24,16 +24,16 @@ def x():
     return torch.randn(8, 197, 768)
 
 
-@pytest.mark.parametrize("name", list(PERTURBATIONS.keys()))
+@pytest.mark.parametrize("name", list(OPERATORS.keys()))
 def test_eval_mode_is_identity(x, name):
-    op = build_perturbation(name)(0.5)
+    op = build_operator(name)(0.5)
     op.eval()
     assert torch.equal(op(x), x)
 
 
 @pytest.mark.parametrize("name", ("dropout", "channel_mask", "token_mask", "droppath"))
 def test_inverted_scaling_preserves_mean(x, name):
-    op = build_perturbation(name)(0.5)
+    op = build_operator(name)(0.5)
     op.train()
     out = torch.stack([op(x) for _ in range(64)]).mean(0)
     rel = (out.mean() - x.mean()).abs() / x.abs().mean()
@@ -67,9 +67,9 @@ def test_droppath_per_sample_all_or_nothing(x):
     assert (per_sample_zero | per_sample_nonzero).all()
 
 
-@pytest.mark.parametrize("name", list(PERTURBATIONS.keys()))
+@pytest.mark.parametrize("name", list(OPERATORS.keys()))
 def test_rate_zero_is_identity(x, name):
-    op = build_perturbation(name)(0.0)
+    op = build_operator(name)(0.0)
     op.train()
     assert torch.equal(op(x), x)
 
@@ -185,11 +185,11 @@ class TestOperatorPositionValidation:
 
     def test_the_wrong_axis_reading_is_real_and_not_hypothetical(self):
         """Demonstrates the misread the guard exists to prevent."""
-        from defences.operators import build_perturbation
+        from defences.operators import build_operator
 
         torch.manual_seed(0)
         image = torch.ones(2, 3, 8, 8)  # (batch, channels, height, width)
-        masked = build_perturbation("token_mask")(0.5).train()(image)
+        masked = build_operator("token_mask")(0.5).train()(image)
 
         # Read as (batch, height, width, channels), whole "tokens" are zeroed, so
         # entire colour-channel planes vanish rather than image patches.

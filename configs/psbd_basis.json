@@ -56,8 +56,8 @@
   "basis": [
     {
       "id": "before_attention_norm_token_mask",
-      "position_config": "before_attention_norm",
-      "perturbation": "token_mask",
+      "position": "before_attention_norm",
+      "operator": "token_mask",
       "block_range": null,
       "family": "input_side",
       "note": "the recommended deployment config",
@@ -76,8 +76,8 @@
     },
     {
       "id": "before_attention_norm_channel_mask",
-      "position_config": "before_attention_norm",
-      "perturbation": "channel_mask",
+      "position": "before_attention_norm",
+      "operator": "channel_mask",
       "block_range": null,
       "family": "input_side",
       "rates": [
@@ -95,8 +95,8 @@
     },
     {
       "id": "before_attention_norm_gaussian",
-      "position_config": "before_attention_norm",
-      "perturbation": "gaussian",
+      "position": "before_attention_norm",
+      "operator": "gaussian",
       "block_range": null,
       "family": "input_side",
       "note": "removes no capacity (H23)",
@@ -117,8 +117,8 @@
     },
     {
       "id": "before_mlp_norm_token_mask",
-      "position_config": "before_mlp_norm",
-      "perturbation": "token_mask",
+      "position": "before_mlp_norm",
+      "operator": "token_mask",
       "block_range": null,
       "family": "input_side",
       "rates": [
@@ -136,8 +136,8 @@
     },
     {
       "id": "both_sublayer_inputs_token_mask",
-      "position_config": "both_sublayer_inputs",
-      "perturbation": "token_mask",
+      "position": "both_sublayer_inputs",
+      "operator": "token_mask",
       "block_range": null,
       "family": "input_side",
       "rates": [
@@ -154,8 +154,8 @@
     },
     {
       "id": "input_pixels_scale_up",
-      "position_config": "input_pixels",
-      "perturbation": "scale_up",
+      "position": "input_pixels",
+      "operator": "scale_up",
       "block_range": null,
       "family": "input_side",
       "rates": [
@@ -174,8 +174,8 @@
     },
     {
       "id": "before_mlp_gaussian",
-      "position_config": "before_mlp",
-      "perturbation": "gaussian",
+      "position": "before_mlp",
+      "operator": "gaussian",
       "block_range": null,
       "family": "input_side",
       "rates": [
@@ -195,8 +195,8 @@
     },
     {
       "id": "before_attention_residual_token_mask",
-      "position_config": "before_attention_residual",
-      "perturbation": "token_mask",
+      "position": "before_attention_residual",
+      "operator": "token_mask",
       "block_range": null,
       "family": "residual_adjacent",
       "rates": [
@@ -214,8 +214,8 @@
     },
     {
       "id": "after_attention_residual_token_mask",
-      "position_config": "after_attention_residual",
-      "perturbation": "token_mask",
+      "position": "after_attention_residual",
+      "operator": "token_mask",
       "block_range": null,
       "family": "residual_adjacent",
       "rates": [
@@ -233,8 +233,8 @@
     },
     {
       "id": "pre_residual",
-      "position_config": "pre_residual",
-      "perturbation": "dropout",
+      "position": "pre_residual",
+      "operator": "dropout",
       "block_range": null,
       "family": "residual_adjacent",
       "note": "the founding comparison",
@@ -252,8 +252,8 @@
     },
     {
       "id": "post_residual",
-      "position_config": "post_residual",
-      "perturbation": "dropout",
+      "position": "post_residual",
+      "operator": "dropout",
       "block_range": null,
       "family": "residual_adjacent",
       "note": "the published ConvNet placement; every cell carries it as its own baseline",
@@ -278,8 +278,8 @@
     },
     {
       "id": "mlp_neurons_channel_mask",
-      "position_config": "mlp_neurons",
-      "perturbation": "channel_mask",
+      "position": "mlp_neurons",
+      "operator": "channel_mask",
       "block_range": null,
       "family": "structured",
       "rates": [
@@ -297,8 +297,8 @@
     },
     {
       "id": "mlp_norm_out_gain_scale",
-      "position_config": "mlp_norm_out",
-      "perturbation": "gain_scale",
+      "position": "mlp_norm_out",
+      "operator": "gain_scale",
       "block_range": null,
       "family": "ported",
       "note": "the withdrawn +0.258 headline; carried so its corrected value is readable at matched coverage",
@@ -318,8 +318,8 @@
     },
     {
       "id": "before_attention_norm_blocks_5_8_token_mask",
-      "position_config": "before_attention_norm",
-      "perturbation": "token_mask",
+      "position": "before_attention_norm",
+      "operator": "token_mask",
       "block_range": [
         5,
         8
@@ -342,8 +342,8 @@
     },
     {
       "id": "before_attention_norm_blocks_9_12_token_mask",
-      "position_config": "before_attention_norm",
-      "perturbation": "token_mask",
+      "position": "before_attention_norm",
+      "operator": "token_mask",
       "block_range": [
         9,
         12
@@ -366,8 +366,8 @@
     },
     {
       "id": "pre_residual_blocks_1_4",
-      "position_config": "pre_residual",
-      "perturbation": "dropout",
+      "position": "pre_residual",
+      "operator": "dropout",
       "block_range": [
         1,
         4
@@ -389,8 +389,8 @@
     },
     {
       "id": "pre_residual_blocks_5_8",
-      "position_config": "pre_residual",
-      "perturbation": "dropout",
+      "position": "pre_residual",
+      "operator": "dropout",
       "block_range": [
         5,
         8
@@ -412,8 +412,8 @@
     },
     {
       "id": "pre_residual_blocks_9_12",
-      "position_config": "pre_residual",
-      "perturbation": "dropout",
+      "position": "pre_residual",
+      "operator": "dropout",
       "block_range": [
         9,
         12

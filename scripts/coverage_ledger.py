@@ -24,6 +24,8 @@ from datetime import datetime, timezone
 
 from defences.decision import complete_rates
 
+from defences.cache import read_run_provenance
+
 DECLARATION_PATH = "configs/psbd_basis.json"
 
 
@@ -140,15 +142,9 @@ def benign_reference_accuracy(
 
 
 def read_run_sidecar(psbd_dir: str, placement: str) -> dict:
-    """Provenance cli.sweep wrote for this placement, empty when it predates the sidecar."""
-    path = os.path.join(psbd_dir, f"run_{placement}.json")
-    if not os.path.exists(path):
-        return {}
-    try:
-        with open(path) as handle:
-            return json.load(handle)
-    except json.JSONDecodeError:
-        return {}
+    """Provenance cli.sweep wrote for this placement, empty when it predates the record."""
+    provenance = read_run_provenance(psbd_dir, placement)
+    return provenance
 
 
 def newest_baseline_mtime(psbd_dir: str) -> float | None:
@@ -199,8 +195,8 @@ def placement_rows(checkpoints_dir: str, results_dir: str, folder: str) -> list[
             {
                 "folder_name": folder,
                 "placement": placement,
-                "position_config": sidecar.get("position_config"),
-                "perturbation": sidecar.get("perturbation"),
+                "position": sidecar.get("position"),
+                "operator": sidecar.get("operator"),
                 "block_range": sidecar.get("block_range"),
                 "mask_seed": sidecar.get("mask_seed"),
                 "forward_passes": sidecar.get("forward_passes"),
@@ -250,8 +246,8 @@ def gaps_for_cell(
             {
                 "folder_name": cell["folder_name"],
                 "placement": entry["id"],
-                "position_config": entry["position_config"],
-                "perturbation": entry["perturbation"],
+                "position": entry["position"],
+                "operator": entry["operator"],
                 "block_range": entry["block_range"],
                 "mask_seed": panel["mask_seed"],
                 "forward_passes": panel["forward_passes"],

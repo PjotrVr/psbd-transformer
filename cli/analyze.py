@@ -80,7 +80,7 @@ def discover_folders(results_dir: str) -> list[str]:
 NON_PLACEMENT_CACHES = ("head_profile",)
 
 
-def discover_position_configs(psbd_dir: str) -> list[str]:
+def discover_placements(psbd_dir: str) -> list[str]:
     """The position-config subfolders stage 1 actually wrote, in sorted order."""
     configs = sorted(
         name
@@ -116,7 +116,7 @@ def shift_to_target_fraction(
 
 def analyze_one_rate(
     psbd_dir: str,
-    position_config: str,
+    placement: str,
     rate: float,
     baselines: dict,
     manifest: dict,
@@ -138,7 +138,7 @@ def analyze_one_rate(
     for split in SPLITS:
         probs, labels, _ = baselines[split]
         per_pass_probs, per_pass_argmax = load_dropout_pass_probs(
-            dropout_pass_path(psbd_dir, position_config, rate, split)
+            dropout_pass_path(psbd_dir, placement, rate, split)
         )
         psu[split] = psu_from_cache(probs, labels, per_pass_probs)
         psu_ratio[split] = psu_ratio_from_cache(probs, labels, per_pass_probs)
@@ -218,9 +218,9 @@ def analyze_one_rate(
     return row
 
 
-def analyze_position_config(
+def analyze_placement(
     psbd_dir: str,
-    position_config: str,
+    placement: str,
     baselines: dict,
     manifest: dict,
     num_classes: int,
@@ -232,11 +232,11 @@ def analyze_position_config(
     all on disk, so this stays safe to run against a results tree a sweep is
     still writing into.
     """
-    rates = complete_rates(psbd_dir, position_config)
+    rates = complete_rates(psbd_dir, placement)
     by_rate = {
         rate: analyze_one_rate(
             psbd_dir,
-            position_config,
+            placement,
             rate,
             baselines,
             manifest,
@@ -318,10 +318,10 @@ def analyze_checkpoint(folder: str, checkpoints_dir: str, results_dir: str) -> d
             "backdoor": len(manifest["analysis_backdoor_indices"]),
         },
         "placements": {
-            config: analyze_position_config(
+            config: analyze_placement(
                 psbd_dir, config, baselines, manifest, num_classes, target_label
             )
-            for config in discover_position_configs(psbd_dir)
+            for config in discover_placements(psbd_dir)
         },
     }
     return report

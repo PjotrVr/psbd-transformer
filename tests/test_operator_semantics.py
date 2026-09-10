@@ -16,7 +16,7 @@ tests/test_perturbations.py covers the same operators through defences.*.
 import pytest
 import torch
 
-from defences.operators import build_perturbation
+from defences.operators import build_operator
 
 # A batch large enough that a masking fraction is measurable rather than noise.
 BATCH = 64
@@ -40,7 +40,7 @@ def activation() -> torch.Tensor:
 
 def perturb(name: str, activation: torch.Tensor, rate: float = RATE, seed: int = 0):
     torch.manual_seed(seed)
-    module = build_perturbation(name)(rate).train()
+    module = build_operator(name)(rate).train()
 
     return module(activation)
 
@@ -143,7 +143,7 @@ def test_gain_scale_multiplies_every_entry_by_one_plus_the_rate(activation):
 
 def test_gain_scale_is_deterministic_across_passes(activation):
     """Its registry entry claims determinism, and PSU's pass count depends on it."""
-    module = build_perturbation("gain_scale")(0.4).train()
+    module = build_operator("gain_scale")(0.4).train()
 
     assert torch.equal(module(activation), module(activation))
 
@@ -188,7 +188,7 @@ def test_inverted_scaling_preserves_the_mean_on_a_shifted_input(name, activation
 )
 def test_every_stochastic_operator_is_inert_in_eval_mode(name, activation):
     """A probe that fires outside its sweep contaminates the baseline it is measured against."""
-    module = build_perturbation(name)(RATE).eval()
+    module = build_operator(name)(RATE).eval()
 
     assert torch.equal(module(activation), activation)
 
@@ -207,7 +207,7 @@ def test_every_stochastic_operator_is_inert_in_eval_mode(name, activation):
 )
 def test_a_zero_rate_is_the_identity(name, activation):
     """Rate 0 is the no-perturbation control, and every sweep relies on it."""
-    module = build_perturbation(name)(0.0).train()
+    module = build_operator(name)(0.0).train()
 
     assert torch.equal(module(activation), activation)
 

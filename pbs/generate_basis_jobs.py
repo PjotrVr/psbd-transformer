@@ -85,14 +85,14 @@ def invocation_key(gap: dict) -> tuple:
     all-or-nothing over the rates it is asked for.
     """
     block_range = tuple(gap["block_range"]) if gap["block_range"] else None
-    return (gap["perturbation"], block_range, tuple(gap["missing_rates"]))
+    return (gap["operator"], block_range, tuple(gap["missing_rates"]))
 
 
 def cell_workload(gaps: list[dict]) -> dict:
     """Per cell, the invocation groups it needs and the positions inside each."""
     workload: dict = collections.defaultdict(lambda: collections.defaultdict(set))
     for gap in gaps:
-        workload[gap["folder_name"]][invocation_key(gap)].add(gap["position_config"])
+        workload[gap["folder_name"]][invocation_key(gap)].add(gap["position"])
     return workload
 
 
@@ -140,7 +140,7 @@ def invocation_lines(cells: list[str], workload: dict) -> str:
             merged[(key, tuple(sorted(positions)))].append(cell)
 
     lines = []
-    for ((perturbation, block_range, rates), positions), folders in sorted(
+    for ((operator, block_range, rates), positions), folders in sorted(
         merged.items(), key=lambda item: (item[0][0][0], str(item[0][0][1]))
     ):
         band = (
@@ -149,13 +149,13 @@ def invocation_lines(cells: list[str], workload: dict) -> str:
             else " all_layers"
         )
         lines.append(
-            f'echo "=== {perturbation}{band} :: {len(folders)} cells x {len(positions)} positions ==="'
+            f'echo "=== {operator}{band} :: {len(folders)} cells x {len(positions)} positions ==="'
         )
         call = [
             "python -m cli.sweep \\",
             f"    --checkpoint-folder {' '.join(sorted(folders))} \\",
-            f"    --position-config {' '.join(positions)} \\",
-            f"    --perturbation {perturbation} \\",
+            f"    --position {' '.join(positions)} \\",
+            f"    --operator {operator} \\",
         ]
         if block_range:
             call.append(f"    --block-range {block_range[0]} {block_range[1]} \\")

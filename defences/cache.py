@@ -41,7 +41,36 @@ def dropout_pass_path(
 
 def manifest_path(psbd_dir: str) -> str:
     """Where the subtree's single split manifest lives."""
-    return os.path.join(psbd_dir, "split_manifest.json")
+    path = os.path.join(psbd_dir, "split_manifest.json")
+    return path
+
+
+def run_provenance_path(psbd_dir: str, placement: str) -> str:
+    """Where cli.sweep records the commit, position, operator and device of a placement."""
+    path = os.path.join(psbd_dir, f"run_{placement}.json")
+    return path
+
+
+# Caches written before the vocabulary settled on position and operator carry
+# the older key names, and 1016 of them are on disk, so the reader translates
+# rather than every consumer carrying a fallback.
+LEGACY_PROVENANCE_KEYS = {"position_config": "position", "perturbation": "operator"}
+
+
+def read_run_provenance(psbd_dir: str, placement: str) -> dict:
+    """The run provenance of a placement, empty when it predates the record or is unreadable."""
+    path = run_provenance_path(psbd_dir, placement)
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path) as handle:
+            payload = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    for old, new in LEGACY_PROVENANCE_KEYS.items():
+        if old in payload and new not in payload:
+            payload[new] = payload.pop(old)
+    return payload
 
 
 def save_baseline(
