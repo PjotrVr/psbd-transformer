@@ -167,7 +167,7 @@ def cache_config_name(
     model_dropout: float = 0.0,
     mask_seed: int = PSBD_MASK_SEED,
 ) -> str:
-    """The results/ subfolder name for one placement.
+    """The results/ subfolder name for a placement.
 
     A band-restricted run is a different measurement from the same position applied
     to every block, so it needs its own folder. Without the suffix the 2 would
@@ -194,7 +194,7 @@ def cache_config_name(
     if model_dropout:
         stem = f"{stem}_pmodel{model_dropout:g}".replace(".", "_")
     # The mask seed works the same way. A different seed is a different draw of
-    # the same estimator, so its cache must not collide with seed 0's; seed 0
+    # the same estimator, so its cache must not collide with seed 0's. Seed 0
     # keeps the bare name so every cache written before the flag stays addressable.
     if mask_seed != PSBD_MASK_SEED:
         stem = f"{stem}_seed{mask_seed}"
@@ -275,7 +275,7 @@ def run_one_rate(
     model_dropout: float = 0.0,
     mask_seed: int = PSBD_MASK_SEED,
 ) -> None:
-    """Every split at one rate, with the position already plugged."""
+    """Every split at a rate, with the position already plugged."""
     for split, loader in loaders.items():
         _, baseline_labels, _ = baselines[split]
         per_pass_probs, per_pass_argmax = compute_dropout_pass_probs(
@@ -416,7 +416,7 @@ def already_complete(psbd_dir: str, cache_name: str, rates: tuple[float, ...]) -
 def run_one_checkpoint(
     folder: str, args: argparse.Namespace, device: torch.device, use_bfloat16: bool
 ) -> None:
-    """Every requested placement for one checkpoint, over one loaded model."""
+    """Every requested placement for a checkpoint, over a single loaded model."""
     block_range = tuple(args.block_range) if args.block_range else None
     rates = tuple(args.rates) if args.rates else DROPOUT_RATES
     psbd_dir = os.path.join(args.results_dir, folder, "psbd")
@@ -491,7 +491,7 @@ def main() -> None:
         try:
             run_one_checkpoint(folder, args, device, use_bfloat16)
         except Exception as error:
-            # One bad checkpoint must not cost the whole batch its remaining hours.
+            # A bad checkpoint must not cost the whole batch its remaining hours.
             print(f"[FAILED] {folder}: {type(error).__name__}: {error}", flush=True)
 
 

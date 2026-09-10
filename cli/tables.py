@@ -75,12 +75,12 @@ DEFAULT_FPRS = (0.01, 0.05, 0.10, 0.25)
 # moves the numbers a long way, because the nearest rate to a mid-ladder sigma can
 # sit well below the rate that actually separates.
 #
-#   deployable  PSBD's own rule: the SMALLEST rate REACHING the target. This is
+#   deployable  PSBD's own rule: the smallest rate reaching the target. This is
 #               what a defender executes and what a detection number must be read
 #               at. Returns None when the grid never reaches the target, which is
 #               a real answer and not a gap to be filled by the nearest rate.
 #
-#   matched     the NEAREST rate to the target, for comparing one placement
+#   matched     the nearest rate to the target, for comparing a placement
 #               against another at equal disturbance. It always returns something,
 #               so it can silently report a cell that was never matched, which is
 #               what --sigma-tolerance marks.
@@ -200,12 +200,12 @@ def cell_score(
 
     Returns None when the position config holds no complete rate on disk.
     Otherwise returns the chosen rate, the clean-validation shift ratio that rate
-    actually achieved, the one-sided AUROC, and one operating point per entry of
+    actually achieved, the one-sided AUROC and an operating point per entry of
     target_fprs in the order given.
 
     achieved_sigma is part of the contract because the "matched" rule returns the
     nearest rate unconditionally: it never fails, so the caller, not this
-    function, has to decide whether the match was close enough to report as one.
+    function, has to decide whether the match was close enough to report as matched.
     The "deployable" rule returns None instead when the grid never reaches the
     target, so a None here means 2 different things depending on the rule and the
     caller has to know which one it asked for.

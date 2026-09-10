@@ -18,8 +18,8 @@ sweep and the training runs already wrote.
                         accuracy. Checked against every checkpoint that carries a
                         training-time measurement, and the 2 agree closely.
 
-A deduced value never overwrites a measured one. Where both exist the measured
-value stays and the deduced one is written beside it, so a disagreement stays
+A deduced value never overwrites a measured value. Where both exist the measured
+value stays and the deduced value is written beside it, so a disagreement stays
 visible rather than being silently reconciled.
 
 Example

@@ -1,4 +1,4 @@
-"""Stage 2 entrypoint: read one checkpoint's PSBD cache, write psbd_metrics.json.
+"""Stage 2 of PSBD: read a checkpoint's cache and write its psbd_metrics.json.
 
 CPU only, seconds per checkpoint, no model and no dataset loaded. Everything it
 needs was written by cli.sweep into results/<folder>/psbd/.
@@ -95,7 +95,7 @@ def discover_position_configs(psbd_dir: str) -> list[str]:
 def load_baselines(
     psbd_dir: str,
 ) -> dict[str, tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
-    """The no-perturbation probs, argmax, and loader labels for all 3 splits."""
+    """The no-perturbation probs, argmax and loader labels for all 3 splits."""
     baselines = {
         split: load_baseline(baseline_path(psbd_dir, split)) for split in SPLITS
     }
@@ -124,7 +124,7 @@ def analyze_one_rate(
     num_classes: int,
     target_label: int | None,
 ) -> dict:
-    """Every number for one (position_config, rate): sigma, shifts, and detection.
+    """Every number for a (position_config, rate): sigma, shifts and detection.
 
     The clean split is paired down to the backdoor split's images before the
     comparison, so TPR and FPR are measured over the same population. The
@@ -227,7 +227,7 @@ def analyze_position_config(
     num_classes: int,
     target_label: int | None,
 ) -> dict:
-    """All rates for one placement, plus the rate-selection verdicts.
+    """All rates for a placement, plus the rate-selection verdicts.
 
     Rates come from complete_rates, which only returns a rate whose 3 splits are
     all on disk, so this stays safe to run against a results tree a sweep is
@@ -291,7 +291,7 @@ def analyze_position_config(
 
 
 def analyze_checkpoint(folder: str, checkpoints_dir: str, results_dir: str) -> dict:
-    """The full stage-2 record for one checkpoint, every placement on disk."""
+    """The full stage-2 record for a checkpoint, every placement on disk."""
     psbd_dir = os.path.join(results_dir, folder, "psbd")
     manifest = read_split_manifest(psbd_dir)
     metadata = read_checkpoint_metadata(
@@ -329,7 +329,7 @@ def analyze_checkpoint(folder: str, checkpoints_dir: str, results_dir: str) -> d
 
 
 def save_report(results_dir: str, folder: str, report: dict) -> None:
-    """Write one checkpoint's stage-2 record next to its cache."""
+    """Write a checkpoint's stage-2 record next to its cache."""
     path = os.path.join(results_dir, folder, "psbd_metrics.json")
     with open(path, "w") as handle:
         json.dump(report, handle, indent=2)

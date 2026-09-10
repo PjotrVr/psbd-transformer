@@ -21,7 +21,7 @@ explanation defences.scores.to_rank points at.
 2 rules, both needing no poisoned data:
 
   mean_rank   average of the 2 normalized ranks. Balanced, and the natural choice
-              when neither detector is known to be the reliable one in advance.
+              when neither detector is known to be reliable in advance.
   min_rank    the more suspicious of the 2 verdicts. The right rule if the failures
               really are disjoint, since a sample only escapes when both detectors
               consider it clean.
@@ -185,7 +185,7 @@ def tpr_at_fpr(
 
 
 def build_header(target_fprs: list[float]) -> str:
-    """The fixed-width header, one column quadruple per target FPR."""
+    """The fixed-width header, a column quadruple per target FPR."""
     header = f"{'attack':16} {'pr':>5}"
     for target in target_fprs:
         header += (
@@ -241,7 +241,7 @@ def main() -> None:
         for target in args.fpr:
             for name in COLUMNS:
                 # The clean side is paired down to the backdoor split's images, so
-                # all 4 columns are compared on one population.
+                # all 4 columns are compared on a single population.
                 clean = pair_clean_to_backdoor(fused["clean"][name], manifest)
                 tpr, _fpr = tpr_at_fpr(
                     fused["validation"][name], clean, fused["backdoor"][name], target

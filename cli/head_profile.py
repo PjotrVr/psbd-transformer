@@ -1,6 +1,6 @@
 """Per-head sensitivity profile: ablate each of the 144 attention heads in turn.
 
-PSBD summarises a random perturbation into one number per sample. This measures
+PSBD summarises a random perturbation into a single number per sample. This measures
 the whole profile instead: for every attention head, how far the model's
 confidence in its own unperturbed prediction falls when exactly that head is
 removed.
@@ -66,7 +66,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def profile_path(psbd_dir: str, split: str) -> str:
-    """Where one split's (144, N) profile tensor lives."""
+    """Where a split's (144, N) profile tensor lives."""
     return os.path.join(psbd_dir, "head_profile", f"{split}.pt")
 
 
@@ -161,7 +161,7 @@ def write_run_provenance(psbd_dir: str, folder: str, use_bfloat16: bool) -> None
 def run_one_checkpoint(
     args: argparse.Namespace, folder: str, device: torch.device
 ) -> None:
-    """Every split's 144-head profile for one checkpoint, over one loaded model."""
+    """Every split's 144-head profile for a checkpoint, over a single loaded model."""
     psbd_dir = os.path.join(args.results_dir, folder, "psbd")
     model, architecture, loaders, manifest, _metadata = load_model_and_loaders(
         args, folder, device
@@ -198,7 +198,7 @@ def main() -> None:
         try:
             run_one_checkpoint(args, folder, device)
         except Exception as error:
-            # One bad checkpoint must not cost the batch its remaining hours.
+            # A bad checkpoint must not cost the batch its remaining hours.
             print(f"[fail] {folder}: {type(error).__name__}: {error}", flush=True)
 
 

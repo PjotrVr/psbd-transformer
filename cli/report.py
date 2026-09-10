@@ -1,4 +1,4 @@
-"""Aggregate every psbd_metrics.json into one per-checkpoint table.
+"""Aggregate every psbd_metrics.json into a single per-checkpoint table.
 
 A row per (checkpoint, placement). ASR and clean accuracy are read from the
 checkpoint's own metrics.json rather than recomputed, since that is the measured,
@@ -215,7 +215,7 @@ def print_negative_control(benign_rows: list[dict]) -> None:
 
 def main() -> None:
     args = parse_args()
-    # The flag is a shift ratio; the stored JSON is keyed by its string spelling,
+    # The flag is a shift ratio. The stored JSON is keyed by its string spelling,
     # so the conversion happens once here at the boundary.
     matched_key = shift_key(args.matched_shift)
     rows = collect_rows(args.results_dir, args.checkpoints_dir, matched_key)

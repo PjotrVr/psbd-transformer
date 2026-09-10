@@ -1,4 +1,4 @@
-"""One table: PSBD against the baselines, at deployable false-positive rates.
+"""A single table: PSBD against the baselines, at deployable false-positive rates.
 
 Reads results/<folder>/psbd_metrics.json and results/<folder>/baseline_metrics.json,
 which were produced on the identical split, threshold rule and quantile grid, so the
@@ -49,7 +49,7 @@ def best_psbd(report: dict, key: str) -> tuple[str, dict] | None:
     """The placement and rate with the highest TPR at the given quantile.
 
     Searched over placements and rates, which is a selection the baselines do not get
-    to make. Reported anyway because the alternative, fixing one placement, would
+    to make. Reported anyway because the alternative, fixing a placement, would
     understate PSBD. The asymmetry is called out in the header instead of hidden.
     """
     best = None
@@ -70,7 +70,7 @@ def cell(value: float | None) -> str:
 
 
 def build_header(target_fprs: list[float]) -> str:
-    """The fixed-width header, one column triple per target FPR."""
+    """The fixed-width header, a column triple per target FPR."""
     header = f"{'attack':16} {'pr':>5} {'ASR':>5}"
     for value in target_fprs:
         header += (
@@ -81,7 +81,7 @@ def build_header(target_fprs: list[float]) -> str:
 
 
 def tpr_by_detector(psbd: dict, baseline: dict, key: str) -> dict[str, float | None]:
-    """Each detector's TPR at one quantile, with PSBD at its best placement."""
+    """Each detector's TPR at a quantile, with PSBD at its best placement."""
     chosen = best_psbd(psbd, key)
     strip = baseline["detectors"].get("strip", {}).get(key)
     confidence = baseline["detectors"].get("confidence", {}).get(key)

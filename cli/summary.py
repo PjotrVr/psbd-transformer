@@ -1,9 +1,9 @@
-"""Collapse every psbd_metrics.json into one compact, versionable table.
+"""Collapse every psbd_metrics.json into a single compact, versionable table.
 
 The full stage-2 record is about 2 MB per checkpoint and 1.2 GB across the tree,
 which is regenerable from the cached tensors and far too large to keep in git.
 What every table in the paper actually reads is a handful of numbers per
-(checkpoint, placement): the operating point, the rate that produced it, and how
+(checkpoint, placement): the operating point, the rate that produced it and how
 well it separated. That is what this writes.
 
 A row per (checkpoint, placement, rate-selection rule). The 3 rules answer
@@ -21,7 +21,7 @@ other 2 show:
 
 achieved_shift_ratio travels with every matched row. A cell whose grid never
 reaches the target is still selected by the nearest rule, so without the achieved
-value a table cannot tell a matched cell from an unmatched one.
+value a table cannot tell a matched cell from an unmatched cell.
 """
 
 import argparse
@@ -119,8 +119,8 @@ KNOWN_OPERATORS = (
 UNKNOWN_OPERATOR = "unknown"
 
 # Every suffix that qualifies a run without naming an operator, with the variant
-# label it produces. Order here does not matter; the parser loops until no pattern
-# matches, so stacked qualifiers come off whatever order they were written in.
+# label it produces. Order here does not matter, since the parser loops until no
+# pattern matches, so stacked qualifiers come off whatever order they were written in.
 QUALIFIER_SUFFIXES = (
     (MODEL_DROPOUT_SUFFIX, "model_dropout_{0}"),
     (BLOCK_RANGE_SUFFIX, "blocks_{0}_{1}"),
@@ -154,7 +154,7 @@ def split_operator(
     # Qualifiers stack, and the sweep writes them in whatever order the flags were
     # given, so a single pass in a fixed order cannot work. Every pattern is
     # anchored at the end of the string, which means an outer qualifier hides an
-    # inner one: pre_residual_blocks_9_16_seed1 does not match the block-range
+    # inner qualifier: pre_residual_blocks_9_16_seed1 does not match the block-range
     # pattern at all until _seed1 comes off. Strip repeatedly until nothing more
     # matches, and keep every qualifier found rather than letting the last one win.
     qualifiers = []
@@ -232,7 +232,7 @@ OPERATING_POINT_FIELDS = (
 
 
 def operating_point_rows(folder, report, metadata, results_dir="results"):
-    """One row per placement, rate, PSU variant and quantile.
+    """A row per placement, rate, PSU variant and quantile.
 
     The compact summary keeps only the headline 0.25 quantile, which is a 25
     percent clean loss and not an operating point any deployment would run at. A
@@ -251,7 +251,7 @@ def operating_point_rows(folder, report, metadata, results_dir="results"):
         "poison_rate": metadata.get("poison_rate"),
         # The requested rate is a request. A clean-label attack is eligible only on
         # the target class, so it saturates and 3 folder names can describe 1 run.
-        # The compact summary already carries both; without them here every
+        # The compact summary already carries both. Without them here every
         # consumer of operating_points.csv reads a rate that was never applied.
         "realized_poison_rate": metadata.get("realized_poison_rate"),
         "poison_rate_capped": metadata.get("poison_rate_capped"),
@@ -323,7 +323,7 @@ def rows_for_checkpoint(
             "position": position,
             "operator": operator,
             # None for a plain measurement. Anything else marks a row that must
-            # not be pooled with the plain one without saying so.
+            # not be pooled with the plain measurement without saying so.
             "variant": variant,
             # False means the stage-1 tensors this row came from are no longer
             # under results/, so the row cannot be recomputed or verified.

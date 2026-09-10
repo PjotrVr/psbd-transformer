@@ -6,7 +6,7 @@ different conditions.
 
 Fairness is the whole point of this script, so the shared parts are shared literally:
 the same build_psbd_loaders_from_checkpoint, the same clean-validation split for
-thresholding, the same pair_clean_to_backdoor subsetting, the same quantile, and the
+thresholding, the same pair_clean_to_backdoor subsetting, the same quantile and the
 same detection_report. The only thing that differs between methods is the score.
 
 Every detector returns low for poisoned, matching PSU, so nothing downstream
@@ -150,7 +150,7 @@ def score_checkpoint(
 
 
 def save_report(results_dir: str, folder: str, report: dict) -> None:
-    """Write one checkpoint's baseline record beside its PSBD one."""
+    """Write a checkpoint's baseline record beside its PSBD record."""
     path = os.path.join(results_dir, folder, "baseline_metrics.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as handle:

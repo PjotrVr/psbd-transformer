@@ -97,7 +97,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def score_split(psbd_dir: str, placement: str, rate: float, split: str, kind: str):
-    """One split's per-sample score and its shift ratio, at one rate."""
+    """A split's per-sample score and its shift ratio, at a rate."""
     probs, labels, _ = load_baseline(baseline_path(psbd_dir, split))
     per_pass, argmax = load_dropout_pass_probs(
         dropout_pass_path(psbd_dir, placement, rate, split)
@@ -111,7 +111,7 @@ def select_rate(psbd_dir: str, placement: str, kind: str, shift_target: float):
     """The smallest rate whose clean-validation shift ratio reaches the target.
 
     Chosen on clean validation data alone, exactly as the paper's rule prescribes.
-    Only the target constant differs between the two variants.
+    Only the target constant differs between the 2 variants.
     """
     for rate in complete_rates(psbd_dir, placement):
         _, sigma = score_split(psbd_dir, placement, rate, "validation", kind)
@@ -121,7 +121,7 @@ def select_rate(psbd_dir: str, placement: str, kind: str, shift_target: float):
 
 
 def evaluate(psbd_dir: str, config: dict) -> dict | None:
-    """Run one complete defence on one checkpoint. Returns None if it cannot run."""
+    """A complete defence run on a checkpoint, or None if it cannot run."""
     placement, kind = config["placement"], config["score"]
     if not complete_rates(psbd_dir, placement):
         return None

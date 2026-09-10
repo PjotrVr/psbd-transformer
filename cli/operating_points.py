@@ -183,11 +183,11 @@ def discover_folders(results_dir: str) -> list[str]:
 
 
 def build_header(target_fprs: list[float]) -> str:
-    """The fixed-width header, one column pair per target FPR.
+    """The fixed-width header, a column pair per target FPR.
 
     Architecture and dataset are in the row because the sweep now spans 2 of the
     first and 4 of the second. Without them the same attack appears several times
-    with different numbers and reads as a bug, or worse, gets averaged.
+    with different numbers and reads as a bug or, worse, gets averaged.
     """
     header = (
         f"{'arch':5} {'dataset':14} {'attack':16} {'pr':>5} {'ASR':>5} "

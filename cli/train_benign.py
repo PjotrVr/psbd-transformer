@@ -5,7 +5,7 @@ that never saw a trigger. Clean accuracy is recorded into the checkpoint metadat
 and the checkpoint is saved under {architecture}_{dataset}_benign/attack_result.pt
 in the same format the sweep reads.
 
-A benign model has no attack of its own, so probing one with the detector later
+A benign model has no attack of its own, so probing it with the detector later
 means supplying the trigger explicitly, through --probe-attack on the sweep,
 rather than reading it from the checkpoint.
 
@@ -70,7 +70,7 @@ def build_benign_train_loader(
 def checkpoint_folder_name(architecture: str, dataset_name: str, args) -> str:
     """The canonical folder name for a benign run.
 
-    Architecture is always explicit, adam gets no optimizer tag, and SAM's rho tag
+    Architecture is always explicit and adam gets no optimizer tag. SAM's rho tag
     always carries an underscore before the digits so a rho sweep keeps each run
     in its own folder.
     """
@@ -206,8 +206,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     # -1 is a CLI-only sentinel for "no limit". Normalize once here, before the
-    # per-dataset loop, so no subsetting code ever sees it (-1 would slice off one
-    # sample instead of meaning "no limit").
+    # per-dataset loop, so no subsetting code ever sees it (-1 would slice off the
+    # last sample instead of meaning "no limit").
     args.max_samples = None if args.max_samples == -1 else args.max_samples
     if args.output and len(args.datasets) != 1:
         raise SystemExit(
@@ -222,7 +222,7 @@ def main() -> None:
         try:
             accuracies[dataset_name] = train_one_benign(dataset_name, args, device)
         except Exception as error:
-            # One dataset failing should not waste the datasets after it, so report
+            # A dataset failing should not waste the datasets after it, so report
             # and continue rather than letting the exception abort the whole run.
             print(f"FAILED {dataset_name}_benign: {error}")
 

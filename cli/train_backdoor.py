@@ -59,7 +59,7 @@ from training.loop import (
     utc_timestamp,
 )
 
-# Interpolation is measured on a fixed subsample; the trajectory, not the exact
+# Interpolation is measured on a fixed subsample. The trajectory, not the exact
 # value, is what the snapshot sweep reads.
 TRAIN_EVAL_SAMPLES = 10000
 
@@ -96,7 +96,7 @@ def resolve_config(attack_name: str, poisoned_dir: str):
 # the mechanism exists to provide. TaCT's reference selects cover by CLASS rather than
 # by rate, so its config constant stands and it is deliberately absent here.
 COVER_RATE_MULTIPLES = {
-    "wanet": 2.0,  # BackdoorBench cross_ratio 2; PSBD "twice the poisoning ratio"
+    "wanet": 2.0,  # BackdoorBench cross_ratio 2, and PSBD's twice the poisoning ratio
     "adaptive_blend": 1.0,  # Qi et al. and PSBD: cover ratio equal to the poisoning ratio
     "bpp": 1.0,  # BackdoorBench neg_ratio 0.1 against pratio 0.1
 }
@@ -155,7 +155,7 @@ def build_training_set(
         )
 
     # A poisoned sample with no perturbed base would silently train the patch-only
-    # variant while args.json records the adversarial one, so refuse before training.
+    # variant while args.json records the adversarial variant, so refuse before training.
     incoherent = adversarial_config_error(config)
     if incoherent:
         raise ValueError(incoherent)
@@ -310,7 +310,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--attack-override",
         # extend rather than the default store, so a repeated flag accumulates.
-        # With plain nargs a repeated flag replaces the earlier one, and
+        # With plain nargs a repeated flag replaces the earlier flag, and
         # --attack-override a=1 --attack-override b=2 keeps only b.
         action="extend",
         nargs="*",
@@ -359,8 +359,8 @@ def parse_args() -> argparse.Namespace:
 def snapshot_epochs(total: int, dense_until: int, freq: int) -> set[int]:
     """Which epochs to snapshot: every one through dense_until, then every freq-th.
 
-    Two phases because the interesting part of the trajectory is the approach to
-    training-set interpolation, which is early; once the model interpolates the
+    2 phases because the interesting part of the trajectory is the approach to
+    training-set interpolation, which is early. Once the model interpolates the
     detection metrics stop moving, so the tail only needs sampling.
     """
     if dense_until <= 0 and freq <= 0:
