@@ -1,6 +1,6 @@
 """Is the PSBD paper's operating point better than this project's comparison midpoint?
 
-Two different quantities have been used interchangeably in this repo and they are not the
+2 different quantities have been used interchangeably in this repo and they are not the
 same thing:
 
   ADAPTIVE_SHIFT_TARGET = 0.8   the PSBD paper's own rule. Yang et al. select the dropout
@@ -12,7 +12,8 @@ same thing:
 
 A comparison device and an operating point answer different questions, and a placement that
 cannot be driven to sigma 0.8 is read at whatever it managed, which quietly turns a matched
-comparison into an unmatched one. This script measures both and says which is defensible.
+comparison into an unmatched comparison. This script measures both and says which is
+defensible.
 
     PYTHONPATH=. python scripts/vit_shift_target_compare.py
 """
@@ -26,15 +27,18 @@ TOLERANCE = 0.15
 
 
 def load(path):
+    """The parsed JSON document at path."""
     with open(path) as handle:
         return json.load(handle)
 
 
 def clearing(report):
+    """The cells in report whose attack cleared the ASR bar."""
     return [c for c in report["cells"].values() if c.get("asr_class") == "clears"]
 
 
 def summarise(cells, placement):
+    """This placement's summary statistics over cells, or None when it is absent everywhere."""
     rows = [c["singles"][placement] for c in cells if placement in c["singles"]]
     if not rows:
         return None

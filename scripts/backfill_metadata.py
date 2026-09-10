@@ -1,6 +1,9 @@
 """Recover every field that is deducible from artifacts already on disk.
 
-Nothing here runs a model. Three quantities were either never recorded or were
+`cli.backfill` is the maintained copy of this tool. This file stays only for the
+cover-sample selection path (TaCT, choose_indices_with_cover) that it alone carries.
+
+Nothing here runs a model. 3 quantities were either never recorded or were
 recorded in a way that hides a cap, and all 3 can be recovered from what the
 sweep and the training runs already wrote.
 
@@ -18,8 +21,8 @@ sweep and the training runs already wrote.
                         accuracy. Verified against 496 checkpoints that carry a
                         training-time measurement: all 496 agree within 0.02.
 
-A deduced value never overwrites a measured one. Where both exist the measured
-value stays and the deduced one is written beside it, so a disagreement stays
+A deduced value never overwrites a measured value. Where both exist the measured
+value stays and the deduced value is written beside it, so a disagreement stays
 visible rather than being silently reconciled.
 """
 
@@ -72,9 +75,9 @@ def training_labels(dataset, raw_data_dir):
 def deduce_realized_poison_rate(metadata, label_cache, raw_data_dir):
     """Replay the seeded poison selection and report the fraction actually poisoned."""
     # A checkpoint recovered from an orphaned file may have no attack recorded at
-    # all, because its provenance was reconstructed from a job script that no longer
-    # exists. Nothing here can be replayed for it, and default_config(None) raises,
-    # which aborted the whole run partway through rather than skipping one folder.
+    # all, because its provenance was reconstructed from a job script that no
+    # longer exists. Nothing here can be replayed for it and default_config(None)
+    # raises, which would abort the whole run rather than skipping 1 folder.
     if not metadata.get("attack") or not metadata.get("dataset"):
         return None
     if metadata["attack"] == "benign":
@@ -181,12 +184,12 @@ def main():
             metadata["poison_rate_capped"] = selection["capped"]
             metadata["n_poisoned"] = selection["realized_count"]
             # Only recent runs record n_cover, and a deduced value never overwrites
-            # a measured one, so this fills the gap without touching what was
+            # a measured value, so this fills the gap without touching what was
             # actually observed.
             if "n_cover" not in metadata and selection.get("cover_count"):
                 metadata["n_cover"] = selection["cover_count"]
             # label_mode follows from the attack, and 60 folders carry it as null.
-            # benign has no attack config, and "generated" has no default one.
+            # benign has no attack config, and "generated" has no default config.
             if metadata.get("label_mode") is None and metadata["attack"] != "benign":
                 try:
                     metadata["label_mode"] = default_config(

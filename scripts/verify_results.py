@@ -1,17 +1,15 @@
-"""Cross-branch result verification.
+"""Dump every AUROC, TPR, FPR and threshold on disk, so 2 states of the results tree can
+be diffed against each other.
 
-Reads all tracked psbd_metrics.json files and computes aggregate statistics.
-Run on both branches and diff the output to verify they produce identical
-numbers.
+Reads every tracked results/*/psbd_metrics.json and flattens each placement's oracle and
+adaptive report into 1 entry per (folder, placement, mode). It reads disk only, so it
+proves nothing about which code produced those numbers: it can show that 2 result trees
+agree or disagree, never why. Run it before and after a rerun, a rebase or a metrics
+change, and diff the 2 outputs.
 
-Usage:
-    git checkout exp/psbd-dropout-position
-    python scripts/verify_results.py > /tmp/branch_a.json
-
-    git checkout publication-ready
-    python scripts/verify_results.py > /tmp/branch_b.json
-
-    diff /tmp/branch_a.json /tmp/branch_b.json
+    python scripts/verify_results.py > /tmp/before.json
+    python scripts/verify_results.py > /tmp/after.json
+    diff /tmp/before.json /tmp/after.json
 """
 
 import json
@@ -23,6 +21,7 @@ RESULTS_DIR = Path("results")
 
 
 def collect_all():
+    """Every (folder, placement, mode) entry on disk, flattened into 1 list."""
     summaries = []
     for path in sorted(RESULTS_DIR.glob("*/psbd_metrics.json")):
         with open(path) as f:

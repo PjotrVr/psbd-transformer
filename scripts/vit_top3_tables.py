@@ -23,6 +23,7 @@ MIN_REACH = 0.80
 
 
 def load(path):
+    """The parsed JSON document at path."""
     with open(path) as handle:
         return json.load(handle)
 
@@ -38,17 +39,20 @@ def implanted(fusion, ledger):
 
 
 def auroc_of(cell, placement):
+    """This placement's AUROC on cell, or None when the placement was not measured there."""
     row = cell["singles"].get(placement)
     return row["auroc"] if row else None
 
 
 def mean_auroc(cells, placement):
+    """The mean AUROC of this placement over cells, or NaN when it was measured nowhere."""
     values = [auroc_of(c, placement) for c in cells]
     values = [v for v in values if v is not None]
     return statistics.mean(values) if values else float("nan")
 
 
 def mean_tpr(cells, placement, key):
+    """The mean TPR of this placement over cells, at the key operating point."""
     values = [
         c["singles"][placement][key]["tpr"] for c in cells if placement in c["singles"]
     ]
@@ -56,6 +60,7 @@ def mean_tpr(cells, placement, key):
 
 
 def bootstrap_ci(values, seed=0):
+    """The 95% bootstrap CI of the mean of values, or a NaN pair when there are too few."""
     if len(values) < 3:
         return float("nan"), float("nan")
     random.seed(seed)
@@ -66,7 +71,7 @@ def bootstrap_ci(values, seed=0):
 
 
 def rank_table(cells, placements, subset):
-    """Rank placements within each poison rate, over a cell subset."""
+    """Each placement's rank at each poison rate, over a cell subset."""
     ranks = {}
     for rate in RATES:
         at_rate = [c for c in cells if c["poison_rate"] == rate and subset(c)]
@@ -83,7 +88,7 @@ def rank_table(cells, placements, subset):
 def select_top(cells, placements):
     """Rule, fixed before the ranking is read.
 
-    Primary key is the WORST rank a placement takes across the three poison rates on hard
+    Primary key is the WORST rank a placement takes across the 3 poison rates on hard
     attacks, because a defender can guess the attack but can never know the poison rate, so
     the deployable config is the one that is never bad rather than the one that is sometimes
     best. Ties break on hard-attack AUROC. A placement reaching matched strength on fewer
@@ -116,6 +121,7 @@ def select_top(cells, placements):
 
 
 def profile(cells, placement):
+    """This placement's full metric profile over cells: AUROC, TPR, reach, floor and more."""
     hard = [c for c in cells if c["attack"] in HARD_ATTACKS]
     easy = [c for c in cells if c["attack"] not in HARD_ATTACKS]
     rows = [c["singles"][placement] for c in cells if placement in c["singles"]]
@@ -135,6 +141,7 @@ def profile(cells, placement):
 
 
 def fmt(value, places=3):
+    """A value rounded to a fixed number of decimals, or "--" when it is NaN."""
     return "--" if value != value else f"{value:.{places}f}"
 
 

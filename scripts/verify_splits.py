@@ -1,18 +1,18 @@
 """Does each cell's cached PSBD split still match the split the current code builds?
 
-load_or_build_baseline reuses any cached baseline whose row count matches what it is asked
-for, and a row count always matches after a retrain, so a split whose DEFINITION changed
-leaves behind a cache that loads cleanly and means something else entirely.
-
-This is not hypothetical. AttackSuccessSet restricts a source-specific attack to its source
-classes, because a source-specific attack only claims to flip those. Every tact cache
-predated that fix and held every non-target class instead, which divides the true attack
-success rate by roughly the class count: 7959 cached rows against 42 correct ones on Tiny,
-a factor of 190. The mtime check in the coverage ledger cannot see this, because the files
-are recent; only rebuilding the split and comparing counts can.
+`defences.cache.load_or_build_baseline` reuses any cached baseline whose row count
+matches what it is asked for and a row count always matches after a retrain, so a
+cache built under an older definition of the split (which rows are eligible, not how
+many are cached) loads cleanly and silently means something else. A source-specific
+attack is the sharpest case: `attacks.poisoning.AttackSuccessSet` restricts eligibility
+to the attack's own source classes, and a baseline built without that restriction
+counts every non-target class instead, which divides the true attack success rate by
+roughly the class count. The mtime-based staleness check in the coverage ledger cannot
+see this kind of drift, since the cached files themselves are recent. Only rebuilding
+the split from the current code and comparing row counts can.
 
 Slow by nature, since it constructs every cell's loaders. Run it after any change to
-poisoning, eval-set construction or dataset splits, and before trusting a table.
+poisoning, eval-set construction or dataset splits and before trusting a table.
 
     PYTHONPATH=. python scripts/verify_splits.py
 """
@@ -29,6 +29,7 @@ from defences.cache import baseline_path
 
 
 def cached_row_counts(psbd_dir: str) -> dict:
+    """Per-split row counts already cached, read from each split's saved probs tensor."""
     counts = {}
     for split in SPLITS:
         path = baseline_path(psbd_dir, split)
@@ -39,6 +40,7 @@ def cached_row_counts(psbd_dir: str) -> dict:
 
 
 def built_row_counts(checkpoint_path: str, raw_data_dir: str) -> dict:
+    """Per-split row counts the current code would build for this checkpoint."""
     loaders, _ = build_psbd_loaders_from_checkpoint(
         checkpoint_path,
         seed=PSBD_SPLIT_SEED,
@@ -50,6 +52,7 @@ def built_row_counts(checkpoint_path: str, raw_data_dir: str) -> dict:
 
 
 def verify_one(folder: str, args) -> dict:
+    """This cell's split-integrity report: ok, STALE or no_baseline, with row counts."""
     psbd_dir = os.path.join(args.results_dir, folder, "psbd")
     cached = cached_row_counts(psbd_dir)
     if not cached:

@@ -1,15 +1,14 @@
-"""What has been tested, what has not, and which of it is trustworthy.
+"""What has been tested against the declared basis, and what is still missing.
 
-Every cross-attack placement ranking this project reported before this script existed was
-computed over whichever cells happened to have that placement cached. An audit of the
-108-cell ViT all-to-one panel found 0 placements present in every cell, and a bimodal split
-where badnet/blend/lf carried a median of 50 configs and wanet/sig/adaptive_blend/bpp/tact
-carried 1 or 0. Ranking placements over unequal cell sets ranks the cells, not the
-placements, so the ledger has to exist before any table built on it can be read.
+A cross-attack placement ranking is only meaningful when every attack contributes the
+same placements to it. Ranking over cells that carry different placements ranks the
+cells rather than the placements, so this ledger has to exist before any table built
+on it can be trusted.
 
-The declaration in configs/psbd_basis.json says what SHOULD exist. This script says what
-DOES, and writes the difference in a form the job generator consumes directly, so "what we
-have not tested" and "what to submit next" are one artifact and cannot drift apart.
+The declaration in configs/psbd_basis.json says what should exist. This script says
+what does and writes the gap between them in a form the job generator consumes
+directly, so what has not been tested and what to submit next stay a single artifact
+rather than drifting apart.
 
 Read-only. No GPU, no model loading, safe to run against a live results tree while jobs
 are writing into it.
@@ -26,14 +25,10 @@ from datetime import datetime, timezone
 from defences.decision import complete_rates
 
 DECLARATION_PATH = "configs/psbd_basis.json"
-# Coverage is counted per rate, not per placement. A dir holding two rates cannot be read at
-# matched shift ratio, so counting it as present is how a coverage table lies; and because
-# already_complete is all-or-nothing per placement, asking for a superset ladder would
-# recompute every finished rate. Tracking rates lets the generator request only what is
-# missing, which is what made extending four ladders affordable.
 
 
 def load_declaration(path: str) -> dict:
+    """The basis declaration read from path."""
     with open(path) as handle:
         return json.load(handle)
 
@@ -42,10 +37,10 @@ def is_panel_folder(folder: str, metadata: dict, panel: dict) -> bool:
     """Whether a checkpoint belongs to the panel the declaration describes."""
     if any(token in folder for token in panel["exclude_folder_tokens"]):
         return False
-    # Where an attack exists in two variants, only the canonical one is a panel
-    # cell. Label-Consistent has both the patch-only runs predating the
-    # adversarial bases and the faithful ones carrying them; both clear the ASR
-    # bar on CIFAR-10, so without this they would compete for the same slot.
+    # Where an attack has 2 variants, only the canonical variant is a panel cell.
+    # Label-Consistent has both the patch-only runs predating the adversarial
+    # bases and the faithful runs carrying them. Both clear the ASR bar on
+    # CIFAR-10, so without this they would compete for the same slot.
     required = panel.get("canonical_variants", {}).get(metadata.get("attack"))
     if required is not None and required not in folder:
         return False
@@ -57,6 +52,7 @@ def is_panel_folder(folder: str, metadata: dict, panel: dict) -> bool:
 
 
 def read_metadata(checkpoints_dir: str, folder: str) -> dict | None:
+    """A checkpoint's args.json metadata, or None when the sidecar is missing."""
     path = os.path.join(checkpoints_dir, folder, "args.json")
     if not os.path.exists(path):
         return None
@@ -68,11 +64,11 @@ def malformed_checkpoints(checkpoints_dir: str) -> list[str]:
     """Plain files sitting directly in checkpoints/, which are wrecked runs.
 
     A generator passing `--output checkpoints/<name>` instead of
-    `checkpoints/<name>/attack_result.pt` used to make save_checkpoint write the
-    weights as a file named `<name>` and drop its args.json into checkpoints/
-    itself. `resolve_checkpoint_path` stops that happening now, but the reason it
-    went unnoticed for 4 weeks is that this enumeration skips non-directories, so
-    a destroyed run and an unrun one looked identical from here. Report them.
+    `checkpoints/<name>/attack_result.pt` makes `training.loop.save_checkpoint`
+    write the weights as a file named `<name>` and drop its args.json into
+    checkpoints/ itself. `training.loop.resolve_checkpoint_path` stops that from
+    happening, but this enumeration skips non-directories, so a destroyed run and
+    a run that never launched look identical from here. Report them.
     """
     return sorted(
         entry
@@ -82,7 +78,7 @@ def malformed_checkpoints(checkpoints_dir: str) -> list[str]:
 
 
 def panel_cells(checkpoints_dir: str, panel: dict) -> list[dict]:
-    """One row per checkpoint the declaration's panel rule selects."""
+    """1 row per checkpoint the declaration's panel rule selects."""
     cells = []
     for folder in sorted(os.listdir(checkpoints_dir)):
         metadata = read_metadata(checkpoints_dir, folder)
@@ -99,7 +95,8 @@ def panel_cells(checkpoints_dir: str, panel: dict) -> list[dict]:
                 # eligible only on the target class, so it saturates: on Tiny all
                 # 4 requested rates resolve to the same 500 images. Carrying both
                 # here gives vit_config_tables, vit_top3_tables and
-                # vit_config_inventory the applied rate rather than the asked one.
+                # vit_config_inventory the realized rate instead of only the
+                # requested rate.
                 "realized_poison_rate": metadata.get("realized_poison_rate"),
                 "poison_rate_capped": metadata.get("poison_rate_capped"),
                 "n_poisoned": metadata.get("n_poisoned"),
@@ -118,7 +115,7 @@ def clean_accuracy_of(
 ) -> float | None:
     """Clean accuracy from either provenance sidecar.
 
-    The benign references predate the args.json convention on two datasets and carry their
+    The benign references predate the args.json convention on 2 datasets and carry their
     number in results/<folder>/metrics.json instead, so both are read.
     """
     metadata = read_metadata(checkpoints_dir, folder) or {}
@@ -143,7 +140,7 @@ def benign_reference_accuracy(
 
 
 def read_run_sidecar(psbd_dir: str, placement: str) -> dict:
-    """Provenance the sweep wrote for this placement, empty when it predates the sidecar."""
+    """Provenance cli.sweep wrote for this placement, empty when it predates the sidecar."""
     path = os.path.join(psbd_dir, f"run_{placement}.json")
     if not os.path.exists(path):
         return {}
@@ -155,6 +152,7 @@ def read_run_sidecar(psbd_dir: str, placement: str) -> dict:
 
 
 def newest_baseline_mtime(psbd_dir: str) -> float | None:
+    """The most recent mtime among the 3 cached baseline files, or None if none exist."""
     stamps = [
         os.path.getmtime(os.path.join(psbd_dir, name))
         for name in (
@@ -170,11 +168,11 @@ def newest_baseline_mtime(psbd_dir: str) -> float | None:
 def stale_baseline(checkpoints_dir: str, folder: str, psbd_dir: str) -> bool:
     """Whether a cached baseline predates the checkpoint it claims to describe.
 
-    load_or_build_baseline reuses any baseline whose row count matches, and a row count
-    always matches after a retrain, so a baseline left behind by a previous model turns PSU
-    into old-model confidence minus new-model perturbed passes. That defect was found in
-    this tree by comparing these two timestamps, which is why it is a standing column and
-    not a one-off script.
+    `defences.cache.load_or_build_baseline` reuses any baseline whose row count matches,
+    and a row count always matches after a retrain, so a baseline left behind by a
+    previous model turns PSU into old-model confidence minus new-model perturbed passes.
+    Comparing these 2 timestamps is the only way to catch it, which is why this is a
+    standing column and not a one-off script.
     """
     baseline = newest_baseline_mtime(psbd_dir)
     weights = os.path.join(checkpoints_dir, folder, "attack_result.pt")
@@ -184,7 +182,7 @@ def stale_baseline(checkpoints_dir: str, folder: str, psbd_dir: str) -> bool:
 
 
 def placement_rows(checkpoints_dir: str, results_dir: str, folder: str) -> list[dict]:
-    """Every cached placement for one cell, with its provenance and rate coverage."""
+    """Every cached placement for 1 cell, with its provenance and rate coverage."""
     psbd_dir = os.path.join(results_dir, folder, "psbd")
     if not os.path.isdir(psbd_dir):
         return []
@@ -220,7 +218,13 @@ def placement_rows(checkpoints_dir: str, results_dir: str, folder: str) -> list[
 
 
 def cached_rates(rows: list[dict], mask_seed: int) -> dict:
-    """Per placement, the rates already on disk at the declaration's seed.
+    """Per placement, the set of basis rates already on disk at the declaration's seed.
+
+    Coverage is counted per rate, not per placement, because a dir holding 2 of a
+    placement's 3 declared rates cannot be read at the matched shift ratio, and counting
+    it as present anyway is how a coverage table lies. Tracking rates individually also
+    lets the generator request only what is missing rather than resweeping an entire
+    ladder whenever it grows.
 
     A stale-baseline dir contributes nothing, so the gap list re-queues it rather than a
     later table quietly reporting a PSU built from a previous model's confidence.
@@ -259,6 +263,7 @@ def gaps_for_cell(
 
 
 def classify_by_asr(cell: dict, asr_bar: float) -> str:
+    """A cell's ASR class: "clears", "below_bar" or "unmeasured"."""
     if cell["asr"] is None:
         return "unmeasured"
     return "clears" if cell["asr"] >= asr_bar else "below_bar"
@@ -283,6 +288,7 @@ def stale_splits(coverage_dir: str) -> set:
 
 
 def build_ledger(args, declaration: dict) -> dict:
+    """The full coverage ledger: panel cells, per-placement rows and basis gaps."""
     panel = declaration["panel"]
     basis = declaration["basis"]
     cells = panel_cells(args.checkpoints_dir, panel)
@@ -334,14 +340,14 @@ def build_ledger(args, declaration: dict) -> dict:
 
 
 def resolve_one_per_attack(cells: list[dict]) -> dict:
-    """One cell per attack, preferring the one that implanted.
+    """1 cell per attack, preferring the one that implanted.
 
-    Two checkpoints can share (dataset, attack, poison_rate) and differ only by a
+    2 checkpoints can share (dataset, attack, poison_rate) and differ only by a
     folder tag: GTSRB clean-label at target class 0 against target class 1, for
     instance, where only the second reaches the requested rate. Keying a dict by
     attack alone let sort order decide, silently. Preferring the cell that clears
     the ASR bar makes the choice explicit, and an ambiguous pair raises rather
-    than picking one.
+    than resolving the tie arbitrarily.
     """
     grouped: dict[str, list[dict]] = collections.defaultdict(list)
     for cell in cells:
@@ -367,7 +373,7 @@ def resolve_one_per_attack(cells: list[dict]) -> dict:
 
 
 def pivot_configs(cells: list[dict]) -> str:
-    """Basis coverage as dataset rows by attack columns, one table per poison rate."""
+    """Basis coverage as dataset rows by attack columns, 1 table per poison rate."""
     attacks = sorted({cell["attack"] for cell in cells})
     datasets = sorted({cell["dataset"] for cell in cells})
     lines = []
@@ -411,6 +417,7 @@ def pivot_presence(rows: list[dict], cells: list[dict], basis: list[dict]) -> st
 
 
 def render_markdown(ledger: dict, declaration: dict) -> str:
+    """The full COVERAGE.md text, assembled from the ledger and the declaration."""
     cells = ledger["cells"]
     by_class = collections.Counter(cell["asr_class"] for cell in cells)
     complete = sum(
@@ -490,6 +497,7 @@ def render_markdown(ledger: dict, declaration: dict) -> str:
 
 
 def write_artifacts(out_dir: str, ledger: dict, declaration: dict) -> None:
+    """Writes coverage.json, gaps.json and COVERAGE.md into out_dir."""
     os.makedirs(out_dir, exist_ok=True)
     with open(os.path.join(out_dir, "coverage.json"), "w") as handle:
         json.dump(ledger, handle, indent=2)
@@ -526,9 +534,10 @@ def main() -> None:
     args = parse_args()
     declaration = load_declaration(args.declaration)
     if args.architecture:
-        # The basis and the benign references are declared for ViT; a Swin ledger reuses the
-        # panel RULE (label modes, rates, excluded tokens) and retargets the architecture and
-        # the per-dataset benign reference, so dCA still compares like with like.
+        # The basis and the benign references are declared for ViT. A Swin ledger reuses
+        # the panel RULE (label modes, rates, excluded tokens) and retargets the
+        # architecture and the per-dataset benign reference, so dCA still compares like
+        # with like.
         declaration = {
             **declaration,
             "panel": {**declaration["panel"], "architecture": args.architecture},
@@ -559,8 +568,8 @@ def main() -> None:
         f"{by_class['below_bar']} below, {by_class['unmeasured']} unmeasured"
     )
 
-    # Loud, and last, so it is the line left on screen. A wrecked run is otherwise
-    # indistinguishable from one that was never launched.
+    # Printed loud and last, so it stays the line left on screen. A wrecked run is
+    # otherwise indistinguishable from a run that was never launched.
     wrecked = malformed_checkpoints(args.checkpoints_dir)
     if wrecked:
         print(
