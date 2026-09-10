@@ -1,7 +1,7 @@
 """What every paper generator shares: where things are, how numbers are read and how tex is written.
 
 A generator reads results/ and the declaration, computes 1 table, figure or set
-of macros, and writes it under paper/ with a first-line comment naming itself,
+of macros and writes it under paper/ with a first-line comment naming itself,
 its inputs, the commit and the time. Nothing under paper/ is typed by hand. The
 macros a generator contributes go to paper/tables/<name>.macros.json, and
 scripts/paper/headline.py folds every sidecar into paper/headline.tex, so a
