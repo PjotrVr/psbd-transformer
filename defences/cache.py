@@ -11,12 +11,12 @@ Layout under results/<checkpoint_folder>/psbd/:
     <position_config>/
         rate_<tag>_<split>.pt    (forward_passes, N) tracked-class probs
 
-The baseline and manifest sit one level above the position-config folders because
+The baseline and manifest sit a level above the position-config folders because
 they depend only on the checkpoint (and the split), not on position or rate, so
 they are written once and read by every one of the checkpoint's jobs.
 
 Hundreds of thousands of these files already exist, so every path spelling and
-every payload key in this module is a fixed on-disk contract.
+every payload key here is a fixed on-disk contract.
 """
 
 import json
@@ -28,16 +28,19 @@ from .inference import build_baseline_cache
 
 
 def baseline_path(psbd_dir: str, split: str) -> str:
+    """Where a split's no-perturbation baseline lives."""
     return os.path.join(psbd_dir, f"baseline_{split}.pt")
 
 
 def dropout_pass_path(
     psbd_dir: str, position_config: str, rate: float, split: str
 ) -> str:
+    """Where the raw per-pass tensors for a (position, rate, split) live."""
     return os.path.join(psbd_dir, position_config, f"rate_{_rate_tag(rate)}_{split}.pt")
 
 
 def manifest_path(psbd_dir: str) -> str:
+    """Where the subtree's single split manifest lives."""
     return os.path.join(psbd_dir, "split_manifest.json")
 
 
@@ -47,7 +50,7 @@ def save_baseline(
     labels: torch.Tensor,
     loader_labels: torch.Tensor,
 ) -> None:
-    """The no-perturbation state of one split: probabilities, prediction, and target.
+    """Save the no-perturbation state of a split: probabilities, prediction and target.
 
     loader_labels is what the loader asked for. On the backdoor split that is the
     attack-success label, so labels == loader_labels is the per-sample record of
@@ -59,6 +62,7 @@ def save_baseline(
 
 
 def load_baseline(path: str) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """(probs, labels, loader_labels) from a baseline file, the last empty if unsaved."""
     blob = torch.load(path, map_location="cpu")
     loader_labels = blob.get("loader_labels", torch.empty(0, dtype=torch.long))
     return blob["probs"], blob["labels"], loader_labels
@@ -67,17 +71,17 @@ def load_baseline(path: str) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
 def save_dropout_pass_probs(
     path: str, per_pass_probs: torch.Tensor, per_pass_argmax: torch.Tensor
 ) -> None:
-    """Both raw per-pass tensors for one (position, rate, split), shaped (k, N)."""
+    """Save both raw per-pass tensors for a (position, rate, split), shaped (k, N)."""
     _atomic_save(
         {"per_pass_probs": per_pass_probs, "per_pass_argmax": per_pass_argmax}, path
     )
 
 
 def load_dropout_pass_probs(path: str) -> tuple[torch.Tensor, torch.Tensor]:
-    """Return (probs, argmax), both (k, N).
+    """(probs, argmax), both (k, N).
 
     argmax is absent from files written before it was saved, so it comes back
-    empty rather than raising, and stage 2 reports sigma as unavailable for those
+    empty rather than raising and stage 2 reports sigma as unavailable for those
     instead of failing the whole checkpoint.
     """
     blob = torch.load(path, map_location="cpu")
@@ -117,6 +121,7 @@ def write_split_manifest(psbd_dir: str, manifest: dict) -> None:
 
 
 def read_split_manifest(psbd_dir: str) -> dict:
+    """The subtree's split manifest."""
     with open(manifest_path(psbd_dir)) as handle:
         return json.load(handle)
 
@@ -129,7 +134,7 @@ def load_or_build_baseline(
     device: torch.device,
     use_bfloat16: bool,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """The no-perturbation baseline for one split, computed once and reused.
+    """The no-perturbation baseline for a split, computed once and reused.
 
     The baseline depends only on (checkpoint, split), never on position or rate,
     but a checkpoint's 10 position-configs run as 10 separate jobs, so there is no
@@ -170,9 +175,9 @@ def _rate_tag(rate: float) -> str:
 
     %g rather than a fixed decimal count, because the sub-0.1 rates a
     residual-stream position needs (0.01 to 0.09, where (1-p)^12 has not yet
-    collapsed) would all round to "0_0" at one decimal place and silently
-    overwrite each other's files. %g keeps the existing "0_1" spelling for the
-    main grid while staying injective below it.
+    collapsed) would all round to "0_0" at 1 decimal place and silently overwrite
+    each other's files. %g keeps the existing "0_1" spelling for the main grid
+    while staying injective below it.
     """
     tag = f"{rate:g}".replace(".", "_")
     return tag
@@ -183,8 +188,8 @@ def _atomic_save(payload: dict, path: str) -> None:
 
     A checkpoint's position-config jobs run concurrently and share the baseline
     and manifest, so a reader can arrive mid-write. os.replace is atomic within a
-    filesystem, so a reader sees either the old file or the complete new one,
-    never a truncated one.
+    filesystem, so a reader sees either the old file or the complete new file,
+    never a truncated file.
     """
     os.makedirs(os.path.dirname(path), exist_ok=True)
     temporary = f"{path}.tmp.{os.getpid()}"

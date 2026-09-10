@@ -1,38 +1,28 @@
-"""Perturbation operators for PSBD: WHAT a probe does once it is attached.
+"""Perturbation operators: what a probe does once it is attached.
 
-The companion module models.positions owns WHERE a probe attaches. Every operator
-here shares nn.Dropout's interface, a Module taking one rate and mapping a
-tensor to a tensor of the same shape, so any operator can be plugged at any
-compatible position without either side knowing about the other.
+models.positions owns where a probe attaches. Every operator here shares
+nn.Dropout's interface, a Module built from a rate that maps a tensor to a tensor
+of the same shape, so any operator plugs into any compatible position without
+either side knowing about the other.
 
-PSBD inherits Bernoulli dropout from a ConvNet setting, where a channel is the
-natural unit. A transformer has several natural units and dropout is not aligned
-with any of them: it samples an independent mask per (token, channel), so it
-never removes an attention head, a hidden neuron, or a token as a whole. It
-removes a little of everything instead.
+Dropout samples an independent mask per (token, channel), so it never removes an
+attention head, a hidden neuron or a token whole. It removes a little of
+everything. A backdoor shortcut is carried by specific structures, and removing a
+structure at a time measures something different from dissolving all of them
+uniformly, which is what the structured operators here exist to test.
 
-That distinction is the point. A backdoor shortcut is carried by specific
-structures, and a perturbation that dissolves uniformly across all of them
-measures something different from one that removes a structure at a time. The
-operators here are the structured alternatives.
+Every operator keeps nn.Dropout's 2 conventions, because PSU compares a perturbed
+pass against an unperturbed one and any deviation would read as signal: identity
+when self.training is False or rate is 0, and inverted scaling, so survivors are
+divided by the keep probability and the expected activation is unchanged.
 
-Every operator follows nn.Dropout's 2 conventions, because PSU compares a
-perturbed forward pass against an unperturbed one and any deviation from them
-would show up as signal:
-
-  1. Identity when self.training is False, or when rate is 0.
-  2. Inverted scaling. Survivors are divided by the keep probability so the
-     expected activation is unchanged, which keeps the unperturbed and perturbed
-     passes on the same scale.
-
-Shape convention throughout is (batch, tokens, channels), which is what ViT
-carries with batch_first=True and what every registry position sees. Swin
-carries (batch, height, width, channels) instead, so the token-axis operators
+Shapes are (batch, tokens, channels), which ViT carries with batch_first=True.
+Swin carries (batch, height, width, channels), so the token-axis operators
 flatten the 2 spatial axes and restore them afterwards.
 
-Adding an operator is 3 steps: write the Module, following whichever existing
-operator masks the same axis, add it to PERTURBATIONS, and list its position
-restriction in PERTURBATION_POSITIONS if it only makes sense somewhere specific.
+Adding an operator is 3 steps: write the Module after whichever existing operator
+masks the same axis, add it to PERTURBATIONS, and list its position restriction
+in PERTURBATION_POSITIONS if it only makes sense somewhere specific.
 """
 
 import torch
@@ -45,12 +35,11 @@ def _keep_scale(rate: float) -> float:
         original form
             y = (m * x) / (1 - p),   m ~ Bernoulli(1 - p)
 
-        restated
+        descriptive form
             survivor = kept_value / keep_probability
 
     so the expected output equals the input and the perturbed pass stays on the
-    same scale as the unperturbed one. Guarded because rate 1.0 would divide by
-    zero.
+    same scale as the unperturbed pass. Guarded because rate 1.0 would divide by 0.
     """
     keep_probability = 1.0 - rate
     if keep_probability <= 0.0:
@@ -60,12 +49,12 @@ def _keep_scale(rate: float) -> float:
 
 
 def _to_token_layout(x: torch.Tensor) -> tuple[torch.Tensor, tuple[int, ...]]:
-    """View any supported layout as (batch, tokens, channels), with its shape.
+    """Any supported layout viewed as (batch, tokens, channels), plus its original shape.
 
     ViT already carries the token layout and passes straight through. Swin
     features are (batch, height, width, channels), so the 2 spatial axes are
-    flattened into one token axis. The returned shape lets the caller restore the
-    original layout after masking.
+    flattened into a single token axis. The returned shape lets the caller restore
+    the layout after masking.
     """
     if x.dim() == 3:
         return x, tuple(x.shape)
@@ -183,8 +172,8 @@ class DropPath(nn.Module):
         if not self.training or self.rate == 0.0:
             return x
 
-        # One Bernoulli draw per sample, broadcast over every other axis, so the
-        # layout does not matter and both ViT and Swin are handled unchanged.
+        # A single Bernoulli draw per sample, broadcast over every other axis, so
+        # the layout does not matter and both ViT and Swin are handled unchanged.
         sample_shape = (x.shape[0],) + (1,) * (x.dim() - 1)
         keep = torch.empty(sample_shape, device=x.device, dtype=x.dtype).bernoulli_(
             1.0 - self.rate
@@ -198,18 +187,17 @@ class GaussianNoise(nn.Module):
     """Additive noise scaled to the activation's own magnitude.
 
     A continuous perturbation rather than a removal, included as the control for
-    whether PSBD needs structure removed at all or merely needs the activation
-    disturbed. rate is read as a relative standard deviation, so the noise
-    magnitude tracks the layer's own scale and one rate means the same relative
-    disturbance everywhere.
+    whether PSBD needs structure removed at all or only needs the activation
+    disturbed. rate is a relative standard deviation, so the noise magnitude
+    tracks the layer's own scale and a rate means the same relative disturbance
+    everywhere.
 
     The standard deviation is computed per sample, over every axis except the
-    batch. A batch-wide reduction would make one sample's noise level depend on
-    which other samples happened to share its batch, and the validation, clean
-    and backdoor splits hold different image populations, so the 3 would sit at
-    3 different noise levels while the comparison between them assumes one.
-    Every other operator in this file already draws per sample. This is the only
-    one where the coupling was possible.
+    batch. A batch-wide reduction would make a sample's noise level depend on which
+    other samples shared its batch, and the validation, clean and backdoor splits
+    hold different image populations, so the 3 would sit at 3 noise levels while
+    the comparison between them assumes a single one. This is the only operator
+    where that coupling was possible.
 
     No inverted scaling, because additive zero-mean noise already leaves the
     expected activation unchanged.
@@ -319,7 +307,7 @@ class HeadMask(nn.Module):
 
 
 class FixedHeadMask(nn.Module):
-    """Zero one named attention head, deterministically, for every sample.
+    """Zero a single named attention head, deterministically, for every sample.
 
     The ablation counterpart to HeadMask's random sampling. Because the mask is
     fixed rather than drawn, a single forward pass measures the effect exactly and
@@ -363,7 +351,7 @@ class GainScale(nn.Module):
         original form
             y = gamma * x_hat + beta,  scale both by omega
 
-        restated
+        descriptive form
             omega*gamma * x_hat + omega*beta = omega * (gamma * x_hat + beta) = omega * y
 
     so amplifying both affine parameters is identical to multiplying the layer's
@@ -372,8 +360,8 @@ class GainScale(nn.Module):
     rate is read as omega - 1, so rate 0 is the identity like every other
     operator here and the rate grids stay comparable in shape.
 
-    This is a PARAMETER-space perturbation expressed in activation space, and it
-    is the only operator in the study that amplifies rather than removes.
+    This is a parameter-space perturbation expressed in activation space, and the
+    only operator in the study that amplifies rather than removes.
     """
 
     def __init__(self, rate: float):
@@ -398,7 +386,7 @@ class ScaleUp(nn.Module):
         original form
             x' = clip(n * x),  n in {2, 3, ...},  x in [0, 1]
 
-        restated
+        descriptive form
             pixels = clip(denormalize(x))
             amplified = clip(factor * pixels)
             x' = normalize(amplified)
@@ -441,9 +429,9 @@ def masked_attention_forward(attention, mask, query, key, value, **kwargs):
     off the loaded module rather than copied, so nothing is mutated and removing
     the wrapper restores the original behaviour exactly.
 
-    Deliberately does NOT support cross-attention or key padding: this project
-    only ever calls it as self-attention, and silently accepting a key that
-    differs from the query would compute something plausible and wrong.
+    Does not support cross-attention or key padding. This project only ever calls
+    it as self-attention, and silently accepting a key that differs from the query
+    would compute something plausible and wrong.
     """
     if query is not key or query is not value:
         raise ValueError("head masking supports self-attention only")
@@ -598,10 +586,10 @@ def effective_forward_passes(perturbation: str, forward_passes: int) -> int:
 
 
 def build_perturbation(name: str):
-    """Look up an operator by name, failing loudly on a typo.
+    """The operator registered under name, failing loudly on a typo.
 
-    A silent fallback to nn.Dropout here would produce a complete, plausible
-    sweep that answers a different question than the one asked.
+    A silent fallback to nn.Dropout here would produce a complete, plausible sweep
+    that answers a different question than the one asked.
     """
     if name not in PERTURBATIONS:
         raise KeyError(f"unknown perturbation {name!r}, known: {sorted(PERTURBATIONS)}")

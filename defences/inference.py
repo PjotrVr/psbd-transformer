@@ -11,14 +11,14 @@ Prediction Shift Uncertainty per the PSBD paper, Equation 2:
                  - mean_over_k_passes(prob_with_dropout(argmax_class))
 
 A low PSU means the confidence in the no-dropout prediction barely moves under
-the perturbation, which flags the sample as likely poisoned. The subtraction
-itself lives in defences.scores, on the CPU side. This module only produces the 2
-forward-pass ingredients it needs.
+the perturbation, which flags the sample as likely poisoned. The subtraction lives
+in defences.scores, on the CPU side. This module produces the 2 forward-pass
+ingredients it needs and writes nothing itself.
 
-Nothing here ever touches the model's own dropout modules. The perturbation comes
-entirely from modules plugged in by models.positions, which live in hook closures
-outside the model tree and are explicitly left in train mode, so model.eval()
-keeps every built-in dropout at its natural identity while the probe still fires.
+Nothing here touches the model's own dropout modules. The perturbation comes from
+modules plugged in by models.positions, which live in hook closures outside the
+model tree and are left in train mode, so model.eval() keeps every built-in
+dropout at its identity while the probe still fires.
 """
 
 from contextlib import nullcontext
@@ -53,20 +53,17 @@ def build_baseline_cache(
     device: torch.device,
     use_bfloat16: bool,
 ) -> list[dict]:
-    """Precompute the no-perturbation state of one split, once.
+    """The no-perturbation state of a split, computed once for every rate to share.
 
-    Caching avoids recomputing the deterministic baseline for every rate in the
-    sweep, which is the dominant cost saving across the run. Must be called
-    before any position is plugged. The sweep entrypoint guarantees that by
-    building every baseline before its rate loop starts.
+    Must run before any position is plugged, which the sweep guarantees by building
+    every baseline before its rate loop starts.
 
-    Three tensors per batch. probs and its argmax are what PSU is measured
-    against. loader_labels is what the loader asked for, which on the backdoor
-    split is the attack-success label, so comparing it to the argmax recovers
-    per-sample whether the trigger actually flipped this image. That matters
-    whenever ASR is well below 1: a triggered image the model classifies
-    correctly is behaviourally clean, and scoring it as a detection positive
-    penalises the detector for the attack's failure.
+    3 tensors per batch. probs and its argmax are what PSU is measured against.
+    loader_labels is what the loader asked for, on the backdoor split the
+    attack-success label, so comparing it to the argmax says per sample whether the
+    trigger actually flipped the image. A triggered image the model still
+    classifies correctly is behaviourally clean, and scoring it as a positive would
+    penalise the detector for the attack's failure.
     """
     model.eval()
 
@@ -95,46 +92,29 @@ def compute_dropout_pass_probs(
     seed: int,
     model_dropout: float = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Raw per-pass evidence, both shaped (forward_passes, N).
+    """The raw per-pass evidence as (probs, argmax), both shaped (forward_passes, N).
 
-    Returns (probs, argmax):
-      probs   float32, the probability assigned to the baseline-argmax class c
-      argmax  int16, the class each perturbed pass actually predicted
+    probs is float32, the probability each perturbed pass gave the baseline-argmax
+    class. argmax is int16, the class each pass actually predicted. Both are kept
+    raw rather than reduced so PSU can be recomputed under another aggregation
+    without a GPU rerun. argmax is what the shift ratio, the adaptive rate rule and
+    the shift-target claim all need, and none of them is recoverable from probs.
 
-    Raw, not reduced: collapsing the k passes to one score here would throw away
-    the ability to recompute PSU under a different aggregation (median instead of
-    mean, a different k) without rerunning the GPU pass. Saving one float per pass
-    per sample keeps that open at trivial disk cost.
+    baseline_labels is the (N,) no-perturbation argmax in the loader's own
+    shuffle=False order, so a running offset pairs each batch to its labels.
+    model_dropout, when set, switches the model's own dropouts on so the probe
+    stacks on top of them. Removal then compounds and the nominal rate stops
+    describing the disturbance.
 
-    argmax is saved because PSU alone cannot express the paper's own mechanism.
-    Three things need it and none are recoverable from probs: the shift ratio
-    sigma (paper Eq. PS, the fraction of passes whose prediction changed), the
-    adaptive rate-selection rule which is defined on sigma, and the central claim
-    that clean samples which shift, shift specifically to the target class. int16
-    is safe for every dataset here, and tiny is the largest at 200 classes.
-
-    baseline_labels is the flat (N,) no-perturbation argmax class per sample, in
-    the same shuffle=False order the loader serves, so a running offset pairs each
-    batch to its labels without re-batching.
-
-    The perturbation comes from modules plugged in by hooks (see models.positions),
-    which are already in train mode, so this never toggles the model's own
-    dropout. model.eval() keeps every existing dropout at its natural identity,
-    unless model_dropout is set, which deliberately switches them on so the probe
-    stacks on top of live model dropout (see the E2 experiment in
-    docs/plans/adaptive-attacker-and-dropout-stacking.md). Removal compounds in
-    that case, so the nominal probe rate stops describing the disturbance.
-
-    Reseeding here fixes the mask sequence, so rerunning the same (split,
-    position, rate) reproduces the same masks exactly. Across 2 splits of
-    different length the sequences agree only up to the shorter one's batch
-    count, which is why clean and backdoor pairing is done by sample index at
-    analysis time, not by assuming shared masks.
+    Reseeding fixes the mask sequence, so the same (split, position, rate)
+    reproduces the same masks. Splits of different length agree only up to the
+    shorter one's batch count, which is why clean and backdoor rows are paired by
+    sample index at analysis time rather than by assuming shared masks.
     """
     model.eval()
-    # Ordering matters: activation must follow eval(), which would otherwise put
-    # the model's own dropouts straight back to identity and silently produce a
-    # complete, plausible, unstacked result.
+    # Activation must follow eval(), which would otherwise put the model's own
+    # dropouts straight back to identity and silently produce a complete,
+    # plausible, unstacked result.
     restore = activate_model_dropout(model, model_dropout) if model_dropout else []
     seed_everything(seed)
 
@@ -176,7 +156,7 @@ def compute_dropout_pass_probs(
 
 
 def _autocast_context(device: torch.device, use_bfloat16: bool):
-    """Run the forward pass in bfloat16 without downcasting the stored scores."""
+    """The autocast context for the forward pass, so stored scores stay float32."""
     if use_bfloat16 and device.type == "cuda":
         return torch.autocast(device_type="cuda", dtype=torch.bfloat16)
     return nullcontext()

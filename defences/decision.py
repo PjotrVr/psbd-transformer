@@ -9,9 +9,9 @@ Detection rule: a sample is flagged when psu(x) < threshold, and the threshold i
 a low quantile of the PSU of a clean validation set the defender is assumed to
 hold. Low PSU means poisoned, because a backdoored model's trigger-to-target path
 survives a perturbation that destroys ordinary class evidence. Because the
-threshold is a quantile of clean data, the quantile IS the false-positive budget:
-nothing is fitted against poisoned data anywhere in this module, except the one
-function that says ORACLE in its name.
+threshold is a quantile of clean data, the quantile is the false-positive budget.
+Nothing is fitted against poisoned data anywhere here except
+select_rate_by_oracle, which says so in its name.
 """
 
 import math
@@ -37,39 +37,36 @@ HEADLINE_QUANTILE = 0.25
 ADAPTIVE_SHIFT_TARGET = 0.8
 
 # Comparing placements at a shared dropout rate compares nothing meaningful. The
-# same p is a wildly different intervention depending on where it lands: a
-# branch-output position perturbs one additive contribution, while a
-# residual-stream position multiplies the whole stream by a mask once per block,
-# so only (1-p)^12 of coordinates survive the ViT stack. At p=0.9 that is 1e-12
-# against a modest branch perturbation. "Pre-residual beats post-residual" would
-# then be indistinguishable from "the weaker perturbation beats the destructive
-# one", which is not a finding about placement at all.
+# same p is a different intervention depending on where it lands: a branch-output
+# position perturbs a single additive contribution, while a residual-stream
+# position masks the whole stream once per block, so only (1-p)^12 of coordinates
+# survive the ViT stack. "Pre-residual beats post-residual" would then be
+# indistinguishable from "the weaker perturbation beats the destructive one".
 #
-# The fix is to make effective strength the shared axis. The clean-validation
-# shift ratio is exactly such a calibrator: it is measured on clean data only, so
-# it stays defender-legal, and it says how much the perturbation actually
-# disturbed the model rather than how much noise was nominally injected. Every
-# placement is compared at matched sigma, and this is the ladder.
+# The shared axis is effective strength instead. The clean-validation shift ratio
+# is measured on clean data only, so it stays defender-legal, and it says how much
+# the perturbation actually disturbed the model rather than how much noise was
+# nominally injected. Every placement is compared at matched sigma on this ladder.
 SHIFT_MATCH_TARGETS: tuple[float, ...] = (0.2, 0.4, 0.6, 0.8)
 
 
 def shift_key(target: float) -> str:
     """The psbd_metrics.json key holding results matched at this shift ratio.
 
-    The key is a string because it names a field in stored JSON, and 879 of 880
-    files on disk already spell it this way, so the format is fixed. Everything in
-    memory should pass the float and call this, rather than writing the f-string
+    The key is a string because it names a field in stored JSON, and every metrics
+    file on disk already spells it this way, so the format is fixed. Everything in
+    memory should pass the float and call this rather than writing the f-string
     again and risking 2 sites disagreeing on the precision.
     """
     return f"sigma{target:.1f}"
 
 
-# The rung of that ladder the placement comparison reports from. It is deliberately
-# NOT ADAPTIVE_SHIFT_TARGET: at 0.8 the destructive placements have already
-# saturated, so the ranking compresses and the comparison loses the resolution it
-# exists for. It is also not a detection target, and using it as one costs 0.126
-# TPR at 1% FPR. Both numbers are real protocol constants that differ, which is
-# why neither is ever written as a bare literal outside this module.
+# The rung of that ladder the placement comparison reports from. Deliberately not
+# ADAPTIVE_SHIFT_TARGET: at 0.8 the destructive placements have already saturated,
+# so the ranking compresses and the comparison loses the resolution it exists for.
+# It is not a detection target either, and using it as one costs TPR at low FPR.
+# The 2 constants differ on purpose, which is why neither is written as a bare
+# literal outside this module.
 PLACEMENT_MATCH_TARGET = 0.6
 
 
@@ -90,14 +87,14 @@ def detection_report(
     backdoor_psu: torch.Tensor,
     quantile: float,
 ) -> dict:
-    """TPR, FPR, and AUROC at one quantile, plus the threshold that produced them.
+    """TPR, FPR and AUROC at a quantile, plus the threshold that produced them.
 
     AUROC negates both score sets because low PSU is the positive (poisoned)
-    evidence, and roc_auc_score expects higher to mean more positive.
+    evidence and roc_auc_score expects higher to mean more positive.
 
-    auroc_two_sided is max(auroc, 1 - auroc). Retained as a diagnostic field only.
-    H15 retired two-sided reporting: a two-sided statistic can flatter any result,
-    and using it requires oracle access to the labels. No live consumer reads it.
+    auroc_two_sided is max(auroc, 1 - auroc), kept as a diagnostic field only. A
+    two-sided statistic can flatter any result and needs oracle access to the
+    labels, so no live consumer reads it.
     """
     threshold = threshold_at_quantile(validation_psu, quantile)
     tpr = float((backdoor_psu < threshold).float().mean().item())
@@ -159,12 +156,12 @@ def select_rate_at_matched_shift(
 ) -> float | None:
     """The rate whose clean-validation shift ratio sits closest to target.
 
-    This is the strength-matched comparison operator. Two placements evaluated at
-    their own matched-sigma rates are being asked the same question ("given a
-    perturbation that disturbs the clean model this much, how well do clean and
-    backdoor samples separate?") rather than the meaningless one that a shared p
-    asks. Ties break toward the smaller rate, which destroys less clean evidence
-    for the same measured disturbance.
+    This is the strength-matched comparison operator. 2 placements evaluated at
+    their own matched-sigma rates are asked the same question, how well clean and
+    backdoor samples separate under a perturbation that disturbs the clean model
+    this much, rather than the meaningless question a shared p asks. Ties break
+    toward the smaller rate, which destroys less clean evidence for the same
+    measured disturbance.
     """
     usable = {rate: value for rate, value in shift_by_rate.items() if value is not None}
     if not usable:
@@ -182,14 +179,11 @@ def bracket_target_shift(
     Returns (lower_rate, upper_rate) with sigma(lower) <= target <= sigma(upper),
     or None when the grid never crosses the target from both sides.
 
-    This exists because neither single-rate rule is a match on a coarse grid. On
-    vit_tiny_badnet_a2o_0_01 at token_mask before_attention_norm, the swept rates
-    give sigma 0.523 at 0.3 and 0.751 at 0.4, so a target of 0.6 has no rate near
-    it. Selecting the nearest rate scores that cell at sigma 0.523 while selecting
-    the smallest rate reaching the target scores it at 0.751, and those 2 readings
-    differ by 0.117 AUROC. That is more than twice the size of the largest
-    placement effect this project reports, so the choice of rule cannot be left
-    implicit.
+    Neither single-rate rule is a match on a coarse grid. The nearest rate and the
+    smallest rate reaching the target can sit on opposite sides of it and read
+    AUROCs that differ by more than any placement effect in the study, so the
+    choice of rule cannot be left implicit and the bracket is what
+    interpolate_at_target_shift reads instead.
     """
     usable = sorted(
         (rate, sigma) for rate, sigma in shift_by_rate.items() if sigma is not None
@@ -221,9 +215,9 @@ def interpolate_at_target_shift(
             value_at_target = value_below + (value_above - value_below)
                               * (target - sigma_below) / (sigma_above - sigma_below)
 
-    Every placement is then read at the SAME effective disturbance rather than at
-    whichever grid point happened to land closest, which is the comparison that
-    matching on shift ratio was introduced to make.
+    Every placement is then read at the same effective disturbance rather than at
+    whichever grid point landed closest, which is the comparison that matching on
+    shift ratio exists to make.
 
     Returns None when the grid does not bracket the target, which is a real
     limitation of that operator's rate grid and is reported rather than papered
@@ -306,15 +300,11 @@ def pair_clean_to_backdoor(clean_scores: torch.Tensor, manifest: dict) -> torch.
 def complete_rates(psbd_dir: str, position_config: str) -> list[float]:
     """Rates whose validation, clean AND backdoor tensors are all on disk.
 
-    Stage 1 writes the 3 splits of a rate one after another, so while a sweep is
-    running there is always a rate with some splits present and some missing.
-    Discovering rates by globbing any rate_*.pt therefore returns rates that cannot be
-    loaded, and every analysis script that did so crashed partway through the moment
-    it ran concurrently with a job.
-
-    Requiring all 3 makes analysis safe to run at any time against a live results
-    tree, which matters because the sweep now runs in multi-hour batches and waiting
-    for it to finish is not practical.
+    Stage 1 writes the 3 splits of a rate in turn, so while a sweep is running
+    there is always a rate with some splits present and some missing, and
+    discovering rates by globbing any rate_*.pt returns rates that cannot be
+    loaded. Requiring all 3 makes analysis safe to run against a live results tree
+    at any time.
     """
     folder = os.path.join(psbd_dir, position_config)
     if not os.path.isdir(folder):
@@ -338,7 +328,7 @@ def complete_rates(psbd_dir: str, position_config: str) -> list[float]:
 def load_critical_rate_from_disk(
     psbd_dir: str, position_config: str, split: str, flip_fraction: float = 0.0
 ) -> torch.Tensor | None:
-    """Load baseline plus all rates for one (checkpoint, position, split), compute p*.
+    """Per-sample critical rate p* for a (checkpoint, position, split), from disk.
 
     Returns None when no complete rates exist.
     """
@@ -403,26 +393,24 @@ def multi_probe_detection(
     rule: str = "calibrated",
     reduction: str = "min",
 ) -> dict:
-    """TPR, FPR, and AUROC of the multi-probe union defence.
+    """TPR, FPR and AUROC of the multi-probe defence.
 
-    Two thresholding rules, both reading clean validation data only, so both stay
+    2 thresholding rules, both reading clean validation data only, so both stay
     defender-legal:
 
       calibrated  the target_fpr quantile of the combined validation score. That
                   score is already a minimum over k probes, so its own quantile
-                  absorbs however correlated the probes happen to be and lands on
+                  absorbs however correlated the probes are and lands on
                   target_fpr by construction. This is the default.
       bonferroni  the literal value target_fpr / k on the rank scale, which flags
-                  a sample when ANY single probe ranks it below that. The union
+                  a sample when any single probe ranks it below that. The union
                   bound makes it conservative, so its achieved FPR is at most
                   target_fpr and usually well under.
 
-    The earlier version applied the Bonferroni quantile target_fpr / k to the
-    COMBINED score rather than to a single probe's rank, which corrects twice.
-    The minimum of k ranks reaching its own target_fpr / k quantile is a much
-    rarer event than any one probe reaching target_fpr / k, so the achieved FPR
-    came out near target_fpr / k and TPR was understated by the same margin.
-    AUROC never depended on the threshold and is unchanged.
+    The Bonferroni quantile applies to a single probe's rank, never to the
+    combined score. Applied to the combined score it corrects twice, since the
+    minimum of k ranks reaching target_fpr / k is far rarer than any probe doing
+    so, and TPR is understated by the same margin.
 
     Both rules are reported under by_rule. The top-level tpr, fpr and threshold
     keys follow the rule argument.

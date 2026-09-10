@@ -1,11 +1,11 @@
 """Per-sample PSBD scores: what number a sample gets, from cached tensors.
 
-The companion module defences.decision turns these numbers into a verdict. Nothing
-here knows about thresholds, quantiles, TPR or FPR, and nothing here imports
-defences.decision. Everything is pure CPU arithmetic over the tensors stage 1 wrote,
-so a scoring rule can be reconsidered in seconds without touching a GPU.
+defences.decision turns these numbers into a verdict. Nothing here knows about
+thresholds, quantiles, TPR or FPR, and nothing here imports decision. Everything is
+CPU arithmetic over the tensors stage 1 wrote, so a scoring rule can be
+reconsidered in seconds without a GPU.
 
-Two quantities from the PSBD paper (papers/PSBD/sec/4_method.tex).
+2 quantities from the PSBD paper (papers/PSBD/sec/4_method.tex).
 
 Prediction Shift Uncertainty, Eq. (PSU definition):
 
@@ -61,29 +61,21 @@ def psu_ratio_from_cache(
 
         psu_ratio(x) = 1 - mean_over_passes(prob_with_dropout(c)) / prob_no_dropout(c)
 
-    The paper's PSU is an absolute drop, which invites the objection that it is
-    really measuring baseline confidence: a sample starting near probability 1 has
-    more room to fall than one starting at 0.6, and a backdoored model is very
-    confident on triggered inputs. Dividing by the starting confidence removes that
-    entirely, so if the objection held, this form would separate worse.
-
-    It separates better. Across all 624 (checkpoint, placement, rate) cells of the
-    CIFAR-10 ViT grid it beats the absolute form in 92.8%, mean AUROC +0.019, and
-    its worst regression anywhere is -0.0025. So PSU is measuring how robust a
-    prediction is, not how confident it began.
-
-    There is also a threshold argument for preferring it. The detection threshold is
-    a quantile of clean-validation PSU, and absolute PSU is bounded above by the
-    starting confidence, so the threshold inherits the validation set's calibration.
-    The ratio is scale-free and should transfer better across datasets and models
-    whose confidence is differently calibrated, though that is untested here.
+    The paper's PSU is an absolute drop, which invites the objection that it really
+    measures baseline confidence: a sample starting near 1 has more room to fall
+    than a sample starting at 0.6, and a backdoored model is very confident on
+    triggered inputs. Dividing by the starting confidence removes that. If the
+    objection held this form would separate worse, and it separates better across
+    the whole grid, so PSU is measuring how robust a prediction is, not how
+    confident it began. The ratio is also scale-free, so a quantile threshold on it
+    does not inherit the validation set's calibration.
 
     Reported alongside the paper's absolute form rather than replacing it, so every
     number stays comparable to the published method.
     """
     tracked = baseline_probs.gather(1, baseline_labels.view(-1, 1).long()).squeeze(1)
-    # Clamped because a sample the model gave essentially zero probability would
-    # otherwise divide by zero and swamp the whole distribution.
+    # Clamped because a sample the model gave almost no probability would
+    # otherwise divide by 0 and swamp the whole distribution.
     tracked = tracked.float().clamp_min(1e-6)
 
     psu_ratio = ((tracked - per_pass_probs.float().mean(dim=0)) / tracked).float()
@@ -93,7 +85,7 @@ def psu_ratio_from_cache(
 def shift_ratio(
     baseline_labels: torch.Tensor, per_pass_argmax: torch.Tensor
 ) -> float | None:
-    """Sigma over one split: the fraction of passes whose prediction moved.
+    """Sigma over a split: the fraction of passes whose prediction moved.
 
     Returns None when the cache predates argmax saving, so a caller reports the
     rate as unavailable rather than silently treating a missing tensor as zero
@@ -173,8 +165,8 @@ def to_rank(values: torch.Tensor, reference: torch.Tensor) -> torch.Tensor:
 
     Ranking against a common reference (clean validation) keeps scores from
     different operators commensurable without fitting anything. Ranking each
-    split against itself pins TPR to FPR and destroys the method (see
-    detector_fusion.py for the full explanation).
+    split against itself pins TPR to FPR and destroys the method, which
+    cli.fuse_detectors explains in full.
     """
     sorted_reference = reference.sort().values
     positions = torch.searchsorted(sorted_reference, values.contiguous())
@@ -183,7 +175,7 @@ def to_rank(values: torch.Tensor, reference: torch.Tensor) -> torch.Tensor:
     return ranks
 
 
-# How k probe ranks are combined into one score. "min" is the union rule: any
+# How k probe ranks are combined into a single score. "min" is the union rule: any
 # single probe finding a sample suspicious is enough. "median" needs a majority.
 PROBE_REDUCTIONS: tuple[str, ...] = ("min", "median")
 
@@ -193,30 +185,24 @@ def multi_probe_score(
     psu_val_per_probe: list[torch.Tensor],
     reduction: str = "min",
 ) -> torch.Tensor:
-    """Combined score across k probes. Lower means more suspicious.
+    """The combined score across k probes, shape (N,). Lower means more suspicious.
 
-    Each probe's PSU is ranked against its own clean-validation reference, then
-    the ranks are combined, which puts every probe on one scale before they meet.
-    Raw PSU distributions differ in scale between probes, so a raw combination
-    would be dominated by whichever probe happens to produce the smallest numbers.
+    Each probe's PSU is ranked against its own clean-validation reference before
+    the ranks are combined, which puts every probe on a single scale. Raw PSU
+    scales differ between probes, so a raw combination would be dominated by
+    whichever probe produces the smallest numbers.
 
-    reduction "min" is the union rule and the project's original: a sample looks
-    clean only if it looks clean to every probe. It is the most sensitive
-    combination and it is what an adaptive attacker should be assumed to attack.
+    "min" is the union rule: a sample looks clean only if it looks clean to every
+    probe. It is the most sensitive combination and the one an adaptive attacker
+    should be assumed to attack. "median" needs a majority to agree. It exists
+    because a probe the attacker has inverted contributes confident wrong evidence
+    rather than none. "min" adopts the most extreme evidence available, so a single
+    inverted probe breaks it, while the median holds until the attacker controls a
+    majority.
 
-    reduction "median" needs a majority of probes to agree. It exists because the
-    union has a specific fragility that the whole point of multi-probe defence is
-    supposed to rule out. A probe an attacker has INVERTED does not merely stop
-    contributing, it contributes confident wrong evidence, and "min" takes the
-    most extreme evidence available, so it adopts the inversion. Measured on
-    synthetic probes, 1 inverted probe of 3 takes the union from 0.969 to 0.621
-    while the median holds 0.833; at 5 probes with 1 inverted it is 0.792 against
-    0.967. The median costs nothing when every probe is healthy (0.996 against
-    0.981 at k = 5) and fails only once the attacker controls a majority.
-
-    psu_per_probe: k tensors, each (N,), PSU for the split being scored.
-    psu_val_per_probe: k tensors, each (M,), PSU for clean validation (the
-        reference distribution for ranking).
+    psu_per_probe holds k tensors of shape (N,) for the split being scored, and
+    psu_val_per_probe k tensors of shape (M,) for clean validation, the reference
+    each is ranked against.
     """
     if reduction not in PROBE_REDUCTIONS:
         raise ValueError(

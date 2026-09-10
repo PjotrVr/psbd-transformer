@@ -6,5 +6,5 @@ perturbed passes. scores turns the cached passes into a number per sample. decis
 turns numbers into a verdict against a threshold. cache is the on-disk layout the
 2 sweep stages hand results through.
 
-Import the submodule you need; this package deliberately re-exports nothing.
+Import the submodule you need. This package re-exports nothing.
 """
