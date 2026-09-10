@@ -66,13 +66,17 @@ def blend_entropy(probs: torch.Tensor) -> torch.Tensor:
     return entropy
 
 
-def _normalization_buffers(
+def normalization_buffers(
     mean: tuple[float, ...],
     std: tuple[float, ...],
     device: torch.device,
     dtype: torch.dtype,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """The dataset statistics shaped to broadcast over (batch, C, H, W)."""
+    """The dataset statistics as (1, channels, 1, 1) tensors, broadcastable over a batch.
+
+    Shared by every detector that leaves normalized space to work on pixels, so
+    the denormalize, perturb, renormalize round trip is written once.
+    """
     mean_tensor = torch.tensor(mean, device=device, dtype=dtype).view(1, -1, 1, 1)
     std_tensor = torch.tensor(std, device=device, dtype=dtype).view(1, -1, 1, 1)
     return mean_tensor, std_tensor
@@ -106,7 +110,7 @@ def strip_scores(
     batch_scores = []
     for images, _ in loader:
         images = images.to(device)  # (batch, C, H, W)
-        mean_tensor, std_tensor = _normalization_buffers(
+        mean_tensor, std_tensor = normalization_buffers(
             mean, std, images.device, images.dtype
         )
         pixels = (images * std_tensor + mean_tensor).clamp(0.0, 1.0)

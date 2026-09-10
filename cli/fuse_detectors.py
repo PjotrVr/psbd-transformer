@@ -41,6 +41,7 @@ import os
 import numpy as np
 import torch
 
+from detectors import STRIP_OVERLAYS
 from detectors.strip import collect_overlay_batch, strip_scores
 from defences.cache import (
     baseline_path,
@@ -58,7 +59,6 @@ from data.splits import (
     read_checkpoint_metadata,
 )
 
-STRIP_OVERLAYS = 8
 
 SPLITS = ("validation", "clean", "backdoor")
 COLUMNS = ("psbd", "strip", "mean", "min")

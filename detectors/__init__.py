@@ -54,8 +54,9 @@ from . import scale_up as scale_up_module
 from . import strip as strip_module
 from . import teco as teco_module
 
-# N in STRIP Eq. (3), the value every recorded baseline number was produced with.
-STRIP_OVERLAYS = 8
+# N in STRIP Eq. (3). Named once, in the module that implements it, so a run's
+# provenance and the registry's cost table cannot quote different values.
+STRIP_OVERLAYS = strip_module.DEFAULT_NUM_OVERLAYS
 
 DETECTOR_NAMES: tuple[str, ...] = (
     "confidence",
@@ -65,6 +66,10 @@ DETECTOR_NAMES: tuple[str, ...] = (
     "ibd_psc",
     "teco",
 )
+
+# Buildable by name but outside DETECTOR_NAMES, so no default run, job or sign
+# gate includes them until a smoke test has fixed their settings.
+EXPERIMENTAL_DETECTOR_NAMES: tuple[str, ...] = ()
 
 # Model queries per scored input, the deployment cost of each method. Counts
 # include the 1 unamplified or uncorrupted pass a method needs to fix its own
@@ -93,6 +98,47 @@ DATA_REQUIREMENT: dict[str, str] = {
 # before any input is scored. Listed so a caller can report that fixed cost
 # separately from the per-input cost, which is what a deployment would care about.
 NEEDS_FITTING: frozenset[str] = frozenset({"scale_up_data_limited", "ibd_psc"})
+
+# Methods that fit per-sample statistics on the validation split and therefore
+# return out-of-fit scores for it (jackknife, leave-one-out or 2 folds) rather
+# than in-sample ones. A threshold set on in-sample scores is too tight, since a
+# sample deviates less from statistics it helped fit.
+CROSS_FITTED: frozenset[str] = frozenset()
+
+# "autocast" methods run under context.use_bfloat16 like PSBD's own passes. A
+# "float32" method forces full precision for its gradient step whatever the
+# context says, because bf16 gradient noise changes an optimisation trajectory
+# where it only rounds a forward pass. The effective dtype of a run is recorded
+# in its provenance and must be identical across every cell a table compares.
+PRECISION_POLICY: dict[str, str] = {
+    "confidence": "autocast",
+    "strip": "autocast",
+    "scale_up": "autocast",
+    "scale_up_data_limited": "autocast",
+    "ibd_psc": "autocast",
+    "teco": "autocast",
+}
+
+# The settings a run's provenance records, so 2 records can be compared for
+# whether they measured the same method.
+DETECTOR_HYPERPARAMETERS: dict[str, dict] = {
+    "confidence": {},
+    "strip": {"overlays": STRIP_OVERLAYS},
+    "scale_up": {"scales": list(scale_up_module.PAPER_SCALES)},
+    "scale_up_data_limited": {
+        "scales": list(scale_up_module.PAPER_SCALES),
+        "min_class_samples": scale_up_module.MIN_CLASS_SAMPLES,
+    },
+    "ibd_psc": {
+        "scaling_factor": ibd_psc_module.DEFAULT_SCALING_FACTOR,
+        "ensemble_size": ibd_psc_module.DEFAULT_ENSEMBLE_SIZE,
+        "error_threshold": ibd_psc_module.DEFAULT_ERROR_THRESHOLD,
+    },
+    "teco": {
+        "corruptions": list(teco_module.DEFAULT_CORRUPTIONS),
+        "max_severity": teco_module.MAX_SEVERITY,
+    },
+}
 
 Detector = Callable[[nn.Module, DataLoader, torch.device], torch.Tensor]
 
@@ -125,6 +171,15 @@ class DetectorContext:
     use_bfloat16: bool = True
     seed: int = 0
     teco_corruptions: tuple[str, ...] = teco_module.DEFAULT_CORRUPTIONS
+
+
+def effective_precision(name: str, context: DetectorContext) -> str:
+    """The dtype a detector's model queries actually run in under this context."""
+    if PRECISION_POLICY[name] == "float32":
+        return "float32"
+    autocast_applies = context.use_bfloat16 and context.device.type == "cuda"
+    precision = "bfloat16" if autocast_applies else "float32"
+    return precision
 
 
 def _require_validation_loader(name: str, context: DetectorContext) -> DataLoader:

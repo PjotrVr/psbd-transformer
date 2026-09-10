@@ -24,7 +24,12 @@ import os
 import torch
 
 from data.registry import DATASET_REGISTRY
-from detectors import DETECTOR_NAMES, DetectorContext, build_detector
+from detectors import (
+    DETECTOR_NAMES,
+    STRIP_OVERLAYS,
+    DetectorContext,
+    build_detector,
+)
 from defences.decision import (
     HEADLINE_QUANTILE,
     PSBD_QUANTILES,
@@ -38,7 +43,6 @@ from data.splits import (
     read_checkpoint_metadata,
 )
 
-STRIP_OVERLAYS = 8
 
 # The trigger a benign checkpoint is probed with when the caller names none, so
 # its baseline numbers sit on the same footing as its PSBD numbers.
