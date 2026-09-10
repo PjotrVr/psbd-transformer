@@ -52,8 +52,9 @@ def safe_ratio(numerator, denominator, floor: float = DEFAULT_FLOOR):
         out[safe] = (numerator / denominator.masked_fill(~safe, 1.0)).float()[safe]
         return out
     if abs(denominator) < floor:
-        return float("nan")
-    return numerator / denominator
+        return math.nan
+    ratio = numerator / denominator
+    return ratio
 
 
 def safe_ratio_positive(numerator, denominator, floor: float = DEFAULT_FLOOR):
@@ -73,10 +74,12 @@ def safe_ratio_positive(numerator, denominator, floor: float = DEFAULT_FLOOR):
         out[safe] = (numerator / denominator.masked_fill(~safe, 1.0)).float()[safe]
         return out
     if not denominator >= floor:
-        return float("nan")
-    return numerator / denominator
+        return math.nan
+    ratio = numerator / denominator
+    return ratio
 
 
 def is_defined(value) -> bool:
     """Whether a scalar result is a real measurement rather than a degenerate value."""
-    return isinstance(value, (int, float)) and math.isfinite(value)
+    defined = isinstance(value, (int, float)) and math.isfinite(value)
+    return defined
