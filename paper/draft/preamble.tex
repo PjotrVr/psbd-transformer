@@ -1,0 +1,9 @@
+% Packages and the 2 macros the chapters rely on. \finding marks a claim with its grade in
+% draft mode and prints nothing in submission mode. \num wraps a headline macro.
+\usepackage{amsmath,amssymb,booktabs,graphicx,xcolor,hyperref,marginnote}
+\usepackage[capitalize]{cleveref}
+\newif\ifdraftnotes
+\draftnotestrue
+\newcommand{\finding}[2]{\ifdraftnotes\marginnote{\footnotesize\texttt{#1}\ #2}\fi}
+\newcommand{\num}[1]{#1}
+\newcommand{\pending}{\textsc{pending}}
