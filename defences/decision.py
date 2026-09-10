@@ -19,7 +19,7 @@ import os
 
 import numpy as np
 import torch
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, roc_curve
 
 from .scores import critical_rate, multi_probe_score
 
@@ -127,6 +127,47 @@ def detection_report(
         else None,
     }
     return report
+
+
+def threshold_diagnostics(
+    validation_psu: torch.Tensor,
+    clean_psu: torch.Tensor,
+    backdoor_psu: torch.Tensor,
+    quantile: float,
+) -> dict:
+    """How much of detection_report's TPR at this quantile is a tie artefact.
+
+    A score that takes few distinct values, such as a fraction over 5
+    amplification scales, can put more than a quantile's worth of clean samples on
+    1 value. The interpolated quantile then lands exactly on that value and the
+    strict less-than rule flags nothing, so TPR reads 0 while AUROC may be high.
+
+    tie_share_at_threshold is the fraction of validation scores equal to the
+    threshold, within float32 resolution. tpr_interpolated is the true positive
+    rate read off the ROC curve of the paired clean and backdoor scores at a false
+    positive rate equal to the quantile, which a tie cannot zero out. Both are
+    reported beside the quantile rule, never instead of it, since the quantile
+    rule is the deployable one.
+    """
+    threshold = threshold_at_quantile(validation_psu, quantile)
+    validation = validation_psu.float()  # (n_validation,)
+    tolerance = 1e-6 * max(1.0, abs(threshold))
+    tied = (validation - threshold).abs() <= tolerance  # (n_validation,)
+    tie_share = float(tied.float().mean().item())
+
+    scores = np.concatenate([-clean_psu.float().numpy(), -backdoor_psu.float().numpy()])
+    labels = np.concatenate([np.zeros(len(clean_psu)), np.ones(len(backdoor_psu))])
+    if len(set(labels.tolist())) > 1:
+        fpr, tpr, _ = roc_curve(labels, scores)
+        tpr_interpolated = float(np.interp(quantile, fpr, tpr))
+    else:
+        tpr_interpolated = float("nan")
+
+    diagnostics = {
+        "tie_share_at_threshold": tie_share,
+        "tpr_interpolated": tpr_interpolated,
+    }
+    return diagnostics
 
 
 def select_rate_adaptively(
