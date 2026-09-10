@@ -10,12 +10,12 @@ forward pre-hook or forward hook, never by switching on a dropout the model
 already has. A trained dropout's inverted scaling was calibrated against the next
 layer's weights, so reusing it would conflate the model's own regularization with
 the probe. Hooks also mean adding a position never duplicates a block class, and
-removing one is handle.remove() with nothing to restore. activate_model_dropout is
+removing a position is handle.remove() with nothing to restore. activate_model_dropout is
 the deliberate exception, kept to study that conflation.
 
 2 positions cannot be hooks because the tensor they perturb never crosses a module
-boundary: after_attention_residual, the stream between the attention add and its
-2 consumers, and attention_heads, the per-head outputs inside
+boundary. after_attention_residual is the stream between the attention add and its
+2 consumers. attention_heads is the per-head outputs inside
 F.multi_head_attention_forward. Both use a removable per-instance forward wrapper.
 
 Adding a position is 1 line in the architecture's registry, plus a comment saying
