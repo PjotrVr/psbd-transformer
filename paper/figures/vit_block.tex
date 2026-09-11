@@ -1,0 +1,31 @@
+\begin{tikzpicture}[
+  node distance=3mm,
+  box/.style={draw, rounded corners=1pt, minimum width=22mm, minimum height=6mm, font=\scriptsize, align=center},
+  norm/.style={box, fill=gray!12},
+  op/.style={box, fill=blue!8},
+  plus/.style={draw, circle, inner sep=1pt, font=\scriptsize},
+  site/.style={draw, circle, fill=orange!80, inner sep=1.4pt, font=\bfseries\tiny},
+  flow/.style={-{Latex[length=1.6mm]}, thick},
+  lbl/.style={font=\scriptsize, text width=34mm, align=left}
+]
+\node[font=\scriptsize] (in) {residual stream $x$ \quad (197 tokens $\times$ 768)};
+\node[norm, below=of in] (ln1) {LayerNorm};
+\node[op, below=of ln1] (attn) {multi-head attention};
+\node[plus, below=of attn] (add1) {$+$};
+\node[norm, below=of add1] (ln2) {LayerNorm};
+\node[op, below=of ln2] (mlp) {MLP (per token)};
+\node[plus, below=of mlp] (add2) {$+$};
+\node[font=\scriptsize, below=of add2] (out) {to the next block};
+\draw[flow] (in) -- (ln1); \draw[flow] (ln1) -- (attn); \draw[flow] (attn) -- (add1);
+\draw[flow] (add1) -- (ln2); \draw[flow] (ln2) -- (mlp); \draw[flow] (mlp) -- (add2); \draw[flow] (add2) -- (out);
+\draw[flow] (in.south) ++(0,-1mm) -| ++(-16mm,0) |- (add1.west);
+\draw[flow] (add1.south) ++(0,-1mm) -| ++(-16mm,0) |- (add2.west);
+\node[site, right=2mm of ln1.north east, yshift=1mm] (A) {A};
+\node[site, right=2mm of ln2.north east, yshift=1mm] (B) {B};
+\node[site, right=2mm of attn.south east, yshift=-1mm] (C) {C};
+\node[site, right=2mm of add1.east, xshift=4mm] (D) {D};
+\node[lbl, right=10mm of A] {A \textbf{before the attention norm}: token mask (recommended), channel mask, Gaussian noise};
+\node[lbl, right=10mm of C] {C \textbf{before the residual add}: dropout on the branch output};
+\node[lbl, right=10mm of D] {D \textbf{after the residual add}: dropout on the stream (the published placement)};
+\node[lbl, right=10mm of B] {B \textbf{before the MLP norm}: token mask, Gaussian noise};
+\end{tikzpicture}
