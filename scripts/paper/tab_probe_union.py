@@ -77,6 +77,20 @@ def table_row(name: str, label: str, record: dict) -> list[str]:
     return row
 
 
+def widen_table(path: str) -> None:
+    """Rewrite the generated table as a full-width float, since its 6 columns overflow 1 column."""
+    with open(path) as handle:
+        text = handle.read()
+    text = text.replace("\\begin{table}[htbp]", "\\begin{table*}[htbp]").replace(
+        "\\end{table}", "\\end{table*}"
+    )
+    text = text.replace("\\begin{adjustbox}{max width=\\linewidth}\n", "").replace(
+        "\\end{adjustbox}\n", ""
+    )
+    with open(path, "w") as handle:
+        handle.write(text)
+
+
 def main() -> None:
     args = build_parser(__doc__).parse_args()
     record = load_record(args.results_dir)
@@ -103,6 +117,7 @@ def main() -> None:
         rows=rows,
         align="lrrrrl",
     )
+    widen_table(os.path.join(args.paper_dir, "tables", "probe_union.tex"))
 
     tm = record["probe_sets"]["psbd_tm"]["summary"]
     tm_rd = record["probe_sets"]["psbd_tm_rd"]
