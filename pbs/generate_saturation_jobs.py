@@ -3,15 +3,18 @@
 The standard grid stops at 0.9 (cli.sweep.DROPOUT_RATES). At the recommended
 deployment config, 7 of 9 attacks peak strictly inside that grid, so 0.9 is a
 ceiling nobody was pushing against. wanet and badnet_a2a peak AT 0.9, which means
-the grid, not the method, is what bounds their measured AUROC. wanet reads 0.905
-at the grid edge and rising; the number would be reported as its optimum without
-ever having been shown to be one.
+the grid is what bounds their measured AUROC. wanet reads 0.905 at the grid edge
+and rising, and the number would be reported as its optimum without ever having
+been shown to be an optimum.
 
 The rates here go to 0.98 rather than 1.0 because a rate of 1.0 masks everything
 and the score stops depending on the input at all.
 
-Writes to pbs/psbd_saturation/, which is gitignored like every other generated
-job directory.
+Reads the folder listing under checkpoints/ in the current directory and writes 1
+job per batch of 4 checkpoints to pbs/psbd_saturation/, which is gitignored like
+every other generated job directory.
+
+    python pbs/generate_saturation_jobs.py
 """
 
 import os
@@ -77,10 +80,13 @@ def existing_checkpoints():
 
 
 def batched(items, size):
-    return [items[start : start + size] for start in range(0, len(items), size)]
+    """Consecutive slices of at most size items, in the original order."""
+    batches = [items[start : start + size] for start in range(0, len(items), size)]
+    return batches
 
 
 def write_jobs(batches, base):
+    """Write 1 job file per batch of folders and return the paths written."""
     os.makedirs(JOB_DIRECTORY, exist_ok=True)
     os.makedirs(LOG_DIRECTORY, exist_ok=True)
     paths = []
@@ -103,6 +109,7 @@ def write_jobs(batches, base):
 
 
 def main():
+    """Batch the checkpoints on disk into jobs, write them and list what was written."""
     base = os.path.abspath(".")
     folders = existing_checkpoints()
     batches = batched(folders, CHECKPOINTS_PER_JOB)

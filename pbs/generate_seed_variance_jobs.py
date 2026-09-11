@@ -1,7 +1,7 @@
 """Re-sweep the 2 candidate configurations under additional defence seeds.
 
 The PSBD probe is stochastic: dropout masks are drawn from a seeded generator, and every
-number this project has reported comes from ONE draw, PSBD_MASK_SEED = 0. A single draw
+number this project has reported comes from 1 draw, PSBD_MASK_SEED = 0. A single draw
 says nothing about the estimator's spread, so a difference between 2 configurations cannot
 currently be separated from seed noise.
 
@@ -15,8 +15,12 @@ The second matters because a configuration that wins only at some poison rates i
 usable: a defender can guess the attack but can NEVER know the poison rate. pre_residual
 blocks 5 to 8 is exactly that trap, 1st at 5% and 10% and 8th at 1%.
 
-Scope is all-to-one and clean-label only, every dataset, all 3 rates, attacks that actually
-implanted. Seed 0 already exists and keeps its bare cache directory.
+Scope is the `all_to_one` and `clean_label` label modes only, every dataset, all 3 rates,
+attacks that actually implanted. Seed 0 already exists and keeps its bare cache directory.
+
+Reads results/vit_*/psbd_metrics.json, checkpoints/<folder>/args.json and the seed cache
+directories under results/<folder>/psbd/. Writes seedvar_N.pbs files and a submit_all.sh
+into pbs/vit_seedvar/ with logs under logs/vit_seedvar/.
 
     python pbs/generate_seed_variance_jobs.py && bash pbs/vit_seedvar/submit_all.sh
 """
@@ -65,7 +69,7 @@ python -m cli.sweep \\
 
 
 def target_cells() -> list[str]:
-    """All-to-one and clean-label cells whose attack actually implanted."""
+    """The `all_to_one` and `clean_label` cells whose attack actually implanted."""
     found = []
     for path in sorted(glob.glob(os.path.join(BASE, "results", "vit_*"))):
         folder = os.path.basename(path)
@@ -89,10 +93,8 @@ def target_cells() -> list[str]:
     return found
 
 
-def main() -> None:
-    os.makedirs(JOB_DIR, exist_ok=True)
-    os.makedirs(LOG_DIR, exist_ok=True)
-    cells = target_cells()
+def pending_tasks(cells: list[str]) -> list[tuple]:
+    """Every (folder, position, operator, seed) whose seed cache directory is absent."""
     tasks = [
         (folder, position, operator, seed)
         for folder in cells
@@ -104,6 +106,11 @@ def main() -> None:
             )
         )
     ]
+    return tasks
+
+
+def write_jobs(tasks: list[tuple]) -> list[str]:
+    """Deal the tasks round robin over N_JOBS job files and return the paths written."""
     written = []
     for index in range(N_JOBS):
         chunk = tasks[index::N_JOBS]
@@ -130,13 +137,28 @@ def main() -> None:
             handle.write(body)
             handle.write('\necho "Finished: $(date)"\nexit 0\n')
         written.append(path)
+    return written
 
+
+def write_submit_script(written: list[str]) -> str:
+    """Write an executable submit_all.sh that qsubs every job path and return its path."""
     submit = os.path.join(JOB_DIR, "submit_all.sh")
     with open(submit, "w") as handle:
         handle.write("#!/bin/bash\n")
         for path in written:
             handle.write(f"qsub {path}\n")
     os.chmod(submit, 0o755)
+    return submit
+
+
+def main() -> None:
+    """Find the implanted cells, list their missing seed sweeps, write the jobs and report."""
+    os.makedirs(JOB_DIR, exist_ok=True)
+    os.makedirs(LOG_DIR, exist_ok=True)
+    cells = target_cells()
+    tasks = pending_tasks(cells)
+    written = write_jobs(tasks)
+    submit = write_submit_script(written)
     print(f"{len(cells)} cells, {len(tasks)} sweeps -> {len(written)} jobs")
     print(f"submit with: bash {submit}")
 

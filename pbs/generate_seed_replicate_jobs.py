@@ -2,19 +2,23 @@
 
 This project's own audit records the gap: "Every checkpoint is seed 0 and no configuration has
 a replicate, so seed to seed variance is unmeasured." Every confidence interval reported here
-is over CELLS, not over training runs, so it describes how much the answer varies across
-attacks and datasets and says nothing about how much it would move if the same cell were
-trained again.
+is over CELLS, so it describes how much the answer varies across attacks and datasets and says
+nothing about how much it would move if the same cell were trained again.
 
-That is not a hypothetical concern. 26 cells do have replicates, and their attack success rates
-move a lot: adaptive_blend at 10% reads 0.604, 0.949 and 0.974 at seeds 0, 1 and 2, and lc at
-5% reads 0.545, 0.912 and 0.844. A verdict of "this attack does not implant" taken from seed 0
-alone is a statement about one training run.
+The concern is concrete. 26 cells do have replicates, and their attack success rates move a
+lot: adaptive_blend at 10% reads 0.604, 0.949 and 0.974 at seeds 0, 1 and 2, while lc at 5%
+reads 0.545, 0.912 and 0.844. A verdict of "this attack does not implant" taken from seed 0
+alone is a statement about 1 training run.
 
 None of those replicates carries a detection cache, so detection seed-variance cannot be read
 from disk at all. This sweeps the deployed single configuration and the published ConvNet
 placement it is compared against, on every replicate, so the headline comparison finally has a
 seed term.
+
+Reads checkpoints/*_seed_*/args.json, the caches under results/<folder>/psbd/ and the ASR bar
+in configs/psbd_basis.json, all relative to the current directory. Writes seedvar_N.pbs files
+and a submit_all.sh into pbs/<batch>/ (pbs/vit_seedvar2 by default) with logs under
+logs/<batch>/.
 
     PYTHONPATH=. python pbs/generate_seed_replicate_jobs.py
 """
@@ -89,7 +93,7 @@ exit 0
 
 
 def replicate_families(asr_bar: float) -> list[str]:
-    """Every checkpoint in a family that has at least one seed replicate.
+    """Every checkpoint in a family that has at least 1 seed replicate.
 
     The base run is included alongside its replicates: a spread needs all of them, and the
     base is the one every existing number was computed from.
@@ -104,8 +108,8 @@ def replicate_families(asr_bar: float) -> list[str]:
     folders = []
     for base, replicates in families.items():
         members = sorted(replicates | {base})
-        # Keep a family only if at least one member implanted; a family that never implants
-        # measures the attack's seed sensitivity, not the detector's.
+        # Keep a family only if at least 1 member implanted. A family that never implants
+        # measures the attack's seed sensitivity rather than the detector's.
         implanted = False
         for member in members:
             meta_path = os.path.join("checkpoints", member, "args.json")
@@ -118,7 +122,8 @@ def replicate_families(asr_bar: float) -> list[str]:
             folders += [
                 m for m in members if os.path.isdir(os.path.join("checkpoints", m))
             ]
-    return sorted(set(folders))
+    unique_folders = sorted(set(folders))
+    return unique_folders
 
 
 def declared_asr_bar() -> float:
@@ -130,19 +135,8 @@ def declared_asr_bar() -> float:
     return asr_bar
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--batch", default="vit_seedvar2")
-    parser.add_argument(
-        "--asr-bar",
-        type=float,
-        default=declared_asr_bar(),
-        help="default is asr_bar in configs/psbd_basis.json",
-    )
-    parser.add_argument("--per-job", type=int, default=8)
-    args = parser.parse_args()
-
-    folders = replicate_families(args.asr_bar)
+def missing_slots(folders: list[str]) -> dict:
+    """The folders that lack each (position, operator, rates) ladder, keyed by that need."""
     gaps = {}
     for folder in folders:
         psbd = os.path.join("results", folder, "psbd")
@@ -151,17 +145,23 @@ def main() -> None:
             need = tuple(r for r in rates if r not in have)
             if need:
                 gaps.setdefault((position, operator, need), []).append(folder)
+    return gaps
 
+
+def pack_units(gaps: dict, per_job: int) -> list[tuple]:
+    """Split every gap's folder list into sweep units of at most per_job folders."""
     units = []
     for (position, operator, rates), members in gaps.items():
-        for start in range(0, len(members), args.per_job):
-            units.append(
-                (position, operator, rates, members[start : start + args.per_job])
-            )
+        for start in range(0, len(members), per_job):
+            units.append((position, operator, rates, members[start : start + per_job]))
+    return units
 
-    out_dir = os.path.join("pbs", args.batch)
+
+def write_jobs(units: list[tuple], batch: str) -> list[str]:
+    """Write 1 job per unit plus a submit_all.sh into pbs/<batch>/ and return the job paths."""
+    out_dir = os.path.join("pbs", batch)
     os.makedirs(out_dir, exist_ok=True)
-    os.makedirs(os.path.join("logs", args.batch), exist_ok=True)
+    os.makedirs(os.path.join("logs", batch), exist_ok=True)
     written = []
     for index, (position, operator, rates, members) in enumerate(units, start=1):
         name = f"seedvar_{index}"
@@ -182,7 +182,7 @@ def main() -> None:
                     walltime=f"{hours}:00:00",
                     name=name,
                     root=PROJECT_ROOT,
-                    batch=args.batch,
+                    batch=batch,
                     body="\n".join(call) + "\n",
                     folders=" ".join(members),
                 )
@@ -192,6 +192,26 @@ def main() -> None:
         handle.write("#!/bin/bash\n")
         for path in written:
             handle.write(f"qsub {os.path.join(PROJECT_ROOT, path)}\n")
+    return written
+
+
+def main() -> None:
+    """Find the replicate families, work out their missing ladders, write the jobs and report."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--batch", default="vit_seedvar2")
+    parser.add_argument(
+        "--asr-bar",
+        type=float,
+        default=declared_asr_bar(),
+        help="default is asr_bar in configs/psbd_basis.json",
+    )
+    parser.add_argument("--per-job", type=int, default=8)
+    args = parser.parse_args()
+
+    folders = replicate_families(args.asr_bar)
+    gaps = missing_slots(folders)
+    units = pack_units(gaps, args.per_job)
+    written = write_jobs(units, args.batch)
 
     print(f"[ok] pbs/{args.batch}/")
     print(f"     checkpoints in replicate families : {len(folders)}")
