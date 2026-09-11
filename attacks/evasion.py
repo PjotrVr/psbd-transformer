@@ -40,6 +40,45 @@ the attacker a noisier, differently centred PSU than the defender reads.
 
 See docs/plans/adaptive-attacker-and-dropout-stacking.md for the threat model, the
 success criteria and the transfer test that is the actual point.
+
+A second objective, `psbd_paper`, implements the adaptive attacker the PSBD
+paper itself describes (Li, Chen, Liu, Wang, arXiv 2406.05826, Appendix
+"Resistance to Potential Adaptive Attacks"). Selected with
+`probe["objective"] = "psbd_paper"`, default `"hinge"`, the objective above.
+
+    original form
+        L = (1 - alpha) L_bd + alpha L_ada
+        L_ada = phi_PSU(x), x in D^c union D^b
+        phi_PSU(x) = P_c(x; theta) - (1/k) sum_{i=1}^{k} P_c(x; p, theta'_i)
+
+    descriptive form
+        loss = (1 - alpha) * cross_entropy + alpha * mean_over_batch(psu_absolute)
+        psu_absolute(x) = prob_no_probe(c) - mean_over_passes(prob_with_probe(c))
+
+L_bd is the paper's own name for the cross entropy loss on the poisoned training
+set, D^c and D^b are its clean and poisoned partitions, phi_PSU is PSBD's own
+Prediction Shift Uncertainty (sec/4_method.tex) and alpha is the weight, read
+off `--evade-weight` for this objective rather than the additive coefficient it
+is for the hinge.
+
+D^c union D^b is the whole training set, so L_ada is a mean over the entire
+batch, both clean and poisoned samples together, with no reference to
+is_poisoned at all. That is the mechanism the paper's own text describes. The
+paper aims for benign samples to carry a low PSU value themselves, so the
+defender's threshold can no longer separate the 2 groups by that statistic.
+
+2 deviations from the paper's own recipe, both recorded here:
+
+1. phi_PSU is the ABSOLUTE PSU, a plain probability difference, not the
+   fractional ratio (`psu_for_batch`) the rest of this module and
+   `defences.scores` use as the headline statistic. This module implements both
+   forms side by side, `psu_for_batch` for the hinge objective and
+   `absolute_psu_for_batch` for `psbd_paper`, so each objective matches the form
+   its own source specifies.
+2. The paper computes L_ada every 50 iterations to save compute. This computes
+   it every batch instead, which is what the hinge objective already does and
+   keeps both objectives on the same training loop, at the cost of running the
+   k extra probe passes more often than the paper's own recipe.
 """
 
 import torch
@@ -82,22 +121,28 @@ class FlaggedPoisonedSet(Dataset):
         return image, label, is_poisoned
 
 
-def psu_for_batch(
+def _probe_confidences(
     model: nn.Module,
     images: torch.Tensor,
     probe: dict,
     passes: int,
     logits: torch.Tensor | None = None,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Per-sample fractional PSU under the probe, differentiable w.r.t. the model.
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """The 2 confidences phi_PSU is built from, both differentiable w.r.t. the model.
 
-    Returns (psu, logits), both carrying grad history: psu is (batch,) and logits
-    is (batch, num_classes). The logits are handed back so the caller reuses the
-    unperturbed forward for cross-entropy. Every retained forward is a full
-    ViT-B/16 activation graph, and computing the clean pass twice is enough on its
-    own to run a batch of 64 out of memory on a 40 GB card.
+    Returns (base, dropped, logits), each carrying grad history. base is
+    P_c(x; theta) and dropped is the mean of P_c(x; p, theta'_i) over `passes`
+    probe samples, both shaped (batch,). logits is the unperturbed forward pass,
+    shaped (batch, num_classes), handed back so the caller reuses it for
+    cross-entropy. Every retained forward is a full ViT-B/16 activation graph,
+    and computing the clean pass twice is enough on its own to run a batch of
+    64 out of memory on a 40 GB card.
 
-    The model is switched to eval mode for the PSU computation so the attacker
+    Shared by the fractional PSU (`psu_for_batch`, the defender's headline
+    statistic) and the absolute PSU (`absolute_psu_for_batch`, the paper's own
+    form), which differ only in whether (base - dropped) is normalised by base.
+
+    The model is switched to eval mode for this computation so the attacker
     measures the same statistic as the defender. On Swin this disables stochastic
     depth, and on ViT (dropout=0) it is a no-op. The probe modules are outside the
     model tree and explicitly set to train mode by plug_dropout, so they sample
@@ -132,9 +177,53 @@ def psu_for_batch(
     if was_training:
         model.train()
 
+    return base, dropped, logits
+
+
+def psu_for_batch(
+    model: nn.Module,
+    images: torch.Tensor,
+    probe: dict,
+    passes: int,
+    logits: torch.Tensor | None = None,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Per-sample fractional PSU under the probe, differentiable w.r.t. the model.
+
+    Returns (psu, logits), both carrying grad history: psu is (batch,) and logits
+    is (batch, num_classes). This is the defender's headline statistic
+    (`defences.scores.psu_ratio_from_cache`), used by the hinge objective.
+    """
+    base, dropped, logits = _probe_confidences(model, images, probe, passes, logits)
     base_clamped = base.clamp_min(BASE_PROBABILITY_FLOOR)
 
     psu = (base - dropped) / base_clamped  # (batch,)
+    return psu, logits
+
+
+def absolute_psu_for_batch(
+    model: nn.Module,
+    images: torch.Tensor,
+    probe: dict,
+    passes: int,
+    logits: torch.Tensor | None = None,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Per-sample absolute PSU under the probe, differentiable w.r.t. the model.
+
+    Returns (psu, logits), both carrying grad history: psu is (batch,) and logits
+    is (batch, num_classes).
+
+        original form
+            phi_PSU(x) = P_c(x; theta) - (1/k) sum_{i=1}^{k} P_c(x; p, theta'_i)
+        descriptive form
+            psu_absolute = prob_no_probe(c) - mean_over_passes(prob_with_probe(c))
+
+    This is PSBD's own form of the statistic (sec/4_method.tex), unnormalised by
+    the base confidence, and is what the paper's adaptive-attacker loss
+    (`psbd_paper` objective) is defined over. See `psu_for_batch` for the
+    fractional form this repository otherwise reports.
+    """
+    base, dropped, logits = _probe_confidences(model, images, probe, passes, logits)
+    psu = base - dropped  # (batch,)
     return psu, logits
 
 
@@ -219,6 +308,28 @@ def evasion_penalty(psu: torch.Tensor, is_poisoned: torch.Tensor) -> torch.Tenso
     return hinge
 
 
+# The 2 evasion objectives evasive_update dispatches on, read off
+# probe.get("objective", "hinge"). Exported so cli.train_backdoor's
+# --evade-objective choices cannot drift from what this module actually handles.
+EVASION_OBJECTIVES = ("hinge", "psbd_paper")
+
+
+def paper_adaptive_penalty(psu_absolute: torch.Tensor) -> torch.Tensor:
+    """L_ada from the PSBD paper's adaptive-attacker appendix, see the module docstring.
+
+        original form
+            L_ada = phi_PSU(x), x in D^c union D^b
+        descriptive form
+            loss_ada = mean_over_batch(psu_absolute)
+
+    D^c union D^b is the whole training set, so unlike `evasion_penalty` this
+    takes the mean over every sample in the batch and never looks at
+    is_poisoned: it pushes PSU down for benign and poisoned samples alike.
+    """
+    penalty = psu_absolute.mean()
+    return penalty
+
+
 def evasive_update(
     model: nn.Module,
     images: torch.Tensor,
@@ -230,19 +341,41 @@ def evasive_update(
     weight: float,
     passes: int,
 ) -> tuple[torch.Tensor, dict]:
-    """A single optimizer step on cross-entropy plus the evasion hinge."""
+    """A single optimizer step on cross-entropy plus the chosen evasion objective.
+
+    probe.get("objective", "hinge") selects the loss:
+
+    - "hinge" (default, unchanged behaviour): fractional PSU, additive penalty,
+      loss = cross_entropy + weight * evasion_penalty(psu, is_poisoned).
+    - "psbd_paper": absolute PSU, convex combination as the paper defines it,
+      loss = (1 - weight) * cross_entropy + weight * paper_adaptive_penalty(psu),
+      with weight read as alpha.
+    """
     optimizer.zero_grad(set_to_none=True)
-    psu, logits = psu_for_batch(model, images, probe, passes)
-    penalty = evasion_penalty(psu, is_poisoned)
-    loss = criterion(logits, labels) + weight * penalty
+    objective = probe.get("objective", "hinge")
+
+    if objective == "hinge":
+        psu, logits = psu_for_batch(model, images, probe, passes)
+        penalty = evasion_penalty(psu, is_poisoned)
+        loss = criterion(logits, labels) + weight * penalty
+    elif objective == "psbd_paper":
+        psu, logits = absolute_psu_for_batch(model, images, probe, passes)
+        penalty = paper_adaptive_penalty(psu)
+        loss = (1.0 - weight) * criterion(logits, labels) + weight * penalty
+    else:
+        raise ValueError(
+            f"unknown evasion objective {objective!r}, expected one of "
+            f"{EVASION_OBJECTIVES}"
+        )
+
     loss.backward()
     optimizer.step()
 
     poisoned = is_poisoned.bool()  # (batch,)
-    # Both group means are reported beside the gap. The cheapest way to close
-    # the gap is to drag clean shift down to meet poisoned rather than raise
-    # poisoned, which changes the whole model rather than hiding a backdoor, and
-    # the gap alone cannot tell the 2 apart.
+    # Both group means are reported beside the gap, whichever objective is
+    # active. The cheapest way to close the gap is to drag clean shift down to
+    # meet poisoned rather than raise poisoned, which changes the whole model
+    # rather than hiding a backdoor, and the gap alone cannot tell the 2 apart.
     stats = {
         "psu_clean": float(psu[~poisoned].mean())
         if (~poisoned).any()

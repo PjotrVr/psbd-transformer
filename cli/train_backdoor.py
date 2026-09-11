@@ -43,7 +43,7 @@ from data.loading import (
 )
 from evaluation.loaders import build_clean_loader
 from evaluation.metrics import clean_accuracy, evaluate_attack
-from attacks.evasion import FlaggedPoisonedSet, calibrate_probe_rate
+from attacks.evasion import EVASION_OBJECTIVES, FlaggedPoisonedSet, calibrate_probe_rate
 from attacks.poisoning import (
     Attack,
     CoverPoisonedTrainingSet,
@@ -243,6 +243,11 @@ def resolve_evasion(
         "position": args.evade_position,
         "operator": args.evade_operator,
         "architecture": args.architecture,
+        # Read by attacks.evasion.evasive_update to pick the loss. Living on the
+        # probe dict, not a separate argument, is what lets it reach
+        # train_one_epoch_evasive without training.loop's call signature
+        # changing: that call already forwards this dict opaquely.
+        "objective": args.evade_objective,
     }
 
     evade_rate = args.evade_rate
@@ -274,14 +279,27 @@ def parse_args() -> argparse.Namespace:
         "--evade-psbd",
         action="store_true",
         help=(
-            "adaptive attacker: add a hinge penalty that raises poisoned samples' "
-            "prediction shift onto the clean distribution, removing the statistic "
-            "PSBD reads while keeping the backdoor"
+            "adaptive attacker: add an evasion penalty (--evade-objective picks "
+            "which one) that removes the statistic PSBD reads while keeping the "
+            "backdoor"
         ),
     )
     parser.add_argument("--evade-weight", type=float, default=1.0)
     parser.add_argument("--evade-position", default="before_attention_norm")
     parser.add_argument("--evade-operator", default="dropout")
+    parser.add_argument(
+        "--evade-objective",
+        choices=EVASION_OBJECTIVES,
+        default="hinge",
+        help=(
+            "hinge (default): this repository's own penalty, additive on top of "
+            "cross-entropy, active only while poisoned shift trails clean. "
+            "psbd_paper: the PSBD paper's own adaptive-attacker loss (Appendix, "
+            "'Resistance to Potential Adaptive Attacks'), a convex combination "
+            "(1 - alpha) * cross_entropy + alpha * L_ada with --evade-weight read "
+            "as alpha, pushing every sample's PSU down, benign and poisoned alike"
+        ),
+    )
     parser.add_argument(
         "--evade-rate",
         type=float,
@@ -590,6 +608,7 @@ def main() -> None:
             "weight": args.evade_weight,
             "position": args.evade_position,
             "operator": args.evade_operator,
+            "objective": args.evade_objective,
             "rate": evade_rate,
             "rate_requested": args.evade_rate,
             "passes": args.evade_passes,
