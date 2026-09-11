@@ -59,12 +59,16 @@ def build_clean_triggered_pairs(
     test_base, _spec = load_test_base(dataset_name, raw_data_dir)
     test_base = limit_dataset(test_base, max_samples, seed)
 
-    clean = torch.stack([test_base[i][0] for i in range(len(test_base))])
+    clean = torch.stack(
+        [test_base[i][0] for i in range(len(test_base))]
+    )  # (N, C, H, W)
     # Stealth is what a defender sees at inference, which is the eval trigger.
     # It also keeps these test indices away from any train-indexed lookup an
     # attack's training-time trigger may hold (Label-Consistent's adversarial bases).
     plant = attack.apply_trigger_eval or attack.apply_trigger
-    triggered = torch.stack([plant(test_base[i][0], i) for i in range(len(test_base))])
+    triggered = torch.stack(
+        [plant(test_base[i][0], i) for i in range(len(test_base))]
+    )  # (N, C, H, W)
     assert clean.shape == triggered.shape, (
         "stealth needs index-aligned pairs. A trigger that changes the image shape "
         "would make every per-image metric compare different pixels"
@@ -98,7 +102,8 @@ def _lpips_model(backbone: str, device) -> lpips.LPIPS:
     """The LPIPS network for a backbone, built on first use and kept."""
     if backbone not in _lpips_models:
         _lpips_models[backbone] = lpips.LPIPS(net=backbone).to(device).eval()
-    return _lpips_models[backbone]
+    model = _lpips_models[backbone]
+    return model
 
 
 def per_image_lpips(
@@ -120,7 +125,9 @@ def per_image_lpips(
 
 def _mean_std(values: torch.Tensor) -> tuple[float, float]:
     """(mean, std) of a per-image metric as plain floats."""
-    return float(values.mean()), float(values.std())
+    mean = float(values.mean())
+    std = float(values.std())
+    return mean, std
 
 
 def compute_stealth_metrics(
@@ -205,4 +212,5 @@ def cached_stealth_metrics(
             seed=seed,
         )
 
-    return _stealth_cache[key]
+    cached = _stealth_cache[key]
+    return cached

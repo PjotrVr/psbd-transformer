@@ -28,7 +28,9 @@ from sklearn.manifold import TSNE
 
 def pca_project(features: torch.Tensor, num_components: int = 2) -> np.ndarray:
     """Linear projection onto the leading num_components principal directions."""
-    projected = PCA(n_components=num_components).fit_transform(features.float().numpy())
+    projected = PCA(n_components=num_components).fit_transform(
+        features.float().numpy()
+    )  # (num_samples, num_components)
     return projected
 
 
@@ -54,7 +56,7 @@ def umap_project(
         n_neighbors=num_neighbors, min_dist=min_distance, random_state=seed
     )
 
-    projected = projector.fit_transform(features.float().numpy())
+    projected = projector.fit_transform(features.float().numpy())  # (num_samples, 2)
     return projected
 
 
@@ -68,7 +70,7 @@ def tsne_project(features: torch.Tensor, seed: int = 0) -> np.ndarray:
     """
     projector = TSNE(n_components=2, init="random", random_state=seed)
 
-    projected = projector.fit_transform(features.float().numpy())
+    projected = projector.fit_transform(features.float().numpy())  # (num_samples, 2)
     return projected
 
 

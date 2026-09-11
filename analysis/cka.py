@@ -192,7 +192,7 @@ def layerwise_cka_matrix(
     grams_a = {layer: _linear_gram(features_by_layer_a[layer]) for layer in layers_a}
     grams_b = {layer: _linear_gram(features_by_layer_b[layer]) for layer in layers_b}
 
-    matrix = torch.zeros(len(layers_a), len(layers_b))
+    matrix = torch.zeros(len(layers_a), len(layers_b))  # (len(layers_a), len(layers_b))
     for i, layer_a in enumerate(layers_a):
         for j, layer_b in enumerate(layers_b):
             matrix[i, j] = _cka_from_grams(grams_a[layer_a], grams_b[layer_b], hsic)

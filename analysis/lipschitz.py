@@ -45,7 +45,7 @@ def linear_channel_lipschitz(weight: torch.Tensor) -> torch.Tensor:
     For output dimension k the map is out_k = row_k dot input, whose Lipschitz
     constant is the row's 2-norm.
     """
-    per_channel = weight.detach().float().norm(dim=1).cpu()
+    per_channel = weight.detach().float().norm(dim=1).cpu()  # (num_outputs,)
     return per_channel
 
 
@@ -54,7 +54,8 @@ def _last_linear(module: nn.Module) -> nn.Linear:
     linears = [layer for layer in module.modules() if isinstance(layer, nn.Linear)]
     if not linears:
         raise ValueError("No linear layer found in the MLP block")
-    return linears[-1]
+    last = linears[-1]
+    return last
 
 
 def mlp_output_channel_lipschitz(model: nn.Module) -> dict[int, torch.Tensor]:

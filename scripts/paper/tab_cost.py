@@ -44,9 +44,9 @@ def load_cost(results_dir: str) -> dict:
     return cost
 
 
-def ms_per_input(seconds_per_input: float) -> str:
-    """Seconds per input as milliseconds, 3 decimals, so a k=1 pass reads as more than 0.000."""
-    text = f"{seconds_per_input * 1000:.3f}"
+def seconds_text(seconds_per_input: float) -> str:
+    """Seconds per input at 4 decimals, so a k=1 pass still reads as more than 0.0000."""
+    text = f"{seconds_per_input:.4f}"
     return text
 
 
@@ -95,8 +95,7 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            f"Wall-clock cost of PSBD-TM against the number of forward passes k, "
-            f"batch 128, fp32, on 1 {cost['gpu_name']}."
+            f"Wall-clock cost of PSBD-TM against the number of forward passes k, batch 128, fp32, on 1 {cost['gpu_name']}."
         ),
         label="tab:cost",
         header=header,
@@ -108,9 +107,9 @@ def main() -> None:
     for architecture in architectures:
         record = cost["architectures"][architecture]
         plain_seconds = record["plain"]["seconds_per_input"]
-        macros[f"cost_plain_ms_{architecture}"] = (
-            ms_per_input(plain_seconds),
-            f"{ARCHITECTURE_LABELS.get(architecture, architecture)} milliseconds per "
+        macros[f"cost_plain_seconds_{architecture}"] = (
+            seconds_text(plain_seconds),
+            f"{ARCHITECTURE_LABELS.get(architecture, architecture)} seconds per "
             "input, 1 plain unperturbed forward pass",
         )
         for forward_passes in (3, 20):

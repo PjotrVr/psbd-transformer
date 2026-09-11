@@ -49,7 +49,8 @@ def load_detection_summary(
         parts = ", ".join(f"{count} {reason}" for reason, count in dropped.items())
         print(f"detection summary: {len(frame)} of {total} rows kept, dropped {parts}")
 
-    return frame.reset_index(drop=True)
+    kept = frame.reset_index(drop=True)
+    return kept
 
 
 def summary_coverage(frame: pd.DataFrame) -> pd.DataFrame:

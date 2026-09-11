@@ -56,7 +56,10 @@ def prediction_accuracy(
     total = 0
     for images, labels in loader:
         labels = labels.to(device).long()  # (batch,)
-        predictions = forward_probs(model, images, device, use_bfloat16).argmax(dim=1)
+        probs = forward_probs(
+            model, images, device, use_bfloat16
+        )  # (batch, num_classes)
+        predictions = probs.argmax(dim=1)  # (batch,)
         correct += (predictions == labels).sum().item()
         total += labels.size(0)
 
@@ -86,16 +89,18 @@ def attack_success_rate(
     which is why the target set stays small.
     """
     if not success_labels or len(success_labels) == 1:
-        return prediction_accuracy(model, backdoor_loader, device, use_bfloat16)
+        accuracy = prediction_accuracy(model, backdoor_loader, device, use_bfloat16)
+        return accuracy
 
-    targets = torch.tensor(sorted(success_labels), device=device)
+    targets = torch.tensor(sorted(success_labels), device=device)  # (num_targets,)
     model.eval()
     hit = 0
     total = 0
     for images, labels in backdoor_loader:
-        predictions = forward_probs(model, images, device, use_bfloat16).argmax(
-            dim=1
-        )  # (batch,)
+        probs = forward_probs(
+            model, images, device, use_bfloat16
+        )  # (batch, num_classes)
+        predictions = probs.argmax(dim=1)  # (batch,)
         hit += torch.isin(predictions, targets).sum().item()
         total += labels.size(0)
 
@@ -129,13 +134,16 @@ def class_correct_and_total(
     """
     model.eval()
 
-    correct = torch.zeros(num_classes)
-    total = torch.zeros(num_classes)
+    correct = torch.zeros(num_classes)  # (num_classes,)
+    total = torch.zeros(num_classes)  # (num_classes,)
     for images, labels in loader:
         labels = labels.to(device).long()  # (batch,)
-        predictions = forward_probs(model, images, device, use_bfloat16).argmax(dim=1)
+        probs = forward_probs(
+            model, images, device, use_bfloat16
+        )  # (batch, num_classes)
+        predictions = probs.argmax(dim=1)  # (batch,)
         for label in range(num_classes):
-            mask = labels == label
+            mask = labels == label  # (batch,) bool
             total[label] += mask.sum().item()
             correct[label] += (predictions[mask] == label).sum().item()
 
@@ -267,7 +275,8 @@ def evaluate_attack(
 def read_args_json(checkpoint_dir: str) -> dict:
     """The training-provenance sidecar written next to a checkpoint."""
     with open(os.path.join(checkpoint_dir, "args.json")) as handle:
-        return json.load(handle)
+        args = json.load(handle)
+    return args
 
 
 def evaluate_checkpoint(
@@ -285,12 +294,13 @@ def evaluate_checkpoint(
         benign_metrics = evaluate_benign(
             model, args["dataset"], device, raw_data_dir, batch_size
         )
-        return {
+        report = {
             "folder_name": folder_name,
             "architecture": args["architecture"],
             "dataset": args["dataset"],
             **benign_metrics,
         }
+        return report
 
     config = default_config(args["attack"])
     attack = build_attack(
@@ -406,7 +416,7 @@ def defense_effectiveness_rate(
     defence that destroys clean accuracy scores higher, while
     defense_effectiveness_rate_simplied (line 94) subtracts it, which is the
     version visual_metric.py calls and the paper's definition. The simplified
-    one is implemented, quoted here exactly:
+    variant is implemented, quoted here exactly:
 
         return (max(0, asr_bd - asr_defense) - max(0, acc_bd - acc_defnese) + 1) / 2
 
@@ -426,7 +436,7 @@ def robust_improvement_rate(
     The same 2 versions exist for RIR. robust_improvement_rate (utils/metric.py
     line 80) adds the clean-accuracy drop, robust_improvement_rate_simplied
     (line 98) subtracts it and is the version visual_metric.py calls. The
-    simplified one is implemented, quoted here exactly:
+    simplified variant is implemented, quoted here exactly:
 
         return (max(0, -ra_bd + ra_defense) - max(0, acc_bd - acc_defnese) + 1) / 2
 

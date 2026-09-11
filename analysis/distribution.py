@@ -78,9 +78,11 @@ def standardized_mean_shift(
     Reported in units of within-population spread, so it stays comparable across
     layers of different width where a raw distance would not.
     """
-    direction = backdoor_features.mean(dim=0) - clean_features.mean(dim=0)
-    clean_projected = project_onto_direction(clean_features, direction)
-    backdoor_projected = project_onto_direction(backdoor_features, direction)
+    direction = backdoor_features.mean(dim=0) - clean_features.mean(dim=0)  # (dim,)
+    clean_projected = project_onto_direction(clean_features, direction)  # (num_clean,)
+    backdoor_projected = project_onto_direction(
+        backdoor_features, direction
+    )  # (num_backdoor,)
 
     clean_count = len(clean_projected)
     backdoor_count = len(backdoor_projected)
@@ -151,13 +153,14 @@ def mahalanobis_distances(
     Returns nan for every query when the reference population has no spread at
     all, because the quantity is undefined there rather than merely large.
     """
-    reference = reference_features.double()
-    query = query_features.double()
+    reference = reference_features.double()  # (num_reference, dim)
+    query = query_features.double()  # (num_query, dim)
 
     if reference.shape[0] < 2:
         # A single row defines no distribution to measure against. A layer this
         # small must not take the whole table down with it, so it reports absent.
-        return torch.full((query.shape[0],), float("nan"))
+        undefined = torch.full((query.shape[0],), float("nan"))  # (num_query,)
+        return undefined
 
     covariance = shrunk_covariance(reference)
     if torch.diagonal(covariance).mean() <= SPECTRUM_FLOOR:
@@ -165,16 +168,17 @@ def mahalanobis_distances(
         # "in units of its variation" is then undefined rather than large. ViT's
         # layer 0 under the cls reduction is exactly this case: the class token
         # enters the stack as a learned constant, identical for every image.
-        return torch.full((query.shape[0],), float("nan"))
+        undefined = torch.full((query.shape[0],), float("nan"))  # (num_query,)
+        return undefined
 
-    centered = query - reference.mean(dim=0, keepdim=True)
+    centered = query - reference.mean(dim=0, keepdim=True)  # (num_query, dim)
 
     # solve is used rather than an explicit inverse because it is both more
     # accurate and cheaper for the same result.
-    solved = torch.linalg.solve(covariance, centered.T).T
-    squared = (centered * solved).sum(dim=1).clamp_min(0.0)
+    solved = torch.linalg.solve(covariance, centered.T).T  # (num_query, dim)
+    squared = (centered * solved).sum(dim=1).clamp_min(0.0)  # (num_query,)
 
-    distances = squared.sqrt().float()
+    distances = squared.sqrt().float()  # (num_query,)
     return distances
 
 
@@ -305,8 +309,8 @@ def target_class_alignment(
     if target_label not in centroids:
         return float("nan")
 
-    trigger_shift = backdoor_features.mean(dim=0) - clean_features.mean(dim=0)
-    target_shift = centroids[target_label] - clean_features.mean(dim=0)
+    trigger_shift = backdoor_features.mean(dim=0) - clean_features.mean(dim=0)  # (dim,)
+    target_shift = centroids[target_label] - clean_features.mean(dim=0)  # (dim,)
 
     alignment = torch.nn.functional.cosine_similarity(
         trigger_shift.unsqueeze(0), target_shift.unsqueeze(0)
@@ -363,8 +367,9 @@ def crossfit_projection_scores(
     sample_count = clean_features.shape[0]
     if sample_count < 2 * folds:
         # Too few samples to hold any out, so there is no honest estimate to give.
-        nan_scores = torch.full((sample_count,), float("nan"))
-        return nan_scores, nan_scores.clone()
+        nan_clean_scores = torch.full((sample_count,), float("nan"))  # (num_samples,)
+        nan_backdoor_scores = nan_clean_scores.clone()  # (num_samples,)
+        return nan_clean_scores, nan_backdoor_scores
 
     # A deterministic interleaved split, so the result does not depend on a seed
     # and neighbouring rows never land in the same fold.

@@ -37,7 +37,8 @@ def build_model(
     not to change the default.
     """
     if architecture == "vit":
-        return build_vit(num_classes, dropout=model_dropout)
+        vit = build_vit(num_classes, dropout=model_dropout)
+        return vit
 
     if architecture == "swin":
         if model_dropout:
@@ -46,7 +47,8 @@ def build_model(
             # it means for ViT. Refusing is better than quietly measuring
             # something else.
             raise ValueError("training-time dropout is implemented for ViT only")
-        return build_swin(num_classes)
+        swin = build_swin(num_classes)
+        return swin
 
     raise ValueError(f"Unknown architecture: {architecture}")
 
@@ -64,13 +66,14 @@ def build_optimizer(
     SAM run is the sharpness-aware 2-step, which keeps the comparison clean.
     """
     if use_sam:
-        return SAM(
+        sam_optimizer = SAM(
             model.parameters(),
             torch.optim.Adam,
             rho=rho,
             lr=learning_rate,
             weight_decay=weight_decay,
         )
+        return sam_optimizer
 
     optimizer = torch.optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=weight_decay
@@ -119,7 +122,7 @@ def plain_update(
 ) -> torch.Tensor:
     """A plain forward, backward and step, returning the batch loss."""
     optimizer.zero_grad()
-    loss = criterion(model(images), labels)
+    loss = criterion(model(images), labels)  # 0-dim
     loss.backward()
     clip_gradients(model, clip_grad_norm)
     optimizer.step()
@@ -144,7 +147,7 @@ def sam_update(
     """
     # ViT and Swin use LayerNorm rather than BatchNorm, so the 2 forward passes
     # carry no running-statistics hazard that SAM has with BatchNorm models.
-    loss = criterion(model(images), labels)
+    loss = criterion(model(images), labels)  # 0-dim
     loss.backward()
     clip_gradients(model, clip_grad_norm)
     optimizer.first_step(zero_grad=True)

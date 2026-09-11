@@ -69,20 +69,24 @@ class SAM(torch.optim.Optimizer):
         adaptive variant weights each parameter by its own magnitude, which makes
         the perturbation invariant to parameter scaling (ASAM).
         """
-        gradient_norm = self._gradient_norm()
+        gradient_norm = self._gradient_norm()  # 0-dim
 
         for group in self.param_groups:
-            scale = group["rho"] / (gradient_norm + GRADIENT_NORM_EPSILON)
+            scale = group["rho"] / (gradient_norm + GRADIENT_NORM_EPSILON)  # 0-dim
             for parameter in group["params"]:
                 if parameter.grad is None:
                     continue
 
                 # second_step restores from here, so the clone has to happen
                 # before the parameter is moved.
-                self.state[parameter]["original"] = parameter.data.clone()
+                original = parameter.data.clone()  # same shape as parameter
+                self.state[parameter]["original"] = original
 
+                # 1.0 (not adaptive) or same shape as parameter (adaptive)
                 per_parameter = torch.pow(parameter, 2) if group["adaptive"] else 1.0
-                parameter.add_(per_parameter * parameter.grad * scale.to(parameter))
+                # same shape as parameter
+                step = per_parameter * parameter.grad * scale.to(parameter)
+                parameter.add_(step)  # in place
 
         if zero_grad:
             self.zero_grad()
@@ -98,6 +102,7 @@ class SAM(torch.optim.Optimizer):
             for parameter in group["params"]:
                 if parameter.grad is None:
                     continue
+                # same shape as parameter
                 parameter.data = self.state[parameter]["original"]
 
         self.base_optimizer.step()
@@ -114,17 +119,19 @@ class SAM(torch.optim.Optimizer):
         """
         reference_device = self.param_groups[0]["params"][0].device
 
-        per_parameter_norms = []
+        per_parameter_norms = []  # k 0-dim tensors, 1 per parameter with a gradient
         for group in self.param_groups:
             for parameter in group["params"]:
                 if parameter.grad is None:
                     continue
+                # 1.0 (not adaptive) or same shape as parameter (adaptive)
                 weighting = torch.abs(parameter) if group["adaptive"] else 1.0
-                per_parameter_norms.append(
+                parameter_norm = (
                     (weighting * parameter.grad).norm(p=2).to(reference_device)
-                )
+                )  # 0-dim
+                per_parameter_norms.append(parameter_norm)
 
-        global_norm = torch.norm(torch.stack(per_parameter_norms), p=2)
+        global_norm = torch.norm(torch.stack(per_parameter_norms), p=2)  # 0-dim
         return global_norm
 
     def load_state_dict(self, state_dict) -> None:

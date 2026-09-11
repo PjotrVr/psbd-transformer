@@ -5,9 +5,9 @@
 attribution here is taken at the model's INPUT, the native-resolution image the
 Resize wrapper consumes, so on a ViT the map lives in pixel space rather than
 on a patch grid a reader would have to unfold. Grad-CAM is the 1 exception by
-construction, since it is defined on an activation grid, and it is delegated to
-the SentiNet port which already places it at the right block for each
-architecture and upsampled here for the overlay.
+construction, since it is defined on an activation grid. It is delegated to the
+SentiNet port, which already places it at the right block for each
+architecture and upsamples it here for the overlay.
 
 Nothing here mutates the model. visual_utils.saliency switches every
 parameter's requires_grad off and never switches it back, which the frozen
@@ -89,8 +89,11 @@ def ranked_classes(
     with torch.inference_mode():
         logits = forward_logits(model, images, device, use_bfloat16)  # (batch, classes)
 
-    ranked = logits.argsort(dim=1, descending=True)[:, :ranked_outputs]
-    return ranked.cpu()
+    ranked = logits.argsort(dim=1, descending=True)[
+        :, :ranked_outputs
+    ]  # (batch, ranked_outputs)
+    on_cpu = ranked.cpu()
+    return on_cpu
 
 
 def expected_gradients(
@@ -124,7 +127,7 @@ def expected_gradients(
 
     shap.GradientExplainer estimates the expectation with num_samples draws of
     (x', alpha), each a background row chosen uniformly and alpha uniform in
-    [0, 1], and the attribution is the mean over draws of the gradient times
+    [0, 1]. The attribution is the mean over draws of the gradient times
     (x - x'). The estimator here is that one, batched, with f the raw logit of
     each of the ranked_outputs top classes as upstream's ranked_outputs asks.
 
@@ -171,7 +174,7 @@ def expected_gradients(
                         (gradient * delta).sum(dim=0).cpu()
                     )
 
-    averaged = attributions / num_samples
+    averaged = attributions / num_samples  # (batch, ranked_outputs, C, H, W)
     return averaged, classes
 
 
@@ -198,4 +201,6 @@ def class_activation_map(
         cam[:, None], size=(height, width), mode="bilinear", align_corners=False
     )  # (batch, 1, H, W)
     rescaled = scale_per_image(upsampled)[:, 0]  # (batch, H, W)
-    return rescaled.detach().cpu(), predicted.cpu()
+    cam_on_cpu = rescaled.detach().cpu()  # (batch, H, W)
+    predicted_on_cpu = predicted.cpu()  # (batch,)
+    return cam_on_cpu, predicted_on_cpu

@@ -140,26 +140,22 @@ def build_balanced_eval_loaders(
     )
 
     def loader(dataset):
-        return DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        built = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        return built
 
-    return (
-        loader(
-            PoisonedTrainingSet(
-                clean_val_base, attack, set(), normalize, spec.num_classes
-            )
-        ),
-        loader(
-            PoisonedTrainingSet(
-                clean_eval_base, attack, set(), normalize, spec.num_classes
-            )
-        ),
-        loader(
-            AttackSuccessSet(
-                backdoor_eval_base,
-                extract_labels(backdoor_eval_base),
-                attack,
-                normalize,
-                spec.num_classes,
-            )
-        ),
+    validation_loader = loader(
+        PoisonedTrainingSet(clean_val_base, attack, set(), normalize, spec.num_classes)
     )
+    clean_loader = loader(
+        PoisonedTrainingSet(clean_eval_base, attack, set(), normalize, spec.num_classes)
+    )
+    backdoor_loader = loader(
+        AttackSuccessSet(
+            backdoor_eval_base,
+            extract_labels(backdoor_eval_base),
+            attack,
+            normalize,
+            spec.num_classes,
+        )
+    )
+    return validation_loader, clean_loader, backdoor_loader
