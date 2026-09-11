@@ -23,7 +23,13 @@ from lightning import seed_everything
 from torch.utils.data import DataLoader
 
 from data.registry import DATASET_REGISTRY
-from data.loading import limit_dataset, load_clean_datasets
+from data.loading import (
+    AUGMENT_CHOICES,
+    AugmentedTrainingSet,
+    build_augmentation_transform,
+    limit_dataset,
+    load_clean_datasets,
+)
 from evaluation.loaders import build_clean_loader
 from evaluation.metrics import evaluate_benign
 from training.loop import (
@@ -42,6 +48,7 @@ def build_benign_train_loader(
     num_workers: int = 8,
     max_samples: int | None = None,
     seed: int = 0,
+    augment: str = "none",
 ) -> tuple[DataLoader, int]:
     """The shuffled training split and its class count.
 
@@ -49,7 +56,12 @@ def build_benign_train_loader(
     because nothing stamps a trigger on these images so there is no pixel-space
     step that has to happen first. Evaluation reuses
     evaluation.loaders.build_clean_loader, the same function cli.evaluate and
-    cli.train_backdoor use for their clean loaders.
+    cli.train_backdoor use for their clean loaders, which augment never touches.
+
+    augment="standard" wraps the finished (normalized) training tensor in
+    build_augmentation_transform's random resized crop and flip. See
+    data.loading.build_augmentation_transform for why applying the crop and flip
+    after normalization is equivalent to applying them before it.
     """
     spec = DATASET_REGISTRY[dataset_name]
     transform = transforms_v2.Compose(
@@ -62,6 +74,10 @@ def build_benign_train_loader(
     train_dataset, _ = load_clean_datasets(dataset_name, transform, raw_data_dir)
     train_dataset = limit_dataset(train_dataset, max_samples, seed)
 
+    if augment == "standard":
+        augmentation = build_augmentation_transform(spec.image_size)
+        train_dataset = AugmentedTrainingSet(train_dataset, augmentation)
+
     train_loader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers
     )
@@ -73,9 +89,12 @@ def checkpoint_folder_name(architecture: str, dataset_name: str, args) -> str:
 
     Architecture is always explicit and adam gets no optimizer tag. SAM's rho tag
     always carries an underscore before the digits so a rho sweep keeps each run
-    in its own folder.
+    in its own folder. The _aug tag sits right after benign, before any sam_rho
+    tag, so an augmented run never overwrites its no-augmentation counterpart.
     """
     folder_name = f"{architecture}_{dataset_name}_benign"
+    if args.augment == "standard":
+        folder_name += "_aug"
     if args.use_sam:
         folder_name += f"_sam_rho_{str(args.rho).replace('.', '_')}"
     return folder_name
@@ -98,6 +117,7 @@ def train_one_benign(
         args.num_workers,
         args.max_samples,
         args.seed,
+        args.augment,
     )
     val_loader = build_clean_loader(
         dataset_name,
@@ -141,34 +161,31 @@ def train_one_benign(
     else:
         folder_name = checkpoint_folder_name(args.architecture, dataset_name, args)
         output_path = f"{args.weights_dir}/{folder_name}/attack_result.pt"
-    save_checkpoint(
-        model,
-        num_classes,
-        output_path,
-        metadata=CheckpointMetadata(
-            dataset=dataset_name,
-            attack="benign",
-            label_mode=None,
-            target_label=0,
-            poison_rate=0.0,
-            realized_poison_rate=0.0,
-            cover_rate=0.0,
-            architecture=args.architecture,
-            use_sam=args.use_sam,
-            rho=args.rho,
-            epochs=args.epochs,
-            seed=args.seed,
-            max_samples=args.max_samples,
-            clean_accuracy=accuracy,
-            asr=None,
-            started_at=started_at,
-            ended_at=ended_at,
-            learning_rate_schedule=args.lr_schedule,
-            clip_grad_norm=args.clip_grad_norm,
-            best_validation_accuracy=trajectory.best,
-            final_validation_accuracy=trajectory.final,
-        ).as_dict(),
-    )
+    metadata = CheckpointMetadata(
+        dataset=dataset_name,
+        attack="benign",
+        label_mode=None,
+        target_label=0,
+        poison_rate=0.0,
+        realized_poison_rate=0.0,
+        cover_rate=0.0,
+        architecture=args.architecture,
+        use_sam=args.use_sam,
+        rho=args.rho,
+        epochs=args.epochs,
+        seed=args.seed,
+        max_samples=args.max_samples,
+        clean_accuracy=accuracy,
+        asr=None,
+        started_at=started_at,
+        ended_at=ended_at,
+        learning_rate_schedule=args.lr_schedule,
+        clip_grad_norm=args.clip_grad_norm,
+        best_validation_accuracy=trajectory.best,
+        final_validation_accuracy=trajectory.final,
+    ).as_dict()
+    metadata["augment"] = args.augment
+    save_checkpoint(model, num_classes, output_path, metadata=metadata)
     print(f"{folder_name} clean accuracy {accuracy:.4f}, saved {output_path}")
     print(f"time taken: {folder_name} took {(time.time() - started) / 60:.1f} min")
     return accuracy
@@ -218,6 +235,15 @@ def parse_args() -> argparse.Namespace:
         help="Truncate each dataset to this many samples, reproducibly, for a fast "
         "smoke run (combine with --epochs 1). -1 (default) uses the whole dataset. "
         "This alone does not imply smoke semantics, and --epochs is independent.",
+    )
+    parser.add_argument(
+        "--augment",
+        choices=AUGMENT_CHOICES,
+        default="none",
+        help="none (default): every existing checkpoint's recipe, no augmentation "
+        "beyond normalization. standard: random resized crop to the training "
+        "resolution (scale 0.6 to 1.0) plus a random horizontal flip, on the "
+        "training loader only.",
     )
     return parser.parse_args()
 

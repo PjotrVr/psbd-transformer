@@ -36,7 +36,10 @@ from attacks import (
 from attacks.generated import GeneratedConfig
 from data.registry import DATASET_REGISTRY
 from data.loading import (
+    AUGMENT_CHOICES,
+    AugmentedTrainingSet,
     base_image_transform,
+    build_augmentation_transform,
     extract_labels,
     limit_dataset,
     load_clean_datasets,
@@ -209,6 +212,16 @@ def build_training_loader(
         normalize,
         spec.num_classes,
     )
+    if args.augment == "standard":
+        # After the trigger is stamped and the sample normalized, so the crop and
+        # flip see exactly the image an attacker's data would present at deploy
+        # time. Never applied to val_loader or any PSBD split, both built
+        # elsewhere from the plain clean or poisoned datasets. Ahead of the
+        # evasion flag below, whose wrapper adds a 3rd tuple element that
+        # AugmentedTrainingSet's 2-tuple contract does not expect.
+        augmentation = build_augmentation_transform(image_size)
+        poisoned_train = AugmentedTrainingSet(poisoned_train, augmentation)
+
     if getattr(args, "evade_psbd", False):
         # The attacker knows which samples it poisoned. This flag never reaches
         # the defender's side of any evaluation.
@@ -223,47 +236,98 @@ def build_training_loader(
     return train_loader, spec.num_classes, attack, config, realized_poison_rate
 
 
+def parse_evade_probe_tokens(args: argparse.Namespace) -> list[tuple[str, str]]:
+    """The (position, operator) pairs to train against, from --evade-probes or the singular flags.
+
+    --evade-probes, when given, takes 1 or more `position:operator` tokens (for
+    example `before_attention_norm:token_mask`) and overrides --evade-position
+    and --evade-operator entirely. With no --evade-probes, a 1-element list
+    carrying exactly the singular flags is returned, so callers never branch on
+    which path chose the probes.
+    """
+    if not args.evade_probes:
+        return [(args.evade_position, args.evade_operator)]
+
+    tokens = []
+    for token in args.evade_probes:
+        if ":" not in token:
+            raise ValueError(
+                f"--evade-probes token {token!r} must be `position:operator`"
+            )
+        position, operator = token.split(":", 1)
+        tokens.append((position, operator))
+    return tokens
+
+
 def resolve_evasion(
     args: argparse.Namespace,
     num_classes: int,
     val_loader: DataLoader,
     device: torch.device,
-) -> tuple[dict | None, float]:
-    """The adaptive attacker's probe config, and the rate it will run at.
+) -> tuple[dict | None, list[dict]]:
+    """The adaptive attacker's probe configs, and the rate each will run at.
 
-    Returns (None, requested rate) when --evade-psbd is off. A requested rate of
-    0.0 means "calibrate", so a throwaway model is built to find the rate whose
-    clean-validation shift ratio matches the defender's own sigma target, and the
-    RNG is restored afterwards so training starts from the same state either way.
+    Returns (None, []) when --evade-psbd is off. Otherwise returns the evasion
+    dict train_one_epoch_evasive reads and the resolved probe list (1 entry per
+    --evade-probes token, or 1 entry for the singular --evade-position and
+    --evade-operator flags when --evade-probes is absent), each carrying its
+    own calibrated "rate".
+
+    A requested rate of 0.0 (the default) means "calibrate", so a throwaway
+    model is built to find the rate whose clean-validation shift ratio matches
+    the defender's own sigma target, once per probe since each probe's
+    (position, operator) has its own shift-versus-rate curve. The RNG is
+    restored afterwards so training starts from the same state regardless of
+    how many probes were calibrated.
+
+    Multi-probe evasion is defined only for the hinge objective (see
+    attacks.evasion's module docstring), so more than 1 --evade-probes token
+    together with --evade-objective psbd_paper is rejected here rather than
+    left for evasive_update to raise mid-training.
     """
     if not args.evade_psbd:
-        return None, args.evade_rate
+        return None, []
 
-    probe = {
-        "position": args.evade_position,
-        "operator": args.evade_operator,
-        "architecture": args.architecture,
-        # Read by attacks.evasion.evasive_update to pick the loss. Living on the
-        # probe dict, not a separate argument, is what lets it reach
-        # train_one_epoch_evasive without training.loop's call signature
-        # changing: that call already forwards this dict opaquely.
-        "objective": args.evade_objective,
-    }
+    probe_tokens = parse_evade_probe_tokens(args)
+    if len(probe_tokens) > 1 and args.evade_objective != "hinge":
+        raise ValueError(
+            "--evade-probes with more than 1 probe only supports "
+            "--evade-objective hinge"
+        )
 
-    evade_rate = args.evade_rate
-    if evade_rate == 0.0:
-        calibration_model = build_model(args.architecture, num_classes).to(device)
-        evade_rate = calibrate_probe_rate(calibration_model, val_loader, probe, device)
+    calibration_model = None
+    probes = []
+    for position, operator in probe_tokens:
+        probe = {
+            "position": position,
+            "operator": operator,
+            "architecture": args.architecture,
+            # Read by attacks.evasion.evasive_update to pick the loss. Living on
+            # the probe dict, not a separate argument, is what lets it reach
+            # train_one_epoch_evasive without training.loop's call signature
+            # changing: that call already forwards this dict opaquely.
+            "objective": args.evade_objective,
+        }
+        rate = args.evade_rate
+        if rate == 0.0:
+            if calibration_model is None:
+                calibration_model = build_model(args.architecture, num_classes).to(
+                    device
+                )
+            rate = calibrate_probe_rate(calibration_model, val_loader, probe, device)
+        probes.append({**probe, "rate": rate})
+
+    if calibration_model is not None:
         del calibration_model
         torch.cuda.empty_cache()
         seed_everything(args.seed, workers=True)
 
     evasion = {
-        "probe": {**probe, "rate": evade_rate},
+        "probe": probes if len(probes) > 1 else probes[0],
         "weight": args.evade_weight,
         "passes": args.evade_passes,
     }
-    return evasion, evade_rate
+    return evasion, probes
 
 
 def parse_args() -> argparse.Namespace:
@@ -287,6 +351,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--evade-weight", type=float, default=1.0)
     parser.add_argument("--evade-position", default="before_attention_norm")
     parser.add_argument("--evade-operator", default="dropout")
+    parser.add_argument(
+        "--evade-probes",
+        nargs="+",
+        default=None,
+        metavar="POSITION:OPERATOR",
+        help=(
+            "1 or more `position:operator` tokens to train against jointly, for "
+            "example before_attention_norm:token_mask before_attention_norm:dropout "
+            "mlp_norm_out:gain_scale. Each is calibrated to its own rate and the "
+            "hinge loss is the mean over probes (attacks.evasion's module "
+            "docstring). Overrides --evade-position and --evade-operator "
+            "entirely; only supported with --evade-objective hinge when more "
+            "than 1 token is given"
+        ),
+    )
     parser.add_argument(
         "--evade-objective",
         choices=EVASION_OBJECTIVES,
@@ -383,6 +462,15 @@ def parse_args() -> argparse.Namespace:
         help="Truncate each dataset to this many samples, reproducibly, for a fast "
         "smoke run (combine with --epochs 1). -1 (default) uses the whole dataset. "
         "This alone does not imply smoke semantics, and --epochs is independent.",
+    )
+    parser.add_argument(
+        "--augment",
+        choices=AUGMENT_CHOICES,
+        default="none",
+        help="none (default): every existing checkpoint's recipe, no augmentation "
+        "beyond normalization. standard: random resized crop to the training "
+        "resolution (scale 0.6 to 1.0) plus a random horizontal flip, on the "
+        "training loader only, applied after the trigger is stamped.",
     )
     return parser.parse_args()
 
@@ -492,6 +580,7 @@ def build_snapshot_hook(
         metadata["epoch"] = epoch
         metadata["train_accuracy"] = train_accuracy
         metadata["snapshot_of"] = os.path.basename(base_dir)
+        metadata["augment"] = args.augment
         save_checkpoint(
             model,
             num_classes,
@@ -535,7 +624,7 @@ def main() -> None:
     # an identical RNG state whether or not --max-samples triggered any subsetting.
     seed_everything(args.seed, workers=True)
 
-    evasion, evade_rate = resolve_evasion(args, num_classes, val_loader, device)
+    evasion, evade_probes = resolve_evasion(args, num_classes, val_loader, device)
 
     model, trajectory = train_classifier(
         args.architecture,
@@ -604,12 +693,21 @@ def main() -> None:
         clip_grad_norm=args.clip_grad_norm,
         best_validation_accuracy=trajectory.best,
         final_validation_accuracy=trajectory.final,
+        # "probes" is a list even for a single --evade-position/--evade-operator
+        # run, so the sidecar's shape never depends on whether --evade-probes
+        # was used: 1 entry means single-probe evasion, more than 1 means the
+        # multi-probe hinge (attacks.evasion's module docstring).
         evasion={
             "weight": args.evade_weight,
-            "position": args.evade_position,
-            "operator": args.evade_operator,
             "objective": args.evade_objective,
-            "rate": evade_rate,
+            "probes": [
+                {
+                    "position": p["position"],
+                    "operator": p["operator"],
+                    "rate": p["rate"],
+                }
+                for p in evade_probes
+            ],
             "rate_requested": args.evade_rate,
             "passes": args.evade_passes,
         }
@@ -618,6 +716,7 @@ def main() -> None:
         model_dropout=args.model_dropout_train,
     ).as_dict()
     metadata["n_cover"] = n_cover
+    metadata["augment"] = args.augment
     # Without this, evaluation rebuilds the attack from default_config() and a run
     # trained with a modified trigger is scored against a trigger it never saw.
     metadata["attack_config_overrides"] = config_overrides(config, args.attack)

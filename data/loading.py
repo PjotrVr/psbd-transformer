@@ -37,6 +37,57 @@ def base_image_transform(image_size: int) -> transforms_v2.Compose:
     return transform
 
 
+# Every fine-tuning run in the project trains with no augmentation beyond
+# normalization, following the PSBD paper's recipe. "standard" exists to answer a
+# reviewer's question, whether the detector still holds on a model trained the
+# usual way, and stays off by default so no existing run's numbers move.
+AUGMENT_CHOICES = ("none", "standard")
+AUGMENT_CROP_SCALE = (0.6, 1.0)
+
+
+def build_augmentation_transform(image_size: int) -> transforms_v2.Compose:
+    """The "standard" augmentation: a random resized crop back to image_size, plus a flip.
+
+    Applies only on the training loader, never on evaluation or the PSBD splits, and
+    only after the attack's trigger has already been stamped, so a poisoned image is
+    augmented the way a real attacker's poisoned image would be. The crop and flip run
+    on the already-normalized training tensor at the call site (see
+    AugmentedTrainingSet), which is equivalent to running them on the poisoned image
+    before normalizing: a crop only selects pixels, an interpolated resize is a
+    per-pixel weighted sum whose weights sum to 1 and a flip only reorders pixels, so
+    all 3 commute exactly with the Normalize map's per-channel (x - mean) / std.
+    """
+    transform = transforms_v2.Compose(
+        [
+            transforms_v2.RandomResizedCrop(image_size, scale=AUGMENT_CROP_SCALE),
+            transforms_v2.RandomHorizontalFlip(),
+        ]
+    )
+    return transform
+
+
+class AugmentedTrainingSet(Dataset):
+    """A training dataset with build_augmentation_transform applied to every image.
+
+    base_dataset already stamps the trigger and normalizes, so this only has to
+    transform the tensor it already yields. See build_augmentation_transform for why
+    running the crop and flip after normalization is equivalent to running them
+    before it.
+    """
+
+    def __init__(self, base_dataset: Dataset, transform: transforms_v2.Compose):
+        self.base_dataset = base_dataset
+        self.transform = transform
+
+    def __len__(self) -> int:
+        return len(self.base_dataset)
+
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, int]:
+        image, label = self.base_dataset[index]  # (C, H, W), already normalized
+        augmented = self.transform(image)  # (C, H, W)
+        return augmented, label
+
+
 def denormalize(image: torch.Tensor, dataset_name: str) -> torch.Tensor:
     """The image back in pixel space, for visualization or trigger inspection.
 
