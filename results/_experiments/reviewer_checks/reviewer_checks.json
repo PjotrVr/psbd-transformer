@@ -1,0 +1,474 @@
+{
+  "generated_at": "2026-09-11T18:50:23.042484+00:00",
+  "git_commit": "a0818dbc892a61fb2fbe2d23339ab48171f33a97-dirty",
+  "n_panel_models": 69,
+  "check1_clean_set_size": {
+    "heldout_size": 2000,
+    "subset_sizes": [
+      100,
+      200,
+      500,
+      1000
+    ],
+    "draws": 5,
+    "seed": 0,
+    "psbd_tm": {
+      "placement": "before_attention_norm_token_mask",
+      "n_models": 69,
+      "by_size": [
+        {
+          "size": 100,
+          "n_models": 69,
+          "selected_rate_mean": 0.5623188405797102,
+          "auroc_q0.10_mean": 0.9248949343873385,
+          "auroc_q0.10_draw_std_mean": 0.010618090797230674,
+          "tpr_q0.10_mean": 0.7682511928417058,
+          "auroc_q0.20_mean": 0.9248949343873385,
+          "auroc_q0.20_draw_std_mean": 0.010618090797230674,
+          "tpr_q0.20_mean": 0.8341320944194128,
+          "worst_model": {
+            "folder": "vit_cifar10_sig_0_1",
+            "auroc_q0.10_mean": 0.43987356674382716,
+            "tpr_q0.10_mean": 0.1568055547773838
+          }
+        },
+        {
+          "size": 200,
+          "n_models": 69,
+          "selected_rate_mean": 0.5634782608695652,
+          "auroc_q0.10_mean": 0.9273540379455089,
+          "auroc_q0.10_draw_std_mean": 0.007921274237638611,
+          "tpr_q0.10_mean": 0.7721495881687922,
+          "auroc_q0.20_mean": 0.9273540379455089,
+          "auroc_q0.20_draw_std_mean": 0.007921274237638611,
+          "tpr_q0.20_mean": 0.837745202920773,
+          "worst_model": {
+            "folder": "vit_cifar10_wanet_0_1",
+            "auroc_q0.10_mean": 0.4587000385802469,
+            "tpr_q0.10_mean": 0.13944444209337234
+          }
+        },
+        {
+          "size": 500,
+          "n_models": 69,
+          "selected_rate_mean": 0.5628985507246377,
+          "auroc_q0.10_mean": 0.9294493824456658,
+          "auroc_q0.10_draw_std_mean": 0.004415274583112084,
+          "tpr_q0.10_mean": 0.7712288228865793,
+          "auroc_q0.20_mean": 0.9294493824456658,
+          "auroc_q0.20_draw_std_mean": 0.004415274583112084,
+          "tpr_q0.20_mean": 0.838862161444959,
+          "worst_model": {
+            "folder": "vit_cifar10_wanet_0_1",
+            "auroc_q0.10_mean": 0.4587000385802469,
+            "tpr_q0.10_mean": 0.10355555564165116
+          }
+        },
+        {
+          "size": 1000,
+          "n_models": 69,
+          "selected_rate_mean": 0.5631884057971015,
+          "auroc_q0.10_mean": 0.9270178449719118,
+          "auroc_q0.10_draw_std_mean": 0.0009288260298517654,
+          "tpr_q0.10_mean": 0.7657857356333188,
+          "auroc_q0.20_mean": 0.9270178449719118,
+          "auroc_q0.20_draw_std_mean": 0.0009288260298517654,
+          "tpr_q0.20_mean": 0.8343086534031275,
+          "worst_model": {
+            "folder": "vit_cifar10_sig_0_1",
+            "auroc_q0.10_mean": 0.41771023341049385,
+            "tpr_q0.10_mean": 0.07161111086606979
+          }
+        }
+      ]
+    },
+    "psbd_rd": {
+      "placement": "post_residual",
+      "n_models": 69,
+      "by_size": [
+        {
+          "size": 100,
+          "n_models": 69,
+          "selected_rate_mean": 0.08171014492753624,
+          "auroc_q0.10_mean": 0.821344718534992,
+          "auroc_q0.10_draw_std_mean": 0.009521263000778105,
+          "tpr_q0.10_mean": 0.63089688066971,
+          "auroc_q0.20_mean": 0.821344718534992,
+          "auroc_q0.20_draw_std_mean": 0.009521263000778105,
+          "tpr_q0.20_mean": 0.7010491371883646,
+          "worst_model": {
+            "folder": "vit_cifar10_tact_0_1",
+            "auroc_q0.10_mean": 0.26094511502234796,
+            "tpr_q0.10_mean": 0.0
+          }
+        },
+        {
+          "size": 200,
+          "n_models": 69,
+          "selected_rate_mean": 0.0808695652173913,
+          "auroc_q0.10_mean": 0.8234380192500247,
+          "auroc_q0.10_draw_std_mean": 0.008314087090233395,
+          "tpr_q0.10_mean": 0.6307397982773736,
+          "auroc_q0.20_mean": 0.8234380192500247,
+          "auroc_q0.20_draw_std_mean": 0.008314087090233395,
+          "tpr_q0.20_mean": 0.6991766995446675,
+          "worst_model": {
+            "folder": "vit_cifar10_tact_0_1",
+            "auroc_q0.10_mean": 0.26094511502234796,
+            "tpr_q0.10_mean": 0.0
+          }
+        },
+        {
+          "size": 500,
+          "n_models": 69,
+          "selected_rate_mean": 0.08043478260869566,
+          "auroc_q0.10_mean": 0.8242551329178555,
+          "auroc_q0.10_draw_std_mean": 0.002384718871737398,
+          "tpr_q0.10_mean": 0.6348405764451709,
+          "auroc_q0.20_mean": 0.8242551329178555,
+          "auroc_q0.20_draw_std_mean": 0.002384718871737398,
+          "tpr_q0.20_mean": 0.7038552141252338,
+          "worst_model": {
+            "folder": "vit_cifar10_tact_0_1",
+            "auroc_q0.10_mean": 0.26094511502234796,
+            "tpr_q0.10_mean": 0.0
+          }
+        },
+        {
+          "size": 1000,
+          "n_models": 69,
+          "selected_rate_mean": 0.0804927536231884,
+          "auroc_q0.10_mean": 0.822301265579894,
+          "auroc_q0.10_draw_std_mean": 0.0025683000309319765,
+          "tpr_q0.10_mean": 0.6322510201915883,
+          "auroc_q0.20_mean": 0.822301265579894,
+          "auroc_q0.20_draw_std_mean": 0.0025683000309319765,
+          "tpr_q0.20_mean": 0.7017958355595129,
+          "worst_model": {
+            "folder": "vit_gtsrb_badnet_a2o_0_01",
+            "auroc_q0.10_mean": 0.22170374083405517,
+            "tpr_q0.10_mean": 0.0008508224738761783
+          }
+        }
+      ]
+    }
+  },
+  "check2_union_generalisation": {
+    "select_on_datasets": [
+      "cifar10",
+      "gtsrb"
+    ],
+    "report_on_datasets": [
+      "cifar100",
+      "tiny"
+    ],
+    "n_selection_models": 33,
+    "n_heldout_models": 32,
+    "n_candidate_placements": 13,
+    "candidate_placements": [
+      "after_attention_residual_token_mask",
+      "before_attention_norm_channel_mask",
+      "before_attention_norm_gaussian",
+      "before_attention_norm_token_mask",
+      "before_mlp_gaussian",
+      "before_mlp_norm_token_mask",
+      "both_sublayer_inputs_token_mask",
+      "input_pixels_scale_up",
+      "mlp_neurons_channel_mask",
+      "post_residual",
+      "pre_residual",
+      "pre_residual_blocks_1_4",
+      "pre_residual_blocks_5_8"
+    ],
+    "best_pair_on_selection": {
+      "placements": [
+        "before_attention_norm_token_mask",
+        "post_residual"
+      ],
+      "selection_summary": {
+        "placements": [
+          "before_attention_norm_token_mask",
+          "post_residual"
+        ],
+        "n_models": 33,
+        "auroc_mean": 0.9475525412220688,
+        "tpr10_mean": 0.7894980708687481,
+        "tpr20_mean": 0.853973484936763,
+        "worst_model": {
+          "folder": "vit_gtsrb_tact_0_1",
+          "dataset": "gtsrb",
+          "attack": "tact",
+          "poison_rate": 0.1,
+          "auroc": 0.7252865241445257,
+          "tpr_at_0.10": 0.05454545468091965,
+          "fpr_at_0.10": 0.2512396574020386,
+          "tpr_at_0.20": 0.7487603425979614,
+          "fpr_at_0.20": 0.257851243019104
+        }
+      }
+    },
+    "held_out": {
+      "psbd_tm_alone": {
+        "placements": [
+          "before_attention_norm_token_mask"
+        ],
+        "n_models": 32,
+        "auroc_mean": 0.9436876999349224,
+        "tpr10_mean": 0.8501692889840342,
+        "tpr20_mean": 0.9013534497935325,
+        "worst_model": {
+          "folder": "vit_tiny_tact_0_01",
+          "dataset": "tiny",
+          "attack": "tact",
+          "poison_rate": 0.01,
+          "auroc": 0.5756802721088435,
+          "tpr_at_0.10": 0.02380952425301075,
+          "fpr_at_0.10": 0.0,
+          "tpr_at_0.20": 0.1190476194024086,
+          "fpr_at_0.20": 0.1190476194024086
+        }
+      },
+      "best_pair": {
+        "placements": [
+          "before_attention_norm_token_mask",
+          "post_residual"
+        ],
+        "n_models": 32,
+        "auroc_mean": 0.9339262516791943,
+        "tpr10_mean": 0.8328101600636728,
+        "tpr20_mean": 0.8744521697517484,
+        "worst_model": {
+          "folder": "vit_tiny_tact_0_01",
+          "dataset": "tiny",
+          "attack": "tact",
+          "poison_rate": 0.01,
+          "auroc": 0.5901360544217688,
+          "tpr_at_0.10": 0.02380952425301075,
+          "fpr_at_0.10": 0.0,
+          "tpr_at_0.20": 0.095238097012043,
+          "fpr_at_0.20": 0.02380952425301075
+        }
+      },
+      "pair_gain_over_psbd_tm": {
+        "n": 32,
+        "mean_gain": -0.009761448255728174,
+        "ci_low": -0.02499108137466061,
+        "ci_high": 0.0025194469666196054
+      }
+    }
+  },
+  "check3_mask_seed": {
+    "position": "before_attention_norm",
+    "operator": "token_mask",
+    "mask_seeds": [
+      0,
+      1,
+      2
+    ],
+    "results_dir": "results/_experiments/reviewer_checks/mask_seeds",
+    "models": [
+      {
+        "folder": "vit_cifar10_wanet_0_1",
+        "rate": 0.5,
+        "by_seed": {
+          "0": {
+            "auroc": 0.4587000385802469,
+            "tpr": 0.08666666597127914
+          },
+          "1": {
+            "auroc": 0.4583960165895062,
+            "tpr": 0.08361110836267471
+          },
+          "2": {
+            "auroc": 0.45840046296296294,
+            "tpr": 0.08694444596767426
+          }
+        },
+        "auroc_std": 0.00017425780305910265,
+        "tpr_std": 0.0018495374924018969
+      },
+      {
+        "folder": "vit_cifar100_badnet_a2o_0_01",
+        "rate": 0.5,
+        "by_seed": {
+          "0": {
+            "auroc": 0.987813554391276,
+            "tpr": 0.9989892840385437
+          },
+          "1": {
+            "auroc": 0.9866901367139567,
+            "tpr": 0.9979785084724426
+          },
+          "2": {
+            "auroc": 0.9866872954069394,
+            "tpr": 0.9977258443832397
+          }
+        },
+        "auroc_std": 0.0006494272669742881,
+        "tpr_std": 0.0006685539307084414
+      },
+      {
+        "folder": "vit_cifar10_sig_0_1",
+        "rate": 0.8,
+        "by_seed": {
+          "0": {
+            "auroc": 0.41771023341049385,
+            "tpr": 0.07083333283662796
+          },
+          "1": {
+            "auroc": 0.4353055459104938,
+            "tpr": 0.06361111253499985
+          },
+          "2": {
+            "auroc": 0.4339713638117284,
+            "tpr": 0.06416666507720947
+          }
+        },
+        "auroc_std": 0.009796252904140403,
+        "tpr_std": 0.004018987511942006
+      },
+      {
+        "folder": "vit_cifar10_badnet_a2o_0_1",
+        "rate": 0.6,
+        "by_seed": {
+          "0": {
+            "auroc": 0.9909954089506173,
+            "tpr": 0.934583306312561
+          },
+          "1": {
+            "auroc": 0.9910913194444445,
+            "tpr": 0.9393055438995361
+          },
+          "2": {
+            "auroc": 0.9906945987654322,
+            "tpr": 0.9381944537162781
+          }
+        },
+        "auroc_std": 0.00020699150042665675,
+        "tpr_std": 0.0024689550689358827
+      },
+      {
+        "folder": "vit_cifar100_bpp_0_05",
+        "rate": 0.5,
+        "by_seed": {
+          "0": {
+            "auroc": 0.9852099115323943,
+            "tpr": 0.96146559715271
+          },
+          "1": {
+            "auroc": 0.984453916354635,
+            "tpr": 0.9603285193443298
+          },
+          "2": {
+            "auroc": 0.9846586181590644,
+            "tpr": 0.9600757956504822
+          }
+        },
+        "auroc_std": 0.00039101490189198424,
+        "tpr_std": 0.000740311130914694
+      },
+      {
+        "folder": "vit_cifar100_tact_0_01",
+        "rate": 0.5,
+        "by_seed": {
+          "0": {
+            "auroc": 0.9087065662571014,
+            "tpr": 0.5057471394538879
+          },
+          "1": {
+            "auroc": 0.9011758488571806,
+            "tpr": 0.517241358757019
+          },
+          "2": {
+            "auroc": 0.9057999735764302,
+            "tpr": 0.4137931168079376
+          }
+        },
+        "auroc_std": 0.0037978615690933484,
+        "tpr_std": 0.05669979147597767
+      },
+      {
+        "folder": "vit_gtsrb_bpp_0_05",
+        "rate": 0.6,
+        "by_seed": {
+          "0": {
+            "auroc": 0.9924530371060547,
+            "tpr": 0.9783512949943542
+          },
+          "1": {
+            "auroc": 0.9922756818850225,
+            "tpr": 0.9781622290611267
+          },
+          "2": {
+            "auroc": 0.9924000271542506,
+            "tpr": 0.978445827960968
+          }
+        },
+        "auroc_std": 9.103724091187556e-05,
+        "tpr_std": 0.00014440149172544406
+      },
+      {
+        "folder": "vit_gtsrb_wanet_0_1",
+        "rate": 0.4,
+        "by_seed": {
+          "0": {
+            "auroc": 0.9479584774115494,
+            "tpr": 0.9489506483078003
+          },
+          "1": {
+            "auroc": 0.9472191130319275,
+            "tpr": 0.9484779834747314
+          },
+          "2": {
+            "auroc": 0.9472326481532304,
+            "tpr": 0.9490451812744141
+          }
+        },
+        "auroc_std": 0.00042301910862950097,
+        "tpr_std": 0.00030388097180793336
+      },
+      {
+        "folder": "vit_tiny_blend_0_1",
+        "rate": 0.5,
+        "by_seed": {
+          "0": {
+            "auroc": 0.9981603481380206,
+            "tpr": 0.9989948272705078
+          },
+          "1": {
+            "auroc": 0.9978815288133063,
+            "tpr": 0.9987435340881348
+          },
+          "2": {
+            "auroc": 0.9978373584775257,
+            "tpr": 0.9987435340881348
+          }
+        },
+        "auroc_std": 0.00017512545749817025,
+        "tpr_std": 0.00014508418648859634
+      },
+      {
+        "folder": "vit_tiny_badnet_a2o_0_01",
+        "rate": 0.5,
+        "by_seed": {
+          "0": {
+            "auroc": 0.9801286373415102,
+            "tpr": 0.9894459247589111
+          },
+          "1": {
+            "auroc": 0.9804901931672342,
+            "tpr": 0.9933408498764038
+          },
+          "2": {
+            "auroc": 0.9810765156980474,
+            "tpr": 0.9934664964675903
+          }
+        },
+        "auroc_std": 0.0004783600638371776,
+        "tpr_std": 0.002285870570897942
+      }
+    ],
+    "auroc_std_mean": 0.0016183347816462507,
+    "tpr_std_mean": 0.006932537383180051
+  }
+}
