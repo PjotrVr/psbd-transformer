@@ -88,7 +88,7 @@ written.
 | [H3](H3-why-post-residual-fails.md) | Post-residual fails by saturating | **REFUTED** as stated |
 | [H4](H4-placement-is-attack-dependent.md) | The best placement tracks where the backdoor direction enters `[CLS]` | **SUPPORTED** |
 | [H5](H5-all-to-all-breaks-psbd.md) | PSBD degrades on all-to-all, which has no single target class | **SUPPORTED**: PSBD does not cover all-to-all. The signal is present with the sign reversed, recorded as a diagnostic only, never as detection |
-| [H6](H6-sam-improves-detectability.md) | SAM makes backdoors more detectable | **DROPPED**, out of scope. The effect is +0.009 AUROC, which needs 10 to 89 seeds per cell to establish. SAM checkpoints are excluded from every reporting path by default |
+| [H6](H6-sam-improves-detectability.md) | SAM makes backdoors more detectable | **PARTIALLY SUPPORTED** for the token mask placement at 10 percent poisoning, unsettled below it. The published placement loses at every rate measured. Full reading in [`docs/sam-findings-2026-09-11.md`](../sam-findings-2026-09-11.md), which supersedes the earlier +0.009 aggregate |
 | [H7](H7-clean-shifts-to-target.md) | Clean samples under dropout shift specifically to the target class | **PARTIALLY REFUTED** |
 | [H8](H8-detection-scales-with-poison-rate.md) | Detection improves with poison rate | INCONCLUSIVE |
 | [H9](H9-strength-not-position.md) | The pre/post gap is a perturbation-strength artifact, not a placement effect | **SUPPORTED** for 3 of 4 attacks |

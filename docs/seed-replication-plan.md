@@ -49,11 +49,14 @@ Read that table as the decision rule. If tier 1 shows `sigma_seed` at or under
 0.02, 3 seeds carries every remaining claim. If it comes in at 0.03 or above, H23
 needs 5 and the gaussian result has to be reported as a tie rather than as a win.
 
-The struck row is why SAM was **dropped rather than measured**. At +0.009 it needs
-10 to 89 seeds per cell, so the only affordable outcome was a confident statement
-that something does not matter. It is out of scope, SAM checkpoints are excluded
-from every reporting path by default, and no seed is spent on it. See
-`results-report.md` section 4.7.
+The struck row's +0.009 figure is superseded. The matched comparison in
+`docs/sam-findings-2026-09-11.md` reads a small gain for the token mask placement
+that becomes consistent only at 10 percent poisoning, +0.065 to +0.074 mean
+AUROC over 8 to 10 matched checkpoint pairs, and a loss for the published
+placement at every rate measured. SAM checkpoints stay excluded from every
+reporting path by default. No seed has yet been spent on either placement,
+so whether that 10 percent finding survives retraining noise is still open.
+See `results-report.md` section 4.7 and `docs/sam-findings-2026-09-11.md`.
 
 ## Tier 1, essential
 

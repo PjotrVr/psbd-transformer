@@ -491,24 +491,30 @@ direction. The readout weight adaptation is itself attack-specific.
   top-20 TAC dimensions is 0.00 to 0.08, against a chance floor of 0.014 and a
   split-half ceiling of 0.87. Attacks share no coordinate-level structure.
 
-### 4.7 SAM, dropped as a line of enquiry
+### 4.7 SAM, current reading
 
-Sharpness-aware minimization is **out of scope for this paper** and no claim rests
-on it. Its entire measured effect on detection is +0.009 mean AUROC. Establishing
-an effect that size against plausible seed to seed variance needs 10 to 89 training
-seeds per cell (`seed-replication-plan.md`), which is an unaffordable amount of
-compute spent to confirm that something does not matter.
+The earlier +0.009 mean AUROC aggregate that this section once used to drop SAM
+as out of scope is superseded. It pooled 18 unmatched combinations, 13 of them
+the atypical `badnet_a2a` attack, against checkpoints swept over an unequal grid.
+The current reading, matched on architecture, dataset, attack and poison rate, is
+`docs/sam-findings-2026-09-11.md`, which every claim in this section now points
+to instead of restating.
 
-The cost of carrying it was concrete rather than theoretical: SAM checkpoints are
-69 percent of the trained set and 75 percent of all analysis rows, so every panel
-that included them spent most of its coverage on the arm with no effect, and
-unequal coverage across arms is the failure mode that inverted 4 conclusions
-elsewhere in this project. Excluding SAM cut a re-sweep from 326 to 74.5 GPU-hours
-with no loss to any reported result.
+The matched comparison finds a small, rate dependent gain for the recommended
+token mask placement and a loss for the published residual dropout placement.
+The token mask gain is close to 0 and sign unstable at 1 percent poisoning (7
+matched checkpoint pairs) and only occasionally significant at 5 percent (7 to
+8 pairs). It becomes consistent only at 10 percent poisoning (8 to 10 pairs,
++0.065 to +0.074 mean AUROC, 3 of 4 bootstrap intervals excluding 0). The
+residual dropout placement loses at every rate measured, with intervals
+excluding 0 in the losing direction at rho 0.15 and rho 0.2 on the pooled grid.
+Coverage is ViT only, CIFAR-10 and CIFAR-100 only, since Swin, GTSRB and Tiny
+ImageNet have not yet been swept at both placements on the SAM side.
 
-The SAM checkpoints and their caches stay on disk and the raw record keeps them.
-Every reporting path excludes them by default, behind an explicit `--include-sam`
-flag, so nothing is deleted and nothing is claimed.
+SAM checkpoints stay excluded from every reporting path by default, behind an
+explicit `--include-sam` flag, since the gain that does exist is small and rate
+dependent rather than a settled positive. Nothing is deleted and nothing beyond
+`docs/sam-findings-2026-09-11.md` is claimed.
 
 Two observations from the earlier SAM work are retained because they are about the
 backdoor rather than about SAM, and they cost nothing to keep:
