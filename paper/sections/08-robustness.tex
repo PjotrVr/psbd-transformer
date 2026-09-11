@@ -4,29 +4,35 @@
 \subsection{An adaptive attacker and the union of probes}
 \label{sec:robustness:adaptive}
 
-The PSBD paper tests an attacker who knows the defence and adds a loss term that lowers the prediction shift of poisoned samples, and reports that the defence survives because its rate rule moves to a higher dropout rate. We trained a stronger version of that attacker on ViT. It is a hinge loss that pushes the poisoned samples' fractional shift up to the clean samples' shift under the exact probe the defender uses, trained jointly with the backdoor on CIFAR-100 for BadNets, Blend, BPP, LF and Adaptive-Blend at 3 poison rates, 14 backdoored models in all. \Cref{tab:adaptive} summarises the outcome.
+The PSBD paper tests an attacker who knows the defence and adds a loss term that lowers the prediction shift of poisoned samples, and reports that the defence survives because its rate rule moves to a higher dropout rate. We trained a stronger version of that attacker on ViT. It is a hinge loss that pushes the poisoned samples' fractional shift up to the clean samples' shift under the exact probe the defender uses, PSBD-TM, trained jointly with the backdoor on CIFAR-100 for BadNets, Blend, BPP, LF and Adaptive-Blend at 3 poison rates. 14 of the 15 evasive models keep an ASR of at least 0.9 and lose 3 points of clean accuracy on average, and \cref{tab:adaptive} summarises them.
 
 \begin{table*}[t]
 \centering\small
-\caption{The adaptive attacker on 14 CIFAR-100 ViT-B/16 models. ASR is the attack success rate of the evasive model and cost its clean-accuracy loss. Probed is the AUROC of the placement the attacker trained against, transfer the mean AUROC over the other placements of the basis, and union the min-rank combination of all probes.}
+\caption{The adaptive attacker on 14 CIFAR-100 ViT-B/16 models. ASR is the attack success rate of the evasive model and cost its clean-accuracy loss. Probed is the AUROC of PSBD-TM, the placement the attacker trained against, transfer the mean AUROC of the 2 probes the attacker never saw, and union the AUROC of the min-rank union of all 3 probes.}
 \label{tab:adaptive}
 \begin{tabular}{lrrrrr}
 \toprule
  & ASR & Cost & Probed & Transfer & Union \\
 \midrule
 before the attack & 0.966 & & 0.966 & & \\
-after the attack, mean & 0.981 & $-$0.030 & \textbf{0.233} & 0.893 & \textbf{0.973} \\
-worst model for the defender (BadNets 5\%) & 1.000 & $-$0.026 & 0.004 & 0.785 & 0.996 \\
-best model for the defender (Blend 5\%) & 1.000 & $-$0.032 & 0.807 & 0.978 & 0.991 \\
+after the attack, mean & 0.981 & $-$0.030 & \textbf{0.233} & 0.893 & \textbf{0.967} \\
+worst model for the probe (BadNets 5\%) & 1.000 & $-$0.026 & 0.004 & 0.785 & 0.994 \\
+worst model for the union (LF 1\%) & 0.938 & $-$0.042 & 0.410 & 0.838 & 0.852 \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-Against a single fixed probe the attacker wins. The probed placement falls from a mean AUROC of 0.966 to 0.233, and to 0.004 on BadNets at 5\%, while the attack keeps its success and costs the attacker 3 points of clean accuracy. The rate rule is already inside these numbers and does not rescue the probe. The claim that PSBD survives an adaptive attacker, obtained with a weaker attacker on ResNet-18, does not appear to transfer to ViT as stated.
+Against a single fixed probe the attacker wins. PSBD-TM falls from a mean AUROC of 0.966 to 0.233, and to 0.004 on BadNets at 5\%, while the attack keeps its success. The rate rule is already inside these numbers and does not rescue the probe. The claim that PSBD survives an adaptive attacker, obtained with a weaker attacker on ResNet-18, does not appear to transfer to ViT as stated.
 
-What does hold is that the evasion does not transfer between probes. The attacker shaped the model against 1 site and 1 perturbation, and every other placement in the basis keeps detecting at a mean of 0.893. Combining all placements by taking each input's most suspicious rank across probes, which we call the union, restores a mean AUROC of 0.973 with a worst model of 0.882. That is above the single-probe defence before the attack on most models.
+What does hold is that the evasion does not transfer between probes. The attacker's loss is computed through 1 site and 1 perturbation, so its gradient only touches the features that probe reads. Dropout at the attention input still reads 0.81 on average on the evasive models and gain scaling of the MLP LayerNorm output reads 0.98, against 0.23 for the probe the attacker trained against.
 
-The defender does not need to know which probe was attacked. Using all of them is within 0.006 of an oracle that drops the attacked one, and attempting to identify the attacked probe and exclude it does worse. The union of probes is therefore the defence we recommend against an adaptive attacker, at a cost of 1 sweep per probe. The open question is an attacker who trains against the union itself. That attack is more expensive for the attacker, since evading 1 probe already costs up to 4.5 clean-accuracy points, and we have not run it. We are also training the paper's own adaptive attacker, whose loss is a convex combination of the backdoor loss and the absolute prediction shift, and \cref{app:rate} will carry its numbers.
+The defence we recommend is therefore a union of probes. Let $s_j(x)$ be the fractional prediction shift of input $x$ under probe $j$, and let $r_j(x)$ be its rank, the share of clean validation inputs whose statistic under probe $j$ is below $s_j(x)$, so that a triggered input, which barely shifts, has a rank near 0. The union score is the most suspicious rank across probes,
+\begin{equation}
+  u(x) = \min_{j} r_j(x),
+\end{equation}
+and $x$ is flagged when $u(x)$ falls below the 25th percentile of $u$ over the clean validation set. Taking the minimum means an input escapes only when every probe considers it clean, and setting the threshold on $u$ itself rather than on each probe keeps the false-positive rate at the budget whatever the probes' correlation. We ran a union of 3 probes, PSBD-TM, dropout at the attention input and gain scaling of the MLP LayerNorm output, each at its own rate from the same rule. A 4th probe, Gaussian noise at the MLP input, was left out because its statistic reads below chance on several of these models, and a probe below chance only adds false alarms to a minimum.
+
+The union restores a mean AUROC of 0.967 on the evasive models, with a worst case of 0.852 on LF at 1\%, and at the 25\% budget it flags 0.97 of the triggered inputs at a measured false-positive rate of 0.26. This is within 0.004 of a union that drops the attacked probe as if the defender knew which one it was, so the defender does not need to know. The cost is 1 sweep per probe, 3 times PSBD-TM alone. The open question is an attacker who trains against the union itself. That attack has to evade 3 probes with 3 different Jacobians at once, and evading 1 already costs up to 4.5 clean-accuracy points, but we have not run it. We are also training the PSBD paper's own adaptive attacker, whose loss is a convex combination of the backdoor loss and the absolute prediction shift, and \cref{app:rate} will carry its numbers.
 
 \subsection{Forward passes and their cost}
 \label{sec:robustness:passes}
@@ -35,7 +41,7 @@ PSBD uses $k = 3$ passes. On all models the mean AUROC of PSBD-TM rises from 0.9
 
 \IfFileExists{tables/cost.tex}{\input{tables/cost}}{}
 
-The passes are the cost of the defence. Each pass is a full forward pass of the perturbed network, so PSBD at $k = 3$ costs 3 times a plain prediction and at $k = 20$ costs 20 times. \Cref{tab:cost} gives the measured seconds per input on the A100 we use, for ViT-B/16 and Swin-S, which is what a deployment trades against the small gain beyond $k = 3$.
+The passes are the cost of the defence. Each pass is a full forward pass of the perturbed network, and \cref{tab:cost} gives the measured cost on the A100 we use. At batch size 128 a plain ViT-B/16 prediction takes 2.2 ms per input, PSBD at $k = 3$ takes 6.7 ms, 3.0 times as much, and $k = 20$ takes 46 ms, 21 times as much. Swin-S is a third faster at every $k$ with the same ratios. A deployment therefore trades a 3-fold slowdown for the detector at $k = 3$ and would pay a further 7-fold for the 0.003 that $k = 20$ adds.
 
 \subsection{Seed variance}
 \label{sec:robustness:seeds}

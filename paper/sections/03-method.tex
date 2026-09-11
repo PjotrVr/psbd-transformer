@@ -8,6 +8,9 @@ A placement is a site paired with a perturbation. A site is a named tensor bound
 
 A perturbation is what the hook does to the tensor. We use dropout as in the original, token masking (zero whole tokens with the class token protected, then rescale), channel masking (zero whole channels), isotropic Gaussian noise scaled to the tensor's standard deviation, and gain scaling of a LayerNorm output. Every perturbation takes 1 rate $p$, and every placement is swept over a ladder of rates from 0.05 to 0.9, in every block unless a band of blocks is stated.
 
+\paragraph{Terms used throughout.}
+A sweep runs 1 placement on 1 backdoored model over its rate ladder and stores the per-pass predictions, so that every rule and metric below is read from the same stored passes. A probe is a placement together with the rate the rule assigns it on a given model, the unit a defender deploys. The basis is the declared list of placements swept on every model, listed in \cref{app:basis}. A band restricts a placement to a range of blocks, and a placement without a band acts in every block. The benign reference of a dataset is a model trained with the same recipe and no poisoning, probed with the same triggers, which every mechanism experiment uses as its control.
+
 \paragraph{The 2 placements we name.}
 The ResNet placement of the original work has no literal counterpart in a ViT block, which has 2 residual adds and no activation after them. We read it as dropout on the residual stream after both adds, site C in \cref{fig:vit-block}, and call PSBD with that placement PSBD-RD. The placement this paper arrives at masks whole tokens at the attention input, site A, and we call it PSBD-TM.
 

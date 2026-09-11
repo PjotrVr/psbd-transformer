@@ -2,7 +2,7 @@
 
 Reads results/_experiments/sam_reading/sam_reading.json, written by
 experiments/sam_reading/measure.py from every (architecture, dataset, attack,
-poison rate) cell with both an Adam checkpoint and at least 1 SAM checkpoint
+poison rate) combination with both an Adam checkpoint and at least 1 SAM checkpoint
 (badnet_a2a excluded). 1 row per rho, with Adam as the reference row: mean
 attack success and clean accuracy, mean AUROC and TPR at the q0.10 FPR budget
 for the token-mask placement at the attention input, mean AUROC for the
@@ -29,12 +29,14 @@ from scripts.paper._common import (  # noqa: E402
 )
 
 GENERATOR = "scripts/paper/tab_sam.py"
-SAM_READING_PATH = os.path.join("results", "_experiments", "sam_reading", "sam_reading.json")
+SAM_READING_PATH = os.path.join(
+    "results", "_experiments", "sam_reading", "sam_reading.json"
+)
 
-TOKEN_MASK_HEADER = "PSBD token mask AUROC"
-TOKEN_MASK_TPR_HEADER = "PSBD token mask TPR at 10%"
-RESIDUAL_DROPOUT_HEADER = "PSBD residual dropout AUROC"
-DELTA_HEADER = "PSBD token mask delta vs Adam"
+TOKEN_MASK_HEADER = "PSBD-TM AUROC"
+TOKEN_MASK_TPR_HEADER = "PSBD-TM TPR@10\\%"
+RESIDUAL_DROPOUT_HEADER = "PSBD-RD AUROC"
+DELTA_HEADER = "PSBD-TM, SAM minus Adam"
 
 
 def adam_row(sam_reading: dict) -> list[str]:
@@ -89,8 +91,12 @@ def best_and_worst_rho(sam_reading: dict) -> tuple[dict, dict]:
         for entry in sam_reading["aggregate_by_rho"]
         if entry["placements"]["token_mask"]["delta_auroc_mean"] is not None
     ]
-    best = max(scored, key=lambda entry: entry["placements"]["token_mask"]["delta_auroc_mean"])
-    worst = min(scored, key=lambda entry: entry["placements"]["token_mask"]["delta_auroc_mean"])
+    best = max(
+        scored, key=lambda entry: entry["placements"]["token_mask"]["delta_auroc_mean"]
+    )
+    worst = min(
+        scored, key=lambda entry: entry["placements"]["token_mask"]["delta_auroc_mean"]
+    )
     return best, worst
 
 
@@ -98,7 +104,9 @@ def main() -> None:
     args = build_parser(__doc__).parse_args()
     sam_reading = load_json(SAM_READING_PATH)
     if sam_reading is None:
-        raise SystemExit(f"{SAM_READING_PATH} does not exist, run experiments/sam_reading/measure.py first")
+        raise SystemExit(
+            f"{SAM_READING_PATH} does not exist, run experiments/sam_reading/measure.py first"
+        )
 
     inputs = [SAM_READING_PATH]
 
@@ -111,12 +119,7 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "Sharpness-aware minimisation against Adam on the matched "
-            f"{sam_reading['n_cells']} architecture, dataset, attack and "
-            "poison-rate cells that trained both, 1 row per rho with Adam as "
-            "the reference, attack success and clean accuracy as means, and "
-            "the token-mask placement's paired AUROC delta against Adam with "
-            "a bootstrap 95\\% interval."
+            "PSBD on models trained with sharpness-aware minimisation against their Adam-trained counterparts, 1 row per sharpness radius."
         ),
         label="tab:sam",
         header=[
@@ -138,28 +141,34 @@ def main() -> None:
     macros = {
         "sam_pairs": (
             str(sam_reading["n_cells"]),
-            "matched architecture, dataset, attack and poison-rate cells with "
+            "matched architecture, dataset, attack and poison-rate combinations with "
             "both an Adam and a SAM checkpoint, badnet_a2a excluded",
         ),
         "sam_adam_reference_auroc_token_mask": (
-            fmt(sam_reading["adam_reference"]["placements"]["token_mask"]["auroc_mean"]),
+            fmt(
+                sam_reading["adam_reference"]["placements"]["token_mask"]["auroc_mean"]
+            ),
             "mean AUROC of the token-mask placement at the attention input on "
             "the Adam checkpoints in the matched grid",
         ),
         "sam_adam_reference_auroc_residual_dropout": (
-            fmt(sam_reading["adam_reference"]["placements"]["residual_dropout"]["auroc_mean"]),
+            fmt(
+                sam_reading["adam_reference"]["placements"]["residual_dropout"][
+                    "auroc_mean"
+                ]
+            ),
             "mean AUROC of the dropout placement after the residual add on the "
             "Adam checkpoints in the matched grid",
         ),
-        "sam_best_rho_token_mask_delta": (
+        "sam_max_rho_token_mask_delta": (
             fmt(best["placements"]["token_mask"]["delta_auroc_mean"], signed=True),
-            f"largest paired AUROC gain of the token-mask placement, SAM minus "
+            "highest paired AUROC delta of the token-mask placement, SAM minus "
             f"Adam, over any rho, reached at rho {best['rho']}, n="
             f"{best['placements']['token_mask']['n']}",
         ),
-        "sam_worst_rho_token_mask_delta": (
+        "sam_min_rho_token_mask_delta": (
             fmt(worst["placements"]["token_mask"]["delta_auroc_mean"], signed=True),
-            f"largest paired AUROC loss of the token-mask placement, SAM minus "
+            "lowest paired AUROC delta of the token-mask placement, SAM minus "
             f"Adam, over any rho, reached at rho {worst['rho']}, n="
             f"{worst['placements']['token_mask']['n']}",
         ),
@@ -169,11 +178,13 @@ def main() -> None:
         token_mask = entry["placements"]["token_mask"]
         residual_dropout = entry["placements"]["residual_dropout"]
         ci = token_mask["delta_auroc_ci"]
-        ci_low, ci_high = (ci[0], ci[1]) if ci is not None else (float("nan"), float("nan"))
+        ci_low, ci_high = (
+            (ci[0], ci[1]) if ci is not None else (float("nan"), float("nan"))
+        )
         macros[f"sam_{stem}_token_mask_delta"] = (
             fmt(token_mask["delta_auroc_mean"], signed=True),
             f"mean paired AUROC delta of the token-mask placement, SAM rho "
-            f"{entry['rho']} minus Adam, over the {token_mask['n']} cells "
+            f"{entry['rho']} minus Adam, over the {token_mask['n']} combinations "
             "both sides swept",
         )
         macros[f"sam_{stem}_token_mask_delta_ci"] = (
@@ -184,7 +195,7 @@ def main() -> None:
             fmt(residual_dropout["delta_auroc_mean"], signed=True),
             f"mean paired AUROC delta of the dropout placement after the "
             f"residual add, SAM rho {entry['rho']} minus Adam, over the "
-            f"{residual_dropout['n']} cells both sides swept",
+            f"{residual_dropout['n']} combinations both sides swept",
         )
 
     write_macros(
@@ -193,7 +204,9 @@ def main() -> None:
         inputs,
         macros,
     )
-    print(f"sam: {sam_reading['n_cells']} matched cells, {len(sam_reading['aggregate_by_rho'])} rho rows")
+    print(
+        f"sam: {sam_reading['n_cells']} matched combinations, {len(sam_reading['aggregate_by_rho'])} rho rows"
+    )
 
 
 if __name__ == "__main__":

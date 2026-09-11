@@ -128,25 +128,20 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "Seed replicates of the headline comparison at the adaptive rule and "
-            "the headline quantile: AUROC of the token\\_mask placement at the "
-            "attention input and the dropout placement after the residual add at "
-            "seeds 0, 1 and 2 of every replicated model whose attack succeeded, the "
-            "sample standard deviation over seeds, and the paired gain's mean and "
-            "spread. The ASR column is the lowest replicate's attack success."
+            "Seed replicates of PSBD-TM and PSBD-RD on the models trained at 3 seeds. Min ASR is the lowest attack success among the 3 runs."
         ),
         label="tab:seeds",
         header=[
-            "dataset",
-            "attack",
-            "rate",
-            "min ASR",
-            "token mask, attention input s0 / s1 / s2",
+            "Dataset",
+            "Attack",
+            "Rate",
+            "Min ASR",
+            "PSBD-TM, seeds 0 / 1 / 2",
             "sd",
-            "dropout, after residual add s0 / s1 / s2",
+            "PSBD-RD, seeds 0 / 1 / 2",
             "sd",
-            "gain mean",
-            "gain sd",
+            "Gain mean",
+            "Gain sd",
         ],
         rows=rows,
         align="lllrlrlrrr",

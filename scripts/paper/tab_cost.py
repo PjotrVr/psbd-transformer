@@ -68,8 +68,7 @@ def main() -> None:
     for architecture in architectures:
         label = ARCHITECTURE_LABELS.get(architecture, architecture)
         header += [
-            f"{label} ms/input",
-            f"{label} img/s",
+            f"{label} ms per input",
             f"{label} slowdown",
         ]
 
@@ -83,8 +82,7 @@ def main() -> None:
             slowdown = timing["seconds_per_input"] / plain_seconds
             row += [
                 ms_per_input(timing["seconds_per_input"]),
-                fmt(timing["images_per_second"], places=1),
-                fmt(slowdown, places=2) + "x",
+                fmt(slowdown, places=1) + "x",
             ]
         rows.append(row)
 
@@ -97,8 +95,8 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            f"Wall-clock cost of PSBD at token\\_mask, before\\_attention\\_norm, "
-            f"batch 128, fp32, on a {cost['gpu_name']}, for {architecture_names}."
+            f"Wall-clock cost of PSBD-TM against the number of forward passes k, "
+            f"batch 128, fp32, on 1 {cost['gpu_name']}."
         ),
         label="tab:cost",
         header=header,

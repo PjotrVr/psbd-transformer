@@ -56,13 +56,9 @@ def transfer_values(row: dict) -> list[float]:
 
 
 def best_union(row: dict) -> float | None:
-    combos = [
-        value
-        for key, value in row.items()
-        if key.startswith("combo_") and key.endswith("_auroc")
-    ]
-    best = max(combos) if combos else None
-    return best
+    """The union over every probe the defender ran, never the best subset."""
+    union = row.get("all_auroc")
+    return union
 
 
 def main() -> None:
@@ -130,12 +126,8 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "The adaptive attacker, models whose evasive checkpoint keeps attack "
-            f"success at or above {HIGH_ASR:g}: the probed operator's AUROC on the base and the "
-            "evasive checkpoint, the mean AUROC of the operators the attacker never "
-            "trained against, and the best probe union on the evasive checkpoint. "
-            "dCA is the clean-accuracy cost of evasion. ViT evades token\\_mask at "
-            "the attention input, Swin evades dropout there."
+            "The adaptive attacker on the models whose evasive version keeps attack "
+            f"success at or above {HIGH_ASR:g}."
         ),
         label="tab:adaptive-attacker",
         header=[
@@ -148,7 +140,7 @@ def main() -> None:
             "probed base",
             "probed evade",
             "transfer mean",
-            "best union",
+            "union",
         ],
         rows=table_rows,
         align="llllrrrrrr",
