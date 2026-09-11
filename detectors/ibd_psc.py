@@ -172,8 +172,10 @@ def clean_error_rate(
     wrong = 0
     total = 0
     for images, labels in validation_loader:
-        probs = forward_probs(model, images, device, use_bfloat16)  # (batch, classes)
-        predicted = probs.argmax(dim=1).cpu()
+        probs = forward_probs(
+            model, images, device, use_bfloat16
+        )  # (batch, num_classes)
+        predicted = probs.argmax(dim=1).cpu()  # (batch,)
         wrong += int((predicted != labels.cpu().long()).sum().item())
         total += labels.size(0)
 
@@ -299,19 +301,25 @@ def psc_scores(
     batch_scores = []
     with amplified_parameters(ordered_layers, scaling_factor) as amplify_first:
         for images, _ in loader:
-            images = images.to(device)  # (batch, C, H, W)
+            images = images.to(device)  # (batch, channels, height, width)
 
             amplify_first(0)
-            baseline_probs = forward_probs(model, images, device, use_bfloat16)
+            baseline_probs = forward_probs(
+                model, images, device, use_bfloat16
+            )  # (batch, num_classes)
             original_labels = baseline_probs.argmax(dim=1)  # (batch,) = y'
 
             retained = torch.zeros(images.size(0), device=device)  # (batch,)
             for count in member_counts:
                 amplify_first(count)
-                probs = forward_probs(model, images, device, use_bfloat16)
+                probs = forward_probs(
+                    model, images, device, use_bfloat16
+                )  # (batch, num_classes)
                 retained += probs.gather(1, original_labels.view(-1, 1)).squeeze(1)
 
-            batch_scores.append((retained / len(member_counts)).cpu())
+            batch_scores.append(
+                (retained / len(member_counts)).cpu()
+            )  # (batch,), Eq. (4)
 
     if not batch_scores:
         return torch.empty(0)

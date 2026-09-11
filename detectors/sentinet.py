@@ -214,18 +214,22 @@ def cam_token_weights(
     # With every parameter frozen the input is the only leaf that can put the
     # activations into a graph. Autograd then builds no weight-gradient graph, so
     # no parameter can end up holding a .grad.
-    pixels = images.to(device).detach().requires_grad_(True)  # (batch, C, H, W)
+    pixels = (
+        images.to(device).detach().requires_grad_(True)
+    )  # (batch, channels, height, width)
     with (
         torch.enable_grad(),
         frozen_parameters(model),
         captured_layers(model, (layer,), architecture) as captured,
     ):
-        logits = forward_logits(model, pixels, device, use_bfloat16)  # (batch, classes)
+        logits = forward_logits(
+            model, pixels, device, use_bfloat16
+        )  # (batch, num_classes)
         predicted = logits.argmax(dim=1)  # (batch,)
         predicted_logit = logits.gather(1, predicted[:, None])  # (batch, 1)
-        activation = captured[
-            layer
-        ]  # (batch, tokens, dim) on ViT, (batch, h, w, C) on Swin
+        # The capture is (batch, tokens, dim) on ViT and (batch, height, width,
+        # channels) on Swin, and its gradient takes the same shape.
+        activation = captured[layer]
         (gradient,) = torch.autograd.grad(predicted_logit.sum(), activation)
 
     # The gradient is taken against the raw captured tensor, since a reshaped view
@@ -362,8 +366,8 @@ def overlay_statistics(
         )
 
     mean_tensor, std_tensor = normalization_buffers(mean, std, device, pixels.dtype)
-    overlays = overlay_pixels.to(device)  # (num_overlays, C, H, W)
-    inert = inert_pixels.to(device)  # (num_overlays, C, H, W)
+    overlays = overlay_pixels.to(device)  # (num_overlays, channels, height, width)
+    inert = inert_pixels.to(device)  # (num_overlays, channels, height, width)
     num_overlays = overlays.size(0)
 
     labels = predicted.to(device)  # (batch,)
@@ -371,24 +375,26 @@ def overlay_statistics(
     fooled_rows = []
     conf_rows = []
     for image, mask, label in zip(pixels.to(device), masks.to(device), labels):
-        region = mask.to(pixels.dtype)  # (1, H, W), 1 inside the region
+        region = mask.to(pixels.dtype)  # (1, height, width), 1 inside the region
         adversarial = (
             overlays * (1 - region) + image[None] * region
-        )  # (num_overlays, C, H, W)
+        )  # (num_overlays, channels, height, width)
         inert_copies = (
             overlays * (1 - region) + inert * region
-        )  # (num_overlays, C, H, W)
+        )  # (num_overlays, channels, height, width)
         composites = torch.cat(
             [adversarial, inert_copies]
-        )  # (2 * num_overlays, C, H, W)
-        normalized = (composites - mean_tensor) / std_tensor
+        )  # (2 * num_overlays, channels, height, width)
+        normalized = (
+            composites - mean_tensor
+        ) / std_tensor  # (2 * num_overlays, channels, height, width)
 
         probs = torch.cat(
             [
                 forward_probs(model, chunk, device, use_bfloat16)
                 for chunk in normalized.split(OVERLAY_CHUNK)
             ]
-        )  # (2 * num_overlays, classes)
+        )  # (2 * num_overlays, num_classes)
         adversarial_labels = probs[:num_overlays].argmax(dim=1)  # (num_overlays,)
         inert_confidence = probs[num_overlays:].max(dim=1).values  # (num_overlays,)
 
@@ -407,16 +413,17 @@ def collect_overlay_pixels(
     mean: tuple[float, ...],
     std: tuple[float, ...],
 ) -> torch.Tensor:
-    """X in Algorithm 3: the first count clean images in [0, 1], (count, C, H, W), on CPU.
+    """X in Algorithm 3: the first count clean images in [0, 1], on the CPU.
 
-    Drawn through strip.collect_overlay_batch from the shared clean validation
-    split, so SentiNet sees the same data budget as every other method here. The
-    loader delivers normalized tensors and compositing happens in pixel space, so
-    the overlays are denormalized once here rather than per input.
+    The result is (count, channels, height, width). Drawn through
+    strip.collect_overlay_batch from the shared clean validation split, so
+    SentiNet sees the same data budget as every other method here. The loader
+    delivers normalized tensors and compositing happens in pixel space, so the
+    overlays are denormalized once here rather than per input.
     """
     overlays = collect_overlay_batch(
         loader, count, seed
-    )  # (count, C, H, W), normalized
+    )  # (count, channels, height, width), normalized
     if overlays.size(0) < count:
         raise ValueError(
             f"the loader yielded {overlays.size(0)} images, fewer than the {count} "
@@ -426,23 +433,28 @@ def collect_overlay_pixels(
     mean_tensor, std_tensor = normalization_buffers(
         mean, std, overlays.device, overlays.dtype
     )
-    overlay_pixels = (overlays * std_tensor + mean_tensor).clamp(0.0, 1.0)
+    overlay_pixels = (overlays * std_tensor + mean_tensor).clamp(
+        0.0, 1.0
+    )  # (count, channels, height, width)
     return overlay_pixels
 
 
 def draw_inert_pixels(
     count: int, image_shape: tuple[int, int, int], seed: int
 ) -> torch.Tensor:
-    """IP in Algorithm 3: count uniform-noise images in [0, 1], (count, C, H, W), on CPU.
+    """IP in Algorithm 3: count uniform-noise images in [0, 1], on the CPU.
 
-    The paper's default inert pattern is random noise. Drawn once from seed and
-    fixed for every scored input, so the inert content is never a per-sample
-    source of variance in avg_conf.
+    The result is (count, channels, height, width). The paper's default inert
+    pattern is random noise. Drawn once from seed and fixed for every scored
+    input, so the inert content is never a per-sample source of variance in
+    avg_conf.
     """
     seed_everything(seed)
     channels, height, width = image_shape
 
-    inert_pixels = torch.rand(count, channels, height, width)  # (count, C, H, W)
+    inert_pixels = torch.rand(
+        count, channels, height, width
+    )  # (count, channels, height, width)
     return inert_pixels
 
 
@@ -470,14 +482,16 @@ def sentinet_statistics(
     fooled_batches = []
     conf_batches = []
     for images, _ in loader:
-        images = images.to(device)  # (batch, C, H, W), normalized
+        images = images.to(device)  # (batch, channels, height, width), normalized
         cam, predicted = grad_cam(
             model, images, device, use_bfloat16, layer, architecture
         )  # (batch, grid, grid), (batch,)
-        masks = saliency_mask(cam, tuple(images.shape[2:]))  # (batch, 1, H, W)
+        masks = saliency_mask(cam, tuple(images.shape[2:]))  # (batch, 1, height, width)
 
         mean_tensor, std_tensor = normalization_buffers(mean, std, device, images.dtype)
-        pixels = (images * std_tensor + mean_tensor).clamp(0.0, 1.0)  # (batch, C, H, W)
+        pixels = (images * std_tensor + mean_tensor).clamp(
+            0.0, 1.0
+        )  # (batch, channels, height, width)
         fooled, avg_conf = overlay_statistics(
             model,
             pixels,

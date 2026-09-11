@@ -144,5 +144,6 @@ def network_core(model: nn.Module) -> nn.Module:
     are the Resize and the network.
     """
     if isinstance(model, nn.Sequential):
-        return model[1]
+        network = model[1]
+        return network
     return model

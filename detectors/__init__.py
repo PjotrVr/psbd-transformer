@@ -344,9 +344,10 @@ def _guard_same_model(name: str, fitted: nn.Module, given: nn.Module) -> None:
 
 def _build_confidence(context: DetectorContext) -> Detector:
     def score(model: nn.Module, loader: DataLoader, device: torch.device):
-        return confidence_module.confidence_scores(
+        scores = confidence_module.confidence_scores(
             model, loader, device, context.use_bfloat16
         )
+        return scores
 
     return score
 
@@ -358,7 +359,7 @@ def _build_strip(context: DetectorContext) -> Detector:
     )
 
     def score(model: nn.Module, loader: DataLoader, device: torch.device):
-        return strip_module.strip_scores(
+        scores = strip_module.strip_scores(
             model,
             loader,
             device,
@@ -369,13 +370,14 @@ def _build_strip(context: DetectorContext) -> Detector:
             context.seed,
             STRIP_OVERLAYS,
         )
+        return scores
 
     return score
 
 
 def _build_scale_up(context: DetectorContext) -> Detector:
     def score(model: nn.Module, loader: DataLoader, device: torch.device):
-        return scale_up_module.scale_up_scores(
+        scores = scale_up_module.scale_up_scores(
             model,
             loader,
             device,
@@ -384,6 +386,7 @@ def _build_scale_up(context: DetectorContext) -> Detector:
             scale_up_module.PAPER_SCALES,
             context.use_bfloat16,
         )
+        return scores
 
     return score
 
@@ -417,7 +420,7 @@ def _build_scale_up_data_limited(context: DetectorContext) -> Detector:
     def score(model: nn.Module, loader: DataLoader, device: torch.device):
         if loader is context.validation_loader:
             return validation_scores
-        return scale_up_module.scale_up_scores(
+        scores = scale_up_module.scale_up_scores(
             model,
             loader,
             device,
@@ -428,6 +431,7 @@ def _build_scale_up_data_limited(context: DetectorContext) -> Detector:
             class_means,
             class_stds,
         )
+        return scores
 
     return score
 
@@ -504,7 +508,7 @@ def _build_ibd_psc_calibrated(context: DetectorContext) -> Detector:
 
 def _build_cd_l(context: DetectorContext) -> Detector:
     def score(model: nn.Module, loader: DataLoader, device: torch.device):
-        return cd_l_module.cd_l_scores(
+        scores = cd_l_module.cd_l_scores(
             model,
             loader,
             device,
@@ -514,6 +518,7 @@ def _build_cd_l(context: DetectorContext) -> Detector:
             context.seed,
             context.cd_l_steps,
         )
+        return scores
 
     return score
 
@@ -557,9 +562,10 @@ def _build_beatrix(context: DetectorContext) -> Detector:
         _guard_same_model("beatrix", context.model, model)
         if loader is context.validation_loader:
             return validation_scores
-        return beatrix_module.beatrix_scores(
+        scores = beatrix_module.beatrix_scores(
             model, loader, device, layer, bands, context.use_bfloat16
         )
+        return scores
 
     return score
 
@@ -594,7 +600,7 @@ def _build_ted(context: DetectorContext) -> Detector:
         _guard_same_model("ted", context.model, model)
         if loader is context.validation_loader:
             return validation_scores
-        return ted_module.ted_scores(
+        scores = ted_module.ted_scores(
             model,
             loader,
             device,
@@ -603,6 +609,7 @@ def _build_ted(context: DetectorContext) -> Detector:
             context.ted_reduction,
             context.use_bfloat16,
         )
+        return scores
 
     return score
 
@@ -646,7 +653,7 @@ def _build_sentinet(context: DetectorContext) -> Detector:
         _guard_same_model("sentinet", context.model, model)
         if loader is context.validation_loader:
             return validation_scores
-        return sentinet_module.sentinet_scores(
+        scores = sentinet_module.sentinet_scores(
             model,
             loader,
             device,
@@ -659,13 +666,14 @@ def _build_sentinet(context: DetectorContext) -> Detector:
             coefficients,
             context.use_bfloat16,
         )
+        return scores
 
     return score
 
 
 def _build_teco(context: DetectorContext) -> Detector:
     def score(model: nn.Module, loader: DataLoader, device: torch.device):
-        return teco_module.teco_scores(
+        scores = teco_module.teco_scores(
             model,
             loader,
             device,
@@ -676,6 +684,7 @@ def _build_teco(context: DetectorContext) -> Detector:
             context.use_bfloat16,
             context.seed,
         )
+        return scores
 
     return score
 

@@ -3,7 +3,7 @@
 There is no paper to cite. This is the null model every input-level detector has
 to beat before its extra machinery has earned anything, and it beats PSBD on the
 benign control. A method that cannot separate itself from a single forward pass
-and a max is reading calibration, not detecting backdoors.
+and a max is reading calibration rather than detecting backdoors.
 
     original form
         s(x) = max_c P(c | x; theta)
@@ -40,7 +40,9 @@ def confidence_scores(
 
     batch_scores = []
     for images, _ in loader:
-        probs = forward_probs(model, images, device, use_bfloat16)  # (batch, classes)
+        probs = forward_probs(
+            model, images, device, use_bfloat16
+        )  # (batch, num_classes)
         batch_scores.append(-probs.max(dim=1).values.cpu())  # (batch,)
 
     if not batch_scores:

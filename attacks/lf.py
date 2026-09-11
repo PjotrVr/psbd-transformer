@@ -31,18 +31,22 @@ def _low_frequency_pattern(image_size: int, cutoff: int, seed: int) -> torch.Ten
     """
     generator = torch.Generator().manual_seed(seed)
     noise = torch.rand(3, image_size, image_size, generator=generator) * 2.0 - 1.0
-    spectrum = torch.fft.fftshift(torch.fft.fft2(noise), dim=(-2, -1))  # (3, S, S)
+    spectrum = torch.fft.fftshift(torch.fft.fft2(noise), dim=(-2, -1))  # (3, H, W)
 
     center = image_size // 2
-    mask = torch.zeros(image_size, image_size)  # (S, S)
+    mask = torch.zeros(image_size, image_size)  # (H, W)
     mask[
         center - cutoff : center + cutoff + 1, center - cutoff : center + cutoff + 1
     ] = 1.0
 
-    filtered = torch.fft.ifft2(torch.fft.ifftshift(spectrum * mask, dim=(-2, -1))).real
+    filtered = torch.fft.ifft2(
+        torch.fft.ifftshift(spectrum * mask, dim=(-2, -1))
+    ).real  # (3, H, W)
+    # The peak is floored so a degenerate all-zero band divides by a small
+    # constant rather than by 0.
     peak = filtered.abs().amax().clamp_min(1e-8)
 
-    pattern = filtered / peak  # (3, S, S), in -1 to 1
+    pattern = filtered / peak  # (3, H, W), in -1 to 1
     return pattern
 
 

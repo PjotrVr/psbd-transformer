@@ -58,11 +58,13 @@ def _to_token_layout(x: torch.Tensor) -> tuple[torch.Tensor, tuple[int, ...]]:
     the layout after masking.
     """
     if x.dim() == 3:
-        return x, tuple(x.shape)
+        token_shape = tuple(x.shape)
+        return x, token_shape
     if x.dim() == 4:
         batch, height, width, channels = x.shape
-        tokens = x.reshape(batch, height * width, channels)  # (batch, h * w, channels)
-        return tokens, tuple(x.shape)
+        tokens = x.reshape(batch, height * width, channels)  # (batch, tokens, channels)
+        spatial_shape = tuple(x.shape)
+        return tokens, spatial_shape
     raise ValueError(
         f"expected (batch, tokens, channels) or (batch, H, W, channels), "
         f"got {tuple(x.shape)}"
@@ -87,15 +89,24 @@ class GroupChannelMask(nn.Module):
         self.group_size = int(group_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x with channel groups zeroed, returned in the layout it arrived in.
+
+        x is (batch, tokens, channels) from ViT or (batch, height, width,
+        channels) from Swin.
+        """
         if not self.training or self.rate == 0.0:
             return x
 
-        tokens_view, original_shape = _to_token_layout(x)
-        masked = self._mask_channels(tokens_view)
+        tokens_view, original_shape = _to_token_layout(x)  # (batch, tokens, channels)
+        masked = self._mask_channels(tokens_view)  # (batch, tokens, channels)
         out = masked.reshape(original_shape)
         return out
 
     def _mask_channels(self, x: torch.Tensor) -> torch.Tensor:
+        """x with whole channel groups zeroed, (batch, tokens, channels) in and out.
+
+        Raises when the channels do not divide into groups of group_size.
+        """
         batch, _, channels = x.shape  # (batch, tokens, channels)
         if channels % self.group_size:
             raise ValueError(
@@ -105,10 +116,10 @@ class GroupChannelMask(nn.Module):
         groups = channels // self.group_size
         keep = torch.empty(batch, 1, groups, device=x.device, dtype=x.dtype).bernoulli_(
             1.0 - self.rate
-        )
+        )  # (batch, 1, groups)
         mask = keep.repeat_interleave(self.group_size, dim=2)  # (batch, 1, channels)
 
-        masked = x * mask * _keep_scale(self.rate)
+        masked = x * mask * _keep_scale(self.rate)  # (batch, tokens, channels)
         return masked
 
 
@@ -130,6 +141,11 @@ class TokenMask(nn.Module):
         self.protect_cls = protect_cls
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x with whole tokens zeroed, returned in the layout it arrived in.
+
+        x is (batch, tokens, channels) from ViT or (batch, height, width,
+        channels) from Swin.
+        """
         if not self.training or self.rate == 0.0:
             return x
 
@@ -137,21 +153,24 @@ class TokenMask(nn.Module):
         # so row 0 of its flattened token axis is an ordinary patch.
         protect_cls = self.protect_cls and x.dim() == 3
 
-        tokens_view, original_shape = _to_token_layout(x)
-        masked = self._mask_tokens(tokens_view, protect_cls)
+        tokens_view, original_shape = _to_token_layout(x)  # (batch, tokens, channels)
+        masked = self._mask_tokens(
+            tokens_view, protect_cls
+        )  # (batch, tokens, channels)
         out = masked.reshape(original_shape)
         return out
 
     def _mask_tokens(self, x: torch.Tensor, protect_cls: bool) -> torch.Tensor:
+        """x with whole tokens zeroed, (batch, tokens, channels) in and out."""
         batch, tokens, _ = x.shape  # (batch, tokens, channels)
         keep = torch.empty(batch, tokens, 1, device=x.device, dtype=x.dtype).bernoulli_(
             1.0 - self.rate
-        )
+        )  # (batch, tokens, 1)
         keep *= _keep_scale(self.rate)
         if protect_cls:
             keep[:, 0, :] = 1.0
 
-        masked = x * keep
+        masked = x * keep  # (batch, tokens, channels)
         return masked
 
 
@@ -170,6 +189,7 @@ class DropPath(nn.Module):
         self.rate = float(rate)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x with whole samples zeroed, any layout with batch first, same shape out."""
         if not self.training or self.rate == 0.0:
             return x
 
@@ -178,9 +198,9 @@ class DropPath(nn.Module):
         sample_shape = (x.shape[0],) + (1,) * (x.dim() - 1)
         keep = torch.empty(sample_shape, device=x.device, dtype=x.dtype).bernoulli_(
             1.0 - self.rate
-        )
+        )  # (batch, 1, ..., 1)
 
-        masked = x * keep * _keep_scale(self.rate)
+        masked = x * keep * _keep_scale(self.rate)  # same shape as x
         return masked
 
 
@@ -200,7 +220,7 @@ class GaussianNoise(nn.Module):
     comparison between them assumes a single level. This is the only operator
     where that coupling was possible.
 
-    No inverted scaling, because additive zero-mean noise already leaves the
+    No inverted scaling, because additive noise with mean 0 already leaves the
     expected activation unchanged.
     """
 
@@ -209,13 +229,14 @@ class GaussianNoise(nn.Module):
         self.rate = float(rate)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x plus noise at rate times its own spread, any layout, same shape out."""
         if not self.training or self.rate == 0.0:
             return x
 
         non_batch_axes = tuple(range(1, x.dim()))
         scale = x.detach().std(dim=non_batch_axes, keepdim=True)  # (batch, 1, ..., 1)
 
-        noised = x + torch.randn_like(x) * (self.rate * scale)
+        noised = x + torch.randn_like(x) * (self.rate * scale)  # same shape as x
         return noised
 
 
@@ -226,22 +247,34 @@ class RademacherNoise(nn.Module):
     rather than from a normal, at the same per sample scale.
 
     The reason it exists is a prediction rather than a hunch. The second order
-    expansion in docs/theory-perturbation-consistency.md gives
+    expansion in docs/theory-perturbation-consistency.md, with Hutchinson's
+    variance for each probe distribution, gives
 
-        psu(x) is approximately -0.5 * trace(H * Sigma)
+        original form
+            phi(x) ~ -(1/2) tr(H Sigma)
+            tr(H Sigma) = sigma^2 tr(H)                  for Sigma = sigma^2 I
+            Var_gaussian   = 2 ||H||_F^2
+            Var_rademacher = 2 (||H||_F^2 - sum_j H_jj^2)
 
-    and for an isotropic Sigma = variance * I that is -0.5 * variance *
-    trace(H). Estimating a trace as the expectation of z^T H z over probes z with
-    zero mean and identity covariance is Hutchinson's estimator, so PSBD run with
-    isotropic noise IS a Hutchinson trace estimator of the Hessian of the
-    predicted class probability.
+        symbols
+            phi(x)     PSU of sample x
+            H          Hessian of the predicted class probability with respect
+                       to the perturbed activation
+            Sigma      covariance of the perturbation
+            sigma^2    variance of an isotropic perturbation
+            z          a probe vector with mean 0 and identity covariance
+            ||H||_F    Frobenius norm of H
+            H_jj       the j-th diagonal entry of H
 
-    Hutchinson's variance is known for both probe distributions:
+        descriptive form
+            psu(x) is approximately -0.5 * trace(H * Sigma)
+            gaussian     2 * frobenius_norm(H)^2
+            rademacher   2 * (frobenius_norm(H)^2 - sum of squared diagonal entries)
 
-        gaussian     2 * frobenius_norm(H)^2
-        rademacher   2 * (frobenius_norm(H)^2 - sum of squared diagonal entries)
-
-    The Rademacher form is smaller by exactly the diagonal energy, and it is the
+    Estimating a trace as the expectation of z^T H z over such probes z is
+    Hutchinson's estimator, so PSBD run with isotropic noise IS a Hutchinson
+    trace estimator of the Hessian of the predicted class probability. The
+    Rademacher form is smaller by exactly the diagonal energy, and it is the
     minimum variance choice among all probe distributions with identity
     covariance. Both estimate the same expectation, so at a matched scale the 2
     operators should agree in the limit of many passes and Rademacher should
@@ -251,8 +284,8 @@ class RademacherNoise(nn.Module):
     Rademacher does not beat Gaussian at matched shift ratio, the trace estimator
     reading of the method is wrong.
 
-    No inverted scaling, for the same reason as GaussianNoise: the noise is zero
-    mean, so the expected activation is already unchanged.
+    No inverted scaling, for the same reason as GaussianNoise: the noise has mean
+    0, so the expected activation is already unchanged.
     """
 
     def __init__(self, rate: float):
@@ -260,6 +293,7 @@ class RademacherNoise(nn.Module):
         self.rate = float(rate)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x plus sign noise at rate times its own spread, any layout, same shape out."""
         if not self.training or self.rate == 0.0:
             return x
 
@@ -268,9 +302,11 @@ class RademacherNoise(nn.Module):
 
         # Drawn as 0 or 1 then mapped to -1 or +1, which is exact in every dtype
         # and avoids the sign of a value that could be 0.
-        signs = torch.randint(0, 2, x.shape, device=x.device, dtype=x.dtype) * 2 - 1
+        signs = (
+            torch.randint(0, 2, x.shape, device=x.device, dtype=x.dtype) * 2 - 1
+        )  # same shape as x
 
-        noised = x + signs * (self.rate * scale)
+        noised = x + signs * (self.rate * scale)  # same shape as x
         return noised
 
 
@@ -291,6 +327,11 @@ class HeadMask(nn.Module):
         self.rate = float(rate)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x with whole heads zeroed, (batch, heads, tokens, dim) in and out.
+
+        Raises on any other rank, since only the attention wrapper produces the
+        per-head layout.
+        """
         if not self.training or self.rate == 0.0:
             return x
         if x.dim() != 4:
@@ -301,9 +342,9 @@ class HeadMask(nn.Module):
         batch, heads = x.shape[0], x.shape[1]
         keep = torch.empty(
             batch, heads, 1, 1, device=x.device, dtype=x.dtype
-        ).bernoulli_(1.0 - self.rate)
+        ).bernoulli_(1.0 - self.rate)  # (batch, heads, 1, 1)
 
-        masked = x * keep * _keep_scale(self.rate)
+        masked = x * keep * _keep_scale(self.rate)  # (batch, heads, tokens, dim)
         return masked
 
 
@@ -325,6 +366,10 @@ class FixedHeadMask(nn.Module):
         self.head_index = int(head_index)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x with 1 named head zeroed, (batch, heads, tokens, dim) in and out.
+
+        Raises on any other rank or on a head index outside the block's heads.
+        """
         if x.dim() != 4:
             raise ValueError(
                 f"expected (batch, heads, tokens, dim), got {tuple(x.shape)}"
@@ -336,7 +381,7 @@ class FixedHeadMask(nn.Module):
 
         # Cloned because the caller's tensor is still live inside the attention
         # forward, and masking in place would corrupt it for any later reader.
-        out = x.clone()
+        out = x.clone()  # (batch, heads, tokens, dim)
         out[:, self.head_index] = 0.0
         return out
 
@@ -370,10 +415,11 @@ class GainScale(nn.Module):
         self.rate = float(rate)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x times 1 + rate, any layout, same shape out."""
         if not self.training or self.rate == 0.0:
             return x
 
-        amplified = x * (1.0 + self.rate)
+        amplified = x * (1.0 + self.rate)  # same shape as x
         return amplified
 
 
@@ -405,25 +451,34 @@ class ScaleUp(nn.Module):
     def __init__(self, rate: float, mean, std):
         super().__init__()
         self.rate = float(rate)
-        self.register_buffer("mean", torch.tensor(mean).view(1, -1, 1, 1))
-        self.register_buffer("std", torch.tensor(std).view(1, -1, 1, 1))
+        self.register_buffer(
+            "mean", torch.tensor(mean).view(1, -1, 1, 1)
+        )  # (1, channels, 1, 1)
+        self.register_buffer(
+            "std", torch.tensor(std).view(1, -1, 1, 1)
+        )  # (1, channels, 1, 1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """The amplified image, (batch, channels, height, width) in and out."""
         if not self.training or self.rate == 0.0:
             return x
 
         mean = self.mean.to(x.device, x.dtype)  # (1, channels, 1, 1)
         std = self.std.to(x.device, x.dtype)  # (1, channels, 1, 1)
 
-        pixels = (x * std + mean).clamp(0.0, 1.0)
-        amplified = (pixels * (1.0 + self.rate)).clamp(0.0, 1.0)
+        pixels = (x * std + mean).clamp(0.0, 1.0)  # (batch, channels, height, width)
+        amplified = (pixels * (1.0 + self.rate)).clamp(0.0, 1.0)  # same shape
 
-        renormalized = (amplified - mean) / std
+        renormalized = (amplified - mean) / std  # (batch, channels, height, width)
         return renormalized
 
 
 def masked_attention_forward(attention, mask, query, key, value, **kwargs):
     """nn.MultiheadAttention.forward, reimplemented so the head axis is maskable.
+
+    query, key and value are the same (batch, tokens, channels) tensor. The
+    return is (output, None) with output (batch, tokens, channels), the pair the
+    module's own forward returns under need_weights=False.
 
     Matches torchvision's call site, self_attention(x, x, x, need_weights=False),
     which is self-attention with no mask and batch_first=True. Weights are read
@@ -443,32 +498,41 @@ def masked_attention_forward(attention, mask, query, key, value, **kwargs):
 
     projected = nn.functional.linear(
         query, attention.in_proj_weight, attention.in_proj_bias
-    )
+    )  # (batch, tokens, 3 * channels)
     q, k, v = projected.chunk(3, dim=-1)  # each (batch, tokens, channels)
 
     def split_heads(tensor: torch.Tensor) -> torch.Tensor:
-        return tensor.view(batch, tokens, heads, dim).transpose(1, 2)
+        per_head = tensor.view(batch, tokens, heads, dim).transpose(
+            1, 2
+        )  # (batch, heads, tokens, dim)
+        return per_head
 
-    # (batch, heads, tokens, dim), the one layout where a whole head is a slice.
+    # The only layout where a whole head is a slice.
     attended = nn.functional.scaled_dot_product_attention(
         split_heads(q), split_heads(k), split_heads(v)
-    )
+    )  # (batch, heads, tokens, dim)
 
-    attended = mask(attended)
+    attended = mask(attended)  # (batch, heads, tokens, dim)
 
-    merged = attended.transpose(1, 2).reshape(batch, tokens, channels)
+    merged = attended.transpose(1, 2).reshape(
+        batch, tokens, channels
+    )  # (batch, tokens, channels)
+    output = attention.out_proj(merged)  # (batch, tokens, channels)
+
     # need_weights=False at the call site, so the second element is never read.
-    return attention.out_proj(merged), None
+    return output, None
 
 
 def head_mask(rate: float) -> HeadMask:
     """Whole attention heads. Requires the attention forward wrapper."""
-    return HeadMask(rate)
+    operator = HeadMask(rate)
+    return operator
 
 
 def channel_mask(rate: float) -> GroupChannelMask:
     """Whole embedding channels, shared across tokens."""
-    return GroupChannelMask(rate, group_size=1)
+    operator = GroupChannelMask(rate, group_size=1)
+    return operator
 
 
 def fixed_head_mask(head_index: int):
@@ -479,7 +543,8 @@ def fixed_head_mask(head_index: int):
     """
 
     def build(_rate: float) -> FixedHeadMask:
-        return FixedHeadMask(head_index)
+        operator = FixedHeadMask(head_index)
+        return operator
 
     return build
 
@@ -492,7 +557,8 @@ def scale_up(mean, std):
     """
 
     def build(rate: float) -> ScaleUp:
-        return ScaleUp(rate, mean, std)
+        operator = ScaleUp(rate, mean, std)
+        return operator
 
     return build
 
@@ -508,8 +574,8 @@ OPERATORS: dict[str, type[nn.Module]] = {
     "droppath": DropPath,
     "gaussian": GaussianNoise,
     # Same isotropic covariance as gaussian, lower estimator variance. See the
-    # class docstring: this is a prediction of the trace estimator reading, not a
-    # variation for its own sake.
+    # class docstring: it exists to test a prediction of the trace estimator
+    # reading.
     "rademacher": RademacherNoise,
     # Ports of 2 published perturbation-consistency detectors, so all 3
     # perturbation families (input, activation, parameter) sit in a single registry.
@@ -533,13 +599,16 @@ OPERATOR_POSITIONS: dict[str, tuple[str, ...]] = {
     "droppath": ("before_attention_residual", "before_mlp_residual"),
 }
 
-# Positions no structured operator may attach to, with the reason. Both entries
-# are cases where the operator runs happily and produces a complete, plausible,
-# wrong answer, which is worse than a crash.
+# The operators that remove whole structures (tokens, channels, heads or a
+# branch) rather than disturbing every entry, which the input_pixels rule below
+# applies to as a set.
 STRUCTURED_OPERATORS: frozenset[str] = frozenset(
     {"token_mask", "channel_mask", "head_mask", "droppath"}
 )
 
+# Operator and position pairs that may not attach, with the reason. Both rules
+# cover cases where the operator runs happily and produces a complete, plausible,
+# wrong answer, which is worse than a crash.
 FORBIDDEN_OPERATOR_POSITIONS: dict[tuple[str, str], str] = {
     (operator, "input_pixels"): (
         "input_pixels carries a (batch, channels, height, width) image, and the "
@@ -594,4 +663,5 @@ def build_operator(name: str):
     """
     if name not in OPERATORS:
         raise KeyError(f"unknown perturbation {name!r}, known: {sorted(OPERATORS)}")
-    return OPERATORS[name]
+    operator = OPERATORS[name]
+    return operator

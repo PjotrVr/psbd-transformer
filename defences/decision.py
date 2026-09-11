@@ -59,7 +59,8 @@ def shift_key(target: float) -> str:
     memory should pass the float and call this rather than writing the f-string
     again and risking 2 sites disagreeing on the precision.
     """
-    return f"sigma{target:.1f}"
+    key = f"sigma{target:.1f}"
+    return key
 
 
 # The rung of that ladder the placement comparison reports from. Deliberately not
@@ -88,9 +89,10 @@ PRIMARY_DATASETS = ("cifar100", "tiny")
 def threshold_at_quantile(validation_psu: torch.Tensor, quantile: float) -> float:
     """The detection threshold: a low quantile of clean validation PSU.
 
-    Uses numpy's linear interpolation, matching the "25th percentile" the paper
+    validation_psu is the (n_validation,) PSU of the clean validation set. Uses
+    numpy's linear interpolation, matching the "25th percentile" the paper
     reports. Needs no backdoor knowledge, which is the point: the quantile is
-    chosen as a tolerable clean loss rate, not fitted against poisoned data.
+    chosen as a tolerable clean loss rate and never fitted against poisoned data.
     """
     threshold = float(np.quantile(validation_psu.float().numpy(), quantile))
     return threshold
@@ -104,6 +106,10 @@ def detection_report(
 ) -> dict:
     """TPR, FPR and AUROC at a quantile, plus the threshold that produced them.
 
+    validation_psu is the (n_validation,) clean validation PSU the threshold is
+    read from. clean_psu (n_clean,) and backdoor_psu (n_backdoor,) are the PSU of
+    the clean and triggered splits being separated.
+
     AUROC negates both score sets because low PSU is the positive (poisoned)
     evidence and roc_auc_score expects higher to mean more positive.
 
@@ -115,14 +121,25 @@ def detection_report(
     tpr = float((backdoor_psu < threshold).float().mean().item())
     fpr = float((clean_psu < threshold).float().mean().item())
 
-    scores = np.concatenate([-clean_psu.float().numpy(), -backdoor_psu.float().numpy()])
-    labels = np.concatenate([np.zeros(len(clean_psu)), np.ones(len(backdoor_psu))])
+    scores = np.concatenate(
+        [-clean_psu.float().numpy(), -backdoor_psu.float().numpy()]
+    )  # (n_clean + n_backdoor,)
+    labels = np.concatenate(
+        [np.zeros(len(clean_psu)), np.ones(len(backdoor_psu))]
+    )  # (n_clean + n_backdoor,)
     auroc = (
         float(roc_auc_score(labels, scores))
         if len(set(labels.tolist())) > 1
         else float("nan")
     )
     auroc_is_defined = not math.isnan(auroc)
+    auroc_two_sided = max(auroc, 1.0 - auroc) if auroc_is_defined else float("nan")
+
+    # "inverted" means backdoor samples are less robust to the perturbation than
+    # clean ones, the opposite of PSBD's premise.
+    direction = (
+        ("inverted" if auroc < 0.5 else "as_expected") if auroc_is_defined else None
+    )
 
     report = {
         "quantile": quantile,
@@ -130,14 +147,8 @@ def detection_report(
         "tpr": tpr,
         "fpr": fpr,
         "auroc": auroc,
-        "auroc_two_sided": max(auroc, 1.0 - auroc)
-        if auroc_is_defined
-        else float("nan"),
-        # "inverted" means backdoor samples are less robust to the perturbation than
-        # clean ones, the opposite of PSBD's premise.
-        "direction": ("inverted" if auroc < 0.5 else "as_expected")
-        if auroc_is_defined
-        else None,
+        "auroc_two_sided": auroc_two_sided,
+        "direction": direction,
     }
     return report
 
@@ -149,6 +160,9 @@ def threshold_diagnostics(
     quantile: float,
 ) -> dict:
     """How much of detection_report's TPR at this quantile is a tie artefact.
+
+    Takes the same 3 PSU tensors as detection_report: validation_psu
+    (n_validation,), clean_psu (n_clean,) and backdoor_psu (n_backdoor,).
 
     A score that takes few distinct values, such as a fraction over 5
     amplification scales, can put more than a quantile's worth of clean samples on
@@ -168,8 +182,12 @@ def threshold_diagnostics(
     tied = (validation - threshold).abs() <= tolerance  # (n_validation,)
     tie_share = float(tied.float().mean().item())
 
-    scores = np.concatenate([-clean_psu.float().numpy(), -backdoor_psu.float().numpy()])
-    labels = np.concatenate([np.zeros(len(clean_psu)), np.ones(len(backdoor_psu))])
+    scores = np.concatenate(
+        [-clean_psu.float().numpy(), -backdoor_psu.float().numpy()]
+    )  # (n_clean + n_backdoor,)
+    labels = np.concatenate(
+        [np.zeros(len(clean_psu)), np.ones(len(backdoor_psu))]
+    )  # (n_clean + n_backdoor,)
     if len(set(labels.tolist())) > 1:
         fpr, tpr, _ = roc_curve(labels, scores)
         tpr_interpolated = float(np.interp(quantile, fpr, tpr))
@@ -192,7 +210,7 @@ def select_rate_adaptively(
     the gap between sigma of the whole training set and sigma of clean validation
     is maximal. Only the first half transfers here. The second half carries signal
     in the paper because their scored pool is the poisoned training set. Ours is a
-    clean test pool, so that gap is noise around zero by construction. The
+    clean test pool, so that gap is noise around 0 by construction. The
     surviving half is still defender-legal: it reads clean validation data only
     and never touches the backdoor split.
 
@@ -204,7 +222,8 @@ def select_rate_adaptively(
         for rate, sigma in shift_by_rate.items()
         if sigma is not None and sigma >= target
     )
-    return reached[0] if reached else None
+    smallest_reaching = reached[0] if reached else None
+    return smallest_reaching
 
 
 def select_rate_at_matched_shift(
@@ -288,12 +307,13 @@ def interpolate_at_target_shift(
     if lower_rate not in value_by_rate or upper_rate not in value_by_rate:
         return None
     if upper_sigma == lower_sigma:
-        return float(value_by_rate[lower_rate])
+        flat_value = float(value_by_rate[lower_rate])
+        return flat_value
 
     span = (target - lower_sigma) / (upper_sigma - lower_sigma)
     lower_value, upper_value = value_by_rate[lower_rate], value_by_rate[upper_rate]
-    interpolated = lower_value + (upper_value - lower_value) * span
-    return float(interpolated)
+    interpolated = float(lower_value + (upper_value - lower_value) * span)
+    return interpolated
 
 
 def select_rate_by_oracle(auroc_by_rate: dict[float, float]) -> float | None:
@@ -307,7 +327,8 @@ def select_rate_by_oracle(auroc_by_rate: dict[float, float]) -> float | None:
     usable = {
         rate: value for rate, value in auroc_by_rate.items() if not math.isnan(value)
     }
-    return max(usable, key=usable.get) if usable else None
+    best = max(usable, key=usable.get) if usable else None
+    return best
 
 
 def attack_success_mask(
@@ -323,12 +344,14 @@ def attack_success_mask(
     badnet_a2a sits, so TPR is reported both over all triggered samples and over
     the captured ones only.
 
-    Returns None for a cache written before loader labels were saved.
+    baseline_labels is the (n,) no-perturbation argmax and loader_labels the
+    (n,) attack-success label the loader served. Returns a (n,) bool mask, or
+    None for a cache written before loader labels were saved.
     """
     if loader_labels.numel() == 0:
         return None
 
-    captured = baseline_labels.long() == loader_labels.long()  # (N,)
+    captured = baseline_labels.long() == loader_labels.long()  # (n,) bool
     return captured
 
 
@@ -342,6 +365,9 @@ def pair_clean_to_backdoor(clean_scores: torch.Tensor, manifest: dict) -> torch.
     classes were dropped rather than the defence. The manifest records both index
     lists in loader-row order, so this maps backdoor rows back onto their clean
     counterparts and returns the clean scores in backdoor row order.
+
+    clean_scores is (n_clean,), 1 score per clean row. The return is
+    (n_backdoor,), the clean score of the image behind each backdoor row.
     """
     clean_indices = manifest["analysis_clean_indices"]
     backdoor_indices = manifest["analysis_backdoor_indices"]
@@ -349,7 +375,7 @@ def pair_clean_to_backdoor(clean_scores: torch.Tensor, manifest: dict) -> torch.
     row_of = {original: row for row, original in enumerate(clean_indices)}
     rows = [row_of[original] for original in backdoor_indices]
 
-    paired = clean_scores[torch.tensor(rows, dtype=torch.long)]
+    paired = clean_scores[torch.tensor(rows, dtype=torch.long)]  # (n_backdoor,)
     return paired
 
 
@@ -386,7 +412,8 @@ def load_critical_rate_from_disk(
 ) -> torch.Tensor | None:
     """Per-sample critical rate p* for a (checkpoint, position, split), from disk.
 
-    Returns None when no complete rates exist.
+    Returns a (n,) float32 tensor in the split's row order, or None when no
+    complete rates exist.
     """
     # Imported here rather than at module level so the decision layer stays
     # importable without pulling in defences.cache's forward-pass dependencies, which
@@ -424,16 +451,26 @@ def multi_probe_auroc(
 ) -> float:
     """AUROC of the multi-probe combined score.
 
+    Each argument holds k tensors, 1 per probe: (n_clean,) for the clean split,
+    (n_backdoor,) for the backdoor split and (n_validation,) for the clean
+    validation reference. NaN when either split is empty.
+
     Negated because a lower rank is more suspicious (the positive class), and
     roc_auc_score expects higher to mean more positive.
     """
-    clean_score = multi_probe_score(clean_psu_per_probe, val_psu_per_probe, reduction)
+    clean_score = multi_probe_score(
+        clean_psu_per_probe, val_psu_per_probe, reduction
+    )  # (n_clean,)
     backdoor_score = multi_probe_score(
         backdoor_psu_per_probe, val_psu_per_probe, reduction
-    )
+    )  # (n_backdoor,)
 
-    scores = np.concatenate([-clean_score.numpy(), -backdoor_score.numpy()])
-    labels = np.concatenate([np.zeros(len(clean_score)), np.ones(len(backdoor_score))])
+    scores = np.concatenate(
+        [-clean_score.numpy(), -backdoor_score.numpy()]
+    )  # (n_clean + n_backdoor,)
+    labels = np.concatenate(
+        [np.zeros(len(clean_score)), np.ones(len(backdoor_score))]
+    )  # (n_clean + n_backdoor,)
     if len(set(labels.tolist())) < 2:
         return float("nan")
 
@@ -469,7 +506,8 @@ def multi_probe_detection(
     so, and TPR is understated by the same margin.
 
     Both rules are reported under by_rule. The top-level tpr, fpr and threshold
-    keys follow the rule argument.
+    keys follow the rule argument. Each *_per_probe argument holds k tensors, 1
+    per probe, shaped as in multi_probe_auroc.
     """
     if rule not in ("calibrated", "bonferroni"):
         raise ValueError(f"unknown rule {rule!r}, expected calibrated or bonferroni")
@@ -480,18 +518,23 @@ def multi_probe_detection(
     # majority, which the bound does not describe.
     bonferroni_q = target_fpr / k
 
-    val_score = multi_probe_score(val_psu_per_probe, val_psu_per_probe, reduction)
-    clean_score = multi_probe_score(clean_psu_per_probe, val_psu_per_probe, reduction)
+    val_score = multi_probe_score(
+        val_psu_per_probe, val_psu_per_probe, reduction
+    )  # (n_validation,)
+    clean_score = multi_probe_score(
+        clean_psu_per_probe, val_psu_per_probe, reduction
+    )  # (n_clean,)
     backdoor_score = multi_probe_score(
         backdoor_psu_per_probe, val_psu_per_probe, reduction
-    )
+    )  # (n_backdoor,)
 
     def rates_at(threshold: float) -> dict:
-        return {
+        rates = {
             "threshold": threshold,
             "tpr": float((backdoor_score < threshold).float().mean()),
             "fpr": float((clean_score < threshold).float().mean()),
         }
+        return rates
 
     combined_auroc = multi_probe_auroc(
         clean_psu_per_probe, backdoor_psu_per_probe, val_psu_per_probe, reduction

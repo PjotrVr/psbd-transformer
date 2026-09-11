@@ -15,14 +15,15 @@ it ignored.
 import hashlib
 import json
 import os
-from data.splits import SPLITS
 
 import torch
+
+from data.splits import SPLITS
 
 RECORDS_DIR = "detectors"
 LEGACY_REPORT = "baseline_metrics.json"
 # A record's status. Only a scored record counts as finished work, so a failed
-# one is retried by the next run instead of silently skipped.
+# record is retried by the next run instead of silently skipped.
 STATUS_SCORED = "scored"
 STATUS_FAILED = "failed"
 
@@ -82,7 +83,7 @@ def save_report(path: str, report: dict) -> None:
     """Write a record through a private temporary file, then rename.
 
     A reader arriving mid-write sees either the old file or the complete new
-    one, never a truncated one, because os.replace is atomic on 1 filesystem.
+    file, never a truncated file, because os.replace is atomic on 1 filesystem.
     """
     os.makedirs(os.path.dirname(path), exist_ok=True)
     temporary = f"{path}.tmp.{os.getpid()}"

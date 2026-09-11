@@ -33,7 +33,9 @@ def _column_signal(image_size: int, amplitude: float, frequency: float) -> torch
         a value per column j, broadcast over every row and channel
     """
     columns = torch.arange(image_size).float()  # (image_size,)
-    signal = amplitude * torch.sin(2.0 * torch.pi * frequency * columns / image_size)
+    signal = amplitude * torch.sin(
+        2.0 * torch.pi * frequency * columns / image_size
+    )  # (image_size,)
 
     broadcastable = signal.view(1, 1, image_size)
     return broadcastable

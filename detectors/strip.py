@@ -96,8 +96,9 @@ def strip_scores(
 ) -> torch.Tensor:
     """STRIP entropy per sample, shape (N,), low meaning poisoned.
 
-    overlay_images is a (>=num_overlays, C, H, W) batch of clean images, normally
-    the output of collect_overlay_batch on the clean validation split.
+    overlay_images is a (>=num_overlays, channels, height, width) batch of clean
+    images, normally the output of collect_overlay_batch on the clean validation
+    split.
 
     Returned as the raw entropy, not negated. STRIP's claim is that a triggered
     input has low entropy under superimposition, and low already means poisoned in
@@ -105,23 +106,32 @@ def strip_scores(
     """
     model.eval()
     seed_everything(seed)
-    overlays = overlay_images[:num_overlays].to(device)  # (num_overlays, C, H, W)
+
+    # overlays is (num_overlays, channels, height, width), normalized like images.
+    overlays = overlay_images[:num_overlays].to(device)
 
     batch_scores = []
     for images, _ in loader:
-        images = images.to(device)  # (batch, C, H, W)
+        images = images.to(device)  # (batch, channels, height, width)
         mean_tensor, std_tensor = normalization_buffers(
             mean, std, images.device, images.dtype
         )
+        # Both sides go back to pixel space at their own shapes, so the sum below
+        # saturates in [0, 1] as cv2.addWeighted does on uint8 arrays.
         pixels = (images * std_tensor + mean_tensor).clamp(0.0, 1.0)
         overlay_pixels = (overlays * std_tensor + mean_tensor).clamp(0.0, 1.0)
+
         summed_entropy = torch.zeros(images.size(0), device=device)  # (batch,)
         for overlay in overlay_pixels:
+            # 1 overlay broadcasts over the batch, so every composite keeps the
+            # (batch, channels, height, width) of images.
             superimposed = (pixels + overlay.unsqueeze(0)).clamp(0.0, 1.0)
             blended = (superimposed - mean_tensor) / std_tensor
-            probs = forward_probs(model, blended, device, use_bfloat16)
+            probs = forward_probs(
+                model, blended, device, use_bfloat16
+            )  # (batch, num_classes)
             summed_entropy += blend_entropy(probs)
-        batch_scores.append((summed_entropy / len(overlays)).cpu())  # Eq. (4)
+        batch_scores.append((summed_entropy / len(overlays)).cpu())  # (batch,), Eq. (4)
 
     if not batch_scores:
         return torch.empty(0)
@@ -132,11 +142,12 @@ def strip_scores(
 
 @torch.inference_mode()
 def collect_overlay_batch(loader: DataLoader, count: int, seed: int) -> torch.Tensor:
-    """The first count clean images as the superimposition set, (count, C, H, W).
+    """The first count clean images as the superimposition set.
 
-    Taken from the clean validation split the defender already holds for
-    thresholding, so STRIP is given exactly the same data budget as every other
-    method here and none gets an advantage from seeing more.
+    The result is (count, channels, height, width). Taken from the clean
+    validation split the defender already holds for thresholding, so STRIP is
+    given exactly the same data budget as every other method here and none gets
+    an advantage from seeing more.
     """
     seed_everything(seed)
 
@@ -151,5 +162,5 @@ def collect_overlay_batch(loader: DataLoader, count: int, seed: int) -> torch.Te
     if not collected:
         return torch.empty(0)
 
-    overlays = torch.cat(collected)[:count]  # (count, C, H, W)
+    overlays = torch.cat(collected)[:count]  # (count, channels, height, width)
     return overlays

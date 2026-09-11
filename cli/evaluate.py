@@ -44,9 +44,10 @@ def attack_label(checkpoint_dir: str) -> str:
     line and a missing or malformed sidecar is reported by the evaluation itself.
     """
     try:
-        return read_args_json(checkpoint_dir)["attack"]
+        attack = read_args_json(checkpoint_dir)["attack"]
     except Exception:
-        return "unknown"
+        attack = "unknown"
+    return attack
 
 
 def parse_args() -> argparse.Namespace:

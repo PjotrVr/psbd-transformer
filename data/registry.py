@@ -79,12 +79,6 @@ DATASET_REGISTRY: dict[str, DatasetSpec] = {
 }
 
 
-# pre_residual perturbs each branch's output just before its residual add.
-# post_residual perturbs the stream just after the add, which is the ConvNet
-# placement of the original PSBD paper. Both insert fresh perturbation modules
-# through the position registry rather than reusing a dropout the model already
-# has. models.positions says why.
-
 ARCHITECTURES = ("vit", "swin")
 
 
@@ -105,6 +99,11 @@ class RunConfig:
     dropout_rates: tuple[float, ...] = tuple(i / 10.0 for i in range(1, 10))
 
     architecture: str = "vit"
+    # pre_residual perturbs each branch's output just before its residual add.
+    # post_residual perturbs the stream just after the add, which is the ConvNet
+    # placement of the original PSBD paper. Both insert fresh perturbation
+    # modules through the position registry rather than reusing a dropout the
+    # model already has. models.positions says why.
     dropout_placement: str = "pre_residual"
 
     weights_dir: str = "backdoor_bench_checkpoints"

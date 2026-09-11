@@ -37,10 +37,11 @@ def build(config: TactConfig, image_size: int, target_label: int) -> Attack:
         stamped[:, image_size - size :, image_size - size :] = patch
         return stamped
 
-    return Attack(
+    attack = Attack(
         "tact",
         apply_trigger,
         config.label_mode,
         target_label,
         source_classes=config.source_classes,
     )
+    return attack

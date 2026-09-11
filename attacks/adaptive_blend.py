@@ -2,11 +2,12 @@
 
 It works by 2 mechanisms. Cover samples are triggered images that keep their true
 label. They flatten the latent separation between clean and poisoned that many
-defences look for, and cover_rate sets how many there are. The trigger is asymmetric: training
-plants a random subset of the pattern's cells and evaluation plants the whole
-pattern. Training on partial evidence forces the model to generalise over the
-pattern, so the full pattern lands far inside the learned region and ASR rises,
-while the weaker training signal keeps poisoned latents close to clean ones.
+defences look for, and cover_rate sets how many there are. The trigger is
+asymmetric: training plants a random subset of the pattern's cells and
+evaluation plants the whole pattern. Training on partial evidence forces the
+model to generalise over the pattern, so the full pattern lands far inside the
+learned region and ASR rises, while the weaker training signal keeps poisoned
+latents close to clean ones.
 
 Training itself is standard cross-entropy over the poisoned-plus-cover set.
 """
@@ -42,22 +43,29 @@ def _cell_mask(
     poisoned training set is reproducible across epochs and runs.
     """
     generator = torch.Generator().manual_seed(seed * 1_000_003 + index)
-    keep = torch.rand(cells, cells, generator=generator) < fraction
+    keep = torch.rand(cells, cells, generator=generator) < fraction  # (cells, cells)
+
+    # Each pixel reads the cell it falls in, so the mask is the kept grid blown
+    # up to image resolution with no interpolation at cell borders.
     step = image_size / cells
-    rows = (torch.arange(image_size) / step).long().clamp(max=cells - 1)
-    columns = (torch.arange(image_size) / step).long().clamp(max=cells - 1)
-    return keep[rows][:, columns].unsqueeze(0).float()
+    rows = (torch.arange(image_size) / step).long().clamp(max=cells - 1)  # (H,)
+    columns = (torch.arange(image_size) / step).long().clamp(max=cells - 1)  # (W,)
+
+    mask = keep[rows][:, columns].unsqueeze(0).float()  # (1, H, W)
+    return mask
 
 
 def build(config: AdaptiveBlendConfig, image_size: int, target_label: int) -> Attack:
     """Adaptive-Blend built for this image size and target label."""
-    pattern = seeded_random_pattern(image_size, config.pattern_seed)  # (3, S, S)
+    pattern = seeded_random_pattern(image_size, config.pattern_seed)  # (3, H, W)
     alpha = config.alpha
 
     def plant(image: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
-        # original: x_poisoned = (1 - alpha) * x + alpha * pattern
-        # here: blended only where the cell mask is on
-        return image * (1.0 - alpha * mask) + alpha * mask * pattern  # (C, H, W)
+        # Original form: x_poisoned = (1 - alpha) * x + alpha * pattern, with x
+        # the clean image, alpha the blend ratio and pattern the fixed blend
+        # image. The blend is applied only where the (1, H, W) cell mask is on.
+        blended = image * (1.0 - alpha * mask) + alpha * mask * pattern  # (C, H, W)
+        return blended
 
     def apply_trigger(image: torch.Tensor, index: int) -> torch.Tensor:
         mask = _cell_mask(
@@ -67,10 +75,13 @@ def build(config: AdaptiveBlendConfig, image_size: int, target_label: int) -> At
             index,
             config.pattern_seed,
         )
-        return plant(image, mask)
+        stamped = plant(image, mask)
+        return stamped
 
     def apply_trigger_eval(image: torch.Tensor, _index: int) -> torch.Tensor:
-        return plant(image, torch.ones(1, image_size, image_size))
+        full_mask = torch.ones(1, image_size, image_size)  # (1, H, W)
+        stamped = plant(image, full_mask)
+        return stamped
 
     attack = Attack(
         "adaptive_blend",

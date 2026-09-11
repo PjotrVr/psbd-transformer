@@ -19,13 +19,17 @@ def read_adversarial_bases(directory: str) -> dict[int, torch.Tensor]:
     """The bases.pt in directory as an index-to-image map, or {} if absent."""
     if not directory:
         return {}
+
     path = os.path.join(directory, BASES_FILENAME)
     if not os.path.exists(path):
         return {}
+
     payload = torch.load(path, map_location="cpu")
     indices = payload["indices"].tolist()
-    images = payload["images"]
-    return {int(index): images[position] for position, index in enumerate(indices)}
+    images = payload["images"]  # (n, C, H, W)
+
+    by_index = {int(index): images[position] for position, index in enumerate(indices)}
+    return by_index
 
 
 def lazy_adversarial_lookup(directory: str, image_size: int):
@@ -42,6 +46,8 @@ def lazy_adversarial_lookup(directory: str, image_size: int):
         if not state["loaded"]:
             cache.update(read_adversarial_bases(directory))
             state["loaded"] = True
+            # Every base in 1 cache was written at the same resolution, so the
+            # first is enough to check.
             for base in cache.values():
                 if base.shape[-1] != image_size:
                     raise ValueError(
@@ -49,7 +55,9 @@ def lazy_adversarial_lookup(directory: str, image_size: int):
                         f"but the attack is built for {image_size}px"
                     )
                 break
-        return cache.get(int(index))
+
+        stored = cache.get(int(index))
+        return stored
 
     return lookup
 
@@ -65,8 +73,10 @@ def missing_adversarial_bases(config, poison_indices) -> list[int]:
     directory = getattr(config, "adversarial_dir", "")
     if not directory:
         return []
+
     available = set(read_adversarial_bases(directory))
-    return sorted(index for index in poison_indices if int(index) not in available)
+    missing = sorted(index for index in poison_indices if int(index) not in available)
+    return missing
 
 
 def adversarial_config_error(config) -> str | None:
