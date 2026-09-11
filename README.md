@@ -93,14 +93,14 @@ Full layout and the rule for where a new file goes: `docs/repository-layout.md`.
 | `cli.train_benign` | Train benign ViT models, the negative controls |
 | `cli.sweep` | Stage 1: GPU sweep over dropout rates for a (checkpoint, position) pair, writes raw per-pass probabilities |
 | `cli.analyze` | Stage 2: CPU analysis of a checkpoint's cache, writes psbd_metrics.json |
-| `cli.summary` | Collapse every psbd_metrics.json into a single compact table |
-| `cli.tables` | Per-dataset detection tables, with the coverage bar enforced in code |
-| `cli.report` | Aggregate every psbd_metrics.json into a single per-checkpoint table |
-| `cli.operating_points` | Detection at low false-positive rates (1%, 5%) |
-| `cli.variants` | PSBD as published against the recommended ViT configuration, head to head |
+| `cli.compare placements summary` | Collapse every psbd_metrics.json into a single compact table |
+| `cli.compare placements tables` | Per-dataset detection tables, with the coverage bar enforced in code |
+| `cli.compare placements report` | Aggregate every psbd_metrics.json into a single per-checkpoint table |
+| `cli.compare placements variants` | PSBD as published against the recommended ViT configuration, head to head |
+| `cli.compare operating-points` | Detection at low false-positive rates (1%, 5%) |
 | `cli.baselines` | Score the competitor detectors on exactly the splits PSBD is scored on |
-| `cli.compare_detectors` | 1 table per metric, PSBD against every competitor detector |
-| `cli.fuse_detectors` | Fuse PSBD and STRIP, whose failures are disjoint |
+| `cli.compare detectors` | 1 table per metric, PSBD against every competitor detector |
+| `cli.compare fused` | Fuse PSBD and STRIP, whose failures are disjoint |
 | `cli.evaluate` | Attack-success, clean-accuracy and stealth metrics for every checkpoint |
 | `cli.backfill` | Recover metadata fields that are deducible from artifacts already on disk |
 | `cli.lc_bases` | Generate the adversarially perturbed base images the Label-Consistent attack needs |

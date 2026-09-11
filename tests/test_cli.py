@@ -1,6 +1,6 @@
-"""The cli/ package: it imports, it keeps its flags, it runs, and it stays thin.
+"""The cli/ package: it imports, it keeps its flags, it runs and it stays thin.
 
-Four properties, each of which has a specific way of going wrong during a port.
+4 properties, each of which has a specific way of going wrong during a port.
 
   1. Every module imports. A dependency that moved packages breaks at import
      time, and an entrypoint nobody exercised until a job started is the worst
@@ -9,7 +9,7 @@ Four properties, each of which has a specific way of going wrong during a port.
      these flags by name, so a rename is a silently queued broken job. Each new
      parser's option strings are compared against its original's programmatically,
      and the new set must be a superset: additions are allowed, removals are not.
-  3. Real runs. Four entrypoints are executed as subprocesses against the real
+  3. Real runs. 4 entrypoints are executed as subprocesses against the real
      results/ and checkpoints/ trees, at the smallest scope on disk, and their
      output is asserted. Writes are redirected into tmp_path, and the stage-1
      cache is symlinked in read-only, so no test can modify a results folder.
@@ -43,6 +43,7 @@ CLI_MODULES = (
     "cli.analyze",
     "cli.backfill",
     "cli.baselines",
+    "cli.compare",
     "cli.compare_detectors",
     "cli.evaluate",
     "cli.fuse_detectors",
@@ -58,8 +59,37 @@ CLI_MODULES = (
     "cli.analyze_latent",
 )
 
+# cli.report, cli.summary, cli.tables and cli.variants folded into
+# `cli.compare placements <action>`. cli.operating_points, cli.compare_detectors
+# and cli.fuse_detectors each folded into their own top-level subcommand. Every
+# path a user or a PBS script can still type, `--help` must succeed through both
+# the new entrypoint and the old shim.
+COMPARE_HELP_PATHS = (
+    (),
+    ("placements",),
+    ("placements", "report"),
+    ("placements", "summary"),
+    ("placements", "tables"),
+    ("placements", "variants"),
+    ("operating-points",),
+    ("detectors",),
+    ("fused",),
+)
 
-# Dependencies point one way: a library package never reaches up into cli/. cli/
+# The old module name each shim forwards to, and the subcommand path it forwards
+# with. A doc example or a generated PBS script still spells the left column.
+DEPRECATED_SHIMS = (
+    ("cli.report", ("placements", "report")),
+    ("cli.summary", ("placements", "summary")),
+    ("cli.tables", ("placements", "tables")),
+    ("cli.variants", ("placements", "variants")),
+    ("cli.operating_points", ("operating-points",)),
+    ("cli.compare_detectors", ("detectors",)),
+    ("cli.fuse_detectors", ("fused",)),
+)
+
+
+# Dependencies point in a single direction: a library package never reaches up into cli/. cli/
 # is where a main() lives and where arguments are parsed, so a library module that
 # imports it has put a command-line concern inside reusable code.
 LIBRARY_PACKAGES = (
@@ -124,7 +154,7 @@ def option_strings(parser: argparse.ArgumentParser) -> set[str]:
 
 
 def imported_roots(path: str) -> set[str]:
-    """The top-level package of every absolute import in one source file.
+    """The top-level package of every absolute import in a single source file.
 
     Relative imports are excluded because they can only reach inside cli/ itself.
     """
@@ -190,7 +220,7 @@ def smallest_cached_checkpoint() -> str | None:
 
 
 def run_cli(module_name: str, *arguments: str) -> str:
-    """Run one entrypoint as a subprocess from the repository root, returning stdout.
+    """Run an entrypoint as a subprocess from the repository root, returning stdout.
 
     A subprocess rather than a direct main() call, because these are entrypoints
     and "python -m cli.x" is the thing that has to work, argv parsing and all.
@@ -219,7 +249,7 @@ def cached_checkpoint() -> str:
 
 @pytest.fixture(scope="session")
 def analyzed_results(tmp_path_factory, cached_checkpoint: str) -> tuple[str, str]:
-    """A scratch results tree holding one real checkpoint's stage-2 output.
+    """A scratch results tree holding a real checkpoint's stage-2 output.
 
     The stage-1 cache is symlinked in read-only and every write lands in the
     scratch tree, so running the suite can never touch results/.
@@ -245,6 +275,44 @@ def analyzed_results(tmp_path_factory, cached_checkpoint: str) -> tuple[str, str
 def test_module_imports(module_name: str) -> None:
     """Every entrypoint imports, so a moved dependency fails here and not in a job."""
     assert importlib.import_module(module_name) is not None
+
+
+@pytest.mark.parametrize(
+    "path", COMPARE_HELP_PATHS, ids=lambda p: " ".join(p) or "compare"
+)
+def test_compare_help(path: tuple[str, ...]) -> None:
+    """`--help` succeeds on cli.compare itself and on every subcommand path.
+
+    placements holds 4 more actions rather than 4 flat flag sets, so the help
+    tree has 2 levels below the entrypoint and both need checking, not just the
+    leaves.
+    """
+    run_cli("cli.compare", *path, "--help")
+
+
+@pytest.mark.parametrize(
+    "module_name, subcommand_path",
+    DEPRECATED_SHIMS,
+    ids=[name for name, _path in DEPRECATED_SHIMS],
+)
+def test_deprecated_shim_still_runs_help(
+    module_name: str, subcommand_path: tuple[str, ...]
+) -> None:
+    """A folded module is now a shim, but `--help` through it still exits 0.
+
+    Existing PBS scripts and doc examples spell these names directly, so the
+    shim has to keep working exactly as it did before the fold into cli.compare,
+    and it has to say so on stderr rather than silently changing behavior.
+    """
+    completed = subprocess.run(
+        [sys.executable, "-m", module_name, "--help"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "deprecated" in completed.stderr
+    assert " ".join(subcommand_path) in completed.stderr
 
 
 @pytest.mark.parametrize("module_name", CLI_MODULES)
@@ -281,7 +349,7 @@ def test_analyze_writes_psbd_metrics(analyzed_results: tuple[str, str]) -> None:
 
 
 def test_report_renders_a_table(analyzed_results: tuple[str, str]) -> None:
-    """The aggregator renders one markdown row per (checkpoint, placement)."""
+    """The aggregator renders a markdown row per (checkpoint, placement)."""
     results_dir, folder = analyzed_results
     output = run_cli("cli.report", "--results-dir", results_dir, "--format", "markdown")
 
@@ -301,7 +369,7 @@ def test_report_renders_csv(analyzed_results: tuple[str, str]) -> None:
 
 
 def test_summary_writes_a_versionable_csv(tmp_path) -> None:
-    """The compact summary collapses the whole tree into one CSV with SAM excluded."""
+    """The compact summary collapses the whole tree into a single CSV with SAM excluded."""
     if not os.path.isdir(RESULTS_DIR):
         pytest.skip("no results/ tree")
 
@@ -340,7 +408,7 @@ def test_summary_writes_a_versionable_csv(tmp_path) -> None:
     # is a legitimate operator that the perturbation registry deliberately omits:
     # it needs the dataset's normalization constants and cannot be built from a
     # rate alone. The summary's own vocabulary is the right authority here.
-    from cli.summary import KNOWN_OPERATORS
+    from cli.compare import KNOWN_OPERATORS
 
     known = set(KNOWN_OPERATORS) | {"dropout", "unknown"}
     seen = {row["operator"] for row in rows}
@@ -368,8 +436,8 @@ def test_repeated_attack_override_accumulates() -> None:
     Declared `nargs="*"` this silently kept only the final occurrence, so
     `--attack-override adversarial_dir=... --attack-override adversarial_epsilon=...`
     dropped the directory and turned Label-Consistent back into its patch-only
-    variant while args.json advertised the adversarial one. Nothing was out of
-    range, so nothing complained.
+    variant while args.json advertised the adversarial variant. Nothing was out
+    of range, so nothing complained.
     """
     module = importlib.import_module("cli.train_backdoor")
     argv = [
@@ -401,12 +469,13 @@ def test_repeated_attack_override_accumulates() -> None:
 def test_split_operator_strips_stacked_qualifiers() -> None:
     """A placement carrying more than 1 qualifier still resolves to its position.
 
-    Every qualifier pattern is anchored at the end of the name, so an outer one
-    hides an inner one. The sweep writes a block range and a mask seed together,
+    Every qualifier pattern is anchored at the end of the name, so an outer
+    qualifier hides an inner qualifier. The sweep writes a block range and a
+    mask seed together,
     and a single fixed-order pass left pre_residual_blocks_9_16_seed1 parsing as
     an unknown operator, which silently dropped those rows from the summary.
     """
-    from cli.summary import KNOWN_OPERATORS, split_operator
+    from cli.compare import KNOWN_OPERATORS, split_operator
 
     stacked = (
         ("pre_residual_blocks_9_16_seed1", "pre_residual", "dropout"),
@@ -415,7 +484,7 @@ def test_split_operator_strips_stacked_qualifiers() -> None:
     for placement, position, operator in stacked:
         got_position, got_operator, variant = split_operator(placement, KNOWN_OPERATORS)
         assert (got_position, got_operator) == (position, operator), placement
-        # Both qualifiers survive; keeping only the last would lose the seed.
+        # Both qualifiers survive. Keeping only the last would lose the seed.
         assert variant is not None and "+" in variant, placement
 
     # A single qualifier keeps the spelling it had before stacking was handled.
