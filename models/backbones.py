@@ -22,6 +22,7 @@ import torchvision.transforms.v2 as transforms_v2
 from torchvision.models import (
     Swin_S_Weights,
     ViT_B_16_Weights,
+    resnet18,
     swin_s,
     vit_b_16,
 )
@@ -66,9 +67,38 @@ def build_swin(num_classes: int) -> nn.Module:
     return resized_model
 
 
+def build_resnet18(num_classes: int) -> nn.Module:
+    """ResNet-18 at CIFAR scale, trained from scratch, the PSBD paper's own control.
+
+    The PSBD paper (papers/PSBD/sec/5_experiments.tex, sec/7_appendix.tex) trains
+    ResNet-18 on CIFAR-10 and GTSRB at their native 3x32x32 resolution, excludes
+    dropout, data augmentation and data normalization for the attacks in scope
+    here (BadNets, Blend) and states no pretrained weights, so this returns the
+    bare network at native resolution with none of the
+    Sequential(Resize(224), ...) wrapping build_vit and build_swin need for their
+    ImageNet backbones. weights=None: nothing in the paper's recipe table
+    (sec/7_appendix.tex) names a pretrained source, unlike the ViT/Swin
+    backbones, which this project deliberately keeps at their ImageNet init.
+
+    Deviation from the paper: torchvision's resnet18 stem (7x7 stride-2 conv,
+    3x3 stride-2 maxpool) is sized for a 224x224 ImageNet input and collapses a
+    32x32 image to a 1x1 feature map by the last residual stage. The paper cites
+    only "ResNet-18 [He et al.]" with no stem detail, and every CIFAR-scale
+    ResNet-18 in the backdoor-learning literature (BackdoorBench included)
+    substitutes the standard CIFAR stem instead: a 3x3 stride-1 first conv and
+    no maxpool, so the 4 residual stages see a shrinking but nonzero feature map
+    (32 -> 32 -> 16 -> 8 -> 4). That substitution is applied here.
+    """
+    network = resnet18(weights=None, num_classes=num_classes)
+    network.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+    network.maxpool = nn.Identity()
+    return network
+
+
 ARCHITECTURE_BUILDERS: dict[str, Callable[[int], nn.Module]] = {
     "vit": build_vit,
     "swin": build_swin,
+    "resnet18": build_resnet18,
 }
 
 
@@ -110,30 +140,36 @@ def load_checkpoint(
     return loaded_model
 
 
-# The 2 backbones have distinct state_dict key substrings, so a checkpoint's own
+# The 3 backbones have distinct state_dict key substrings, so a checkpoint's own
 # weights identify its architecture when the folder name does not.
 VIT_STATE_DICT_MARKERS = ("conv_proj", "class_token", "encoder.layers.encoder_layer_")
 SWIN_STATE_DICT_MARKERS = ("features.",)
+# torchvision's ResNet-18 names its 4 residual stages layer1..layer4, a
+# substring no ViT or Swin state_dict key contains.
+RESNET_STATE_DICT_MARKERS = ("layer1.", "layer2.", "layer3.", "layer4.")
 
 
 def detect_architecture(checkpoint_path: str) -> str:
     """The architecture a checkpoint's state_dict keys identify.
 
-    Raises when the keys match both marker sets or neither, since a checkpoint that
-    cannot be identified must not be loaded as a guess.
+    Raises when the keys match more than 1 marker set or none, since a checkpoint
+    that cannot be identified must not be loaded as a guess.
     """
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     keys = list(checkpoint.get("model", checkpoint).keys())
 
     is_vit = any(marker in key for key in keys for marker in VIT_STATE_DICT_MARKERS)
     is_swin = any(marker in key for key in keys for marker in SWIN_STATE_DICT_MARKERS)
+    is_resnet = any(
+        marker in key for key in keys for marker in RESNET_STATE_DICT_MARKERS
+    )
 
-    if is_vit and not is_swin:
-        return "vit"
-    if is_swin and not is_vit:
-        return "swin"
+    matches = {"vit": is_vit, "swin": is_swin, "resnet18": is_resnet}
+    identified = [name for name, matched in matches.items() if matched]
+    if len(identified) == 1:
+        return identified[0]
     raise ValueError(
-        f"state_dict at {checkpoint_path} matched vit={is_vit} swin={is_swin}, expected exactly one"
+        f"state_dict at {checkpoint_path} matched {matches}, expected exactly one"
     )
 
 

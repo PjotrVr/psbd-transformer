@@ -29,6 +29,7 @@ from typing import Callable
 import torch
 import torch.nn as nn
 from torch.utils.hooks import RemovableHandle
+from torchvision.models.resnet import BasicBlock
 from torchvision.models.vision_transformer import EncoderBlock
 from torchvision.models.swin_transformer import SwinTransformerBlock
 
@@ -156,14 +157,42 @@ SWIN_POSITIONS: dict[str, PositionSpec] = {
     "input_pixels": PositionSpec("", "pre", scope="root"),
 }
 
+# ResNet-18's BasicBlock (torchvision.models.resnet), the PSBD paper's own
+# ConvNet control. A basic block has exactly 1 residual add per block, unlike a
+# transformer block's 2 (attention and MLP), so there is only 1 site to name:
+# "post_residual" resolves directly here to 1 probe per block. cli.sweep and
+# attacks.evasion instead resolve a position through
+# DROPOUT_CONFIGS.get(position, (position,)) before ever touching
+# POSITION_REGISTRY, and that lookup is architecture-agnostic: for the key
+# "post_residual" it always returns the ViT/Swin pair
+# ("after_attention_residual", "after_mlp_residual"), never the bare name. Both
+# alias keys are carried here too, pointing at the identical PositionSpec, so
+# `--position post_residual` and the evasion probe token `post_residual:dropout`
+# resolve without a resnet18-specific branch anywhere outside this module. That
+# indirect path attaches the residual wrapper twice per block (once per alias
+# name), and the second attach overwrites the block's forward set by the
+# first, so only the last-attached probe is ever invoked, at the requested
+# rate, and
+# unplug_dropout still restores the block exactly, since ForwardRestore.remove()
+# is idempotent. A direct plug_dropout(..., ("post_residual",), ...) call, as
+# the tests use, attaches exactly 1 probe per block with no such overwrite.
+_RESNET_POST_RESIDUAL = PositionSpec("", "residual")
+RESNET_POSITIONS: dict[str, PositionSpec] = {
+    "post_residual": _RESNET_POST_RESIDUAL,
+    "after_attention_residual": _RESNET_POST_RESIDUAL,
+    "after_mlp_residual": _RESNET_POST_RESIDUAL,
+}
+
 POSITION_REGISTRY: dict[str, dict[str, PositionSpec]] = {
     "vit": VIT_POSITIONS,
     "swin": SWIN_POSITIONS,
+    "resnet18": RESNET_POSITIONS,
 }
 
 BLOCK_TYPES: dict[str, tuple[type, ...]] = {
     "vit": (EncoderBlock,),
     "swin": (SwinTransformerBlock,),
+    "resnet18": (BasicBlock,),
 }
 
 # The 9 atomic positions swept in isolation, in forward order through a block.
@@ -506,7 +535,32 @@ def _swin_post_attention_residual_forward(
     return x
 
 
+def _resnet_post_residual_forward(block: nn.Module, probe: nn.Module, input_tensor):
+    """BasicBlock.forward with the probe after the residual add, before ReLU.
+
+    input_tensor is the (batch, channels, height, width) feature map entering
+    the block and the return is the map leaving it, in the same shape (channels
+    change only across a block whose downsample is not None). Mirrors
+    torchvision's BasicBlock.forward exactly except for the single probe call,
+    which lands exactly where the PSBD paper places it (sec/4_method.tex,
+    "PS setting"): "dropout layers are applied after each residual connection
+    in the residual basic block, before the activation function".
+    """
+    identity = input_tensor  # (batch, channels, height, width)
+    out = block.conv1(input_tensor)
+    out = block.bn1(out)
+    out = block.relu(out)
+    out = block.conv2(out)
+    out = block.bn2(out)  # (batch, channels, height, width)
+    if block.downsample is not None:
+        identity = block.downsample(input_tensor)  # (batch, channels, height, width)
+    out = probe(out + identity)  # (batch, channels, height, width)
+    out = block.relu(out)
+    return out
+
+
 RESIDUAL_FORWARDS: dict[str, Callable] = {
     "vit": _vit_post_attention_residual_forward,
     "swin": _swin_post_attention_residual_forward,
+    "resnet18": _resnet_post_residual_forward,
 }

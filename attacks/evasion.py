@@ -41,10 +41,16 @@ the attacker a noisier, differently centred PSU than the defender reads.
 See docs/plans/adaptive-attacker-and-dropout-stacking.md for the threat model, the
 success criteria and the transfer test that is the actual point.
 
-A second objective, `psbd_paper`, implements the adaptive attacker the PSBD
+A second objective, `psu_mean`, implements the adaptive attacker the PSBD
 paper itself describes (Li, Chen, Liu, Wang, arXiv 2406.05826, Appendix
 "Resistance to Potential Adaptive Attacks"). Selected with
-`probe["objective"] = "psbd_paper"`, default `"hinge"`, the objective above.
+`probe["objective"] = "psu_mean"`, default `"psu_gap_hinge"`, the objective
+above. The 2 canonical names state what each loss computes: `psu_gap_hinge`
+penalises the gap between the poisoned and the clean mean fractional PSU
+under the probe, `psu_mean` adds alpha times the mean absolute PSU over every
+training sample to the backdoor loss. The old names `"hinge"` and
+`"psbd_paper"` are still accepted (`normalize_evasion_objective`), so an
+already-queued job script naming either keeps running unchanged.
 
     original form
         L = (1 - alpha) L_bd + alpha L_ada
@@ -72,15 +78,15 @@ defender's threshold can no longer separate the 2 groups by that statistic.
 1. phi_PSU is the ABSOLUTE PSU, a plain probability difference, not the
    fractional ratio (`psu_for_batch`) the rest of this module and
    `defences.scores` use as the headline statistic. This module implements both
-   forms side by side, `psu_for_batch` for the hinge objective and
-   `absolute_psu_for_batch` for `psbd_paper`, so each objective matches the form
+   forms side by side, `psu_for_batch` for the psu_gap_hinge objective and
+   `absolute_psu_for_batch` for `psu_mean`, so each objective matches the form
    its own source specifies.
 2. The paper computes L_ada every 50 iterations to save compute. This computes
-   it every batch instead, which is what the hinge objective already does and
+   it every batch instead, which is what the psu_gap_hinge objective already does and
    keeps both objectives on the same training loop, at the cost of running the
    k extra probe passes more often than the paper's own recipe.
 
-A third path, multi-probe evasion, extends the hinge objective (`--evade-probes`,
+A third path, multi-probe evasion, extends the psu_gap_hinge objective (`--evade-probes`,
 `cli.train_backdoor`) from 1 probe to several, so the attacker trains against the
 defence's own min-rank union (`defences.decision.multi_probe_auroc`,
 `docs/hypothesis/H41-multi-probe-defence.md`) rather than a single placement it
@@ -226,7 +232,7 @@ def psu_for_batch(
 
     Returns (psu, logits), both carrying grad history: psu is (batch,) and logits
     is (batch, num_classes). This is the defender's headline statistic
-    (`defences.scores.psu_ratio_from_cache`), used by the hinge objective.
+    (`defences.scores.psu_ratio_from_cache`), used by the psu_gap_hinge objective.
     """
     base, dropped, logits = _probe_confidences(model, images, probe, passes, logits)
     base_clamped = base.clamp_min(BASE_PROBABILITY_FLOOR)
@@ -254,7 +260,7 @@ def absolute_psu_for_batch(
 
     This is PSBD's own form of the statistic (sec/4_method.tex), unnormalised by
     the base confidence, and is what the paper's adaptive-attacker loss
-    (`psbd_paper` objective) is defined over. See `psu_for_batch` for the
+    (`psu_mean` objective) is defined over. See `psu_for_batch` for the
     fractional form this repository otherwise reports.
     """
     base, dropped, logits = _probe_confidences(model, images, probe, passes, logits)
@@ -380,10 +386,26 @@ def multi_probe_evasion_penalty(
     return hinges.mean()
 
 
-# The 2 evasion objectives evasive_update dispatches on, read off
-# probe.get("objective", "hinge"). Exported so cli.train_backdoor's
+# The evasion objectives evasive_update dispatches on, read off
+# probe.get("objective", "psu_gap_hinge"). Exported so cli.train_backdoor's
 # --evade-objective choices cannot drift from what this module actually handles.
-EVASION_OBJECTIVES = ("hinge", "psbd_paper")
+# "hinge" and "psbd_paper" are the pre-rename names, kept as accepted choices
+# (translated by normalize_evasion_objective) so an already-queued job script
+# still runs, and every new script should name the canonical pair instead.
+EVASION_OBJECTIVES = ("psu_gap_hinge", "psu_mean", "hinge", "psbd_paper")
+
+# Canonical objective names state what the loss computes, not whose loss it
+# is: "psu_gap_hinge" was "hinge", "psu_mean" was "psbd_paper".
+EVASION_OBJECTIVE_ALIASES: dict[str, str] = {
+    "hinge": "psu_gap_hinge",
+    "psbd_paper": "psu_mean",
+}
+
+
+def normalize_evasion_objective(objective: str) -> str:
+    """The canonical objective name, translating a deprecated alias unchanged otherwise."""
+    canonical = EVASION_OBJECTIVE_ALIASES.get(objective, objective)
+    return canonical
 
 
 def paper_adaptive_penalty(psu_absolute: torch.Tensor) -> torch.Tensor:
@@ -419,32 +441,38 @@ def evasive_update(
     dicts, which routes through the multi-probe hinge (module docstring's 3rd
     formula) regardless of how many probes the list holds. A 1-entry list is
     numerically identical to passing that entry as a plain dict. Every probe in
-    a list is read as `objective="hinge"`, since the multi-probe formula is only
-    defined for the hinge: a list with any other objective raises.
+    a list is read as `objective="psu_gap_hinge"`, since the multi-probe
+    formula is only defined for the hinge: a list with any other objective
+    raises.
 
-    A single probe's `probe.get("objective", "hinge")` selects the loss:
+    A single probe's `probe.get("objective", "psu_gap_hinge")` selects the loss
+    (normalize_evasion_objective translates the deprecated "hinge" /
+    "psbd_paper" spellings first):
 
-    - "hinge" (default, unchanged behaviour): fractional PSU, additive penalty,
-      loss = cross_entropy + weight * evasion_penalty(psu, is_poisoned).
-    - "psbd_paper": absolute PSU, convex combination as the paper defines it,
+    - "psu_gap_hinge" (default, unchanged behaviour): fractional PSU, additive
+      penalty, loss = cross_entropy + weight * evasion_penalty(psu, is_poisoned).
+    - "psu_mean": absolute PSU, convex combination as the paper defines it,
       loss = (1 - weight) * cross_entropy + weight * paper_adaptive_penalty(psu),
       with weight read as alpha.
     """
     optimizer.zero_grad(set_to_none=True)
     probes = probe if isinstance(probe, list) else [probe]
-    objectives = {p.get("objective", "hinge") for p in probes}
-    if len(probes) > 1 and objectives != {"hinge"}:
+    objectives = {
+        normalize_evasion_objective(p.get("objective", "psu_gap_hinge")) for p in probes
+    }
+    if len(probes) > 1 and objectives != {"psu_gap_hinge"}:
         raise ValueError(
-            f"multi-probe evasion only supports the hinge objective, got {objectives}"
+            "multi-probe evasion only supports the psu_gap_hinge objective, got "
+            f"{objectives}"
         )
     objective = next(iter(objectives))
 
-    if objective == "hinge":
+    if objective == "psu_gap_hinge":
         psu_per_probe, logits = multi_probe_psu_for_batch(model, images, probes, passes)
         penalty = multi_probe_evasion_penalty(psu_per_probe, is_poisoned)
         loss = criterion(logits, labels) + weight * penalty
         psu = psu_per_probe[0]
-    elif objective == "psbd_paper":
+    elif objective == "psu_mean":
         psu, logits = absolute_psu_for_batch(model, images, probes[0], passes)
         penalty = paper_adaptive_penalty(psu)
         loss = (1.0 - weight) * criterion(logits, labels) + weight * penalty

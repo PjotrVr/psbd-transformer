@@ -22,7 +22,7 @@ from torch.utils.data import DataLoader
 
 from evaluation.metrics import clean_accuracy
 from attacks.evasion import train_one_epoch_evasive
-from models.backbones import build_swin, build_vit
+from models.backbones import build_resnet18, build_swin, build_vit
 from utils.provenance import current_git_commit
 from .sam import SAM
 
@@ -49,6 +49,12 @@ def build_model(
             raise ValueError("training-time dropout is implemented for ViT only")
         swin = build_swin(num_classes)
         return swin
+
+    if architecture == "resnet18":
+        if model_dropout:
+            raise ValueError("training-time dropout is implemented for ViT only")
+        resnet = build_resnet18(num_classes)
+        return resnet
 
     raise ValueError(f"Unknown architecture: {architecture}")
 

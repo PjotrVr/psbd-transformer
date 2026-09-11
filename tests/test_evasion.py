@@ -29,7 +29,9 @@ PROBE = {
     "architecture": "vit",
 }
 
-PROBE_PAPER = {**PROBE, "objective": "psbd_paper"}
+# "psu_mean" is the canonical name for the objective that used to be
+# "psbd_paper" (attacks.evasion.EVASION_OBJECTIVE_ALIASES).
+PROBE_PAPER = {**PROBE, "objective": "psu_mean"}
 
 
 class TinyViT(nn.Module):
@@ -338,6 +340,49 @@ def test_paper_weight_one_drops_cross_entropy_entirely(batch):
     assert float(batch_loss) == pytest.approx(float(psu.mean()), abs=1e-5)
 
 
+def test_deprecated_objective_aliases_still_dispatch(batch):
+    """ "hinge" and "psbd_paper" still select the same loss as their new names.
+
+    An already-queued job script naming either old string must keep running
+    unchanged after the rename (attacks.evasion.EVASION_OBJECTIVE_ALIASES).
+    """
+    images, labels, is_poisoned = batch
+    criterion = nn.CrossEntropyLoss()
+
+    torch.manual_seed(4)
+    old_name_model = TinyViT()
+    torch.manual_seed(4)
+    new_name_model = TinyViT()
+    old_name_probe = {**PROBE, "objective": "hinge"}
+    new_name_probe = {**PROBE, "objective": "psu_gap_hinge"}
+
+    torch.manual_seed(5)
+    old_name_loss, _ = evasive_update(
+        old_name_model,
+        images,
+        labels,
+        is_poisoned,
+        criterion,
+        torch.optim.SGD(old_name_model.parameters(), lr=0.0),
+        old_name_probe,
+        1.0,
+        3,
+    )
+    torch.manual_seed(5)
+    new_name_loss, _ = evasive_update(
+        new_name_model,
+        images,
+        labels,
+        is_poisoned,
+        criterion,
+        torch.optim.SGD(new_name_model.parameters(), lr=0.0),
+        new_name_probe,
+        1.0,
+        3,
+    )
+    assert float(old_name_loss) == pytest.approx(float(new_name_loss), abs=1e-6)
+
+
 def test_unknown_objective_raises(batch):
     images, labels, is_poisoned = batch
     model = TinyViT()
@@ -523,8 +568,8 @@ def test_evasive_update_rejects_multi_probe_with_the_paper_objective(batch):
     images, labels, is_poisoned = batch
     model = TinyViT()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
-    probes = [PROBE_PAPER, {**PROBE_B, "objective": "psbd_paper"}]
-    with pytest.raises(ValueError, match="only supports the hinge objective"):
+    probes = [PROBE_PAPER, {**PROBE_B, "objective": "psu_mean"}]
+    with pytest.raises(ValueError, match="only supports the psu_gap_hinge objective"):
         evasive_update(
             model,
             images,

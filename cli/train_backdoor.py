@@ -46,7 +46,12 @@ from data.loading import (
 )
 from evaluation.loaders import build_clean_loader
 from evaluation.metrics import clean_accuracy, evaluate_attack
-from attacks.evasion import EVASION_OBJECTIVES, FlaggedPoisonedSet, calibrate_probe_rate
+from attacks.evasion import (
+    EVASION_OBJECTIVES,
+    FlaggedPoisonedSet,
+    calibrate_probe_rate,
+    normalize_evasion_objective,
+)
 from attacks.poisoning import (
     Attack,
     CoverPoisonedTrainingSet,
@@ -236,17 +241,44 @@ def build_training_loader(
     return train_loader, spec.num_classes, attack, config, realized_poison_rate
 
 
+# The default evasion probe when neither --evade-probes nor the singular
+# --evade-position / --evade-operator flags are given, keyed by --architecture.
+# before_attention_norm:dropout is the ViT/Swin placement every existing
+# adaptive-attacker experiment trains against, and post_residual:dropout is
+# resnet18's only position (models.positions.RESNET_POSITIONS), the PSBD
+# paper's own ConvNet placement. This is what lets the 3 command variants
+# (plain, the paper's attacker, this project's attacker) differ by exactly the
+# --evade-psbd/--evade-objective/--evade-weight flags and nothing else.
+DEFAULT_EVADE_PROBE_BY_ARCHITECTURE: dict[str, tuple[str, str]] = {
+    "resnet18": ("post_residual", "dropout"),
+}
+DEFAULT_EVADE_PROBE: tuple[str, str] = ("before_attention_norm", "dropout")
+
+
 def parse_evade_probe_tokens(args: argparse.Namespace) -> list[tuple[str, str]]:
     """The (position, operator) pairs to train against, from --evade-probes or the singular flags.
 
     --evade-probes, when given, takes 1 or more `position:operator` tokens (for
     example `before_attention_norm:token_mask`) and overrides --evade-position
-    and --evade-operator entirely. With no --evade-probes, a 1-element list
-    carrying exactly the singular flags is returned, so callers never branch on
-    which path chose the probes.
+    and --evade-operator entirely. With no --evade-probes and neither singular
+    flag set, the default resolves from --architecture
+    (DEFAULT_EVADE_PROBE_BY_ARCHITECTURE), so a bare --evade-psbd needs no
+    position or operator at all. Setting only 1 of the singular flags is
+    refused rather than silently pairing it with the other's default.
     """
     if not args.evade_probes:
-        return [(args.evade_position, args.evade_operator)]
+        position, operator = args.evade_position, args.evade_operator
+        if position is None and operator is None:
+            position, operator = DEFAULT_EVADE_PROBE_BY_ARCHITECTURE.get(
+                args.architecture, DEFAULT_EVADE_PROBE
+            )
+        elif position is None or operator is None:
+            raise ValueError(
+                "--evade-position and --evade-operator must be given together, "
+                "or neither, so the architecture default is not silently mixed "
+                "with 1 explicit flag"
+            )
+        return [(position, operator)]
 
     tokens = []
     for token in args.evade_probes:
@@ -280,19 +312,20 @@ def resolve_evasion(
     restored afterwards so training starts from the same state regardless of
     how many probes were calibrated.
 
-    Multi-probe evasion is defined only for the hinge objective (see
+    Multi-probe evasion is defined only for the psu_gap_hinge objective (see
     attacks.evasion's module docstring), so more than 1 --evade-probes token
-    together with --evade-objective psbd_paper is rejected here rather than
+    together with --evade-objective psu_mean is rejected here rather than
     left for evasive_update to raise mid-training.
     """
     if not args.evade_psbd:
         return None, []
 
     probe_tokens = parse_evade_probe_tokens(args)
-    if len(probe_tokens) > 1 and args.evade_objective != "hinge":
+    objective = normalize_evasion_objective(args.evade_objective)
+    if len(probe_tokens) > 1 and objective != "psu_gap_hinge":
         raise ValueError(
             "--evade-probes with more than 1 probe only supports "
-            "--evade-objective hinge"
+            "--evade-objective psu_gap_hinge"
         )
 
     calibration_model = None
@@ -305,8 +338,10 @@ def resolve_evasion(
             # Read by attacks.evasion.evasive_update to pick the loss. Living on
             # the probe dict, not a separate argument, is what lets it reach
             # train_one_epoch_evasive without training.loop's call signature
-            # changing: that call already forwards this dict opaquely.
-            "objective": args.evade_objective,
+            # changing: that call already forwards this dict opaquely. Stored
+            # already normalized, so args.json and every downstream reader see
+            # the canonical name regardless of which spelling was passed.
+            "objective": objective,
         }
         rate = args.evade_rate
         if rate == 0.0:
@@ -336,7 +371,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--attack", choices=ATTACK_NAMES, required=True)
     parser.add_argument("--poison-rate", type=float, required=True)
     parser.add_argument("--target-label", type=int, default=0)
-    parser.add_argument("--architecture", choices=("vit", "swin"), default="vit")
+    parser.add_argument(
+        "--architecture", choices=("vit", "swin", "resnet18"), default="vit"
+    )
     parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument(
@@ -349,8 +386,20 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument("--evade-weight", type=float, default=1.0)
-    parser.add_argument("--evade-position", default="before_attention_norm")
-    parser.add_argument("--evade-operator", default="dropout")
+    parser.add_argument(
+        "--evade-position",
+        default=None,
+        help="default: DEFAULT_EVADE_PROBE_BY_ARCHITECTURE's entry for "
+        "--architecture (before_attention_norm for vit/swin, post_residual for "
+        "resnet18). Must be given together with --evade-operator, or not at all.",
+    )
+    parser.add_argument(
+        "--evade-operator",
+        default=None,
+        help="default: DEFAULT_EVADE_PROBE_BY_ARCHITECTURE's entry for "
+        "--architecture (dropout for every architecture today). Must be given "
+        "together with --evade-position, or not at all.",
+    )
     parser.add_argument(
         "--evade-probes",
         nargs="+",
@@ -362,21 +411,23 @@ def parse_args() -> argparse.Namespace:
             "mlp_norm_out:gain_scale. Each is calibrated to its own rate and the "
             "hinge loss is the mean over probes (attacks.evasion's module "
             "docstring). Overrides --evade-position and --evade-operator "
-            "entirely; only supported with --evade-objective hinge when more "
-            "than 1 token is given"
+            "entirely; only supported with --evade-objective psu_gap_hinge when "
+            "more than 1 token is given"
         ),
     )
     parser.add_argument(
         "--evade-objective",
         choices=EVASION_OBJECTIVES,
-        default="hinge",
+        default="psu_gap_hinge",
         help=(
-            "hinge (default): this repository's own penalty, additive on top of "
-            "cross-entropy, active only while poisoned shift trails clean. "
-            "psbd_paper: the PSBD paper's own adaptive-attacker loss (Appendix, "
-            "'Resistance to Potential Adaptive Attacks'), a convex combination "
+            "psu_gap_hinge (default, formerly 'hinge'): this repository's own "
+            "penalty, additive on top of cross-entropy, active only while "
+            "poisoned shift trails clean. psu_mean (formerly 'psbd_paper'): the "
+            "PSBD paper's own adaptive-attacker loss (Appendix, 'Resistance to "
+            "Potential Adaptive Attacks'), a convex combination "
             "(1 - alpha) * cross_entropy + alpha * L_ada with --evade-weight read "
-            "as alpha, pushing every sample's PSU down, benign and poisoned alike"
+            "as alpha, pushing every sample's PSU down, benign and poisoned alike. "
+            "'hinge' and 'psbd_paper' are still accepted as deprecated aliases"
         ),
     )
     parser.add_argument(
@@ -699,7 +750,7 @@ def main() -> None:
         # multi-probe hinge (attacks.evasion's module docstring).
         evasion={
             "weight": args.evade_weight,
-            "objective": args.evade_objective,
+            "objective": normalize_evasion_objective(args.evade_objective),
             "probes": [
                 {
                     "position": p["position"],

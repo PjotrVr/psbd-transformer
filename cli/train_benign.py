@@ -201,7 +201,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--batch-size", type=int, default=128)
-    parser.add_argument("--architecture", choices=("vit", "swin"), default="vit")
+    parser.add_argument(
+        "--architecture", choices=("vit", "swin", "resnet18"), default="vit"
+    )
     parser.add_argument("--use-sam", action="store_true")
     parser.add_argument("--rho", type=float, default=0.1)
     parser.add_argument(
