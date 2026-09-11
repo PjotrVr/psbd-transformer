@@ -68,8 +68,8 @@ def main() -> None:
     for architecture in architectures:
         label = ARCHITECTURE_LABELS.get(architecture, architecture)
         header += [
-            f"{label} ms per input",
-            f"{label} slowdown",
+            f"{label} ms",
+            "slowdown",
         ]
 
     rows = []

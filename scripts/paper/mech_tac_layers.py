@@ -147,8 +147,8 @@ def main() -> None:
             onsets.setdefault(item["attack"], []).append(onset)
         table_rows.append(
             [
-                item["dataset"],
-                item["folder"].replace(f"vit_{item['dataset']}_", ""),
+                dataset_label(item["dataset"]),
+                folder_legend_label(item["folder"], item["dataset"]),
                 str(peak["layer"]),
                 fmt(peak["rel_direction_norm"], places=2),
                 str(onset) if onset is not None else "--",
