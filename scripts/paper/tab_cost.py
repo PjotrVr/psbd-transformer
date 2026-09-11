@@ -81,7 +81,7 @@ def main() -> None:
             timing = cost_row(record, forward_passes, HEADLINE_PLACEMENT)
             slowdown = timing["seconds_per_input"] / plain_seconds
             row += [
-                ms_per_input(timing["seconds_per_input"]),
+                fmt(timing["seconds_per_input"] * 1000, places=1),
                 fmt(slowdown, places=1) + "x",
             ]
         rows.append(row)
