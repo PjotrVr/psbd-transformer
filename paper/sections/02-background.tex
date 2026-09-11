@@ -16,7 +16,7 @@ where $\theta$ are the weights, $\theta'$ the weights with dropout active and $\
 \end{equation}
 with $\hat y$ the class predicted without dropout. A poisoned input keeps its probability under dropout and has a low $\psu$.
 
-The dropout rate is chosen so that the shift ratio of the clean validation set reaches 0.8, the threshold is the 25th percentile of the validation set's $\psu$, and $k = 3$. The paper places dropout after each residual connection of a ResNet basic block. It explains the phenomenon by neuron bias. Dropout removes clean features, the network falls back on the classes its neurons are biased toward, and the backdoor's neurons are biased more firmly than the rest. We return to that explanation in \cref{sec:mechanism}.
+The dropout rate is chosen so that the shift ratio of the clean validation set reaches 0.8, the threshold is the 25th percentile of the validation set's $\psu$, and $k = 3$. In a ResNet the paper applies dropout after each residual connection of the basic block, before the activation function. It explains the phenomenon by neuron bias. Dropout removes clean features, the network falls back on the classes its neurons are biased toward, and the backdoor's neurons are biased more firmly than the rest. We return to that explanation in \cref{sec:mechanism}.
 
 \subsection{Perturbation sites in a ViT block}
 A ViT-B/16 \cite{dosovitskiy2021an} splits a 224 by 224 image into 196 patches of 16 by 16 pixels, embeds each as a 768-dimensional token, prepends a class token and runs 12 identical blocks. Each block applies a LayerNorm, multi-head self-attention over the 197 tokens and a residual add, then a second LayerNorm, a 2-layer MLP applied to every token independently and a second residual add. The classifier reads the class token after a final LayerNorm. \Cref{fig:vit-block} shows 1 block with the sites where we inject a perturbation.
@@ -26,6 +26,6 @@ Attention is the only operation that mixes information across tokens. A perturba
 \begin{figure}[t]
 \centering
 \input{figures/vit_block}
-\caption{One ViT block with the sites we perturb, in forward order. Site A is the attention input, where we mask whole tokens. Site C is the residual stream after the add, the site that corresponds to the PSBD paper's dropout on ResNets. The attention branch output before the add (B), the MLP input (D), the attention heads and the MLP hidden units are the other sites in the basis.}
+\caption{One ViT block with the sites we perturb, in forward order. Site A is the attention input, where PSBD-TM masks whole tokens. Site C is the residual stream after the add, where PSBD-RD applies dropout. The attention branch output before the add (B), the MLP input (D), the attention heads and the MLP hidden units are the other sites in the basis.}
 \label{fig:vit-block}
 \end{figure}

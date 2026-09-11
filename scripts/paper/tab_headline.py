@@ -31,6 +31,7 @@ from scripts.paper._common import (  # noqa: E402
     build_parser,
     ci_text,
     clearing_cells,
+    dataset_label,
     fmt,
     load_coverage,
     load_psbd_metrics,
@@ -42,10 +43,12 @@ from scripts.paper._common import (  # noqa: E402
 GENERATOR = "scripts/paper/tab_headline.py"
 QUANTILE_KEYS = ("q0.01", "q0.05", "q0.10", "q0.25")
 CONFIGS = ("rec_adapt", "rec_match", "pub_adapt")
+# Column headers name the placement by site and operator, never by the words
+# "recommended" or "published", so a reader never has to learn that shorthand.
 CONFIG_HEADERS = {
-    "rec_adapt": "rec-adapt",
-    "rec_match": "rec-match06",
-    "pub_adapt": "pub-adapt",
+    "rec_adapt": "token mask, attention input (adaptive)",
+    "rec_match": "token mask, attention input (matched)",
+    "pub_adapt": "dropout, after residual add",
 }
 RATE_ORDER = (0.01, 0.05, 0.1)
 DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny", "svhn", "eurosat")
@@ -108,7 +111,9 @@ def subsets(cells: list[dict]) -> list[tuple[str, list[dict]]]:
         ("primary datasets", [c for c in cells if c["dataset"] in PRIMARY_DATASETS]),
     ]
     for dataset in DATASET_ORDER:
-        groups.append((dataset, [c for c in cells if c["dataset"] == dataset]))
+        groups.append(
+            (dataset_label(dataset), [c for c in cells if c["dataset"] == dataset])
+        )
     for rate in RATE_ORDER:
         groups.append(
             (f"rate {rate:g}", [c for c in cells if c["poison_rate"] == rate])
@@ -176,12 +181,12 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "AUROC and TPR at 4 false-positive budgets for the recommended "
-            "placement `before\\_attention\\_norm\\_token\\_mask` at the adaptive "
-            "0.8 rule (rec-adapt) and the matched 0.6 rule (rec-match06), and the "
-            "published placement `post\\_residual` at the adaptive rule (pub-adapt), "
-            "over the 65 clearing cells. n is the common-coverage count of the row, "
-            "the cells where all 3 configurations returned a value."
+            "AUROC and TPR at 4 false-positive budgets for the token\\_mask placement "
+            "at the attention input (`before\\_attention\\_norm\\_token\\_mask`) at the "
+            "adaptive 0.8 rule and the matched 0.6 rule, and the dropout placement "
+            "after the residual add (`post\\_residual`) at the adaptive rule, over "
+            "the panel of 65 backdoored models. n is the common-coverage count of "
+            "the row, the models where all 3 configurations returned a value."
         ),
         label="tab:headline",
         header=big_table_header(),
@@ -198,19 +203,20 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "Paired AUROC deltas at the headline quantile q0.25, recommended minus "
-            "published, both at the adaptive rule and recommended at the matched "
-            "0.6 rule against published at the adaptive rule. "
+            "Paired AUROC deltas at the headline quantile q0.25, token mask at the "
+            "attention input minus dropout after the residual add, both at the "
+            "adaptive rule, and token mask at the attention input at the matched "
+            "0.6 rule against dropout after the residual add at the adaptive rule. "
             f"{args.bootstrap}-resample bootstrap 95\\% intervals, seed {args.seed}."
         ),
         label="tab:headline-deltas",
         header=[
             "subset",
             "n adapt",
-            "rec-adapt minus pub-adapt",
+            "token mask, attention input (adaptive) minus dropout, after residual add",
             "95% CI",
             "n match",
-            "rec-match06 minus pub-adapt",
+            "token mask, attention input (matched) minus dropout, after residual add",
             "95% CI",
         ],
         rows=delta_rows,

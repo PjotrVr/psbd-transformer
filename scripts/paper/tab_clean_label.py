@@ -19,7 +19,9 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from scripts.paper._common import (  # noqa: E402
+    attack_label,
     build_parser_with_checkpoints,
+    dataset_label,
     fmt,
     load_args_json,
     load_declaration,
@@ -60,7 +62,9 @@ def usable(sidecar: dict, benign: float | None) -> bool:
     return ok
 
 
-def clears(sidecar: dict, benign: float | None, asr_bar: float, drop_bar: float) -> bool:
+def clears(
+    sidecar: dict, benign: float | None, asr_bar: float, drop_bar: float
+) -> bool:
     asr = sidecar.get("asr")
     accuracy = sidecar.get("clean_accuracy")
     if asr is None or accuracy is None or benign is None:
@@ -86,8 +90,8 @@ def cell_rows(
         accuracies = [run["clean_accuracy"] for run in good]
         rows.append(
             [
-                dataset,
-                attack,
+                dataset_label(dataset),
+                attack_label(attack),
                 f"{rate:g}",
                 str(target),
                 f"{len(good)}/{len(runs)}",
@@ -140,7 +144,10 @@ def epsilon_over_255(sidecar: dict) -> int | None:
 
 
 def lc_pilot_rows(
-    runs: dict[str, dict], benign_of: dict[str, float | None], asr_bar: float, drop_bar: float
+    runs: dict[str, dict],
+    benign_of: dict[str, float | None],
+    asr_bar: float,
+    drop_bar: float,
 ) -> tuple[list[list[str]], dict[str, int | None]]:
     """1 row per pilot run, and the epsilon the rule picks per dataset."""
     rows = []
@@ -161,12 +168,15 @@ def lc_pilot_rows(
                 passing.append(epsilon)
             rows.append(
                 [
-                    dataset,
+                    dataset_label(dataset),
                     f"{float(sidecar['poison_rate']):g}",
                     str(epsilon),
                     fmt(sidecar.get("asr")),
                     fmt(sidecar.get("clean_accuracy")),
-                    fmt((sidecar.get("clean_accuracy") or 0) - (benign or 0), signed=True),
+                    fmt(
+                        (sidecar.get("clean_accuracy") or 0) - (benign or 0),
+                        signed=True,
+                    ),
                     "yes" if passes else ("diverged" if not ok else "no"),
                 ]
             )
@@ -242,7 +252,9 @@ def main() -> None:
         **sidecars(args.checkpoints_dir, "vit_eurosat_*"),
     }
     new_datasets = {
-        folder: sidecar for folder, sidecar in new_datasets.items() if "benign" not in folder
+        folder: sidecar
+        for folder, sidecar in new_datasets.items()
+        if "benign" not in folder
     }
     new_rows = cell_rows(group_by_cell(new_datasets), benign_of, asr_bar, drop_bar)
     write_table(
@@ -251,8 +263,8 @@ def main() -> None:
         inputs=inputs,
         caption=(
             "SVHN and EuroSAT as clean-label carriers: SIG at every panel rate with "
-            "a dirty-label blend control, 3 training seeds per cell, seed means with "
-            "the number of seeds clearing both bars."
+            "a dirty-label blend control, 3 training seeds per model, seed means "
+            "with the number of seeds clearing both bars."
         ),
         label="tab:clean-label-new-datasets",
         header=CELL_HEADER,
@@ -275,10 +287,14 @@ def main() -> None:
         asrs = [run["asr"] for run in runs if run.get("asr") is not None]
         multi_rows.append(
             [
-                dataset,
+                dataset_label(dataset),
                 str(targets),
                 str(len(runs)),
-                fmt(mean_or_none([float(run.get("realized_poison_rate") or 0) for run in runs])),
+                fmt(
+                    mean_or_none(
+                        [float(run.get("realized_poison_rate") or 0) for run in runs]
+                    )
+                ),
                 fmt(mean_or_none(asrs)),
                 fmt(min(asrs)) if asrs else "--",
                 fmt(max(asrs)) if asrs else "--",
@@ -294,44 +310,111 @@ def main() -> None:
             "Multi-target clean-label SIG on the primary datasets at the lowest panel "
             "rate: the target set is the first m classes, the recorded attack success "
             "counts a prediction landing anywhere in the set, and the single-target "
-            "row is the panel's own cell."
+            "row is the panel's own model."
         ),
         label="tab:clean-label-multitarget",
-        header=["dataset", "targets m", "runs", "realized rate", "mean ASR", "min", "max", "mean CA", "runs clearing"],
+        header=[
+            "dataset",
+            "targets m",
+            "runs",
+            "realized rate",
+            "mean ASR",
+            "min",
+            "max",
+            "mean CA",
+            "runs clearing",
+        ],
         rows=multi_rows,
         align="lrrrrrrrr",
     )
 
     diverged, total = diverged_gtsrb(args.checkpoints_dir, benign_of["gtsrb"])
     sig_5_percent = [
-        run for run in sig_tl1.values() if float(run["poison_rate"]) == 0.05 and usable(run, benign_of["gtsrb"])
+        run
+        for run in sig_tl1.values()
+        if float(run["poison_rate"]) == 0.05 and usable(run, benign_of["gtsrb"])
     ]
     sig_targets = {int(run.get("target_label") or 0) for run in sig_tl1.values()}
     lc_gtsrb_pilot = [run for run in lc_pilot.values() if run["dataset"] == "gtsrb"]
     macros = {
-        "sig_gtsrb_target_class": (str(min(sig_targets)) if sig_targets else "--", "the target class of the GTSRB SIG runs with the target tag"),
-        "sig_gtsrb_runs": (str(len(sig_tl1)), "GTSRB SIG runs at the tagged target class"),
-        "sig_gtsrb_rates": (str(len({float(run["poison_rate"]) for run in sig_tl1.values()})), "rates among the GTSRB SIG runs at the tagged target class"),
-        "sig_gtsrb_seeds": (str(len({int(run.get("seed") or 0) for run in sig_tl1.values()})), "seeds among the GTSRB SIG runs at the tagged target class"),
-        "lc_epsilon_budgets": (str(len({epsilon_over_255(run) for run in lc_pilot.values()})), "epsilon budgets in the Label-Consistent pilot"),
-        "lc_gtsrb_pilot_runs": (str(len(lc_gtsrb_pilot)), "Label-Consistent pilot runs on GTSRB"),
-        "lc_gtsrb_pilot_diverged": (str(sum(1 for run in lc_gtsrb_pilot if not usable(run, benign_of["gtsrb"]))), "Label-Consistent pilot runs on GTSRB that diverged"),
-        "multitarget_set_sizes": (" and ".join(str(size) for size in sorted({int(row[1]) for row in multi_rows if int(row[1]) > 1})), "the multi-target set sizes probed"),
-        "multitarget_seeds": (str(max((int(row[2]) for row in multi_rows if int(row[1]) > 1), default=0)), "seeds per multi-target cell"),
-        "new_dataset_seeds": (str(max((int(row[4].split('/')[1]) for row in new_rows), default=0)), "seeds per SVHN and EuroSAT cell"),
-        "gtsrb_diverged_runs": (str(diverged), "ViT GTSRB training runs whose clean accuracy collapsed below half the benign reference"),
-        "gtsrb_runs_scored": (str(total), "ViT GTSRB training runs with a recorded clean accuracy"),
+        "sig_gtsrb_target_class": (
+            str(min(sig_targets)) if sig_targets else "--",
+            "the target class of the GTSRB SIG runs with the target tag",
+        ),
+        "sig_gtsrb_runs": (
+            str(len(sig_tl1)),
+            "GTSRB SIG runs at the tagged target class",
+        ),
+        "sig_gtsrb_rates": (
+            str(len({float(run["poison_rate"]) for run in sig_tl1.values()})),
+            "rates among the GTSRB SIG runs at the tagged target class",
+        ),
+        "sig_gtsrb_seeds": (
+            str(len({int(run.get("seed") or 0) for run in sig_tl1.values()})),
+            "seeds among the GTSRB SIG runs at the tagged target class",
+        ),
+        "lc_epsilon_budgets": (
+            str(len({epsilon_over_255(run) for run in lc_pilot.values()})),
+            "epsilon budgets in the Label-Consistent pilot",
+        ),
+        "lc_gtsrb_pilot_runs": (
+            str(len(lc_gtsrb_pilot)),
+            "Label-Consistent pilot runs on GTSRB",
+        ),
+        "lc_gtsrb_pilot_diverged": (
+            str(
+                sum(1 for run in lc_gtsrb_pilot if not usable(run, benign_of["gtsrb"]))
+            ),
+            "Label-Consistent pilot runs on GTSRB that diverged",
+        ),
+        "multitarget_set_sizes": (
+            " and ".join(
+                str(size)
+                for size in sorted(
+                    {int(row[1]) for row in multi_rows if int(row[1]) > 1}
+                )
+            ),
+            "the multi-target set sizes probed",
+        ),
+        "multitarget_seeds": (
+            str(max((int(row[2]) for row in multi_rows if int(row[1]) > 1), default=0)),
+            "seeds per multi-target cell",
+        ),
+        "new_dataset_seeds": (
+            str(max((int(row[4].split("/")[1]) for row in new_rows), default=0)),
+            "seeds per SVHN and EuroSAT cell",
+        ),
+        "gtsrb_diverged_runs": (
+            str(diverged),
+            "ViT GTSRB training runs whose clean accuracy collapsed below half the benign reference",
+        ),
+        "gtsrb_runs_scored": (
+            str(total),
+            "ViT GTSRB training runs with a recorded clean accuracy",
+        ),
         "sig_gtsrb_tl_one_five_percent_mean_asr": (
             fmt(mean_or_none([run["asr"] for run in sig_5_percent])),
             "mean ASR of usable SIG GTSRB runs at target class 1 and the middle panel rate",
         ),
         "sig_gtsrb_tl_one_five_percent_seeds_clearing": (
-            str(sum(1 for run in sig_5_percent if clears(run, benign_of["gtsrb"], asr_bar, drop_bar))),
+            str(
+                sum(
+                    1
+                    for run in sig_5_percent
+                    if clears(run, benign_of["gtsrb"], asr_bar, drop_bar)
+                )
+            ),
             "usable SIG GTSRB seeds at target class 1 and the middle rate that clear both bars",
         ),
-        "sig_gtsrb_tl_one_five_percent_seeds": (str(len(sig_5_percent)), "usable SIG GTSRB seeds at target class 1 and the middle rate"),
+        "sig_gtsrb_tl_one_five_percent_seeds": (
+            str(len(sig_5_percent)),
+            "usable SIG GTSRB seeds at target class 1 and the middle rate",
+        ),
         "lc_epsilon_chosen": (
-            ", ".join(f"{dataset} {epsilon if epsilon is not None else 'none'}" for dataset, epsilon in sorted(chosen.items())),
+            ", ".join(
+                f"{dataset_label(dataset)} {epsilon if epsilon is not None else 'none'}"
+                for dataset, epsilon in sorted(chosen.items())
+            ),
             "the Label-Consistent epsilon over 255 the pilot rule picks per dataset, none where no run passes",
         ),
         "lc_datasets_with_epsilon": (
@@ -339,7 +422,11 @@ def main() -> None:
             "datasets where some Label-Consistent epsilon passes both bars",
         ),
         "new_dataset_cells_clearing_on_mean": (
-            str(sum(1 for row in new_rows if row[5] != "--" and float(row[5]) >= asr_bar)),
+            str(
+                sum(
+                    1 for row in new_rows if row[5] != "--" and float(row[5]) >= asr_bar
+                )
+            ),
             "SVHN and EuroSAT cells whose seed-mean ASR clears the bar",
         ),
         "new_dataset_cells": (str(len(new_rows)), "SVHN and EuroSAT cells trained"),
@@ -347,10 +434,16 @@ def main() -> None:
             str(sum(int(row[-1]) for row in multi_rows if int(row[1]) > 1)),
             "multi-target SIG runs whose set-wide attack success clears the bar",
         ),
-        "multitarget_runs": (str(sum(int(row[2]) for row in multi_rows if int(row[1]) > 1)), "multi-target SIG runs trained"),
+        "multitarget_runs": (
+            str(sum(int(row[2]) for row in multi_rows if int(row[1]) > 1)),
+            "multi-target SIG runs trained",
+        ),
     }
     write_macros(
-        os.path.join(args.paper_dir, "tables", "clean_label.macros.json"), GENERATOR, inputs, macros
+        os.path.join(args.paper_dir, "tables", "clean_label.macros.json"),
+        GENERATOR,
+        inputs,
+        macros,
     )
     print(
         f"clean label: sig tl1 {len(sig_tl1)} runs, lc pilot {len(lc_pilot)}, new {len(new_datasets)}, "

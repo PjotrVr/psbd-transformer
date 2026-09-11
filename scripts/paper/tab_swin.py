@@ -26,6 +26,7 @@ from scripts.paper._common import (  # noqa: E402
     bootstrap_ci,
     build_parser_with_checkpoints,
     ci_text,
+    dataset_label,
     fmt,
     is_panel_folder,
     load_args_json,
@@ -47,7 +48,9 @@ MIN_CELLS_FOR_ROW = 5
 def swin_cells(results_dir: str, checkpoints_dir: str, asr_bar: float) -> list[dict]:
     """Swin folders that are panel-shaped, have metrics, and whose attack implanted."""
     cells = []
-    for path in sorted(glob.glob(os.path.join(results_dir, "swin_*", "psbd_metrics.json"))):
+    for path in sorted(
+        glob.glob(os.path.join(results_dir, "swin_*", "psbd_metrics.json"))
+    ):
         folder = os.path.basename(os.path.dirname(path))
         if not is_panel_folder(folder) or "benign" in folder:
             continue
@@ -106,7 +109,9 @@ def placement_table(cells: list[dict]) -> tuple[list[list[str]], dict[str, dict]
     return rows, stats
 
 
-def paired_gain(cells: list[dict], placement_a: str, placement_b: str, rule: str) -> list[float]:
+def paired_gain(
+    cells: list[dict], placement_a: str, placement_b: str, rule: str
+) -> list[float]:
     deltas = []
     for cell in cells:
         a = psbd_values(cell["report"], placement_a, rule)
@@ -135,32 +140,69 @@ def main() -> None:
         caption=(
             "Swin-S: mean AUROC at the headline quantile for every cached placement "
             "with at least "
-            f"{MIN_CELLS_FOR_ROW} implanted cells, at the matched and adaptive rules. "
-            "Cells are Swin folders whose sidecar attack success clears the bar, "
-            + ", ".join(f"{count} on {dataset}" for dataset, count in sorted(by_dataset.items()))
+            f"{MIN_CELLS_FOR_ROW} implanted models, at the matched and adaptive rules. "
+            "Models are Swin folders whose sidecar attack success clears the bar, "
+            + ", ".join(
+                f"{count} on {dataset_label(dataset)}"
+                for dataset, count in sorted(by_dataset.items())
+            )
             + ". Coverage is uneven across placements, so rows are not paired."
         ),
         label="tab:swin-placements",
-        header=["placement", "n match", "AUROC matched", "n adapt", "AUROC adaptive", "inversions"],
+        header=[
+            "placement",
+            "n match",
+            "AUROC matched",
+            "n adapt",
+            "AUROC adaptive",
+            "below chance",
+        ],
         rows=rows,
         align="lrrrrr",
     )
 
     gain_rows = []
     macros = {
-        "swin_cells": (str(len(cells)), "Swin cells whose attack cleared the bar and carry PSBD metrics"),
-        "swin_datasets": (str(len(by_dataset)), "datasets with at least 1 implanted Swin cell"),
+        "swin_cells": (
+            str(len(cells)),
+            "Swin cells whose attack cleared the bar and carry PSBD metrics",
+        ),
+        "swin_datasets": (
+            str(len(by_dataset)),
+            "datasets with at least 1 implanted Swin cell",
+        ),
     }
     for stem, label, placement_a, placement_b in (
-        ("swin_gain_recommended_minus_published", "recommended minus published", RECOMMENDED_PLACEMENT, PUBLISHED_PLACEMENT),
-        ("swin_gain_dropout_input_minus_published", "dropout at the attention input minus published", SWIN_DROPOUT_INPUT, PUBLISHED_PLACEMENT),
-        ("swin_gain_recommended_minus_pre_residual", "recommended minus pre_residual", RECOMMENDED_PLACEMENT, "pre_residual"),
+        (
+            "swin_gain_recommended_minus_published",
+            "token mask, attention input minus dropout, after residual add",
+            RECOMMENDED_PLACEMENT,
+            PUBLISHED_PLACEMENT,
+        ),
+        (
+            "swin_gain_dropout_input_minus_published",
+            "dropout, attention input minus dropout, after residual add",
+            SWIN_DROPOUT_INPUT,
+            PUBLISHED_PLACEMENT,
+        ),
+        (
+            "swin_gain_recommended_minus_pre_residual",
+            "token mask, attention input minus pre_residual",
+            RECOMMENDED_PLACEMENT,
+            "pre_residual",
+        ),
     ):
         for rule in RULES:
             deltas = paired_gain(cells, placement_a, placement_b, rule)
             low, high = bootstrap_ci(deltas, args.bootstrap, args.seed)
             gain_rows.append(
-                [label, rule, str(len(deltas)), fmt(mean_or_none(deltas), signed=True), ci_text(low, high)]
+                [
+                    label,
+                    rule,
+                    str(len(deltas)),
+                    fmt(mean_or_none(deltas), signed=True),
+                    ci_text(low, high),
+                ]
             )
             if rule == "adaptive":
                 macros[stem] = (
@@ -168,14 +210,20 @@ def main() -> None:
                     f"Swin paired AUROC gain, {label}, adaptive rule, over {len(deltas)} cells",
                 )
                 macros[f"{stem}_n"] = (str(len(deltas)), f"cells behind {stem}")
-                macros[f"{stem}_low"] = (fmt(low, signed=True), f"lower bootstrap bound of {stem}")
-                macros[f"{stem}_high"] = (fmt(high, signed=True), f"upper bootstrap bound of {stem}")
+                macros[f"{stem}_low"] = (
+                    fmt(low, signed=True),
+                    f"lower bootstrap bound of {stem}",
+                )
+                macros[f"{stem}_high"] = (
+                    fmt(high, signed=True),
+                    f"upper bootstrap bound of {stem}",
+                )
     write_table(
         path=os.path.join(args.paper_dir, "tables", "swin_gains.tex"),
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "Swin-S paired placement gains at the headline quantile over the cells "
+            "Swin-S paired placement gains at the headline quantile over the models "
             f"carrying both placements, {args.bootstrap}-resample bootstrap intervals."
         ),
         label="tab:swin-gains",
@@ -183,16 +231,27 @@ def main() -> None:
         rows=gain_rows,
         align="llrrl",
     )
-    seed_replicates = len(glob.glob(os.path.join(args.checkpoints_dir, "swin_*_seed_*", "args.json")))
-    macros["swin_seed_replicates"] = (str(seed_replicates), "Swin training-seed replicate checkpoints on disk")
+    seed_replicates = len(
+        glob.glob(os.path.join(args.checkpoints_dir, "swin_*_seed_*", "args.json"))
+    )
+    macros["swin_seed_replicates"] = (
+        str(seed_replicates),
+        "Swin training-seed replicate checkpoints on disk",
+    )
     recommended = stats.get(RECOMMENDED_PLACEMENT, {}).get("adaptive", {})
     macros["swin_recommended_auroc_adaptive"] = (
         fmt(recommended.get("mean")),
         f"Swin mean AUROC of the recommended placement at the adaptive rule over {recommended.get('n', 0)} cells",
     )
-    macros["swin_recommended_n"] = (str(recommended.get("n", 0)), "Swin cells carrying the recommended placement")
+    macros["swin_recommended_n"] = (
+        str(recommended.get("n", 0)),
+        "Swin cells carrying the recommended placement",
+    )
     write_macros(
-        os.path.join(args.paper_dir, "tables", "swin.macros.json"), GENERATOR, inputs, macros
+        os.path.join(args.paper_dir, "tables", "swin.macros.json"),
+        GENERATOR,
+        inputs,
+        macros,
     )
     print(f"swin: {len(cells)} cells {dict(by_dataset)}, recommended {recommended}")
 

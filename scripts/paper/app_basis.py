@@ -21,11 +21,13 @@ from scripts.paper._common import (  # noqa: E402
     HEADLINE_KEY,
     build_parser,
     clearing_cells,
+    family_label,
     fmt,
     load_coverage,
     load_declaration,
     load_psbd_metrics,
     mean_or_none,
+    placement_label,
     write_macros,
     write_table,
 )
@@ -94,19 +96,17 @@ def ranking_rows(
         measured.items(),
         key=lambda item: -(item[1]["adaptive_mean"] or 0.0),
     )
+    entries = {entry["id"]: entry for entry in basis}
     rows = []
     for rank, (placement, stats) in enumerate(ordered, start=1):
         rows.append(
             [
                 str(rank),
-                placement,
-                stats["family"],
-                str(stats["matched_n"]),
-                fmt(stats["matched_mean"]),
+                placement_label(entries[placement]),
+                family_label(stats["family"]),
                 str(stats["adaptive_n"]),
                 fmt(stats["adaptive_mean"]),
                 fmt(stats["adaptive_floor"]),
-                str(stats["adaptive_inversions"]),
             ]
         )
     return rows, dict(ordered)
@@ -123,19 +123,34 @@ def variance_ratios(ordered: dict[str, dict], basis: list[dict]) -> dict[str, di
     """
     entries = {entry["id"]: entry for entry in basis}
     token_mask_positions = [
-        name for name, entry in entries.items()
+        name
+        for name, entry in entries.items()
         if entry["operator"] == "token_mask" and not entry.get("block_range")
     ]
     attention_norm_operators = [
-        name for name, entry in entries.items()
+        name
+        for name, entry in entries.items()
         if entry["position"] == "before_attention_norm" and not entry.get("block_range")
     ]
     ratios = {}
     for rule in ("matched", "adaptive"):
         key = f"{rule}_mean"
-        position_values = [ordered[name][key] for name in token_mask_positions if ordered[name][key] is not None]
-        operator_values = [ordered[name][key] for name in attention_norm_operators if ordered[name][key] is not None]
-        mask_values = [ordered[name][key] for name in attention_norm_operators if entries[name]["operator"] != "gaussian" and ordered[name][key] is not None]
+        position_values = [
+            ordered[name][key]
+            for name in token_mask_positions
+            if ordered[name][key] is not None
+        ]
+        operator_values = [
+            ordered[name][key]
+            for name in attention_norm_operators
+            if ordered[name][key] is not None
+        ]
+        mask_values = [
+            ordered[name][key]
+            for name in attention_norm_operators
+            if entries[name]["operator"] != "gaussian"
+            and ordered[name][key] is not None
+        ]
         position_range = max(position_values) - min(position_values)
         operator_range = max(operator_values) - min(operator_values)
         operator_range_masks = max(mask_values) - min(mask_values)
@@ -144,18 +159,20 @@ def variance_ratios(ordered: dict[str, dict], basis: list[dict]) -> dict[str, di
             "operator_range": operator_range,
             "operator_range_masks": operator_range_masks,
             "ratio": position_range / operator_range if operator_range else None,
-            "ratio_masks": position_range / operator_range_masks if operator_range_masks else None,
+            "ratio_masks": position_range / operator_range_masks
+            if operator_range_masks
+            else None,
         }
     return ratios
 
 
 def rank_of(ordered: dict[str, dict], placement: str, key: str) -> int:
     """The 1-based rank of a placement by 1 statistic, larger being better."""
-    values = sorted(
-        ((stats[key] or 0.0), name) for name, stats in ordered.items()
-    )
+    values = sorted(((stats[key] or 0.0), name) for name, stats in ordered.items())
     values.reverse()
-    rank = next(index for index, (_, name) in enumerate(values, start=1) if name == placement)
+    rank = next(
+        index for index, (_, name) in enumerate(values, start=1) if name == placement
+    )
     return rank
 
 
@@ -173,11 +190,11 @@ def main() -> None:
         inputs=[args.declaration],
         caption=(
             "The placement basis as configs/psbd\\_basis.json declares it: every "
-            "panel cell carries every 1 of these placements, each swept over the "
-            "rate ladder in the last column."
+            "model in the panel carries every 1 of these placements, each swept "
+            "over the rate ladder in the last column."
         ),
         label="tab:basis-declaration",
-        header=["placement id", "position", "operator", "blocks", "family", "rates"],
+        header=["placement id", "site", "operator", "blocks", "family", "rates"],
         rows=declaration_rows(basis),
         align="llllll",
     )
@@ -193,25 +210,19 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "Every basis placement on the clearing cells, ranked by mean AUROC at "
-            "the headline quantile under the adaptive rule. n is the number of "
-            "cells whose rate ladder reached the rule's target. The floor is the "
-            "worst single cell and the last column counts cells whose AUROC is under 0.5."
+            "Every placement of the basis ranked by mean AUROC on ViT-B/16. n is the number of models whose rate ladder reaches the shift ratio target, and the last column is the lowest single-model AUROC."
         ),
         label="tab:basis-ranking",
         header=[
-            "rank",
-            "placement",
-            "family",
-            "n match",
-            "AUROC matched",
-            "n adapt",
-            "AUROC adaptive",
-            "floor",
-            "below chance",
+            "Rank",
+            "Placement",
+            "Family",
+            "n",
+            "AUROC",
+            "Lowest AUROC",
         ],
         rows=rows,
-        align="rllrrrrrr",
+        align="rllrrr",
     )
 
     variance = variance_ratios(ordered, basis)
@@ -261,7 +272,9 @@ def main() -> None:
             "cells the recommended placement reaches at the matched rule",
         ),
         "basis_spread_adaptive": (
-            fmt((best_stats["adaptive_mean"] or 0) - (worst_stats["adaptive_mean"] or 0)),
+            fmt(
+                (best_stats["adaptive_mean"] or 0) - (worst_stats["adaptive_mean"] or 0)
+            ),
             "adaptive-rule mean AUROC spread between the best and worst basis placement",
         ),
     }

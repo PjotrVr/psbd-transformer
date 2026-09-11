@@ -18,7 +18,9 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from scripts.paper._common import (  # noqa: E402
+    attack_label,
     build_parser,
+    dataset_label,
     fmt,
     load_json,
     mean_or_none,
@@ -54,7 +56,11 @@ def transfer_values(row: dict) -> list[float]:
 
 
 def best_union(row: dict) -> float | None:
-    combos = [value for key, value in row.items() if key.startswith("combo_") and key.endswith("_auroc")]
+    combos = [
+        value
+        for key, value in row.items()
+        if key.startswith("combo_") and key.endswith("_auroc")
+    ]
     best = max(combos) if combos else None
     return best
 
@@ -66,21 +72,38 @@ def main() -> None:
     attacker_rows = load_json(attacker_path) or []
     union_rows = load_json(union_path) or []
     union_by_key = {
-        (row["arch"], row["dataset"], row["attack"], row["rate"]): row for row in union_rows
+        (row["arch"], row["dataset"], row["attack"], row["rate"]): row
+        for row in union_rows
     }
     inputs = [attacker_path, union_path]
 
     table_rows = []
     per_arch: dict[str, dict[str, list[float]]] = {}
-    for row in sorted(attacker_rows, key=lambda r: (r["arch"], r["dataset"], r["attack"], r["rate"])):
+    for row in sorted(
+        attacker_rows, key=lambda r: (r["arch"], r["dataset"], r["attack"], r["rate"])
+    ):
         probed = row["probed_label"].replace("@", "_at_")
         probed_base = row.get(f"{probed}_base")
         probed_evade = row.get(f"{probed}_evade")
         transfer = transfer_values(row)
-        union = best_union(union_by_key.get((row["arch"], row["dataset"], row["attack"], row["rate"]), {}))
+        union = best_union(
+            union_by_key.get(
+                (row["arch"], row["dataset"], row["attack"], row["rate"]), {}
+            )
+        )
         if row.get("evade_asr", 0) < HIGH_ASR:
             continue
-        stats = per_arch.setdefault(row["arch"], {"base": [], "evade": [], "transfer": [], "union": [], "asr_cost": [], "ca_cost": []})
+        stats = per_arch.setdefault(
+            row["arch"],
+            {
+                "base": [],
+                "evade": [],
+                "transfer": [],
+                "union": [],
+                "asr_cost": [],
+                "ca_cost": [],
+            },
+        )
         stats["base"].append(probed_base)
         stats["evade"].append(probed_evade)
         stats["transfer"].append(mean_or_none(transfer))
@@ -91,8 +114,8 @@ def main() -> None:
         table_rows.append(
             [
                 row["arch"],
-                row["dataset"],
-                row["attack"],
+                dataset_label(row["dataset"]),
+                attack_label(row["attack"]),
                 f"{row['rate']:g}",
                 fmt(row["evade_asr"]),
                 fmt(row["evade_ca"] - row["base_ca"], signed=True),
@@ -107,30 +130,78 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "The adaptive attacker, cells whose evasive checkpoint keeps attack success "
-            f"at or above {HIGH_ASR:g}: the probed operator's AUROC on the base and the "
+            "The adaptive attacker, models whose evasive checkpoint keeps attack "
+            f"success at or above {HIGH_ASR:g}: the probed operator's AUROC on the base and the "
             "evasive checkpoint, the mean AUROC of the operators the attacker never "
             "trained against, and the best probe union on the evasive checkpoint. "
             "dCA is the clean-accuracy cost of evasion. ViT evades token\\_mask at "
             "the attention input, Swin evades dropout there."
         ),
         label="tab:adaptive-attacker",
-        header=["arch", "dataset", "attack", "rate", "evade ASR", "dCA", "probed base", "probed evade", "transfer mean", "best union"],
+        header=[
+            "arch",
+            "dataset",
+            "attack",
+            "rate",
+            "evade ASR",
+            "dCA",
+            "probed base",
+            "probed evade",
+            "transfer mean",
+            "best union",
+        ],
         rows=table_rows,
         align="llllrrrrrr",
     )
 
-    macros = {"adaptive_high_asr": (f"{HIGH_ASR:g}", "attack success an evasive checkpoint must keep to count")}
+    macros = {
+        "adaptive_high_asr": (
+            f"{HIGH_ASR:g}",
+            "attack success an evasive checkpoint must keep to count",
+        )
+    }
     for arch, stats in per_arch.items():
-        macros[f"adaptive_{arch}_cells"] = (str(len(stats["base"])), f"{arch} evasive cells keeping attack success above {HIGH_ASR:g}")
-        macros[f"adaptive_{arch}_probed_base"] = (fmt(mean_or_none(stats["base"])), f"{arch} mean AUROC of the probed operator on the base checkpoints")
-        macros[f"adaptive_{arch}_probed_evade"] = (fmt(mean_or_none(stats["evade"])), f"{arch} mean AUROC of the probed operator on the evasive checkpoints")
-        macros[f"adaptive_{arch}_transfer"] = (fmt(mean_or_none(stats["transfer"])), f"{arch} mean AUROC of the unprobed operators on the evasive checkpoints")
-        macros[f"adaptive_{arch}_union"] = (fmt(mean_or_none(stats["union"])), f"{arch} mean AUROC of the best probe union on the evasive checkpoints")
-        macros[f"adaptive_{arch}_ca_cost"] = (fmt(mean_or_none(stats["ca_cost"]), signed=True), f"{arch} mean clean-accuracy cost of evasion")
-        macros[f"adaptive_{arch}_asr_cost"] = (fmt(mean_or_none(stats["asr_cost"]), signed=True), f"{arch} mean attack-success cost of evasion")
-    write_macros(os.path.join(args.paper_dir, "tables", "adaptive.macros.json"), GENERATOR, inputs, macros)
-    print("adaptive: " + ", ".join(f"{arch} n={len(stats['base'])} evade={fmt(mean_or_none(stats['evade']))} union={fmt(mean_or_none(stats['union']))}" for arch, stats in per_arch.items()))
+        macros[f"adaptive_{arch}_cells"] = (
+            str(len(stats["base"])),
+            f"{arch} evasive cells keeping attack success above {HIGH_ASR:g}",
+        )
+        macros[f"adaptive_{arch}_probed_base"] = (
+            fmt(mean_or_none(stats["base"])),
+            f"{arch} mean AUROC of the probed operator on the base checkpoints",
+        )
+        macros[f"adaptive_{arch}_probed_evade"] = (
+            fmt(mean_or_none(stats["evade"])),
+            f"{arch} mean AUROC of the probed operator on the evasive checkpoints",
+        )
+        macros[f"adaptive_{arch}_transfer"] = (
+            fmt(mean_or_none(stats["transfer"])),
+            f"{arch} mean AUROC of the unprobed operators on the evasive checkpoints",
+        )
+        macros[f"adaptive_{arch}_union"] = (
+            fmt(mean_or_none(stats["union"])),
+            f"{arch} mean AUROC of the best probe union on the evasive checkpoints",
+        )
+        macros[f"adaptive_{arch}_ca_cost"] = (
+            fmt(mean_or_none(stats["ca_cost"]), signed=True),
+            f"{arch} mean clean-accuracy cost of evasion",
+        )
+        macros[f"adaptive_{arch}_asr_cost"] = (
+            fmt(mean_or_none(stats["asr_cost"]), signed=True),
+            f"{arch} mean attack-success cost of evasion",
+        )
+    write_macros(
+        os.path.join(args.paper_dir, "tables", "adaptive.macros.json"),
+        GENERATOR,
+        inputs,
+        macros,
+    )
+    print(
+        "adaptive: "
+        + ", ".join(
+            f"{arch} n={len(stats['base'])} evade={fmt(mean_or_none(stats['evade']))} union={fmt(mean_or_none(stats['union']))}"
+            for arch, stats in per_arch.items()
+        )
+    )
 
 
 if __name__ == "__main__":

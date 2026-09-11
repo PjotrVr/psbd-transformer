@@ -183,9 +183,10 @@ def main() -> None:
             "Depth-band placements at the matched 0.6 rate, mean AUROC at q0.25, "
             "the paired delta against the family's all-blocks placement with a "
             f"{args.bootstrap}-resample bootstrap 95\\% interval, and the mean "
-            "achieved clean-validation shift ratio at the chosen rate. "
-            "\\code{before\\_attention\\_norm\\_blocks\\_1\\_4\\_token\\_mask} has no cache anywhere "
-            r"in the 65-cell panel and prints \pending throughout."
+            "achieved clean-validation shift ratio at the chosen rate. Token "
+            "masking at the attention input restricted to blocks 1 to 4 has not "
+            "been swept yet on any model in the panel of 65 backdoored models "
+            "and prints pending throughout."
         ),
         label="tab:depth-bands",
         header=[

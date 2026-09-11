@@ -17,6 +17,7 @@ sys.path.insert(0, os.getcwd())
 
 from scripts.paper._common import (  # noqa: E402
     build_parser,
+    dataset_label,
     fmt,
     is_panel_folder,
     load_json,
@@ -38,9 +39,15 @@ def main() -> None:
     rows = {
         folder: values
         for folder, values in record["rows"].items()
-        if folder.startswith("vit_") and is_panel_folder(folder) and "benign" not in folder
+        if folder.startswith("vit_")
+        and is_panel_folder(folder)
+        and "benign" not in folder
     }
-    benign = {folder: values for folder, values in record["rows"].items() if folder.startswith("vit_") and "benign" in folder and is_panel_folder(folder)}
+    benign = {
+        folder: values
+        for folder, values in record["rows"].items()
+        if folder.startswith("vit_") and "benign" in folder and is_panel_folder(folder)
+    }
 
     by_dataset: dict[str, list[dict]] = {}
     for folder, values in rows.items():
@@ -49,11 +56,16 @@ def main() -> None:
     for dataset, values in sorted(by_dataset.items()):
         table_rows.append(
             [
-                dataset,
+                dataset_label(dataset),
                 str(len(values)),
                 fmt(mean_or_none([value["psu"] for value in values])),
                 fmt(mean_or_none([value["confidence"] for value in values])),
-                fmt(mean_or_none([value["psu"] - value["confidence"] for value in values]), signed=True),
+                fmt(
+                    mean_or_none(
+                        [value["psu"] - value["confidence"] for value in values]
+                    ),
+                    signed=True,
+                ),
                 str(sum(1 for value in values if value["psu"] > value["confidence"])),
             ]
         )
@@ -64,7 +76,12 @@ def main() -> None:
             str(len(all_values)),
             fmt(mean_or_none([value["psu"] for value in all_values])),
             fmt(mean_or_none([value["confidence"] for value in all_values])),
-            fmt(mean_or_none([value["psu"] - value["confidence"] for value in all_values]), signed=True),
+            fmt(
+                mean_or_none(
+                    [value["psu"] - value["confidence"] for value in all_values]
+                ),
+                signed=True,
+            ),
             str(sum(1 for value in all_values if value["psu"] > value["confidence"])),
         ]
     )
@@ -79,19 +96,48 @@ def main() -> None:
             "outside the SAM, evasion and seed sets, and the count of checkpoints where PSU wins."
         ),
         label="tab:confidence-null",
-        header=["dataset", "n", "PSU AUROC", "confidence AUROC", "PSU minus confidence", "PSU wins"],
+        header=[
+            "dataset",
+            "n",
+            "PSU AUROC",
+            "confidence AUROC",
+            "PSU minus confidence",
+            "PSU wins",
+        ],
         rows=table_rows,
         align="lrrrrr",
     )
     macros = {
-        "confidence_null_checkpoints": (str(len(all_values)), "ViT backdoored checkpoints in the confidence-null record"),
-        "confidence_null_psu_auroc": (fmt(mean_or_none([value["psu"] for value in all_values])), "mean PSU AUROC in the confidence-null record"),
-        "confidence_null_auroc": (fmt(mean_or_none([value["confidence"] for value in all_values])), "mean max-softmax confidence AUROC in the confidence-null record"),
-        "confidence_null_psu_wins": (str(sum(1 for value in all_values if value["psu"] > value["confidence"])), "checkpoints where PSU beats the confidence null"),
-        "confidence_null_benign_psu": (fmt(mean_or_none([value["psu"] for value in benign.values()])), "mean PSU AUROC on the benign references in the confidence-null record"),
+        "confidence_null_checkpoints": (
+            str(len(all_values)),
+            "ViT backdoored checkpoints in the confidence-null record",
+        ),
+        "confidence_null_psu_auroc": (
+            fmt(mean_or_none([value["psu"] for value in all_values])),
+            "mean PSU AUROC in the confidence-null record",
+        ),
+        "confidence_null_auroc": (
+            fmt(mean_or_none([value["confidence"] for value in all_values])),
+            "mean max-softmax confidence AUROC in the confidence-null record",
+        ),
+        "confidence_null_psu_wins": (
+            str(sum(1 for value in all_values if value["psu"] > value["confidence"])),
+            "checkpoints where PSU beats the confidence null",
+        ),
+        "confidence_null_benign_psu": (
+            fmt(mean_or_none([value["psu"] for value in benign.values()])),
+            "mean PSU AUROC on the benign references in the confidence-null record",
+        ),
     }
-    write_macros(os.path.join(args.paper_dir, "tables", "confidence_null.macros.json"), GENERATOR, [path], macros)
-    print(f"confidence null: n={len(all_values)}, psu {macros['confidence_null_psu_auroc'][0]} vs confidence {macros['confidence_null_auroc'][0]}")
+    write_macros(
+        os.path.join(args.paper_dir, "tables", "confidence_null.macros.json"),
+        GENERATOR,
+        [path],
+        macros,
+    )
+    print(
+        f"confidence null: n={len(all_values)}, psu {macros['confidence_null_psu_auroc'][0]} vs confidence {macros['confidence_null_auroc'][0]}"
+    )
 
 
 if __name__ == "__main__":

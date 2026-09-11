@@ -28,10 +28,12 @@ from cli.compare_detectors import psbd_values  # noqa: E402
 from defences.decision import EASY_ATTACKS, HARD_ATTACKS  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     HEADLINE_KEY,
+    attack_label,
     bootstrap_ci,
     build_parser,
     ci_text,
     clearing_cells,
+    dataset_label,
     fmt,
     load_coverage,
     load_declaration,
@@ -154,7 +156,9 @@ def subsets(cells: list[dict]) -> list[tuple[str, list[dict]]]:
     """The rows every gap table shares: all, per dataset, per rate, hard and easy."""
     groups = [("all", cells)]
     for dataset in DATASET_ORDER:
-        groups.append((dataset, [c for c in cells if c["dataset"] == dataset]))
+        groups.append(
+            (dataset_label(dataset), [c for c in cells if c["dataset"] == dataset])
+        )
     for rate in RATE_ORDER:
         groups.append(
             (f"rate {rate:g}", [c for c in cells if c["poison_rate"] == rate])
@@ -198,14 +202,14 @@ def write_gap_table(
         path = os.path.join(args.paper_dir, "tables", "family_split.tex")
         label = "tab:family-split"
         caption = (
-            "The within-cell family gap with the operator held fixed at token_mask: "
+            "The within-model family gap with the operator held fixed at token_mask: "
             f"input-side ({placement_list(families['input_side'])}) minus "
             f"residual-adjacent ({placement_list(families['residual_adjacent'])}), "
-            "each family's per-cell value the mean AUROC at q0.25 over whichever of "
+            "each family's per-model value the mean AUROC at q0.25 over whichever of "
             "its members are cached. Read at the matched 0.6 rate and separately at "
             f"the adaptive 0.8 rate, {args.bootstrap}-resample bootstrap 95\\% "
             "intervals. The dropout row is H20's original operator, which the basis "
-            r"panel carries at no input-side position, so it prints \pending until "
+            r"panel carries at no input-side site, so it prints \pending until "
             "the operator-matched sweep runs."
         )
     else:
@@ -216,7 +220,7 @@ def write_gap_table(
             f"input-side ({placement_list(families['input_side'])}) minus "
             f"residual-adjacent ({placement_list(families['residual_adjacent'])}). "
             "The 2 families mix operators (gaussian, scale_up, channel_mask and "
-            "dropout beside token_mask), so this reading confounds position with "
+            "dropout beside token_mask), so this reading confounds site with "
             "operator and is kept only for comparison with the operator-matched "
             "table."
         )
@@ -245,7 +249,7 @@ def leave_one_out_means(
         means[attack] = mean_or_none(deltas)
         rows.append(
             [
-                f"without {attack}",
+                f"without {attack_label(attack)}",
                 str(len(deltas)),
                 fmt(means[attack], signed=True),
                 ci_text(low, high),
@@ -265,8 +269,8 @@ def write_leave_one_out_table(
         caption=(
             "The operator-matched gap at the matched 0.6 rate, refit with 1 attack "
             f"dropped at a time over the {len(attacks)} attacks present in the "
-            "65-cell panel, so a gap driven by a single attack would show as a "
-            "refit crossing 0."
+            "panel of 65 backdoored models, so a gap driven by a single attack "
+            "would show as a refit crossing 0."
         ),
         label="tab:family-split-loo",
         header=["dropped attack", "n", "gap matched06", "95% CI"],
@@ -309,8 +313,8 @@ def write_local_global_table(
     absent = sorted(set(LOCAL_ATTACKS + GLOBAL_ATTACKS) - set(attacks_present))
     absent_text = (
         " "
-        + ", ".join(absent)
-        + " clear no cell on this panel and contribute to neither row."
+        + ", ".join(attack_label(attack) for attack in absent)
+        + " clear no model on this panel and contribute to neither row."
         if absent
         else ""
     )
@@ -321,9 +325,10 @@ def write_local_global_table(
         caption=(
             "The family gap split by trigger locality, under the operator-matched "
             "token_mask definition and the confounded basis-tag definition. Local "
-            "triggers occupy a fixed spatial patch (" + ", ".join(LOCAL_ATTACKS) + "), "
-            "global triggers cover the whole image ("
-            + ", ".join(GLOBAL_ATTACKS)
+            "triggers occupy a fixed spatial patch ("
+            + ", ".join(attack_label(attack) for attack in LOCAL_ATTACKS)
+            + "), global triggers cover the whole image ("
+            + ", ".join(attack_label(attack) for attack in GLOBAL_ATTACKS)
             + ")."
             + absent_text
         ),

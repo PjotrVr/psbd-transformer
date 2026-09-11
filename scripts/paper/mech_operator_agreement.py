@@ -27,9 +27,7 @@ sys.path.insert(0, os.getcwd())
 import itertools
 import statistics
 
-import matplotlib
-
-matplotlib.use("Agg")
+import scripts.paper._style  # noqa: E402,F401  the shared figure style
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import spearmanr
@@ -228,7 +226,7 @@ def write_heatmap(
                 )
     ax.set_xlabel("clean-split agreement (upper triangle)")
     ax.set_ylabel("backdoor-split agreement (lower triangle)")
-    fig.colorbar(image, ax=ax, label="mean Spearman rho over cells", shrink=0.8)
+    fig.colorbar(image, ax=ax, label="mean Spearman rho over models", shrink=0.8)
     fig.tight_layout()
 
     path = os.path.join(args.paper_dir, "figures", "mech_operator_agreement.pdf")
@@ -262,9 +260,9 @@ def write_agreement_table(
     header = [
         "placement",
         "family",
-        "rho vs recommended (clean)",
+        "rho vs token mask, attention input (clean)",
         "n",
-        "rho vs recommended (backdoor)",
+        "rho vs token mask, attention input (backdoor)",
         "n",
     ]
     rows = []
@@ -291,10 +289,11 @@ def write_agreement_table(
             f"{args.results_dir}/<folder>/psbd/<placement>/rate_*_{{clean,backdoor}}.pt"
         ],
         caption=(
-            "B1: mean Spearman correlation, over clearing cells, between each basis "
-            f"placement's per-sample fractional PSU and the recommended placement's "
-            f"({RECOMMENDED_PLACEMENT}), at each placement's own matched-0.6 rate. n "
-            "is the number of cells carrying both placements at a usable rate."
+            "B1: mean Spearman correlation, over the models whose attack succeeded, "
+            "between each basis placement's per-sample fractional PSU and the "
+            f"token\\_mask placement's at the attention input ({RECOMMENDED_PLACEMENT}), "
+            "at each placement's own matched-0.6 rate. n is the number of models "
+            "carrying both placements at a usable rate."
         ),
         label="tab:mech-operator-agreement",
         header=header,
@@ -340,7 +339,7 @@ def write_family_table(args, accumulator, family_of) -> None:
         ],
         caption=(
             "B1: mean per-sample PSU agreement (Spearman rho, averaged over placement "
-            "pairs and over cells) within and across the input-side and "
+            "pairs and over models) within and across the input-side and "
             "residual-adjacent families, the axis H20 splits on."
         ),
         label="tab:mech-operator-agreement-family",

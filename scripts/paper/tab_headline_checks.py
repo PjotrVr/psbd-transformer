@@ -21,6 +21,7 @@ from cli.compare_detectors import psbd_values  # noqa: E402
 from defences.decision import PUBLISHED_PLACEMENT, RECOMMENDED_PLACEMENT  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     HEADLINE_KEY,
+    attack_label,
     bootstrap_ci,
     build_parser,
     ci_text,
@@ -46,7 +47,9 @@ def auroc(report: dict | None, placement: str, rule: str) -> float | None:
     return value
 
 
-def paired(cells: list[dict], placement_a: str, placement_b: str, rule: str) -> list[float]:
+def paired(
+    cells: list[dict], placement_a: str, placement_b: str, rule: str
+) -> list[float]:
     deltas = []
     for cell in cells:
         a = cell["auroc"][(placement_a, rule)]
@@ -61,7 +64,9 @@ def main() -> None:
     coverage_path = os.path.join(args.results_dir, "coverage", "coverage.json")
     coverage = load_coverage(args.results_dir)
     cells = clearing_cells(coverage)
-    diverged = sum(1 for cell in coverage["cells"] if cell.get("asr_class") == "diverged")
+    diverged = sum(
+        1 for cell in coverage["cells"] if cell.get("asr_class") == "diverged"
+    )
     for cell in cells:
         report = load_psbd_metrics(args.results_dir, cell["folder_name"])
         cell["auroc"] = {
@@ -69,9 +74,16 @@ def main() -> None:
             for placement in (RECOMMENDED_PLACEMENT, PUBLISHED_PLACEMENT, PRE_RESIDUAL)
             for rule in RULES
         }
-    inputs = [coverage_path, f"{args.results_dir}/<folder>/psbd_metrics.json ({len(cells)} cells)"]
+    inputs = [
+        coverage_path,
+        f"{args.results_dir}/<folder>/psbd_metrics.json ({len(cells)} cells)",
+    ]
     # A clearing cell enters a detection table only once its sweep has landed.
-    cached = [cell for cell in cells if cell["auroc"][(RECOMMENDED_PLACEMENT, "adaptive")] is not None]
+    cached = [
+        cell
+        for cell in cells
+        if cell["auroc"][(RECOMMENDED_PLACEMENT, "adaptive")] is not None
+    ]
     cells = cached
     attacks = sorted({cell["attack"] for cell in cells})
 
@@ -80,26 +92,38 @@ def main() -> None:
     refit_lows = {rule: [] for rule in RULES}
     for attack in attacks:
         rest = [cell for cell in cells if cell["attack"] != attack]
-        row = [f"without {attack}"]
+        row = [f"without {attack_label(attack)}"]
         for rule in RULES:
             deltas = paired(rest, RECOMMENDED_PLACEMENT, PUBLISHED_PLACEMENT, rule)
             low, high = bootstrap_ci(deltas, args.bootstrap, args.seed)
             refit_means[rule].append(mean_or_none(deltas))
             refit_lows[rule].append(low)
-            row += [str(len(deltas)), fmt(mean_or_none(deltas), signed=True), ci_text(low, high)]
+            row += [
+                str(len(deltas)),
+                fmt(mean_or_none(deltas), signed=True),
+                ci_text(low, high),
+            ]
         rows.append(row)
     write_table(
         path=os.path.join(args.paper_dir, "tables", "headline_leave_one_out.tex"),
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "The headline gain, recommended minus published at the headline quantile, "
-            "refit with 1 attack dropped at a time, both placements at the adaptive "
-            "rule and both at the matched rule, "
-            f"{args.bootstrap}-resample bootstrap intervals."
+            "The headline gain, token mask at the attention input minus dropout "
+            "after the residual add, at the headline quantile, refit with 1 attack "
+            "dropped at a time, both placements at the adaptive rule and both at the "
+            f"matched rule, {args.bootstrap}-resample bootstrap intervals."
         ),
         label="tab:headline-loo",
-        header=["dropped attack", "n", "gain adaptive", "95% CI", "n", "gain matched", "95% CI"],
+        header=[
+            "dropped attack",
+            "n",
+            "gain adaptive",
+            "95% CI",
+            "n",
+            "gain matched",
+            "95% CI",
+        ],
         rows=rows,
         align="lrrlrrl",
     )
@@ -110,14 +134,22 @@ def main() -> None:
         deltas = paired(cells, PRE_RESIDUAL, PUBLISHED_PLACEMENT, rule)
         low, high = bootstrap_ci(deltas, args.bootstrap, args.seed)
         pre_post[rule] = (mean_or_none(deltas), low, high, len(deltas))
-        pre_post_rows.append(["pre_residual minus post_residual", rule, str(len(deltas)), fmt(mean_or_none(deltas), signed=True), ci_text(low, high)])
+        pre_post_rows.append(
+            [
+                "pre_residual minus post_residual",
+                rule,
+                str(len(deltas)),
+                fmt(mean_or_none(deltas), signed=True),
+                ci_text(low, high),
+            ]
+        )
     write_table(
         path=os.path.join(args.paper_dir, "tables", "pre_post.tex"),
         generator=GENERATOR,
         inputs=inputs,
         caption=(
             "The founding question on the basis panel: dropout before each residual "
-            "add against dropout after it, paired within cell at the headline "
+            "add against dropout after it, paired within model at the headline "
             "quantile, at the matched rule and at the adaptive rule."
         ),
         label="tab:pre-post",
@@ -163,16 +195,44 @@ def main() -> None:
             fmt(min(refit_lows["matched"]), signed=True),
             "lowest bootstrap lower bound over the matched-rule leave-one-attack-out refits",
         ),
-        "pre_minus_post_matched": (fmt(pre_post["matched"][0], signed=True), "pre_residual minus post_residual dropout, matched rule, paired over the basis panel"),
-        "pre_minus_post_matched_low": (fmt(pre_post["matched"][1], signed=True), "lower bootstrap bound of pre_minus_post_matched"),
-        "pre_minus_post_matched_high": (fmt(pre_post["matched"][2], signed=True), "upper bootstrap bound of pre_minus_post_matched"),
-        "pre_minus_post_adaptive": (fmt(pre_post["adaptive"][0], signed=True), "pre_residual minus post_residual dropout, adaptive rule, paired over the basis panel"),
-        "pre_minus_post_adaptive_low": (fmt(pre_post["adaptive"][1], signed=True), "lower bootstrap bound of pre_minus_post_adaptive"),
-        "pre_minus_post_adaptive_high": (fmt(pre_post["adaptive"][2], signed=True), "upper bootstrap bound of pre_minus_post_adaptive"),
-        "pre_minus_post_n": (str(pre_post["matched"][3]), "cells behind the pre against post comparison"),
+        "pre_minus_post_matched": (
+            fmt(pre_post["matched"][0], signed=True),
+            "pre_residual minus post_residual dropout, matched rule, paired over the basis panel",
+        ),
+        "pre_minus_post_matched_low": (
+            fmt(pre_post["matched"][1], signed=True),
+            "lower bootstrap bound of pre_minus_post_matched",
+        ),
+        "pre_minus_post_matched_high": (
+            fmt(pre_post["matched"][2], signed=True),
+            "upper bootstrap bound of pre_minus_post_matched",
+        ),
+        "pre_minus_post_adaptive": (
+            fmt(pre_post["adaptive"][0], signed=True),
+            "pre_residual minus post_residual dropout, adaptive rule, paired over the basis panel",
+        ),
+        "pre_minus_post_adaptive_low": (
+            fmt(pre_post["adaptive"][1], signed=True),
+            "lower bootstrap bound of pre_minus_post_adaptive",
+        ),
+        "pre_minus_post_adaptive_high": (
+            fmt(pre_post["adaptive"][2], signed=True),
+            "upper bootstrap bound of pre_minus_post_adaptive",
+        ),
+        "pre_minus_post_n": (
+            str(pre_post["matched"][3]),
+            "cells behind the pre against post comparison",
+        ),
     }
-    write_macros(os.path.join(args.paper_dir, "tables", "headline_checks.macros.json"), GENERATOR, inputs, macros)
-    print(f"headline checks: loo min adaptive {macros['headline_gain_min_leave_one_attack_out_adaptive'][0]}, pre-post matched {macros['pre_minus_post_matched'][0]}")
+    write_macros(
+        os.path.join(args.paper_dir, "tables", "headline_checks.macros.json"),
+        GENERATOR,
+        inputs,
+        macros,
+    )
+    print(
+        f"headline checks: loo min adaptive {macros['headline_gain_min_leave_one_attack_out_adaptive'][0]}, pre-post matched {macros['pre_minus_post_matched'][0]}"
+    )
 
 
 if __name__ == "__main__":

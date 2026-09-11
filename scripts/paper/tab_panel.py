@@ -18,7 +18,9 @@ sys.path.insert(0, os.getcwd())
 
 from defences.decision import EASY_ATTACKS, HARD_ATTACKS  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
+    attack_label,
     build_parser,
+    dataset_label,
     load_coverage,
     write_macros,
     write_table,
@@ -66,7 +68,7 @@ def panel_rows(
     rows = []
     for dataset in datasets:
         for attack in attacks:
-            row = [dataset, attack]
+            row = [dataset_label(dataset), attack_label(attack)]
             row += [
                 cell_text(cells_by_key.get((dataset, attack, rate)))
                 for rate in RATE_ORDER
@@ -79,7 +81,7 @@ def benign_rows(
     benign_reference_accuracy: dict[str, float], datasets: tuple[str, ...]
 ) -> list[list[str]]:
     rows = [
-        [dataset, f"{benign_reference_accuracy[dataset]:.3f}"]
+        [dataset_label(dataset), f"{benign_reference_accuracy[dataset]:.3f}"]
         for dataset in datasets
         if dataset in benign_reference_accuracy
     ]
@@ -107,9 +109,9 @@ def main() -> None:
         inputs=[coverage_path],
         caption=(
             f"The ViT panel, from results/coverage/coverage.json: {len(clearing)} of "
-            f"{len(cells)} declared cells clear the attack success bar {asr_bar:.2f} "
-            "and carry every table in this paper. A clearing cell prints attack "
-            "success rate over clean accuracy. A cell below the bar prints only its "
+            f"{len(cells)} declared models clear the attack success bar {asr_bar:.2f} "
+            "and carry every table in this paper. A model that clears prints attack "
+            "success rate over clean accuracy. A model below the bar prints only its "
             r"attack success rate, marked $^\dagger$, so its exclusion stays visible."
         ),
         label="tab:panel",
@@ -125,7 +127,8 @@ def main() -> None:
         caption=(
             "Benign-model clean accuracy per dataset, the reference every "
             "clean-accuracy-drop figure in this paper subtracts against. Same "
-            "architecture, optimizer and 15 epochs as every panel cell."
+            "architecture, optimizer and 15 epochs as every backdoored model in the "
+            "panel."
         ),
         label="tab:panel-benign",
         header=["dataset", "benign clean accuracy"],

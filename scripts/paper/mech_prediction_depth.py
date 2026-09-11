@@ -22,6 +22,7 @@ from cli.compare_detectors import psbd_values  # noqa: E402
 from defences.decision import EASY_ATTACKS, HARD_ATTACKS, RECOMMENDED_PLACEMENT  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     HEADLINE_KEY,
+    attack_label,
     bootstrap_ci,
     build_parser,
     ci_text,
@@ -52,7 +53,11 @@ def depth_record(results_dir: str, folder: str) -> dict | None:
 def measure_cell(results_dir: str, cell: dict) -> dict | None:
     """Both detectors' AUROC and low-budget TPR on 1 cell, or None when either is missing."""
     depth = depth_record(results_dir, cell["folder_name"])
-    psbd = psbd_values(load_psbd_metrics(results_dir, cell["folder_name"]), RECOMMENDED_PLACEMENT, "adaptive")
+    psbd = psbd_values(
+        load_psbd_metrics(results_dir, cell["folder_name"]),
+        RECOMMENDED_PLACEMENT,
+        "adaptive",
+    )
     if depth is None or psbd is None or HEADLINE_KEY not in psbd:
         return None
     measured = {
@@ -64,7 +69,9 @@ def measure_cell(results_dir: str, cell: dict) -> dict | None:
     return measured
 
 
-def subset_row(name: str, cells: list[dict], resamples: int, seed: int) -> tuple[list[str], dict]:
+def subset_row(
+    name: str, cells: list[dict], resamples: int, seed: int
+) -> tuple[list[str], dict]:
     auroc_delta = [c["m"]["depth_auroc"] - c["m"]["psbd_auroc"] for c in cells]
     tpr_delta = [c["m"]["depth_tpr"] - c["m"]["psbd_tpr"] for c in cells]
     auroc_ci = bootstrap_ci(auroc_delta, resamples, seed)
@@ -105,13 +112,19 @@ def main() -> None:
         f"{args.results_dir}/<folder>/psbd_metrics.json",
     ]
 
-    subsets = [("all", cells), ("hard attacks", [c for c in cells if c["attack"] in HARD_ATTACKS]), ("easy attacks", [c for c in cells if c["attack"] in EASY_ATTACKS])]
+    subsets = [
+        ("all", cells),
+        ("hard attacks", [c for c in cells if c["attack"] in HARD_ATTACKS]),
+        ("easy attacks", [c for c in cells if c["attack"] in EASY_ATTACKS]),
+    ]
     for attack in list(HARD_ATTACKS) + list(EASY_ATTACKS):
         group = [c for c in cells if c["attack"] == attack]
         if group:
-            subsets.append((attack, group))
+            subsets.append((attack_label(attack), group))
     for rate in (0.01, 0.05, 0.1):
-        subsets.append((f"rate {rate:g}", [c for c in cells if c["poison_rate"] == rate]))
+        subsets.append(
+            (f"rate {rate:g}", [c for c in cells if c["poison_rate"] == rate])
+        )
 
     rows = []
     numbers = {}
@@ -125,13 +138,24 @@ def main() -> None:
         inputs=inputs,
         caption=(
             "Prediction depth (depth\\_soft, 1 forward pass) against PSBD at the "
-            "recommended placement and the adaptive rule, paired within cell on the "
-            "same splits: AUROC at the headline quantile and TPR at the smallest "
-            "budget, with the paired delta, its bootstrap interval and the count of "
-            "cells where prediction depth wins at the low budget."
+            "token\\_mask placement at the attention input and the adaptive rule, "
+            "paired within model on the same splits: AUROC at the headline "
+            "quantile and TPR at the smallest budget, with the paired delta, its "
+            "bootstrap interval and the count of models where prediction depth "
+            "wins at the low budget."
         ),
         label="tab:prediction-depth",
-        header=["subset", "n", "depth AUROC", "PSBD AUROC", "delta AUROC [CI]", "depth TPR@1%", "PSBD TPR@1%", "delta TPR [CI]", "depth wins"],
+        header=[
+            "subset",
+            "n",
+            "depth AUROC",
+            "PSBD AUROC",
+            "delta AUROC [CI]",
+            "depth TPR@1%",
+            "PSBD TPR@1%",
+            "delta TPR [CI]",
+            "depth wins",
+        ],
         rows=rows,
         align="lrrrlrrlr",
     )
@@ -144,20 +168,63 @@ def main() -> None:
     everything = numbers["all"]
     hard = numbers["hard attacks"]
     macros = {
-        "depth_cells": (str(everything["n"]), "clearing cells carrying both prediction depth and the recommended placement"),
-        "depth_auroc_all": (fmt(mean_or_none([c["m"]["depth_auroc"] for c in cells])), "mean AUROC of prediction depth over the clearing cells"),
-        "depth_minus_psbd_auroc": (fmt(everything["auroc_delta"], signed=True), "mean paired AUROC delta, prediction depth minus PSBD, all clearing cells"),
-        "depth_minus_psbd_auroc_ci": (ci_text(*everything["auroc_ci"]), "bootstrap interval on depth_minus_psbd_auroc"),
-        "depth_minus_psbd_tpr": (fmt(everything["tpr_delta"], signed=True), "mean paired low-budget TPR delta, prediction depth minus PSBD, all clearing cells"),
-        "depth_minus_psbd_tpr_ci": (ci_text(*everything["tpr_ci"]), "bootstrap interval on depth_minus_psbd_tpr"),
-        "depth_minus_psbd_tpr_hard": (fmt(hard["tpr_delta"], signed=True), "mean paired low-budget TPR delta on the hard attacks"),
-        "depth_minus_psbd_tpr_hard_ci": (ci_text(*hard["tpr_ci"]), "bootstrap interval on depth_minus_psbd_tpr_hard"),
-        "depth_minus_psbd_auroc_hard": (fmt(hard["auroc_delta"], signed=True), "mean paired AUROC delta on the hard attacks"),
-        "depth_tpr_wins": (fmt(sum(1 for c in cells if c["m"]["depth_tpr"] > c["m"]["psbd_tpr"]), places=0), "clearing cells where prediction depth beats PSBD at the low budget"),
-        "depth_benign_auroc": (fmt(mean_or_none(benign)), f"mean prediction-depth AUROC on the {len(benign)} benign references"),
+        "depth_cells": (
+            str(everything["n"]),
+            "clearing cells carrying both prediction depth and the recommended placement",
+        ),
+        "depth_auroc_all": (
+            fmt(mean_or_none([c["m"]["depth_auroc"] for c in cells])),
+            "mean AUROC of prediction depth over the clearing cells",
+        ),
+        "depth_minus_psbd_auroc": (
+            fmt(everything["auroc_delta"], signed=True),
+            "mean paired AUROC delta, prediction depth minus PSBD, all clearing cells",
+        ),
+        "depth_minus_psbd_auroc_ci": (
+            ci_text(*everything["auroc_ci"]),
+            "bootstrap interval on depth_minus_psbd_auroc",
+        ),
+        "depth_minus_psbd_tpr": (
+            fmt(everything["tpr_delta"], signed=True),
+            "mean paired low-budget TPR delta, prediction depth minus PSBD, all clearing cells",
+        ),
+        "depth_minus_psbd_tpr_ci": (
+            ci_text(*everything["tpr_ci"]),
+            "bootstrap interval on depth_minus_psbd_tpr",
+        ),
+        "depth_minus_psbd_tpr_hard": (
+            fmt(hard["tpr_delta"], signed=True),
+            "mean paired low-budget TPR delta on the hard attacks",
+        ),
+        "depth_minus_psbd_tpr_hard_ci": (
+            ci_text(*hard["tpr_ci"]),
+            "bootstrap interval on depth_minus_psbd_tpr_hard",
+        ),
+        "depth_minus_psbd_auroc_hard": (
+            fmt(hard["auroc_delta"], signed=True),
+            "mean paired AUROC delta on the hard attacks",
+        ),
+        "depth_tpr_wins": (
+            fmt(
+                sum(1 for c in cells if c["m"]["depth_tpr"] > c["m"]["psbd_tpr"]),
+                places=0,
+            ),
+            "clearing cells where prediction depth beats PSBD at the low budget",
+        ),
+        "depth_benign_auroc": (
+            fmt(mean_or_none(benign)),
+            f"mean prediction-depth AUROC on the {len(benign)} benign references",
+        ),
     }
-    write_macros(os.path.join(args.paper_dir, "tables", "prediction_depth.macros.json"), GENERATOR, inputs, macros)
-    print(f"prediction depth: n={everything['n']}, auroc delta {macros['depth_minus_psbd_auroc'][0]}, tpr delta {macros['depth_minus_psbd_tpr'][0]}")
+    write_macros(
+        os.path.join(args.paper_dir, "tables", "prediction_depth.macros.json"),
+        GENERATOR,
+        inputs,
+        macros,
+    )
+    print(
+        f"prediction depth: n={everything['n']}, auroc delta {macros['depth_minus_psbd_auroc'][0]}, tpr delta {macros['depth_minus_psbd_tpr'][0]}"
+    )
 
 
 if __name__ == "__main__":

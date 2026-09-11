@@ -1,59 +1,64 @@
-\section{Detection results on ViT-B/16}
+\section{Where to perturb a ViT}
 \label{sec:results}
 
-\subsection{How the numbers are read}
-\label{sec:results:reading}
+This section walks from the original placement to PSBD-TM in 4 moves, each on the same backdoored ViT-B/16 models. We first apply dropout to the residual stream, as our reading of the original placement. We then keep dropout and move it to the other sites of the block. We then keep the best site and change what is injected there. Last, we restrict the winning placement to a band of blocks. Every number below is read at the rate the original rule assigns, and the per-model numbers behind each table are in \cref{app:results}.
 
-Every detection number below is read the same way. For 1 backdoored model and 1 placement, the statistic scores every image of the paired clean and triggered sets, and the area under the ROC curve (AUROC) measures how well those scores separate the 2 sets. A value of 1.0 is perfect, 0.5 is a coin, and below 0.5 the scores order the sets the wrong way round. We never flip a score whose AUROC falls below 0.5, since a defender cannot know in advance which way a model will read. Such a model is reported as below chance.
+\subsection{Dropout on the residual stream}
+\label{sec:results:residual}
 
-The true-positive rate (TPR) at a false-positive budget is the share of triggered images flagged when the threshold is set on the clean validation set so that the given share of clean images is flagged. TPR at 1\% is the number a deployment cares about.
+A ViT block has 2 residual adds, so PSBD-RD applies dropout to the stream after both of them. \Cref{tab:staircase-residual} reads it beside its nearest variants, dropout after the attention add only, dropout on the branch outputs just before the adds, and the latter restricted to a third of the network.
 
-Each placement is swept over a ladder of perturbation rates, and 2 rules pick the rate to read. The adaptive rule is the PSBD paper's deployment rule, the smallest rate at which the perturbation changes 80\% of the clean validation predictions. The matched rule reads every placement at the rate where it first changes 60\% of them, so that 2 placements are compared at the same disturbance. It exists only for comparisons. A gain is a difference between 2 placements on the same model, averaged over models, and its 95\% interval is a bootstrap over models, so it says how consistent the gain is across the 65 models.
+\input{tables/staircase_residual}
 
-\subsection{Attention-input token masking against post-residual dropout}
+PSBD-RD reaches a mean AUROC of 0.832 and flags 66\% of the triggered inputs at a 10\% false-positive budget. The mean hides a split. On BadNets, Blend and LF at 5\% and 10\% poisoning it is close to perfect, and on TaCT and on most models at 1\% poisoning it is close to a coin or worse, which \cref{tab:results-rate-1} shows model by model. Moving the dropout to the branch outputs before the adds changes nothing on average, and applying it after the attention add only, on the 9 models swept so far, is no better. The site is also fragile across training seeds. \Cref{sec:robustness:seeds} shows that PSBD-RD's AUROC moves by 0.08 between seeds of the same model, against 0.01 for PSBD-TM.
+
+Restricting residual dropout to a band of blocks helps a little. The middle third gains +0.043 over all blocks and the last third +0.027, while the first third loses 0.034. The stream in early blocks carries mostly clean content, so perturbing it there spends the budget on the wrong signal.
+
+\subsection{The same dropout at the attention input}
+\label{sec:results:sites}
+
+Dropout itself is not the problem. \Cref{tab:staircase-dropout-sites} keeps the perturbation the original used and moves it to the other sites of \cref{fig:vit-block}, in every block.
+
+\input{tables/staircase_dropout_sites}
+
+Dropout at the attention input, before the block's LayerNorm, reaches 0.925 on the 37 models swept so far, a paired gain of +0.039 over PSBD-RD on those models, and flags 79\% of the triggered inputs at a 10\% false-positive budget. Dropout at the MLP input stays at the level of the residual stream and dropout on the embedding output sits between the 2. The sweep of these sites over the remaining models is running, and the final version reads them on all. Where a perturbation is injected therefore matters more than the fact that it is dropout, and the attention input is where the same perturbation works.
+
+\subsection{Masking tokens instead of dropping coordinates}
+\label{sec:results:operator}
+
+With the site fixed at the attention input, \cref{tab:staircase-operators} changes what is injected there, and for comparison reads the same perturbations at the other sites of the basis.
+
+\input{tables/staircase_operators}
+
+Masking whole tokens is the best of the 4 perturbations at that site. It reaches 0.935 and flags 80\% of the triggered inputs at a 10\% false-positive budget, against 0.880 for masking whole channels, 0.925 for dropout on the models that hold both, and 0.796 for Gaussian noise. This is PSBD-TM. Token masking on the attention branch output just before its residual add is its twin. It reads 0.936 and flags 81\% at the same budget, so the 2 sites either side of the attention block behave alike, and by the numbers alone the branch output is marginally ahead. We name the attention input because it is the site whose mechanism \cref{sec:mechanism} can state, because it is the site we have verified across training seeds and on Swin-S, and because the 2 differ by less than a seed moves either of them. The sweeps that put the branch output on the same footing are running. Token masking on the stream after the attention add, by contrast, is the worst placement in the basis. The 3 sites differ only in whether the residual stream itself is masked, and \cref{sec:mechanism} explains why that matters.
+
+The site and the perturbation interact rather than add. At the attention input, noise loses 0.139 to token masking. At the MLP input the same comparison reverses, and noise at 0.868 beats token masking at 0.821. An account that ranks perturbations once for all sites cannot produce a reversal, and neither can one that ranks sites once for all perturbations. \Cref{sec:mechanism:layernorm} traces the reversal to the LayerNorm behind the attention input, which absorbs additive noise but not masking.
+
+Why should whole tokens beat coordinates? Dropout zeroes individual coordinates of the perturbed tensor, and a coordinate is 1 of the 768 numbers describing a token. It is renormalised by the next LayerNorm and averaged by the next attention, so dropping 30\% of coordinates leaves every token present with a slightly noisier description. A token is the unit that attention routes, so masking it removes that token from every attention pattern of the block. \Cref{sec:mechanism} shows that a backdoor is carried by the trigger's own tokens for most of the network and that its direction is not aligned with any coordinate axis, so a coordinate-level perturbation cannot remove the shortcut while a token-level one can. Channel masking, which removes whole coordinates, trails token masking by 0.055 at the same site, and on Swin dropout at the attention input scores 0.862 against 0.968 for token masking (\cref{sec:swin}).
+
+\subsection{Every block, not a band}
+\label{sec:results:depth}
+
+PSBD-TM perturbs all 12 blocks. \Cref{tab:staircase-bands} restricts it to a third of the network.
+
+\input{tables/staircase_bands}
+
+Restricting the mask to blocks 5 to 8 costs 0.063 and to blocks 9 to 12 costs 0.050, so the token mask works best when it acts everywhere. This is the opposite of what residual dropout showed in \cref{tab:staircase-residual}, where the middle band was the best. \Cref{sec:mechanism} gives the reason. A token mask before attention removes the trigger's tokens at whatever depth they are routed to the class token, so every added block is another chance to remove them, while a perturbation on the stream hits the decision itself and is best kept away from the early blocks.
+
+\subsection{PSBD-TM across attacks, poison rates and datasets}
 \label{sec:results:headline}
 
-The PSBD paper places dropout after each residual connection of a ResNet basic block. A ViT block has no single counterpart to that site, so we followed the idea rather than the letter and applied dropout to the residual stream after each residual add. We call this post-residual dropout. It works, but it is not the best site a ViT offers. Masking whole tokens at the input of every attention block, before its LayerNorm, is the placement we recommend, and \cref{tab:headline} compares the 2 on the 65 backdoored models.
+\Cref{tab:results-rate-1,tab:results-rate-5,tab:results-rate-10} in \cref{app:results} give PSBD-TM and PSBD-RD on every model at 1\%, 5\% and 10\% poisoning, with ASR, clean accuracy, AUROC and TPR@FPR at 10\% and 20\%. \Cref{tab:gains} summarises the paired gain of PSBD-TM over PSBD-RD by poison rate and dataset.
 
 \begin{table}[t]
 \centering\small
-\caption{Attention-input token masking against post-residual dropout on 65 backdoored ViT-B/16 models. AUROC is the mean over models at the adaptive rule unless stated. TPR is read at thresholds set on the clean validation set. A model is below chance when its AUROC is under 0.5.}
-\label{tab:headline}
-\begin{adjustbox}{max width=\linewidth}
-\begin{tabular}{lcc}
-\toprule
- & token mask & dropout \\
- & attention input & after residual add \\
-\midrule
-AUROC, adaptive rule & \textbf{0.935} & 0.832 \\
-AUROC, matched rule & \textbf{0.926} & 0.832 \\
-TPR at 1\% FPR & \textbf{0.629} & 0.477 \\
-TPR at 10\% FPR & \textbf{0.800} & 0.658 \\
-TPR at 25\% FPR & \textbf{0.871} & 0.744 \\
-lowest AUROC over the 65 models & \textbf{0.418} & 0.222 \\
-models below chance & \textbf{2} & 12 \\
-\bottomrule
-\end{tabular}
-\end{adjustbox}
-\end{table}
-
-Token masking leads on every row. Its mean AUROC is 0.103 higher at the adaptive rule and 0.094 higher at the matched rule, its true-positive rate at 1\% false positives is 0.629 against 0.477, and it falls below chance on 2 models against 12. Post-residual dropout fails on 12 models because dropout on the stream disturbs the class token directly, so on those attacks the poisoned predictions move as much as the clean ones.
-
-The 2 models where token masking fails are both on CIFAR-10 at 10\% poisoning. SIG reads 0.878 at the matched rule and falls to 0.418 at the adaptive rule, because the 0.8 shift target overshoots for it. WaNet reads 0.459 under both rules. This is the 1 comparison with post-residual dropout the paper makes. From here on token masking is read on its own terms, and post-residual dropout appears only as a reference row.
-
-\Cref{tab:gains} breaks the paired gain down by attack difficulty, poison rate and dataset. The intervals are bootstrap intervals over models, so they measure how consistent the gain is.
-
-\begin{table}[t]
-\centering\small
-\caption{Paired AUROC gain of attention-input token masking over post-residual dropout at the adaptive rule, by subset, with 95\% bootstrap intervals over models.}
+\caption{Paired AUROC gain of PSBD-TM over PSBD-RD, with 95\% bootstrap intervals.}
 \label{tab:gains}
 \begin{tabular}{lrrl}
 \toprule
-subset & models & gain & 95\% interval \\
+Subset & Models & Gain & 95\% interval \\
 \midrule
 all & 65 & +0.103 & [+0.048, +0.160] \\
-hard attacks & 29 & +0.110 & [+0.011, +0.210] \\
-easy attacks & 36 & +0.098 & [+0.041, +0.166] \\
 \midrule
 1\% poisoning & 19 & +0.161 & [+0.059, +0.283] \\
 5\% poisoning & 22 & +0.091 & [+0.031, +0.159] \\
@@ -67,64 +72,13 @@ Tiny ImageNet & 17 & +0.049 & [+0.007, +0.105] \\
 \end{tabular}
 \end{table}
 
-2 patterns stand out. The gain grows as the poison rate falls, from +0.069 at 10\% to +0.161 at 1\%. This is the regime where a defender most needs help, since an attacker who can poison only 1\% of the data plants a weaker shortcut. The gain is also positive on every dataset, but its size varies. It is large on CIFAR-100 and GTSRB and small on Tiny ImageNet, where post-residual dropout is already strong on the easy attacks. Removing any single attack from the 65 models leaves a gain of at least +0.046, so no one attack carries the result.
+The gain grows as the poison rate falls, from +0.069 at 10\% to +0.161 at 1\%. This is the regime where a defender most needs help, since an attacker who can poison only 1\% of the data plants a weaker shortcut. The gain is positive on every dataset, large on CIFAR-100 and GTSRB and small on Tiny ImageNet, where PSBD-RD is already strong on BadNets, Blend and LF. Removing any single attack from the evaluation leaves a gain of at least +0.046, so no one attack carries the result. Per attack, PSBD-TM is at or above 0.9 on BadNets, Blend, LF and BPP on every dataset and rate, above 0.9 on TaCT on CIFAR-10 and CIFAR-100 but not on Tiny ImageNet, and its 2 weakest readings are SIG and WaNet on CIFAR-10 at 10\% poisoning, both discussed in \cref{sec:limitations}.
 
-\subsection{Separating the site from the perturbation}
-\label{sec:results:operator}
+\Cref{fig:basis} closes the section with every fully swept placement of the basis on 1 axis.
 
-A placement fixes 2 things at once, so the gain above could come from where the perturbation goes or from what it does. \Cref{tab:operators} separates them by holding 1 axis fixed and moving the other, all at the matched rule so that every comparison has the same disturbance budget.
-
-\begin{table}[t]
-\centering\small
-\caption{Site and perturbation effects at matched disturbance, paired over 65 models. Each row moves 1 axis and holds the other fixed. Noise is isotropic Gaussian noise scaled to the tensor's standard deviation.}
-\label{tab:operators}
-\begin{adjustbox}{max width=\linewidth}
-\begin{tabular}{p{4.3cm}rl}
-\toprule
-comparison & $\Delta$ AUROC & 95\% interval \\
-\midrule
-\multicolumn{3}{l}{\emph{same perturbation (token mask), different site}} \\
-attention input minus MLP input & +0.109 & [+0.079, +0.138] \\
-\midrule
-\multicolumn{3}{l}{\emph{same site, different perturbation}} \\
-attention input, noise minus token mask & $-$0.206 & [$-$0.259, $-$0.156] \\
-attention input, noise minus channel mask & $-$0.113 & [$-$0.151, $-$0.078] \\
-MLP input, noise minus token mask & +0.056 & [+0.026, +0.087] \\
-\bottomrule
-\end{tabular}
-\end{adjustbox}
-\end{table}
-
-Both axes matter. Moving token masking from the attention input to the MLP input of the same block costs 0.109, so the site matters on its own. Holding the site at the attention input and switching from token masking to noise costs 0.206, so the perturbation matters on its own too.
-
-The surprising row is the last one. At the MLP input the same comparison reverses sign, and noise beats token masking by 0.056. An account that ranks perturbations once for all sites cannot produce a reversal, and neither can one that ranks sites once for all perturbations. \Cref{sec:mechanism:layernorm} explains the reversal through the LayerNorm that sits directly behind the attention input and absorbs additive noise but not masking.
-
-A tempting simplification is to sort the sites into 2 families, those on a sublayer's input and those adjacent to the residual stream, and to credit the family. An earlier reading of our own data, with dropout on CIFAR-10, suggested an input-side advantage of +0.054. On all 65 models, with the perturbation held at token masking, the family gap is +0.005 with an interval from $-$0.010 to +0.023. There is no family effect once the perturbation is matched. The advantage belongs to 1 specific site, the attention input.
-
-\subsection{Ranking of all 18 placements}
-\label{sec:results:basis}
-
-\Cref{fig:basis} ranks all 18 placements by mean AUROC at the adaptive rule. Attention-input token masking is second by 0.001 behind token masking on the attention branch output before its residual add, and first at the matched rule. We recommend it over the nominal first because it leads at matched disturbance and because its site has the clean mechanistic reading of \cref{sec:mechanism}. Post-residual dropout is twelfth.
-
-The spread from best to worst placement is 0.19 AUROC. That is larger than any gain a change to the statistic or the threshold would buy on these models, which is the practical content of this section. On a ViT the placement is the method.
-
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{basis_ranking.pdf}
-\caption{Mean AUROC of every placement in the basis over 65 backdoored models, at the adaptive rule (blue) and the matched rule (orange). Placements that mask whole tokens before attention lead. Noise before a LayerNorm and the pixel-space perturbation trail.}
+\includegraphics[width=0.8\textwidth]{basis_ranking.pdf}
+\caption{Mean AUROC of every placement in the basis with a complete sweep, read at the rate the original rule assigns. Placements that mask whole tokens before attention lead. Noise before a LayerNorm and the pixel-space perturbation trail.}
 \label{fig:basis}
-\end{figure}
-
-\subsection{Token masking against dropout}
-\label{sec:results:tokens}
-
-Dropout, as the original work uses it, zeroes individual coordinates of the perturbed tensor. Token masking zeroes whole tokens, with the class token protected and the survivors rescaled. On a ViT these are different perturbations of the same tensor. A coordinate is 1 of the 768 numbers describing a token. It is renormalised by the next LayerNorm and averaged by the next attention, so dropping 30\% of coordinates leaves every token present with a slightly noisier description. A token is the unit that attention routes, so masking it removes that token from every attention pattern of the block.
-
-\Cref{sec:mechanism} shows that a backdoor is carried by the trigger's own tokens for most of the network and that its direction is not aligned with any coordinate axis. Zeroing the 20 coordinates the trigger moves most leaves attack success at 1.000. A coordinate-level perturbation therefore cannot remove the shortcut, while a token-level one can. The detection numbers agree. Dropout at the attention input scores 0.862 on Swin against 0.968 for token masking at the same input (\cref{sec:swin}), and channel masking, which removes whole coordinates, trails token masking by 0.113 on ViT (\cref{tab:operators}).
-
-\subsection{Which blocks to perturb}
-\label{sec:results:depth}
-
-Attention-input token masking perturbs all 12 blocks. Restricting it to blocks 5 to 8 or to blocks 9 to 12 costs 0.06 in both cases, so the input-side perturbation works best when it acts everywhere. Dropout before the residual add behaves differently. Restricted to blocks 5 to 8 it gains 0.052 over the all-blocks version, and restricted to blocks 1 to 4 it loses 0.062.
-
-The difference fits the mechanism of \cref{sec:mechanism}. A token mask that acts before routing removes the trigger's tokens at whatever depth routing happens, so every added block is another chance to remove them. A perturbation on the residual stream hits the stream itself, and in early blocks the stream carries mostly clean content, so perturbing it there spends budget on the wrong signal.
+\end{figure*}

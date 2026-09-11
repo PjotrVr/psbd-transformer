@@ -25,18 +25,18 @@ sys.path.insert(0, os.getcwd())
 import glob
 import statistics
 
-import matplotlib
-
-matplotlib.use("Agg")
+import scripts.paper._style  # noqa: E402,F401  the shared figure style
 import matplotlib.pyplot as plt
 
 from cli.compare_detectors import psbd_rate
 from defences.decision import EASY_ATTACKS, HARD_ATTACKS, RECOMMENDED_PLACEMENT
 from scripts.paper._common import (
+    attack_label,
     bootstrap_ci,
     build_parser,
     ci_text,
     clearing_cells,
+    dataset_label,
     figure_sidecar,
     fmt,
     load_coverage,
@@ -62,7 +62,7 @@ RULE_LABEL = {"matched": "matched 0.6", "adaptive": "adaptive 0.8"}
 # The macros headline on the matched-0.6 rule, the project's standard placement
 # comparison operator (defences.decision.PLACEMENT_MATCH_TARGET), so a target-share
 # excess is read at the same disturbance level every other placement number uses.
-MACRO_RULE = "matched"
+MACRO_RULE = "adaptive"
 
 # Okabe-Ito, colourblind safe, used in this fixed order across every mech_*.py figure.
 PALETTE = [
@@ -269,7 +269,7 @@ def write_shift_target_table(args, records: list[dict]) -> None:
     rows = []
     for attack in attacks:
         attack_records = [r for r in records if r["attack"] == attack]
-        row = [attack, str(len(attack_records))]
+        row = [attack_label(attack), str(len(attack_records))]
         for rule in RULES:
             shares, benign_shares, _, excess = paired_excess(
                 attack_records, rule, args.bootstrap, args.seed
@@ -281,7 +281,7 @@ def write_shift_target_table(args, records: list[dict]) -> None:
             ]
         rows.append(row)
 
-    all_row = ["all cells", str(len(records))]
+    all_row = ["all models", str(len(records))]
     for rule in RULES:
         shares, benign_shares, _, excess = paired_excess(
             records, rule, args.bootstrap, args.seed
@@ -301,12 +301,12 @@ def write_shift_target_table(args, records: list[dict]) -> None:
             f"{args.results_dir}/<folder>/psbd_metrics.json (65 clearing cells, 4 benign)"
         ],
         caption=(
-            "A1: target-class share of shifted clean predictions at the recommended "
-            f"placement ({RECOMMENDED_PLACEMENT}), against the uniform expectation "
-            "1/num\\_classes and the matched-dataset benign reference, read at the "
-            "matched-0.6 and adaptive-0.8 rate rules. Excess is the attack's share "
-            "minus the benign share on the same dataset, paired per cell, 95\\% "
-            "bootstrap interval over cells."
+            "A1: target-class share of shifted clean predictions at the token\\_mask "
+            f"placement at the attention input ({RECOMMENDED_PLACEMENT}), against the "
+            "uniform expectation 1/num\\_classes and the matched-dataset benign "
+            "reference, read at the matched-0.6 and adaptive-0.8 rate rules. Excess is "
+            "the attack's share minus the benign share on the same dataset, paired per "
+            "model, 95\\% bootstrap interval over models."
         ),
         label="tab:mech-shift-target",
         header=header,
@@ -323,13 +323,13 @@ def write_dataset_table(args, records: list[dict]) -> None:
     carries the intervals.
     """
     header = [
-        "dataset",
-        "attack",
+        "Dataset",
+        "Attack",
         "n",
-        f"share@{RULE_LABEL[MACRO_RULE]}",
-        "uniform",
-        "benign share",
-        "excess",
+        "Share",
+        "Uniform",
+        "Benign",
+        "Excess",
     ]
     rows = []
     for dataset in DATASET_ORDER:
@@ -344,8 +344,8 @@ def write_dataset_table(args, records: list[dict]) -> None:
             )
             rows.append(
                 [
-                    dataset,
-                    attack,
+                    dataset_label(dataset),
+                    attack_label(attack),
                     str(len(group)),
                     fmt(statistics.mean(shares)),
                     fmt(uniform),
@@ -362,11 +362,9 @@ def write_dataset_table(args, records: list[dict]) -> None:
             f"{args.results_dir}/<folder>/psbd_metrics.json (65 clearing cells, 4 benign)"
         ],
         caption=(
-            "A1 by dataset: target-class share of shifted clean predictions at the "
-            f"recommended placement and the {RULE_LABEL[MACRO_RULE]} rule, per dataset "
-            "and attack, against the uniform expectation and the dataset's benign "
-            "reference. n is the number of poison rates the cell clears, so rows "
-            "carry no interval."
+            "Share of shifted clean predictions that land on the target class under "
+            "PSBD-TM, per dataset and attack, against the uniform expectation and the "
+            "benign reference of the dataset."
         ),
         label="tab:mech-shift-target-by-dataset",
         header=header,
@@ -417,7 +415,7 @@ def write_tl1_table(args) -> None:
         caption = (
             "A1b: no vit\\_gtsrb\\_sig\\_*\\_tl1 or vit\\_gtsrb\\_lc\\_*\\_tl1 folder "
             "with a psbd\\_metrics.json exists on disk yet, so this table has no "
-            "rows. The main table's target class is 0 on every panel cell."
+            "rows. The main table's target class is 0 on every model in the panel."
         )
         rows = [["--", "0", "--", "--", "--"]]
 
@@ -451,7 +449,7 @@ def write_shift_target_figure(args, records: list[dict], benign_reports: dict) -
             markersize=3,
             linewidth=1.3,
             color=PALETTE[index % len(PALETTE)],
-            label=attack,
+            label=attack_label(attack),
         )
 
     if band:

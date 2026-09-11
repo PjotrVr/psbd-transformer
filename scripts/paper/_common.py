@@ -159,7 +159,7 @@ def write_table(
     columns = align or "l" + "r" * (len(header) - 1)
     lines = [
         provenance_comment(generator, inputs),
-        r"\begin{table}[t]",
+        r"\begin{table}[htbp]",
         r"\centering",
         r"\small",
         f"\\caption{{{caption}}}",
@@ -324,3 +324,115 @@ def std_or_none(values: list[float]) -> float | None:
         return None
     deviation = statistics.stdev(values)
     return deviation
+
+
+DATASET_LABELS = {
+    "cifar10": "CIFAR-10",
+    "cifar100": "CIFAR-100",
+    "gtsrb": "GTSRB",
+    "tiny": "Tiny ImageNet",
+    "svhn": "SVHN",
+    "eurosat": "EuroSAT",
+}
+
+
+def dataset_label(dataset: str) -> str:
+    """The display name of a dataset token, the token itself when unknown."""
+    return DATASET_LABELS.get(dataset, dataset)
+
+
+ATTACK_LABELS = {
+    "badnet_a2o": "BadNets",
+    "badnet_a2a": "BadNets (all-to-all)",
+    "blend": "Blend",
+    "sig": "SIG",
+    "wanet": "WaNet",
+    "lf": "LF",
+    "lc": "Label-Consistent",
+    "bpp": "BPP",
+    "adaptive_blend": "Adaptive-Blend",
+    "tact": "TaCT",
+    "benign": "benign",
+}
+
+
+def attack_label(attack: str) -> str:
+    """The display name of an attack token, the token itself when unknown."""
+    return ATTACK_LABELS.get(attack, attack)
+
+
+# 0_01 / 0_05 / 0_1 are the only poison-rate tokens the checkpoint folder
+# template carries (see the checkpoint naming section of CLAUDE.md).
+RATE_TOKEN_LABELS = {"0_01": "1%", "0_05": "5%", "0_1": "10%"}
+
+
+def folder_legend_label(folder: str, dataset: str) -> str:
+    """A checkpoint folder as a reader-facing legend label: '<attack> <rate%>' or 'benign'.
+
+    Strips the `vit_{dataset}_` prefix, then matches the longest known attack
+    token at the front of what remains so `badnet_a2o` is not cut at its first
+    underscore, and reads the rate token after it. Anything unmatched (a folder
+    tag this dataset's legends were not written for) falls back to the bare
+    remainder rather than raising.
+    """
+    remainder = folder
+    prefix = f"vit_{dataset}_"
+    if remainder.startswith(prefix):
+        remainder = remainder[len(prefix) :]
+    if remainder == "benign":
+        return attack_label("benign")
+    for attack in sorted(ATTACK_LABELS, key=len, reverse=True):
+        attack_prefix = f"{attack}_"
+        if remainder.startswith(attack_prefix):
+            rate_token = remainder[len(attack_prefix) :]
+            rate_text = RATE_TOKEN_LABELS.get(rate_token, rate_token)
+            label = f"{attack_label(attack)} {rate_text}"
+            return label
+    return remainder
+
+
+POSITION_WORDS = {
+    "before_attention_norm": "attention input",
+    "before_attention": "attention input after norm",
+    "before_mlp_norm": "MLP input",
+    "before_mlp": "MLP input after norm",
+    "both_sublayer_inputs": "both sublayer inputs",
+    "input_pixels": "input pixels",
+    "before_attention_residual": "attention output before the add",
+    "after_attention_residual": "stream after the attention add",
+    "pre_residual": "before both residual adds",
+    "post_residual": "after both residual adds",
+    "mlp_neurons": "MLP neurons",
+    "mlp_norm_out": "MLP norm output",
+    "after_embedding": "embedding output",
+}
+OPERATOR_WORDS = {
+    "token_mask": "token mask",
+    "channel_mask": "channel mask",
+    "gaussian": "noise",
+    "dropout": "dropout",
+    "gain_scale": "gain scale",
+    "scale_up": "scale up",
+}
+FAMILY_WORDS = {
+    "input_side": "input side",
+    "residual_adjacent": "residual adjacent",
+    "structured": "structured",
+    "ported": "ported",
+    "depth_band": "depth band",
+}
+
+
+def placement_label(entry: dict) -> str:
+    """A basis entry in words, operator first, then the site, then the block band."""
+    words = f"{OPERATOR_WORDS.get(entry['operator'], entry['operator'])}, {POSITION_WORDS.get(entry['position'], entry['position'])}"
+    block_range = entry.get("block_range")
+    if block_range:
+        words += f", blocks {block_range[0]} to {block_range[1]}"
+    return words
+
+
+def family_label(family: str) -> str:
+    """A basis family tag in words."""
+    label = FAMILY_WORDS.get(family, family.replace("_", " "))
+    return label

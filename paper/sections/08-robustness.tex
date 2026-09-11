@@ -1,18 +1,18 @@
-\section{Robustness, cost and comparison}
+\section{Robustness and cost}
 \label{sec:robustness}
 
-\subsection{The adaptive attacker and the union of probes}
+\subsection{An adaptive attacker and the union of probes}
 \label{sec:robustness:adaptive}
 
 The PSBD paper tests an attacker who knows the defence and adds a loss term that lowers the prediction shift of poisoned samples, and reports that the defence survives because its rate rule moves to a higher dropout rate. We trained a stronger version of that attacker on ViT. It is a hinge loss that pushes the poisoned samples' fractional shift up to the clean samples' shift under the exact probe the defender uses, trained jointly with the backdoor on CIFAR-100 for BadNets, Blend, BPP, LF and Adaptive-Blend at 3 poison rates, 14 backdoored models in all. \Cref{tab:adaptive} summarises the outcome.
 
 \begin{table*}[t]
 \centering\small
-\caption{The adaptive attacker on 14 CIFAR-100 ViT models. ASR is the attack success rate of the evasive model. The probed column is the placement the attacker trained against. Transfer is the mean AUROC over the other basis placements. Union is the min-rank combination of all probes. Cost is the attacker's own clean-accuracy loss.}
+\caption{The adaptive attacker on 14 CIFAR-100 ViT-B/16 models. ASR is the attack success rate of the evasive model and cost its clean-accuracy loss. Probed is the AUROC of the placement the attacker trained against, transfer the mean AUROC over the other placements of the basis, and union the min-rank combination of all probes.}
 \label{tab:adaptive}
 \begin{tabular}{lrrrrr}
 \toprule
- & ASR & cost & probed & transfer & union \\
+ & ASR & Cost & Probed & Transfer & Union \\
 \midrule
 before the attack & 0.966 & & 0.966 & & \\
 after the attack, mean & 0.981 & $-$0.030 & \textbf{0.233} & 0.893 & \textbf{0.973} \\
@@ -22,52 +22,31 @@ best model for the defender (Blend 5\%) & 1.000 & $-$0.032 & 0.807 & 0.978 & 0.9
 \end{tabular}
 \end{table*}
 
-Against a single fixed probe the attacker wins. The probed placement falls from a mean AUROC of 0.966 to 0.233, and to 0.004 on BadNets at 5\%, while the attack keeps its success and costs the attacker 3 points of clean accuracy. The paper's rate adaptation is already inside these numbers and does not rescue the probe. The claim that PSBD survives an adaptive attacker, obtained with a weaker attacker on ResNet-18, does not appear to transfer to ViT as stated.
+Against a single fixed probe the attacker wins. The probed placement falls from a mean AUROC of 0.966 to 0.233, and to 0.004 on BadNets at 5\%, while the attack keeps its success and costs the attacker 3 points of clean accuracy. The rate rule is already inside these numbers and does not rescue the probe. The claim that PSBD survives an adaptive attacker, obtained with a weaker attacker on ResNet-18, does not appear to transfer to ViT as stated.
 
 What does hold is that the evasion does not transfer between probes. The attacker shaped the model against 1 site and 1 perturbation, and every other placement in the basis keeps detecting at a mean of 0.893. Combining all placements by taking each input's most suspicious rank across probes, which we call the union, restores a mean AUROC of 0.973 with a worst model of 0.882. That is above the single-probe defence before the attack on most models.
 
-The defender does not need to know which probe was attacked. Using all of them is within 0.006 of an oracle that drops the attacked one, and attempting to identify the attacked probe and exclude it does worse. The union of probes is therefore the defence we recommend against an adaptive attacker, at a cost of 1 sweep per probe. The open question is an attacker who trains against the union itself. That attack is more expensive for the attacker, since evading 1 probe already costs up to 4.5 clean-accuracy points, and we have not run it.
+The defender does not need to know which probe was attacked. Using all of them is within 0.006 of an oracle that drops the attacked one, and attempting to identify the attacked probe and exclude it does worse. The union of probes is therefore the defence we recommend against an adaptive attacker, at a cost of 1 sweep per probe. The open question is an attacker who trains against the union itself. That attack is more expensive for the attacker, since evading 1 probe already costs up to 4.5 clean-accuracy points, and we have not run it. We are also training the paper's own adaptive attacker, whose loss is a convex combination of the backdoor loss and the absolute prediction shift, and \cref{app:rate} will carry its numbers.
 
-\subsection{The shift target}
-\label{sec:robustness:target}
-
-The adaptive rule reads each placement at the rate where 80\% of clean validation predictions change. \Cref{fig:shift-ladder} asks whether 0.8 is the right target by interpolating every model's rate ladder onto a shared grid of achieved shift ratios from 0.2 to 0.98 and reading AUROC and TPR along it, for all 65 models and for the 29 hard-attack models.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{fig_shift_ladder.pdf}
-\caption{Mean AUROC, TPR at 1\% FPR and TPR at 10\% FPR of attention-input token masking against the achieved clean shift ratio, over all 65 models and over the 29 hard-attack models. The vertical lines mark the matched rule (0.6) and the adaptive rule (0.8). Above 0.8 fewer models reach the target and the mean is taken over those that do.}
-\label{fig:shift-ladder}
-\end{figure*}
-
-AUROC is flat above a shift ratio of about 0.6, at 0.927 at 0.6 and 0.936 at 0.8 over all models and 0.881 against 0.882 on the hard attacks. The true-positive rate at a fixed false-positive budget keeps rising. At 1\% FPR it goes from 0.408 at a target of 0.6 to 0.568 at 0.8 and 0.646 at 0.9, and on the hard attacks from 0.258 to 0.344 to 0.395. A higher target therefore buys operating-point performance without moving the ranking statistic. The caveat is that only 52 of the 65 models reach a shift ratio of 0.9 within the swept rate ladder and 44 reach 0.95, so the means past 0.8 are over a shrinking subset. The paper's 0.8 is a reasonable choice and 0.9 appears worth testing where the ladder reaches it.
-
-\subsection{Number of forward passes}
+\subsection{Forward passes and their cost}
 \label{sec:robustness:passes}
 
-PSBD uses $k = 3$ passes. \Cref{fig:forward-passes} reads the effect of $k$ in 2 ways. Over all 65 models, the first 3 passes are available from the headline sweeps and mean AUROC rises from 0.919 at $k = 1$ to 0.930 at $k = 2$ and 0.935 at $k = 3$. On 6 models at 1\% poisoning (BadNets, Blend and LF on CIFAR-100 and Tiny ImageNet) we also swept $k$ up to 20. There AUROC goes from 0.963 at 1 pass to 0.972 at 3 and 0.974 at 20, and TPR at 10\% FPR from 0.940 to 0.967 to 0.969.
+PSBD uses $k = 3$ passes. On all models the mean AUROC of PSBD-TM rises from 0.919 at $k = 1$ to 0.930 at $k = 2$ and 0.935 at $k = 3$. On 6 models at 1\% poisoning we also swept $k$ up to 20, and there AUROC goes from 0.963 at 1 pass to 0.972 at 3 and 0.974 at 20, with TPR at a 10\% false-positive budget from 0.940 to 0.967 to 0.969. The second and third pass are worth having, and the gain from the third to the twentieth is under 0.003. \Cref{app:passes} plots the full curves and the sweeps over more models and more values of $k$ that are running.
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{fig_forward_passes.pdf}
-\caption{Mean AUROC, TPR at 10\% FPR and TPR at 20\% FPR of attention-input token masking against the number of forward passes $k$ at the adaptive rule. The full curve is on 6 models at 1\% poisoning with a $k = 20$ sweep. The short curve is on all 65 models, whose headline sweeps hold $k \le 3$.}
-\label{fig:forward-passes}
-\end{figure*}
+\IfFileExists{tables/cost.tex}{\input{tables/cost}}{}
 
-The second and third pass are worth having, and the gain from the third to the twentieth is under 0.003 on these models. $k = 3$ is therefore close to converged for the easy attacks at 1\%. Whether the hard attacks at 1\% behave the same is being measured, since their $k = 20$ sweeps had not finished when this draft was compiled.
+The passes are the cost of the defence. Each pass is a full forward pass of the perturbed network, so PSBD at $k = 3$ costs 3 times a plain prediction and at $k = 20$ costs 20 times. \Cref{tab:cost} gives the measured seconds per input on the A100 we use, for ViT-B/16 and Swin-S, which is what a deployment trades against the small gain beyond $k = 3$.
 
 \subsection{Seed variance}
 \label{sec:robustness:seeds}
 
-14 backdoored models were trained 3 times with different seeds (BadNets, Blend and WaNet on CIFAR-100 and Tiny ImageNet). Attention-input token masking has a seed standard deviation of 0.012 AUROC on average. Post-residual dropout has 0.076, and reaches 0.278 on CIFAR-100 BadNets at 5\%, where its 3 seeds read 0.826, 0.493 and 0.274. The gain of token masking over post-residual dropout is +0.128 on these models and changes sign on 4 of 14, all on Blend and WaNet where both placements are near 1.0.
-
-A single seed is therefore a fair reading of attention-input token masking and an unreliable reading of post-residual dropout. That instability is part of why post-residual dropout falls below chance on 12 models. It is weaker on average and far less stable.
+14 backdoored models were trained 3 times with different seeds (BadNets, Blend and WaNet on CIFAR-100 and Tiny ImageNet). PSBD-TM has a seed standard deviation of 0.012 AUROC on average. PSBD-RD has 0.076, and reaches 0.278 on CIFAR-100 BadNets at 5\%, where its 3 seeds read 0.826, 0.493 and 0.274. The gain of PSBD-TM over PSBD-RD is +0.128 on these models and changes sign on 4 of 14, all on Blend and WaNet where both placements are near 1.0. A single seed is therefore a fair reading of PSBD-TM and an unreliable reading of PSBD-RD, which is weaker on average and far less stable. \Cref{app:seeds} lists the per-seed readings, and 2 further seeds of every model are being trained.
 
 \subsection{Comparison with other input-level detectors}
 \label{sec:robustness:detectors}
 
-We ported 10 input-level detectors to the same splits and threshold rule (confidence, STRIP, SCALE-UP in 2 variants, IBD-PSC, TeCo, CD-L, Beatrix, TED, SentiNet), each checked numerically against its reference implementation. On a smoke test of 3 GTSRB models every detector reads chance on the benign model, and on BadNets STRIP, CD-L, TED and TeCo all reach 0.99 or more. On an easy patch attack PSBD has no edge.
+We ported 10 input-level detectors to the same splits and threshold rule (confidence, STRIP, SCALE-UP in 2 variants, IBD-PSC, TeCo, CD-L, Beatrix, TED, SentiNet), each checked numerically against its reference implementation. On a smoke test of 3 GTSRB models every detector reads chance on the benign model, and on BadNets STRIP, CD-L, TED and TeCo all reach 0.99 or more. On a patch attack at 5\% poisoning PSBD has no edge over them.
 
-2 ports fail for reasons specific to ViTs. IBD-PSC amplifies LayerNorm gains at the paper's factor of 1.5, and a 99\%-accurate ViT keeps every prediction, so its score saturates at an AUROC of 0.506. SentiNet's Grad-CAM mask covers 0 to 2\% of the trigger at every block, so its transplant carries nothing and reads 0.107. The full comparison over the 71 backdoored models, which is where the hard attacks decide the ranking, is running.
+2 ports fail for reasons specific to ViTs. IBD-PSC amplifies LayerNorm gains at the paper's factor of 1.5, and a 99\%-accurate ViT keeps every prediction, so its score saturates at an AUROC of 0.506. SentiNet's Grad-CAM \cite{selvaraju2017gradcam} mask covers 0 to 2\% of the trigger at every block, so its transplant carries nothing and reads 0.107. The full comparison over every backdoored model is running, and \cref{app:smoke} gives the smoke test.
 
-A cheaper alternative to PSBD from our own work reads the class token through the final LayerNorm and head at every block, a logit lens that costs 1 pass. It ties PSBD on AUROC over the 65 models (0.911 against 0.935) and beats it on TPR at 1\% false positives on the hard attacks, by +0.183 with an interval from +0.062 to +0.296, and it loses on BadNets. The 2 statistics are complementary rather than redundant.
+A cheaper alternative to PSBD from our own work reads the class token through the final LayerNorm and head at every block, a logit lens \cite{nostalgebraist2020logitlens,belrose2023tunedlens} that costs 1 pass. It ties PSBD on AUROC over all models (0.911 against 0.935) and beats it on TPR at a 1\% false-positive budget on BPP, WaNet, TaCT and SIG, by +0.183 with an interval from +0.062 to +0.296, and it loses on BadNets. The 2 statistics are complementary rather than redundant.

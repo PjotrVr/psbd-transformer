@@ -1,23 +1,24 @@
 \section{Adapting PSBD to a ViT}
 \label{sec:method}
 
-We keep PSBD's decision rule fixed and vary only what is injected and where. This keeps every placement comparable and keeps the method faithful to the paper in everything that is not architecture-specific.
+We keep PSBD's decision rule fixed and vary only what is injected and where. This keeps every placement comparable and keeps the method faithful to the original in everything that is not architecture-specific.
 
 \paragraph{Sites and perturbations.}
-A placement is a site paired with a perturbation. A site is a named tensor boundary inside every block, reached through forward hooks so that the model's own dropout modules stay off and no trained weight is touched. The basis holds 9 single sites (the attention input before and after its LayerNorm, the MLP input before and after its LayerNorm, the 2 branch outputs before their residual adds, the 2 residual streams after the adds, and the embedding), 2 structured sites (the attention heads and the MLP hidden units), and 4 sites ported from other detectors (the input pixels and the LayerNorm outputs).
+A placement is a site paired with a perturbation. A site is a named tensor boundary inside every block, reached through forward hooks so that the model's own dropout modules stay off and no trained weight is touched. The basis holds 9 single sites (the attention input before and after its LayerNorm, the MLP input before and after its LayerNorm, the 2 branch outputs before their residual adds, the 2 residual streams after the adds, and the embedding), 2 structured sites (the attention heads and the MLP hidden units), and 4 sites ported from other detectors (the input pixels and the LayerNorm outputs). \Cref{app:basis} lists them all.
 
-A perturbation, which we also call an operator, is what the hook does to the tensor. The operators are dropout as in the paper, token masking (zero whole tokens with the class token protected, then rescale), channel masking (zero whole channels), isotropic Gaussian noise scaled to the tensor's standard deviation, and gain scaling of a LayerNorm output. Every operator takes 1 rate $p$, and every placement is swept over a ladder of rates from 0.05 to 0.9. We refer to the 2 placements that matter most by name. Attention-input token masking masks whole tokens at site A of \cref{fig:vit-block}, and post-residual dropout applies dropout on the residual stream at site C.
+A perturbation is what the hook does to the tensor. We use dropout as in the original, token masking (zero whole tokens with the class token protected, then rescale), channel masking (zero whole channels), isotropic Gaussian noise scaled to the tensor's standard deviation, and gain scaling of a LayerNorm output. Every perturbation takes 1 rate $p$, and every placement is swept over a ladder of rates from 0.05 to 0.9, in every block unless a band of blocks is stated.
+
+\paragraph{The 2 placements we name.}
+The ResNet placement of the original work has no literal counterpart in a ViT block, which has 2 residual adds and no activation after them. We read it as dropout on the residual stream after both adds, site C in \cref{fig:vit-block}, and call PSBD with that placement PSBD-RD. The placement this paper arrives at masks whole tokens at the attention input, site A, and we call it PSBD-TM.
 
 \paragraph{The statistic.}
-We use the fractional form of the statistic, the drop in the predicted class's probability divided by that probability without the perturbation, so that a confident and an unconfident clean prediction that lose the same share of their probability score alike. The decision is one-sided, low means poisoned, exactly as in the paper.
+We use the fractional form of the statistic, the drop in the predicted class's probability divided by that probability without the perturbation, so that a confident and an unconfident clean prediction that lose the same share of their probability score alike. The decision is one-sided, low means poisoned, exactly as in the original.
 
-\paragraph{The rate rule and the comparison rule.}
-The paper picks the dropout rate at which the clean validation set's shift ratio reaches 0.8. We keep that rule for deployment and call it the adaptive rule. It is not usable for comparing placements, because the same nominal rate is a different disturbance at different sites. Masking 30\% of the tokens before attention and dropping 30\% of the residual stream's coordinates move the prediction by very different amounts.
+\paragraph{The rate.}
+We follow the original rule and read every placement at the smallest rate at which the perturbation changes 80\% of the clean validation predictions. Because the same nominal rate is a very different disturbance at different sites, this rule is also what makes placements comparable. Each placement is read at the disturbance the rule assigns it, and \cref{app:rate} checks that 0.8 is a good target on our models.
 
-Every comparison between placements is therefore also read at a matched rule, the rate at which each placement first moves 60\% of clean validation predictions. At a matched shift ratio 2 placements have been given the same budget of disturbance, and what remains is how well that disturbance separates poisoned from clean inputs. We report both rules and note when they disagree.
-
-\paragraph{The threshold and the metrics.}
-The threshold is a quantile of the clean validation set's scores, so the false-positive rate is set by the defender. We report the area under the ROC curve at the paper's 25th-percentile threshold and the true-positive rate at the 1\%, 10\% and 25\% quantiles. The clean and triggered test sets are paired. Every triggered image is the triggered copy of an image in the clean set, so the 2 populations differ only by the trigger.
+\paragraph{Threshold and metrics.}
+The threshold is a quantile of the clean validation set's scores, so the false-positive rate is set by the defender. We report the area under the ROC curve (AUROC) and the true-positive rate at the false-positive budgets of 10\% and 20\%, written TPR@FPR. The clean and triggered test sets are paired. Every triggered image is the triggered copy of an image in the clean set, so the 2 populations differ only by the trigger.
 
 \paragraph{Number of passes.}
-We use $k = 3$ passes as the paper does. \Cref{sec:robustness:passes} measures what more passes buy.
+We use $k = 3$ passes as the original does. \Cref{sec:robustness:passes} measures what more passes buy and what they cost.

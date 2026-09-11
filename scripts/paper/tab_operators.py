@@ -151,8 +151,8 @@ def main() -> None:
         caption=(
             "Mean AUROC at q0.25 for each placement of the operator and site "
             "comparison, at the matched 0.6 rate and the adaptive 0.8 rate, over "
-            "the 65-cell panel. n is the number of cells the placement covers "
-            "under that rule."
+            "the panel of 65 backdoored models. n is the number of models the "
+            "placement covers under that rule."
         ),
         label="tab:operators",
         header=[

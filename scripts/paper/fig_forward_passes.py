@@ -179,7 +179,6 @@ def draw_panel(ax, k_values, pilot_agg, all_cells_agg, metric, ylabel):
     """1 panel: pilot mean +- std band across all k, dashed all-cells mean at k in 1,2,3."""
     pilot_k = list(k_values)
     pilot_mean = [pilot_agg[k][metric]["mean"] for k in pilot_k]
-    pilot_std = [pilot_agg[k][metric]["std"] or 0.0 for k in pilot_k]
     ax.plot(
         pilot_k,
         pilot_mean,
@@ -189,9 +188,6 @@ def draw_panel(ax, k_values, pilot_agg, all_cells_agg, metric, ylabel):
         color=PILOT_COLOUR,
         label="6 models at 1% poisoning, k up to 20",
     )
-    lower = [m - s for m, s in zip(pilot_mean, pilot_std)]
-    upper = [m + s for m, s in zip(pilot_mean, pilot_std)]
-    ax.fill_between(pilot_k, lower, upper, color=PILOT_COLOUR, alpha=0.2, linewidth=0)
 
     base_k = list(BASE_K_VALUES)
     all_mean = [all_cells_agg[k][metric]["mean"] for k in base_k]

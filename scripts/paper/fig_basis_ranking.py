@@ -14,9 +14,7 @@ import sys
 
 sys.path.insert(0, os.getcwd())
 
-import matplotlib  # noqa: E402
-
-matplotlib.use("Agg")
+import scripts.paper._style  # noqa: E402,F401  the shared figure style
 import matplotlib.pyplot as plt  # noqa: E402
 
 from scripts.paper._common import (  # noqa: E402
@@ -30,19 +28,46 @@ from scripts.paper.app_basis import ranking_rows  # noqa: E402
 
 GENERATOR = "scripts/paper/fig_basis_ranking.py"
 ADAPTIVE_COLOUR = "#0072B2"
-MATCHED_COLOUR = "#9ecae1"
 RECOMMENDED = "before_attention_norm_token_mask"
 PUBLISHED = "post_residual"
 
 
-def readable(placement: str) -> str:
-    """The placement id with underscores as spaces, the recommended and published ones marked."""
-    label = placement.replace("_", " ")
+POSITION_WORDS = {
+    "before_attention_norm": "attention input",
+    "before_attention": "attention input after norm",
+    "before_mlp_norm": "MLP input",
+    "before_mlp": "MLP input after norm",
+    "both_sublayer_inputs": "both sublayer inputs",
+    "input_pixels": "input pixels",
+    "before_attention_residual": "attention output before the add",
+    "after_attention_residual": "stream after the attention add",
+    "pre_residual": "before both residual adds",
+    "post_residual": "after both residual adds",
+    "mlp_neurons": "MLP neurons",
+    "mlp_norm_out": "MLP norm output",
+    "after_embedding": "embedding output",
+}
+OPERATOR_WORDS = {
+    "token_mask": "token mask",
+    "channel_mask": "channel mask",
+    "gaussian": "noise",
+    "dropout": "dropout",
+    "gain_scale": "gain scale",
+    "scale_up": "scale up",
+}
+
+
+def readable(placement: str, entry: dict) -> str:
+    """The placement in words, operator first, then the site, then the block band."""
+    words = f"{OPERATOR_WORDS.get(entry['operator'], entry['operator'])}, {POSITION_WORDS.get(entry['position'], entry['position'])}"
+    block_range = entry.get("block_range")
+    if block_range:
+        words += f", blocks {block_range[0]} to {block_range[1]}"
     if placement == RECOMMENDED:
-        label += "  (recommended)"
+        words += "  (PSBD-TM)"
     if placement == PUBLISHED:
-        label += "  (published)"
-    return label
+        words += "  (PSBD-RD)"
+    return words
 
 
 def main() -> None:
@@ -52,32 +77,20 @@ def main() -> None:
     cells = clearing_cells(coverage)
     _rows, ordered = ranking_rows(args.results_dir, cells, declaration["basis"])
 
-    placements = list(ordered)[::-1]
+    entries = {entry["id"]: entry for entry in declaration["basis"]}
+    full_count = max(ordered[p]["adaptive_n"] for p in ordered)
+    complete = {p for p in ordered if ordered[p]["adaptive_n"] == full_count}
+    placements = [p for p in list(ordered)[::-1] if p in complete]
     adaptive = [ordered[p]["adaptive_mean"] or 0.0 for p in placements]
-    matched = [ordered[p]["matched_mean"] or 0.0 for p in placements]
     positions = range(len(placements))
 
-    fig, ax = plt.subplots(figsize=(6.4, 5.2))
-    ax.barh(
-        [y + 0.2 for y in positions],
-        adaptive,
-        height=0.38,
-        color=ADAPTIVE_COLOUR,
-        label="adaptive rule (0.8)",
-    )
-    ax.barh(
-        [y - 0.2 for y in positions],
-        matched,
-        height=0.38,
-        color=MATCHED_COLOUR,
-        label="matched rule (0.6)",
-    )
+    fig, ax = plt.subplots(figsize=(6.4, 4.2))
+    ax.barh(list(positions), adaptive, height=0.62, color=ADAPTIVE_COLOUR)
     ax.set_yticks(list(positions))
-    ax.set_yticklabels([readable(p) for p in placements], fontsize=7)
-    ax.set_xlim(0.5, 1.0)
-    ax.set_xlabel("mean AUROC over 65 cells")
+    ax.set_yticklabels([readable(p, entries[p]) for p in placements], fontsize=8)
+    ax.set_xlim(0.45, 1.0)
+    ax.set_xlabel("mean AUROC")
     ax.axvline(0.5, color="black", linewidth=0.6)
-    ax.legend(loc="lower right", fontsize=8, frameon=False)
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
     fig.tight_layout()
@@ -90,7 +103,7 @@ def main() -> None:
         path.replace(".pdf", ".json"),
         GENERATOR,
         [os.path.join(args.results_dir, "coverage", "coverage.json"), args.declaration],
-        {"placements": placements, "adaptive_mean": adaptive, "matched_mean": matched},
+        {"placements": placements, "adaptive_mean": adaptive},
     )
     print(f"basis ranking: {len(placements)} placements, top {placements[-1]}")
 

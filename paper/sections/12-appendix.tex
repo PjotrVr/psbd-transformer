@@ -1,47 +1,89 @@
-\section{The backdoored models}
-\label{app:panel}
+\section{Detection results per poison rate}
+\label{app:results}
 
-The 65 models behind every detection number in the paper are those in \cref{tab:panel} whose attack success rate is at least 0.85. Models below that bar are marked with a dagger and take no part in the results, since a detector cannot be credited or blamed for a backdoor that was never planted. Each row is 1 dataset and 1 attack, and the 3 columns are the poison rates 1\%, 5\% and 10\%. A model that clears the bar prints its attack success rate over its clean accuracy. A model below the bar prints only its attack success rate.
+\Cref{tab:results-rate-1,tab:results-rate-5,tab:results-rate-10} give the full detection results at 1\%, 5\% and 10\% poisoning, 1 row per backdoored model, grouped by dataset. ASR is the attack success rate of the model, the share of triggered non-target images classified as the target, and CA is its clean accuracy on the test set. The 2 blocks of detection columns are PSBD-TM (token masking at the attention input) and PSBD-RD (dropout on the residual stream after both adds). AUROC is the one-sided area under the ROC curve, never flipped, so a value below 0.5 means the statistic ordered poisoned and clean inputs the wrong way round on that model. TPR@FPR is the share of triggered inputs flagged when the threshold is set on the 2000 clean validation images so that 10\% or 20\% of them are flagged.
 
-Reading down the table shows what the evaluation can and cannot say. BadNets, Blend, BPP and LF implant at every rate on every dataset. TaCT implants everywhere except GTSRB at 1\%. WaNet implants only at 5\% and 10\% and not on CIFAR-100, SIG only on CIFAR-10 at 10\%, and Adaptive-Blend never reaches the bar. The hard-attack subset of the main text is therefore BPP, WaNet, TaCT and SIG. \Cref{tab:panel-benign} gives the clean accuracy of the benign reference model of each dataset, trained with the same recipe, which every clean-accuracy drop in the paper subtracts against.
+A model whose attack success is below 0.85 prints its ASR and CA but no detection numbers, since a detector cannot be credited or blamed for a backdoor that was never planted. Reading the 3 tables together shows what the evaluation can and cannot say. BadNets, Blend, BPP and LF implant at every rate on every dataset. TaCT implants everywhere except GTSRB at 1\%. WaNet implants only at 5\% and 10\% and not on CIFAR-100, SIG only on CIFAR-10 at 10\% and on SVHN and EuroSAT, and Adaptive-Blend never reaches the bar. \Cref{tab:results-benign} gives the clean accuracy of the benign reference model of each dataset, trained with the same recipe, which every clean-accuracy drop in the paper subtracts against.
 
-\input{tables/panel}
-\input{tables/panel_benign}
+\input{tables/results_rate_1}
+\input{tables/results_rate_5}
+\input{tables/results_rate_10}
+\input{tables/results_benign}
+\FloatBarrier
+
+\input{sections/13-attacks}
 \FloatBarrier
 
 \section{The placement basis}
 \label{app:basis}
 
-\Cref{tab:basis-declaration} lists the 18 placements every model was swept over. A placement is a site (where the perturbation is injected, \cref{fig:vit-block}) paired with a perturbation operator (what the perturbation does), optionally restricted to a band of blocks. The family column groups sites by where they sit relative to the residual stream. Input-side sites perturb a sublayer's input before its LayerNorm. Residual-adjacent sites perturb a branch output just before its residual add or the stream just after it. The structured sites perturb attention heads and MLP hidden units, and the ported sites come from other detectors (scaling input pixels as SCALE-UP does, scaling a LayerNorm's gain as IBD-PSC does). The rates column is the ladder each placement was swept over. Masks and dropout use a share of the tensor, Gaussian noise a multiple of the tensor's standard deviation.
+\Cref{tab:basis-declaration} lists the placements every model was swept over. A placement is a site (where the perturbation is injected, \cref{fig:vit-block}) paired with a perturbation (what the hook does), optionally restricted to a band of blocks. The family column groups sites by where they sit relative to the residual stream. Input-side sites perturb a sublayer's input before its LayerNorm. Residual-adjacent sites perturb a branch output just before its residual add or the stream just after it. The structured sites perturb attention heads and MLP hidden units, and the ported sites come from other detectors, scaling input pixels as SCALE-UP does and scaling a LayerNorm's gain as IBD-PSC does. The rates column is the ladder each placement was swept over. Masks and dropout use a share of the tensor, Gaussian noise a multiple of the tensor's standard deviation. The last 6 entries were added after the first 18 had been read, to fill \cref{tab:staircase-residual,tab:staircase-dropout-sites,tab:staircase-bands}, and their sweeps are in progress.
 
 \input{tables/basis_declaration}
 \FloatBarrier
 
-\Cref{tab:basis-ranking} ranks the same 18 placements on the 65 models. For each placement the table gives its mean AUROC at the matched rule and at the adaptive rule (\cref{sec:results:reading}), its lowest single-model AUROC at the adaptive rule, and how many models fall below chance. The top 3 placements all mask whole tokens on an input to attention. The gain-scaling and noise placements sit in the bottom half, and scaling input pixels is last. Attention-input token masking is second by 0.001 at the adaptive rule behind token masking on the attention branch before its residual add, and first at the matched rule. We recommend it because it leads at matched disturbance and because its site has the mechanistic reading of \cref{sec:mechanism}. \Cref{fig:basis} plots this table.
+\Cref{tab:basis-ranking} ranks the placements with a complete sweep by mean AUROC, and gives each placement's lowest single-model AUROC. The top 3 placements all mask whole tokens on an input to attention. The gain-scaling and noise placements sit in the bottom half, and scaling input pixels is last. PSBD-TM is second by 0.001 behind token masking on the attention branch before its residual add. We recommend it over the nominal first because its site has the mechanistic reading of \cref{sec:mechanism} and because it is the more stable of the 2 across seeds. \Cref{fig:basis} plots this table.
 
 \input{tables/basis_ranking}
 \FloatBarrier
 
-\section{Depth bands}
-\label{app:bands}
+\section{Selection protocol}
+\label{app:protocol}
 
-\Cref{tab:depth-bands} is the measurement behind \cref{sec:results:depth}. Attention-input token masking and dropout before the residual add were each rerun restricted to a third of the network (blocks 1 to 4, 5 to 8 and 9 to 12) and compared, at the matched rule, with their all-blocks versions on the same models. The delta column is the paired difference from the all-blocks version with its bootstrap interval. The last column is the clean shift ratio the chosen rate reached, which confirms that the comparison is at matched disturbance. Restricting token masking to any band costs about 0.06. Restricting residual dropout to the middle band gains 0.05 and to the early band loses 0.06. The early band of token masking was not in the original basis and is being swept.
+Choosing the best of 18 placements on the models it is later reported on would give an optimistic reading, so the basis declares a split before any sweep. Placements are selected on CIFAR-10 and GTSRB and reported on CIFAR-100 and Tiny ImageNet. On the 32 held-out CIFAR-100 and Tiny ImageNet models PSBD-TM reads a mean AUROC of 0.944, above its mean of 0.935 over all models, so its lead is not a product of the selection. The numbers in the main text pool both halves.
 
-\input{tables/depth_bands}
-\FloatBarrier
+\section{The shift ratio target}
+\label{app:rate}
+
+The original rule reads each placement at the rate where 80\% of clean validation predictions change. \Cref{fig:shift-ladder} checks that target on our models by interpolating every model's rate ladder onto a shared grid of achieved shift ratios from 0.2 to 0.98 and reading AUROC and TPR along it, for all models and separately for the models at each poison rate.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig_shift_ladder.pdf}
+\caption{Mean AUROC, TPR at 1\% FPR and TPR at 10\% FPR of PSBD-TM against the achieved clean shift ratio. The dashed line marks the target of 0.8. Above 0.8 fewer models reach the target within the swept rate ladder and the mean is taken over those that do.}
+\label{fig:shift-ladder}
+\end{figure}
+
+AUROC is flat above a shift ratio of about 0.6, at 0.927 at 0.6 and 0.936 at 0.8, while the true-positive rate at a fixed false-positive budget keeps rising with the target. At 1\% FPR it goes from 0.408 at 0.6 to 0.568 at 0.8 and 0.646 at 0.9. A higher target therefore buys operating-point performance without moving the ranking statistic. The caveat is that only 52 of the 65 models reach a shift ratio of 0.9 within the swept rate ladder, so the means past 0.8 are over a shrinking subset. We keep the original target of 0.8, which sits at the knee of every curve.
+
+\section{Forward passes}
+\label{app:passes}
+
+\Cref{fig:forward-passes} plots the effect of the number of passes $k$ behind \cref{sec:robustness:passes}. Over all models the first 3 passes are available from the sweeps, and on 6 models at 1\% poisoning (BadNets, Blend and LF on CIFAR-100 and Tiny ImageNet) we swept $k$ up to 20. The sweeps at $k$ in 1, 5, 10 and 20 over the BPP, WaNet and TaCT models at 1\% and 5\% poisoning on CIFAR-100 and Tiny ImageNet are running and will replace the 6-model curve.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig_forward_passes.pdf}
+\caption{Mean AUROC, TPR at 10\% FPR and TPR at 20\% FPR of PSBD-TM against the number of forward passes $k$. The full curve is on 6 models at 1\% poisoning with a $k = 20$ sweep. The short curve is on all models, whose sweeps hold $k \le 3$.}
+\label{fig:forward-passes}
+\end{figure}
 
 \section{Per-layer profiles of the backdoor direction}
 \label{app:layers}
 
-\Cref{tab:tac-layers} gives, for each of the 18 models in \cref{fig:tac-layers}, the block at which the backdoor direction's norm relative to the clean activation peaks, that peak value, the first block at which the relative norm reaches half its final value (the onset), the final-layer linear centered kernel alignment (CKA) between clean and triggered activations (1.0 means the trigger leaves the representation unchanged), and the mean absolute trigger-activated change (TAC) per dimension at the final layer. The benign rows are the control. Their peak relative norm never exceeds 0.12 and their CKA is 1.0, so the profiles of the backdoored rows are learned structure and not an artefact of the trigger's pixels. TaCT stands out with a peak of 0.26 to 0.38 and a CKA of 0.98 to 0.99. A source-specific attack changes the representation of the few source classes only, so a direction averaged over all classes is small even though the attack succeeds.
+\Cref{tab:tac-layers} gives, for each of the 18 models in \cref{fig:tac-layers}, the block at which the backdoor direction's norm relative to the clean activation peaks, that peak value, the first block at which the relative norm reaches half its final value (the onset), the final-layer linear centered kernel alignment (CKA) \cite{kornblith2019cka} between clean and triggered activations (1.0 means the trigger leaves the representation unchanged), and the mean absolute trigger-activated change (TAC) per dimension at the final layer. The benign rows are the control. Their peak relative norm never exceeds 0.12 and their CKA is 1.0, so the profiles of the backdoored rows are learned structure and not an artefact of the trigger's pixels. TaCT stands out with a peak of 0.26 to 0.38 and a CKA of 0.98 to 0.99. A source-specific attack changes the representation of the few source classes only, so a direction averaged over all classes is small even though the attack succeeds.
 
 \input{tables/tac_layers}
 \FloatBarrier
 
+\section{Comparison with Karayal\c{c}{\i}n et al. in detail}
+\label{app:picek}
+
+Karayal\c{c}{\i}n et al.~\cite{karayalcin2026backdoor} remove a backdoor by projecting the direction of 1 selected layer out of every weight matrix that writes to the residual stream, the patch embedding and all 24 attention and MLP output projections, and report attack success falling from 97.7 to 6.7 on average with Blend on CIFAR-100 the 1 survivor. \Cref{tab:erasure} repeats their procedure on our models, with their layer selection rule, and adds 2 controls, the same edit restricted to blocks 10 and 11 and the same edit with a random direction of the same norm.
+
+\IfFileExists{tables/erasure.tex}{\input{tables/erasure}}{}
+\FloatBarrier
+
+The removal reproduces. Every attack except Blend on CIFAR-100 falls to an attack success at or below 0.034 at a clean-accuracy cost of 0.4 to 9.5 points, Blend on CIFAR-100 stays at 1.000 at both poison rates exactly as they report, and neither control moves any attack. Our first attempt had edited only the last 2 blocks and left every attack intact, which the blocks 10 and 11 column now shows to be expected. The direction is re-created by every block, so removing it means removing it everywhere.
+
+Their second claim, that distributed triggers reach the class token earlier than patch triggers, is measured independently in \cref{fig:tac-layers}. It holds on CIFAR-100 and Tiny ImageNet, where the onset of the backdoor direction comes earlier for Blend, BPP and LF than for BadNets, and it reverses on GTSRB, which they did not run.
+
+Their third contribution is a data-free detector that scores the classifier head's rows against the early layers' output projections and flags a model when 1 class stands out by more than 3 standard deviations, and it is reported to flag WaNet and BPP reliably and patch triggers never. We ran the rule with their grid over the number of layers and the floor of the standard deviation on 15 of our backdoored models and 4 benign ones. It names the correct target on all 5 WaNet models, with a best $Z$ of 35 to 139, and on BPP only on CIFAR-10. On CIFAR-100 and Tiny ImageNet it names a wrong class at every poison rate, it never fires on BadNets, Blend or TaCT, and it raises a false alarm on 3 to 15\% of the grid on every benign model. Their WaNet result reproduces, their BPP result does not on 2 of 3 datasets, and \cref{tab:direction} says why a weight-space rule reads little. The backdoor is a rotated direction, not a coordinate pattern, and a score built from coordinates of the head and the weights sees only its projection.
+
 \section{Seed replicates}
 \label{app:seeds}
 
-\Cref{tab:seeds} gives the 3-seed readings behind \cref{sec:robustness:seeds}. Each row is a backdoored model trained 3 times with different seeds. The columns give the smallest attack success rate among the 3 runs, the AUROC of attention-input token masking on each seed with its standard deviation, the same for post-residual dropout, and the mean and standard deviation of their paired gain. Token masking's standard deviation stays under 0.04 on every row, while post-residual dropout's reaches 0.28 on CIFAR-100 BadNets at 5\%. Further seeds are being trained for the hard attacks and the other datasets.
+\Cref{tab:seeds} gives the 3-seed readings behind \cref{sec:robustness:seeds}. Each row is a backdoored model trained 3 times with different seeds. The columns give the smallest attack success rate among the 3 runs, the AUROC of PSBD-TM on each seed with its standard deviation, the same for PSBD-RD, and the mean and standard deviation of their paired gain. PSBD-TM's standard deviation stays under 0.04 on every row, while PSBD-RD's reaches 0.28 on CIFAR-100 BadNets at 5\%.
 
 \input{tables/seeds}
 \FloatBarrier
@@ -49,6 +91,6 @@ Reading down the table shows what the evaluation can and cannot say. BadNets, Bl
 \section{The other detectors on the smoke-test models}
 \label{app:smoke}
 
-\Cref{tab:detector-smoke} is the smoke test behind \cref{sec:robustness:detectors}. 10 input-level detectors, each ported and checked against its reference implementation, run on a benign, a BadNets and a Blend GTSRB model at 5\% poisoning with 500 validation images, on the same splits and threshold rule as PSBD. The passes column is the number of forward passes each detector spends per input and the last column the measured seconds per input on 1 A100. Every detector reads chance on the benign model, which is the check that its sign convention is right. On BadNets STRIP, CD-L, TED and TeCo reach 0.99 or more, so a patch trigger at 5\% is easy for every consistency detector. The ranking on the hard attacks is what the full run will decide. The 2 detectors that fail, IBD-PSC and SentiNet, fail for ViT-specific reasons stated in \cref{sec:robustness:detectors}.
+\Cref{tab:detector-smoke} is the smoke test behind \cref{sec:robustness:detectors}. 10 input-level detectors, each ported and checked against its reference implementation, run on a benign, a BadNets and a Blend GTSRB model at 5\% poisoning with 500 validation images, on the same splits and threshold rule as PSBD. The passes column is the number of forward passes each detector spends per input and the last column the measured seconds per input on 1 A100. Every detector reads chance on the benign model, which is the check that its sign convention is right. On BadNets STRIP, CD-L, TED and TeCo reach 0.99 or more, so a patch trigger at 5\% is easy for every consistency detector. The ranking on the other attacks is what the full run will decide. The 2 detectors that fail, IBD-PSC and SentiNet, fail for ViT-specific reasons stated in \cref{sec:robustness:detectors}.
 
 \input{tables/detector_smoke}

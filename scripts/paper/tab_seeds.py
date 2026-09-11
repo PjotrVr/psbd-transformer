@@ -21,8 +21,10 @@ from cli.compare_detectors import psbd_values  # noqa: E402
 from defences.decision import PUBLISHED_PLACEMENT, RECOMMENDED_PLACEMENT  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     HEADLINE_KEY,
+    attack_label,
     build_parser_with_checkpoints,
     clearing_cells,
+    dataset_label,
     fmt,
     load_args_json,
     load_coverage,
@@ -81,7 +83,9 @@ def replicate_asr(checkpoints_dir: str, folder: str) -> list[float]:
 def main() -> None:
     args = build_parser_with_checkpoints(__doc__).parse_args()
     coverage_path = os.path.join(args.results_dir, "coverage", "coverage.json")
-    cells = replicated_cells(args.results_dir, clearing_cells(load_coverage(args.results_dir)))
+    cells = replicated_cells(
+        args.results_dir, clearing_cells(load_coverage(args.results_dir))
+    )
     inputs = [
         coverage_path,
         f"{args.results_dir}/<folder>[_seed_N]/psbd_metrics.json ({len(cells)} cells)",
@@ -92,7 +96,9 @@ def main() -> None:
     recommended_sds, published_sds, gain_sds, gain_means = [], [], [], []
     sign_flips = 0
     for cell in cells:
-        recommended = [cell["seeds"][seed]["recommended"] for seed in sorted(cell["seeds"])]
+        recommended = [
+            cell["seeds"][seed]["recommended"] for seed in sorted(cell["seeds"])
+        ]
         published = [cell["seeds"][seed]["published"] for seed in sorted(cell["seeds"])]
         gains = [rec - pub for rec, pub in zip(recommended, published)]
         recommended_sds.append(std_or_none(recommended))
@@ -104,8 +110,8 @@ def main() -> None:
         asr = replicate_asr(args.checkpoints_dir, cell["folder_name"])
         rows.append(
             [
-                cell["dataset"],
-                cell["attack"],
+                dataset_label(cell["dataset"]),
+                attack_label(cell["attack"]),
                 f"{cell['poison_rate']:g}",
                 fmt(min(asr)) if asr else "--",
                 " / ".join(fmt(value) for value in recommended),
@@ -123,8 +129,9 @@ def main() -> None:
         inputs=inputs,
         caption=(
             "Seed replicates of the headline comparison at the adaptive rule and "
-            "the headline quantile: AUROC of the recommended and the published "
-            "placement at seeds 0, 1 and 2 of every replicated clearing cell, the "
+            "the headline quantile: AUROC of the token\\_mask placement at the "
+            "attention input and the dropout placement after the residual add at "
+            "seeds 0, 1 and 2 of every replicated model whose attack succeeded, the "
             "sample standard deviation over seeds, and the paired gain's mean and "
             "spread. The ASR column is the lowest replicate's attack success."
         ),
@@ -134,9 +141,9 @@ def main() -> None:
             "attack",
             "rate",
             "min ASR",
-            "recommended s0 / s1 / s2",
+            "token mask, attention input s0 / s1 / s2",
             "sd",
-            "published s0 / s1 / s2",
+            "dropout, after residual add s0 / s1 / s2",
             "sd",
             "gain mean",
             "gain sd",
@@ -146,10 +153,18 @@ def main() -> None:
     )
 
     macros = {
-        "seeds_per_cell": (str(1 + len(REPLICATE_SEEDS)), "training seeds per replicated cell"),
-        "seed_cells": (str(len(cells)), "clearing cells with 3 training seeds at both placements"),
+        "seeds_per_cell": (
+            str(1 + len(REPLICATE_SEEDS)),
+            "training seeds per replicated cell",
+        ),
+        "seed_cells": (
+            str(len(cells)),
+            "clearing cells with 3 training seeds at both placements",
+        ),
         "seed_sd_recommended": (
-            fmt(mean_or_none([value for value in recommended_sds if value is not None])),
+            fmt(
+                mean_or_none([value for value in recommended_sds if value is not None])
+            ),
             "mean over replicated cells of the recommended placement's AUROC "
             "standard deviation across 3 seeds",
         ),
@@ -163,11 +178,16 @@ def main() -> None:
             "mean over replicated cells of the paired gain's standard deviation across 3 seeds",
         ),
         "seed_sd_gain_max": (
-            fmt(max(value for value in gain_sds if value is not None)) if gain_sds else "--",
+            fmt(max(value for value in gain_sds if value is not None))
+            if gain_sds
+            else "--",
             "largest per-cell standard deviation of the paired gain across 3 seeds",
         ),
         "seed_gain_mean": (
-            fmt(mean_or_none([value for value in gain_means if value is not None]), signed=True),
+            fmt(
+                mean_or_none([value for value in gain_means if value is not None]),
+                signed=True,
+            ),
             "mean over replicated cells of the seed-averaged paired gain, "
             "recommended minus published at the adaptive rule",
         ),

@@ -25,7 +25,6 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 from defences.decision import (  # noqa: E402
     ADAPTIVE_SHIFT_TARGET,
-    PLACEMENT_MATCH_TARGET,
     RECOMMENDED_PLACEMENT,
     interpolate_at_target_shift,
 )
@@ -147,32 +146,29 @@ def aggregate_targets(
     return aggregated
 
 
-def draw_panel(ax, grid, all_agg, hard_agg, metric, ylabel):
+RATE_COLOURS = {0.01: "#D55E00", 0.05: "#009E73", 0.1: "#CC79A7"}
+
+
+def draw_panel(ax, grid, all_agg, rate_aggs, metric, ylabel):
     grid_array = np.array(grid)
-    for label, agg, colour in (
-        ("all 65 backdoored models", all_agg, ALL_CELLS_COLOUR),
-        ("29 models under hard attacks (BPP, WaNet, TaCT, SIG)", hard_agg, HARD_ATTACKS_COLOUR),
-    ):
+    series = [("all models", all_agg, ALL_CELLS_COLOUR)] + [
+        (f"{int(round(rate * 100))}% poisoning", agg, RATE_COLOURS[rate])
+        for rate, agg in sorted(rate_aggs.items())
+    ]
+    for label, agg, colour in series:
         mean = np.array([v if v is not None else np.nan for v in agg[metric]["mean"]])
-        std = np.array(agg[metric]["std"])
         ax.plot(grid_array, mean, linewidth=1.4, color=colour, label=label)
-        ax.fill_between(
-            grid_array, mean - std, mean + std, color=colour, alpha=0.18, linewidth=0
-        )
-
-    for target, style in ((PLACEMENT_MATCH_TARGET, ":"), (ADAPTIVE_SHIFT_TARGET, "--")):
-        ax.axvline(target, color="black", linewidth=0.8, linestyle=style)
-
-    ax.set_xlabel("clean-validation shift ratio (achieved, target)")
+    ax.axvline(ADAPTIVE_SHIFT_TARGET, color="black", linestyle="--", linewidth=0.8)
+    ax.set_xlabel("clean-validation shift ratio (achieved)")
     ax.set_ylabel(ylabel)
-    ax.set_xlim(0.20, 0.98)
+    ax.set_xlim(grid[0], grid[-1])
 
 
-def write_figure(args, all_agg, hard_agg) -> str:
+def write_figure(args, all_agg, rate_aggs) -> str:
     fig, axes = plt.subplots(1, 3, figsize=(9.6, 3.0), sharex=True)
-    draw_panel(axes[0], GRID, all_agg, hard_agg, "auroc", "AUROC")
-    draw_panel(axes[1], GRID, all_agg, hard_agg, "tpr01", "TPR at 1% FPR")
-    draw_panel(axes[2], GRID, all_agg, hard_agg, "tpr10", "TPR at 10% FPR")
+    draw_panel(axes[0], GRID, all_agg, rate_aggs, "auroc", "AUROC")
+    draw_panel(axes[1], GRID, all_agg, rate_aggs, "tpr01", "TPR at 1% FPR")
+    draw_panel(axes[2], GRID, all_agg, rate_aggs, "tpr10", "TPR at 10% FPR")
     axes[0].legend(loc="lower right", fontsize=6)
     fig.tight_layout()
 
@@ -190,19 +186,22 @@ def main() -> None:
     cells = clearing_cells(coverage)
     primary_cells = [cell for cell in cells if cell["dataset"] in PRIMARY_DATASETS]
 
-    ladders, folders_by_group = {}, {"all": [], "hard": []}
+    ladders, folders_by_group = {}, {"all": []}
+    rates = {}
     for cell in primary_cells:
         ladder = cell_ladder(args.results_dir, cell["folder_name"])
         if ladder is None:
             continue
         ladders[cell["folder_name"]] = ladder
         folders_by_group["all"].append(cell["folder_name"])
-        if cell["attack"] in HARD_ATTACKS:
-            folders_by_group["hard"].append(cell["folder_name"])
+        rates.setdefault(float(cell["poison_rate"]), []).append(cell["folder_name"])
 
     curves = {folder: cell_curve(ladder, GRID) for folder, ladder in ladders.items()}
     all_agg = aggregate_curve([curves[f] for f in folders_by_group["all"]], GRID)
-    hard_agg = aggregate_curve([curves[f] for f in folders_by_group["hard"]], GRID)
+    rate_aggs = {
+        rate: aggregate_curve([curves[f] for f in folders], GRID)
+        for rate, folders in rates.items()
+    }
 
     at_targets = {
         folder: cell_at_targets(ladder, REPORT_TARGETS)
@@ -211,22 +210,16 @@ def main() -> None:
     all_targets_agg = aggregate_targets(
         [at_targets[f] for f in folders_by_group["all"]], REPORT_TARGETS
     )
-    hard_targets_agg = aggregate_targets(
-        [at_targets[f] for f in folders_by_group["hard"]], REPORT_TARGETS
-    )
 
     print(
-        f"{len(ladders)} of {len(primary_cells)} primary clearing cells carry a "
-        f"{RECOMMENDED_PLACEMENT} rate ladder, {len(folders_by_group['hard'])} of "
-        "them hard attacks"
+        f"{len(ladders)} of {len(primary_cells)} backdoored models carry a "
+        f"{RECOMMENDED_PLACEMENT} rate ladder"
     )
 
-    figure_path = write_figure(args, all_agg, hard_agg)
+    figure_path = write_figure(args, all_agg, rate_aggs)
 
     plotted = {
         "recommended_placement": RECOMMENDED_PLACEMENT,
-        "hard_attacks": list(HARD_ATTACKS),
-        "matched_rule_target": PLACEMENT_MATCH_TARGET,
         "adaptive_rule_target": ADAPTIVE_SHIFT_TARGET,
         "grid": GRID,
         "all_cells": {
@@ -234,10 +227,9 @@ def main() -> None:
             "curve": all_agg,
             "at_targets": all_targets_agg,
         },
-        "hard_attacks_cells": {
-            "folders": folders_by_group["hard"],
-            "curve": hard_agg,
-            "at_targets": hard_targets_agg,
+        "per_rate": {
+            str(rate): {"folders": folders, "curve": rate_aggs[rate]}
+            for rate, folders in rates.items()
         },
         "per_cell_at_targets": at_targets,
     }
