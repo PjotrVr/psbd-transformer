@@ -122,7 +122,9 @@ def tier_of(metadata: dict) -> int | None:
     return 3
 
 
-def ledger_runs(coverage_path: str, checkpoints_dir: str) -> list[tuple[dict, int]]:
+def ledger_runs(
+    coverage_path: str, checkpoints_dir: str, seeds_wanted: int = SEEDS_WANTED
+) -> list[tuple[dict, int]]:
     """(metadata, seed) for every seed a clearing panel cell still lacks, hardest first.
 
     Order: hard attacks before easy, lower poison rate first, primary datasets
@@ -162,7 +164,7 @@ def ledger_runs(coverage_path: str, checkpoints_dir: str) -> list[tuple[dict, in
                     if json.load(handle).get("asr") is not None:
                         present.append(seed)
         missing = [seed for seed in range(1, 6) if seed not in present][
-            : max(0, SEEDS_WANTED - len(present))
+            : max(0, seeds_wanted - len(present))
         ]
         runs += [(metadata, seed) for seed in missing]
     return runs
