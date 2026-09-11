@@ -561,6 +561,67 @@
         0.95,
         0.99
       ]
+    },
+    {
+      "id": "before_attention_residual_dropout",
+      "position": "before_attention_residual",
+      "operator": "dropout",
+      "block_range": null,
+      "family": "residual_adjacent",
+      "note": "attention branch output before the add with dropout, the site B counterpart of the site A entry, added 2026-09-11 to test whether the A against B difference is specific to token masking",
+      "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "before_attention_residual_channel_mask",
+      "position": "before_attention_residual",
+      "operator": "channel_mask",
+      "block_range": null,
+      "family": "residual_adjacent",
+      "note": "attention branch output before the add with channel_mask, the site B counterpart of the site A entry, added 2026-09-11 to test whether the A against B difference is specific to token masking",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "before_attention_residual_gaussian",
+      "position": "before_attention_residual",
+      "operator": "gaussian",
+      "block_range": null,
+      "family": "residual_adjacent",
+      "note": "attention branch output before the add with gaussian, the site B counterpart of the site A entry, added 2026-09-11 to test whether the A against B difference is specific to token masking",
+      "rates": [
+        0.05,
+        0.1,
+        0.2,
+        0.3,
+        0.5,
+        0.75,
+        1.0,
+        1.5,
+        2.0,
+        3.0,
+        5.0,
+        8.0
+      ]
     }
   ],
   "combinations": {
