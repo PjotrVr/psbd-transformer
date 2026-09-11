@@ -169,7 +169,7 @@ def write_figure(paper_dir: str, panels: list[dict]) -> str:
         draw_panel(ax, data)
 
     for ax in axes[1, :]:
-        ax.set_xlabel("fractional prediction shift (PSU)")
+        ax.set_xlabel("prediction shift uncertainty (PSU)")
     for ax in axes[:, 0]:
         ax.set_ylabel("density")
 

@@ -15,7 +15,7 @@ A sweep runs 1 placement on 1 backdoored model over its rate ladder and stores t
 The ResNet placement of the original work has no literal counterpart in a ViT block, which has 2 residual adds and no activation after them. We read it as dropout on the residual stream after both adds, site C in \cref{fig:vit-block}, and call PSBD with that placement PSBD-RD. The placement this paper arrives at masks whole tokens at the attention input, site A, and we call it PSBD-TM.
 
 \paragraph{The statistic.}
-We use the fractional form of the statistic, the drop in the predicted class's probability divided by that probability without the perturbation, so that a confident and an unconfident clean prediction that lose the same share of their probability score alike. The decision is one-sided, low means poisoned, exactly as in the original.
+The detection statistic is the prediction shift uncertainty (PSU) of \cref{sec:background}, in its fractional form, the drop in the predicted class's probability under the perturbation divided by that probability without it, so that a confident and an unconfident clean prediction that lose the same share of their probability score alike. We write PSU for this quantity throughout. The decision is one-sided, low PSU means poisoned, exactly as in the original.
 
 \paragraph{The rate.}
 We follow the original rule and read every placement at the smallest rate at which the perturbation changes 80\% of the clean validation predictions. Because the same nominal rate is a very different disturbance at different sites, this rule is also what makes placements comparable. Each placement is read at the disturbance the rule assigns it, and \cref{app:rate} checks that 0.8 is a good target on our models.

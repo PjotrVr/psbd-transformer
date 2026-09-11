@@ -4,7 +4,7 @@
 \subsection{An adaptive attacker and the union of probes}
 \label{sec:robustness:adaptive}
 
-The PSBD paper tests an attacker who knows the defence and adds a loss term that lowers the prediction shift of poisoned samples, and reports that the defence survives because its rate rule moves to a higher dropout rate. We trained a stronger version of that attacker on ViT. It is a hinge loss that pushes the poisoned samples' fractional shift up to the clean samples' shift under the exact probe the defender uses, PSBD-TM, trained jointly with the backdoor on CIFAR-100 for BadNets, Blend, BPP, LF and Adaptive-Blend at 3 poison rates. 14 of the 15 evasive models keep an ASR of at least 0.9 and lose 3 points of clean accuracy on average, and \cref{tab:adaptive} summarises them.
+The PSBD paper tests an attacker who knows the defence and adds a loss term that lowers the prediction shift of poisoned samples, and reports that the defence survives because its rate rule moves to a higher dropout rate. We trained a stronger version of that attacker on ViT. It is a hinge loss that pushes the poisoned samples' PSU up to the clean samples' PSU under the exact probe the defender uses, PSBD-TM, trained jointly with the backdoor on CIFAR-100 for BadNets, Blend, BPP, LF and Adaptive-Blend at 3 poison rates. 14 of the 15 evasive models keep an ASR of at least 0.9 and lose 3 points of clean accuracy on average, and \cref{tab:adaptive} summarises them.
 
 \begin{table*}[t]
 \centering\small
@@ -26,7 +26,7 @@ Against a single fixed probe the attacker wins. PSBD-TM falls from a mean AUROC 
 
 What does hold is that the evasion does not transfer between probes. The attacker's loss is computed through 1 site and 1 perturbation, so its gradient only touches the features that probe reads. Dropout at the attention input still reads 0.81 on average on the evasive models and gain scaling of the MLP LayerNorm output reads 0.98, against 0.23 for the probe the attacker trained against.
 
-The defence we recommend is therefore a union of probes. Let $s_j(x)$ be the fractional prediction shift of input $x$ under probe $j$, and let $r_j(x)$ be its rank, the share of clean validation inputs whose statistic under probe $j$ is below $s_j(x)$, so that a triggered input, which barely shifts, has a rank near 0. The union score is the most suspicious rank across probes,
+The defence we recommend is therefore a union of probes. Let $s_j(x)$ be the PSU of input $x$ under probe $j$, and let $r_j(x)$ be its rank, the share of clean validation inputs whose statistic under probe $j$ is below $s_j(x)$, so that a triggered input, which barely shifts, has a rank near 0. The union score is the most suspicious rank across probes,
 \begin{equation}
   u(x) = \min_{j} r_j(x),
 \end{equation}
