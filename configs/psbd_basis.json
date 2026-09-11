@@ -242,6 +242,25 @@
       ]
     },
     {
+      "id": "after_attention_residual",
+      "position": "after_attention_residual",
+      "operator": "dropout",
+      "block_range": null,
+      "family": "residual_adjacent",
+      "note": "dropout on the attention add only, the half of post_residual isolated from the MLP add, set beside pre_residual and post_residual",
+      "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
       "id": "pre_residual",
       "position": "pre_residual",
       "operator": "dropout",
@@ -430,6 +449,106 @@
       ],
       "family": "depth_band",
       "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        0.95,
+        0.99
+      ]
+    },
+    {
+      "id": "before_attention_norm",
+      "position": "before_attention_norm",
+      "operator": "dropout",
+      "block_range": null,
+      "family": "input_side",
+      "note": "attention input before its LayerNorm, dropout held fixed against the token_mask and channel_mask entries at the same site",
+      "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "before_attention",
+      "position": "before_attention",
+      "operator": "dropout",
+      "block_range": null,
+      "family": "input_side",
+      "note": "attention input after its LayerNorm, the ln_1 output rather than its input",
+      "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "before_mlp_norm",
+      "position": "before_mlp_norm",
+      "operator": "dropout",
+      "block_range": null,
+      "family": "input_side",
+      "note": "MLP input before its LayerNorm, the ln_2 pre-hook. before_mlp is the post-norm site instead (torchvision's EncoderBlock is pre-norm, so mlp reads ln_2's output), which is why this entry names before_mlp_norm and not before_mlp",
+      "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "after_embedding",
+      "position": "after_embedding",
+      "operator": "dropout",
+      "block_range": null,
+      "family": "input_side",
+      "note": "embedding output, the patch and position embedding sum read by encoder.dropout's own pre-hook",
+      "rates": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    {
+      "id": "before_attention_norm_blocks_1_4_token_mask",
+      "position": "before_attention_norm",
+      "operator": "token_mask",
+      "block_range": [
+        1,
+        4
+      ],
+      "family": "depth_band",
+      "rates": [
+        0.05,
         0.1,
         0.2,
         0.3,
