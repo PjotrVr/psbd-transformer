@@ -196,7 +196,7 @@ def main() -> None:
             "Every basis placement on the clearing cells, ranked by mean AUROC at "
             "the headline quantile under the adaptive rule. n is the number of "
             "cells whose rate ladder reached the rule's target. The floor is the "
-            "worst single cell and an inversion is a cell below chance."
+            "worst single cell and the last column counts cells whose AUROC is under 0.5."
         ),
         label="tab:basis-ranking",
         header=[
@@ -208,7 +208,7 @@ def main() -> None:
             "n adapt",
             "AUROC adaptive",
             "floor",
-            "inversions",
+            "below chance",
         ],
         rows=rows,
         align="rllrrrrrr",

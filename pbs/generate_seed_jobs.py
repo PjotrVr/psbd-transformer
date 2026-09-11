@@ -29,18 +29,24 @@ PANEL = ("badnet_a2o", "blend", "wanet", "lc", "adaptive_blend")
 MAIN_RATES = (0.01, 0.05, 0.1)
 PRIMARY_DATASETS = ("cifar100", "tiny")
 
-# Median observed wall clock per training run, from the trained_started_at to
-# trained_ended_at spans already recorded in args.json.
+# Median wall clock per plain Adam training run, from the trained_started_at to
+# trained_ended_at spans in args.json with SAM and evasion runs excluded (both
+# cost 2 to 4 times a plain run and had doubled an earlier version of this table).
 MEDIAN_MINUTES = {
-    ("vit", "cifar10"): 170,
-    ("vit", "cifar100"): 348,
-    ("vit", "gtsrb"): 90,
-    ("vit", "tiny"): 692,
-    ("swin", "cifar10"): 130,
-    ("swin", "cifar100"): 276,
-    ("swin", "gtsrb"): 90,
-    ("swin", "tiny"): 548,
+    ("vit", "cifar10"): 84,
+    ("vit", "cifar100"): 84,
+    ("vit", "gtsrb"): 46,
+    ("vit", "tiny"): 167,
+    ("vit", "svhn"): 124,
+    ("vit", "eurosat"): 37,
+    ("swin", "cifar10"): 65,
+    ("swin", "cifar100"): 65,
+    ("swin", "gtsrb"): 36,
+    ("swin", "tiny"): 129,
 }
+HARD_ATTACKS = ("bpp", "wanet", "tact", "sig", "lc", "adaptive_blend")
+DATASET_PRIORITY = ("cifar100", "tiny", "gtsrb", "cifar10", "svhn", "eurosat")
+SEEDS_WANTED = 3
 
 TEMPLATE = """#!/bin/bash
 #PBS -q gpu
@@ -114,6 +120,52 @@ def tier_of(metadata: dict) -> int | None:
     if architecture == "vit":
         return 2
     return 3
+
+
+def ledger_runs(coverage_path: str, checkpoints_dir: str) -> list[tuple[dict, int]]:
+    """(metadata, seed) for every seed a clearing panel cell still lacks, hardest first.
+
+    Order: hard attacks before easy, lower poison rate first, primary datasets
+    first. A cell counts a seed as present when checkpoints/<folder>_seed_<n>/
+    args.json exists with a recorded attack success rate.
+    """
+    with open(coverage_path) as handle:
+        cells = [
+            c for c in json.load(handle)["cells"] if c.get("asr_class") == "clears"
+        ]
+
+    def priority(cell: dict) -> tuple:
+        hard = 0 if cell["attack"] in HARD_ATTACKS else 1
+        dataset = (
+            DATASET_PRIORITY.index(cell["dataset"])
+            if cell["dataset"] in DATASET_PRIORITY
+            else 9
+        )
+        return (hard, cell["poison_rate"], dataset, cell["attack"])
+
+    runs = []
+    for cell in sorted(cells, key=priority):
+        folder = cell["folder_name"]
+        args_path = os.path.join(checkpoints_dir, folder, "args.json")
+        if not os.path.exists(args_path):
+            continue
+        with open(args_path) as handle:
+            metadata = json.load(handle)
+        metadata["folder"] = folder
+        present = [0]
+        for seed in range(1, 6):
+            replicate = os.path.join(
+                checkpoints_dir, seeded_folder(folder, seed), "args.json"
+            )
+            if os.path.exists(replicate):
+                with open(replicate) as handle:
+                    if json.load(handle).get("asr") is not None:
+                        present.append(seed)
+        missing = [seed for seed in range(1, 6) if seed not in present][
+            : max(0, SEEDS_WANTED - len(present))
+        ]
+        runs += [(metadata, seed) for seed in missing]
+    return runs
 
 
 def seeded_folder(folder: str, seed: int) -> str:
@@ -194,6 +246,17 @@ def parse_args() -> argparse.Namespace:
     """The command line: tier, seeds, wall clock budget, directories and dry-run flag."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tier", type=int, default=1, choices=(1, 2, 3))
+    parser.add_argument(
+        "--from-ledger",
+        default=None,
+        help="path to results/coverage/coverage.json: replicate every clearing cell to 3 seeds, hardest first, instead of a tier",
+    )
+    parser.add_argument(
+        "--max-runs",
+        type=int,
+        default=None,
+        help="cap the number of training runs emitted",
+    )
     parser.add_argument("--seeds", type=int, nargs="+", default=[1, 2])
     parser.add_argument("--hours", type=float, default=12.0)
     parser.add_argument("--checkpoints-dir", default=os.path.join(BASE, "checkpoints"))
@@ -206,14 +269,21 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     """Select the tier, pack its runs into jobs, report the plan and write the job files."""
     args = parse_args()
-    selected = discover(args.tier, args.checkpoints_dir)
-    runs = [(metadata, seed) for metadata in selected for seed in args.seeds]
+    if args.from_ledger:
+        runs = ledger_runs(args.from_ledger, args.checkpoints_dir)
+        selected = sorted({metadata["folder"] for metadata, _ in runs})
+    else:
+        selected = discover(args.tier, args.checkpoints_dir)
+        runs = [(metadata, seed) for metadata in selected for seed in args.seeds]
+    if args.max_runs is not None:
+        runs = runs[: args.max_runs]
     jobs = pack(runs, args.hours * 60 * 0.9)
 
     total_minutes = sum(
         MEDIAN_MINUTES.get((m["architecture"], m["dataset"]), 300) for m, _ in runs
     )
-    print(f"tier {args.tier}: {len(selected)} checkpoints")
+    source = f"ledger {args.from_ledger}" if args.from_ledger else f"tier {args.tier}"
+    print(f"{source}: {len(selected)} checkpoints")
     print(f"seeds {args.seeds}: {len(runs)} training runs")
     print(f"estimated GPU time: {total_minutes / 60:.0f} hours")
     print(f"jobs at {args.hours}h: {len(jobs)}")

@@ -164,6 +164,9 @@ def write_table(
         r"\small",
         f"\\caption{{{caption}}}",
         f"\\label{{{label}}}",
+        # adjustbox scales a table down to the column width and never up, so a
+        # wide generated table fits the 2-column layout without editing by hand.
+        r"\begin{adjustbox}{max width=\linewidth}",
         f"\\begin{{tabular}}{{{columns}}}",
         r"\toprule",
         " & ".join(tex_escape(cell) for cell in header) + r" \\",
@@ -171,7 +174,7 @@ def write_table(
     ]
     for row in rows:
         lines.append(" & ".join(tex_escape(cell) for cell in row) + r" \\")
-    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}", ""]
+    lines += [r"\bottomrule", r"\end{tabular}", r"\end{adjustbox}", r"\end{table}", ""]
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as handle:
         handle.write("\n".join(lines))
