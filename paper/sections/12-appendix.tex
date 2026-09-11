@@ -1,37 +1,54 @@
-\section{The panel}
+\section{The backdoored models}
 \label{app:panel}
-\Cref{tab:panel} lists every trained cell of the ViT panel with its attack success rate and clean accuracy. A cell enters the detection results when its attack success rate is at least 0.85; cells below the bar are marked with a dagger. \Cref{tab:panel-benign} gives the benign references.
+
+The 65 models behind every detection number in the paper are those in \cref{tab:panel} whose attack success rate is at least 0.85. Models below that bar are marked with a dagger and take no part in the results, since a detector cannot be credited or blamed for a backdoor that was never planted. Each row is 1 dataset and 1 attack, and the 3 columns are the poison rates 1\%, 5\% and 10\%. A model that clears the bar prints its attack success rate over its clean accuracy. A model below the bar prints only its attack success rate.
+
+Reading down the table shows what the evaluation can and cannot say. BadNets, Blend, BPP and LF implant at every rate on every dataset. TaCT implants everywhere except GTSRB at 1\%. WaNet implants only at 5\% and 10\% and not on CIFAR-100, SIG only on CIFAR-10 at 10\%, and Adaptive-Blend never reaches the bar. The hard-attack subset of the main text is therefore BPP, WaNet, TaCT and SIG. \Cref{tab:panel-benign} gives the clean accuracy of the benign reference model of each dataset, trained with the same recipe, which every clean-accuracy drop in the paper subtracts against.
 
 \input{tables/panel}
 \input{tables/panel_benign}
+\FloatBarrier
 
 \section{The placement basis}
 \label{app:basis}
-\Cref{tab:basis-declaration} declares the 18 placements with their position, operator, family and rate ladder, and \cref{tab:basis-ranking} ranks them on the 65 cells at both rules with each placement's worst cell and number of inverted cells. \Cref{fig:basis} in the main text plots the same ranking.
+
+\Cref{tab:basis-declaration} lists the 18 placements every model was swept over. A placement is a site (where the perturbation is injected, \cref{fig:vit-block}) paired with a perturbation operator (what the perturbation does), optionally restricted to a band of blocks. The family column groups sites by where they sit relative to the residual stream. Input-side sites perturb a sublayer's input before its LayerNorm. Residual-adjacent sites perturb a branch output just before its residual add or the stream just after it. The structured sites perturb attention heads and MLP hidden units, and the ported sites come from other detectors (scaling input pixels as SCALE-UP does, scaling a LayerNorm's gain as IBD-PSC does). The rates column is the ladder each placement was swept over. Masks and dropout use a share of the tensor, Gaussian noise a multiple of the tensor's standard deviation.
 
 \input{tables/basis_declaration}
+\FloatBarrier
+
+\Cref{tab:basis-ranking} ranks the same 18 placements on the 65 models. For each placement the table gives its mean AUROC at the matched rule and at the adaptive rule (\cref{sec:results:reading}), its lowest single-model AUROC at the adaptive rule, and how many models fall below chance. The top 3 placements all mask whole tokens on an input to attention. The gain-scaling and noise placements sit in the bottom half, and scaling input pixels is last. Attention-input token masking is second by 0.001 at the adaptive rule behind token masking on the attention branch before its residual add, and first at the matched rule. We recommend it because it leads at matched disturbance and because its site has the mechanistic reading of \cref{sec:mechanism}. \Cref{fig:basis} plots this table.
+
 \input{tables/basis_ranking}
+\FloatBarrier
 
 \section{Depth bands}
 \label{app:bands}
-\Cref{tab:depth-bands} gives the depth-band placements behind \cref{sec:results:depth}: the recommended placement and dropout before the residual add, each restricted to a third of the network, against their all-blocks versions at the matched rule.
+
+\Cref{tab:depth-bands} is the measurement behind \cref{sec:results:depth}. Attention-input token masking and dropout before the residual add were each rerun restricted to a third of the network (blocks 1 to 4, 5 to 8 and 9 to 12) and compared, at the matched rule, with their all-blocks versions on the same models. The delta column is the paired difference from the all-blocks version with its bootstrap interval. The last column is the clean shift ratio the chosen rate reached, which confirms that the comparison is at matched disturbance. Restricting token masking to any band costs about 0.06. Restricting residual dropout to the middle band gains 0.05 and to the early band loses 0.06. The early band of token masking was not in the original basis and is being swept.
 
 \input{tables/depth_bands}
+\FloatBarrier
 
-\section{Per-layer profiles}
+\section{Per-layer profiles of the backdoor direction}
 \label{app:layers}
-\Cref{tab:tac-layers} lists, per checkpoint behind \cref{fig:tac-layers}, the block where the backdoor direction's relative norm peaks, the block where it first reaches half its final value, and the final-layer CKA between clean and triggered activations.
+
+\Cref{tab:tac-layers} gives, for each of the 18 models in \cref{fig:tac-layers}, the block at which the backdoor direction's norm relative to the clean activation peaks, that peak value, the first block at which the relative norm reaches half its final value (the onset), the final-layer linear centered kernel alignment (CKA) between clean and triggered activations (1.0 means the trigger leaves the representation unchanged), and the mean absolute trigger-activated change (TAC) per dimension at the final layer. The benign rows are the control. Their peak relative norm never exceeds 0.12 and their CKA is 1.0, so the profiles of the backdoored rows are learned structure and not an artefact of the trigger's pixels. TaCT stands out with a peak of 0.26 to 0.38 and a CKA of 0.98 to 0.99. A source-specific attack changes the representation of the few source classes only, so a direction averaged over all classes is small even though the attack succeeds.
 
 \input{tables/tac_layers}
+\FloatBarrier
 
-\section{Seeds}
+\section{Seed replicates}
 \label{app:seeds}
-\Cref{tab:seeds} gives the 3-seed readings behind \cref{sec:robustness:seeds}.
+
+\Cref{tab:seeds} gives the 3-seed readings behind \cref{sec:robustness:seeds}. Each row is a backdoored model trained 3 times with different seeds. The columns give the smallest attack success rate among the 3 runs, the AUROC of attention-input token masking on each seed with its standard deviation, the same for post-residual dropout, and the mean and standard deviation of their paired gain. Token masking's standard deviation stays under 0.04 on every row, while post-residual dropout's reaches 0.28 on CIFAR-100 BadNets at 5\%. Further seeds are being trained for the hard attacks and the other datasets.
 
 \input{tables/seeds}
+\FloatBarrier
 
-\section{Detector smoke test}
+\section{The other detectors on the smoke-test models}
 \label{app:smoke}
-\Cref{tab:detector-smoke} gives the smoke test behind \cref{sec:robustness:detectors}: every ported detector on a benign, a BadNets and a Blend GTSRB checkpoint at 5\% poisoning, with its forward passes per input and measured seconds per input on 1 A100.
+
+\Cref{tab:detector-smoke} is the smoke test behind \cref{sec:robustness:detectors}. 10 input-level detectors, each ported and checked against its reference implementation, run on a benign, a BadNets and a Blend GTSRB model at 5\% poisoning with 500 validation images, on the same splits and threshold rule as PSBD. The passes column is the number of forward passes each detector spends per input and the last column the measured seconds per input on 1 A100. Every detector reads chance on the benign model, which is the check that its sign convention is right. On BadNets STRIP, CD-L, TED and TeCo reach 0.99 or more, so a patch trigger at 5\% is easy for every consistency detector. The ranking on the hard attacks is what the full run will decide. The 2 detectors that fail, IBD-PSC and SentiNet, fail for ViT-specific reasons stated in \cref{sec:robustness:detectors}.
 
 \input{tables/detector_smoke}

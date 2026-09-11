@@ -1,28 +1,32 @@
-\section{Swin Transformer}
+\section{Transfer to Swin-S}
 \label{sec:swin}
 
-Swin-S restricts attention to shifted windows and merges patches between stages, so tokens mix locally within a stage and only reach every other token through merging. If the account of \cref{sec:mechanism} is right, a token mask before the attention LayerNorm should still remove routed evidence, since every route still passes through windowed attention, and the position should still beat the literal port. \Cref{tab:swin} reads the same placements on 53 to 60 backdoored Swin-S cells over CIFAR-10, CIFAR-100 and GTSRB (no attack implants on Tiny ImageNet on Swin at any rate we tried).
+Swin-S restricts attention to shifted windows and merges patches between stages, so tokens mix locally within a stage and only reach every other token through merging. If the account of \cref{sec:mechanism} is right, a token mask before the attention LayerNorm should still remove routed evidence, since every route still passes through windowed attention, and the site should still beat post-residual dropout. \Cref{tab:swin} reads the same placements on 53 to 60 backdoored Swin-S models over CIFAR-10, CIFAR-100 and GTSRB. No attack implants on Tiny ImageNet on Swin at any rate we tried.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering\small
-\caption{Swin-S: mean AUROC of the main placements and paired gains, adaptive rule, with 95\% bootstrap intervals.}
+\caption{Swin-S. Mean AUROC of the main placements and paired gains at the adaptive rule, with 95\% bootstrap intervals over models.}
 \label{tab:swin}
 \begin{tabular}{lrrr}
 \toprule
-placement & cells & AUROC & inverted \\
+placement & models & AUROC & below chance \\
 \midrule
-token mask, attention input (recommended) & 53 & \textbf{0.968} & 1 \\
+token mask, attention input & 53 & \textbf{0.968} & 1 \\
 token mask, both sublayer inputs & 53 & 0.944 & 0 \\
-dropout after the residual add (literal port) & 60 & 0.871 & 5 \\
-dropout before the residual add & 59 & 0.843 & 7 \\
-dropout at the attention input & 59 & 0.862 & 4 \\
+dropout, after residual add & 60 & 0.871 & 5 \\
+dropout, before residual add & 59 & 0.843 & 7 \\
+dropout, attention input & 59 & 0.862 & 4 \\
 \midrule
-\multicolumn{4}{l}{\emph{paired gains}} \\
-recommended minus literal port & 53 & +0.091 & [+0.044, +0.142] \\
-recommended minus dropout before the add & 51 & +0.128 & [+0.064, +0.197] \\
-dropout at attention input minus literal port & 56 & $-$0.022 & [$-$0.084, +0.039] \\
+\multicolumn{4}{l}{\emph{paired gains, with the 95\% interval in the last column}} \\
+row 1 minus row 3 & 53 & +0.091 & [+0.044, +0.142] \\
+row 1 minus row 4 & 51 & +0.128 & [+0.064, +0.197] \\
+row 5 minus row 3 & 56 & $-$0.022 & [$-$0.084, +0.039] \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
-The ranking transfers. The recommended placement reaches 0.968 with 1 inverted cell against 0.871 and 5 inversions for the literal port, a paired gain of +0.091 close to the ViT gain of +0.103. The third block of the table is the control that separates position from operator on Swin as \cref{tab:operators} did on ViT: moving dropout, the paper's operator, from the residual stream to the attention input gains nothing ($-$0.022, interval containing 0), while moving to token masking at that same input gains +0.091. On Swin as on ViT, the operator that removes whole tokens is what the attention input rewards, and windowing does not change that. 2 differences remain. WaNet is detected worse on Swin than on ViT (0.26 to 0.29 against 0.51 to 0.55 with dropout at the matched rate on CIFAR-100), consistent with a warping trigger that windowed attention spreads across windows before any single window can be masked away. And the Swin cells have not been swept over the full 18-placement basis, so the Swin ranking rests on 5 placements rather than 18; the panel is being completed.
+The ranking transfers. Attention-input token masking reaches 0.968 with 1 model below chance, against 0.871 and 5 for post-residual dropout, a paired gain of +0.091 close to the ViT gain of +0.103.
+
+The last block of the table is the control that separates site from perturbation on Swin as \cref{tab:operators} did on ViT. Moving dropout, the paper's perturbation, from the residual stream to the attention input gains nothing, with $-$0.022 and an interval containing 0. Moving to token masking at that same input gains +0.091. On Swin as on ViT, the perturbation that removes whole tokens is what the attention input rewards, and windowing does not change that.
+
+2 differences remain. WaNet is detected worse on Swin than on ViT, at 0.26 to 0.29 against 0.51 to 0.55 with dropout at the matched rate on CIFAR-100. This is consistent with a warping trigger that windowed attention spreads across windows before any single window can be masked away. And the Swin models have not been swept over the full 18-placement basis, so the Swin ranking rests on 5 placements rather than 18. That sweep is in progress.

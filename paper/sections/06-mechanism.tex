@@ -1,20 +1,25 @@
-\section{Why the placement works}
+\section{Where the backdoor lives in a ViT}
 \label{sec:mechanism}
 
-The results of \cref{sec:results} are a ranking. This section explains it by following a backdoor through a ViT with 3 tools, and then checks that the picture they give predicts the ranking, the operator reversal and the attacks on which the original paper's explanation does and does not hold. Every experiment runs on the same checkpoints as the detection results, with the benign model of the same dataset, probed with the same trigger, as the control.
+The results of \cref{sec:results} are a ranking. This section explains it by following a backdoor through a ViT with 3 tools, and then checks that the picture they give predicts the ranking, the reversal between noise and masking, and the attacks on which the original paper's explanation does and does not hold. Every experiment runs on the same backdoored models as the detection results, with the benign model of the same dataset, probed with the same trigger, as the control.
 
-\subsection{The backdoor is 1 direction, written late}
+\subsection{The backdoor direction and the depth at which it appears}
 \label{sec:mechanism:direction}
 
-For a checkpoint and a layer, take the mean difference between the class token's activation on a triggered image and on its clean copy. This is the backdoor direction of that layer, the construction Karayal\c{c}{\i}n et al.~\cite{karayalcin2026backdoor} use on ViTs. \Cref{tab:direction} tests whether it is causal. Projecting the final layer's direction out of the class token, after the final LayerNorm where the classifier reads, takes attack success from 1.000 to 0.000 on BadNets, 0.026 on Blend and 0.085 on BPP while clean accuracy falls by at most 4 points. Projecting out a random direction of the same norm changes nothing, and zeroing the 20 coordinates the trigger moves most changes nothing either. The backdoor is a direction in the residual stream rather than a set of neurons, and any method that ranks coordinates, heads or channels sees only a rotated shadow of it. LF is the exception: removing its direction takes attack success only to 0.572, so the low-frequency trigger is carried by more than 1 direction.
+For a model and a layer, take the mean difference between the class token's activation on a triggered image and on its clean copy. This is the backdoor direction of that layer, the construction Karayal\c{c}{\i}n et al.~\cite{karayalcin2026backdoor} use on ViTs. \Cref{tab:direction} tests whether it is causal. Projecting the final layer's direction out of the class token, after the final LayerNorm where the classifier reads, takes attack success from 1.000 to 0.000 on BadNets, 0.026 on Blend and 0.085 on BPP, while clean accuracy falls by at most 4 points.
+
+2 controls say the effect is specific. Projecting out a random direction of the same norm changes nothing, and zeroing the 20 coordinates the trigger moves most changes nothing either. The backdoor is a direction in the residual stream rather than a set of neurons, and any method that ranks coordinates, heads or channels sees only a rotated shadow of it.
+
+LF is the exception at the final layer. Removing its direction there takes attack success only to 0.572. Only when the direction is removed from every block's write to the stream (\cref{sec:mechanism:picek}) does LF fall to 0.034, so the low-frequency trigger is carried by the stream over several blocks rather than read off 1 layer.
 
 \begin{table}[t]
 \centering\small
-\caption{Attack success after 4 interventions at the final layer on CIFAR-10 at 10\% poisoning. Removing the backdoor direction kills the attack, the controls do not. The last column is clean accuracy after the direction is removed (before: 0.94 to 0.96).}
+\caption{Attack success after 4 interventions at the final layer on CIFAR-10 at 10\% poisoning. Removing the backdoor direction kills the attack, the 2 controls do not. The last column is clean accuracy after the direction is removed (0.94 to 0.96 before).}
 \label{tab:direction}
-\begin{tabular}{lccccc}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
 \toprule
-attack & none & direction & random dir. & top 20 coord. & CA after \\
+attack & none & direction & random & top-20 & CA after \\
 \midrule
 BadNets & 1.000 & \textbf{0.000} & 1.000 & 1.000 & 0.902 \\
 Blend   & 1.000 & \textbf{0.026} & 1.000 & 1.000 & 0.928 \\
@@ -29,50 +34,56 @@ The direction is not present from the start. \Cref{fig:tac-layers} follows its n
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{mech_tac_layers.pdf}
-\caption{Relative norm of the backdoor direction (top) and mean trigger-activated change per dimension (bottom) by block, on GTSRB, CIFAR-100 and Tiny ImageNet at 10\% poisoning, 500 paired images per checkpoint. The benign model probed with the same trigger is dashed. The backdoor is written in the second half of the network.}
+\caption{Relative norm of the backdoor direction (top) and mean trigger-activated change (TAC) per dimension, the mean absolute activation difference between a triggered image and its clean copy (bottom), by block, on GTSRB, CIFAR-100 and Tiny ImageNet at 10\% poisoning, 500 paired images per model. The benign model probed with the same trigger is dashed. The backdoor is written in the second half of the network.}
 \label{fig:tac-layers}
 \end{figure*}
 
-\subsection{The trigger's tokens carry it until late}
+\subsection{Routing of the trigger through attention}
 \label{sec:mechanism:routing}
 
-Activation patching asks where the backdoor sits at each depth. At a chosen block we overwrite a group of tokens on the triggered image with their values on the clean copy and measure how much of the clean prediction comes back. \Cref{fig:patching} does this for the trigger's own tokens (the 4 patches under a BadNets trigger), for the class token, and for a random token group of the same size. For BadNets and TaCT, patching the trigger's own tokens restores the clean prediction completely through block 6 and still does at block 10, while patching the class token restores nothing until block 9 and recovers 0.55 to 0.66 at the final block. The random group restores nothing at any depth. So for a local trigger the backdoor sits entirely in the trigger's own tokens for most of the network and reaches the class token, where the classifier reads, only in the last quarter. A global trigger covers every patch, so its trigger set is all 196 tokens and the random group of the same size is the same set; for these attacks the experiment can only confirm that the backdoor is spread over the tokens.
+Activation patching asks where the backdoor sits at each depth. At a chosen block we overwrite a group of tokens on the triggered image with their values on the clean copy and measure how much of the clean prediction comes back. \Cref{fig:patching} does this for the trigger's own tokens (the 4 patches under a BadNets trigger), for the class token, and for a random token group of the same size.
+
+For BadNets and TaCT, patching the trigger's own tokens restores the clean prediction completely through block 6 and still does at block 10. Patching the class token restores nothing until block 9 and recovers 0.55 to 0.66 at the final block. The random group restores nothing at any depth. For a local trigger the backdoor therefore sits entirely in the trigger's own tokens for most of the network and reaches the class token, where the classifier reads, only in the last quarter. A global trigger covers every patch, so its trigger set is all 196 tokens and the random group of the same size is the same set. For these attacks the experiment can only confirm that the backdoor is spread over the tokens.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{mech_activation_patching.pdf}
-\caption{Share of the clean prediction recovered when a token group is replaced by its clean value at a given block, averaged over the panel's cells of each attack. For the local triggers (BadNets, TaCT) the trigger's tokens hold the backdoor through block 10 and the class token takes over only at the end.}
+\caption{Share of the clean prediction recovered when a token group is replaced by its clean value at a given block, averaged over the backdoored models of each attack. For the local triggers (BadNets, TaCT) the trigger's tokens hold the backdoor through block 10 and the class token takes over only at the end.}
 \label{fig:patching}
 \end{figure*}
 
-The class token's attention confirms the route. On the BadNets checkpoints the share of its attention that falls on the trigger's 4 tokens is 0.025 in blocks 1 to 4, 0.231 in blocks 5 to 8 and 0.550 in blocks 9 to 12, against 0.025 throughout on the benign model. Attention, the only operation that moves information between tokens, carries the trigger to the class token in the second half of the network. \Cref{fig:routing} shows this per block.
+The class token's attention confirms the route. On the BadNets models the share of its attention that falls on the trigger's 4 tokens is 0.025 in blocks 1 to 4, 0.231 in blocks 5 to 8 and 0.550 in blocks 9 to 12, against 0.025 throughout on the benign model. Attention, the only operation that moves information between tokens, carries the trigger to the class token in the second half of the network. \Cref{fig:routing} shows this per block.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{mech_routing.pdf}
-\caption{Share of the class token's attention on the trigger's tokens by block, BadNets against the benign control. The trigger is routed to the class token in blocks 5 to 12.}
+\includegraphics[width=0.9\textwidth]{mech_routing.pdf}
+\caption{Left, share of the class token's attention that falls on the trigger's tokens, by block and attack, against the benign model probed with the same trigger (dashed). Right, the norm rank of the trigger's tokens among all patch tokens. The trigger is routed to the class token in blocks 5 to 12.}
 \label{fig:routing}
-\end{figure}
+\end{figure*}
 
-\subsection{What this predicts about placements}
+\subsection{Consequences for the placement}
 \label{sec:mechanism:placements}
 
-Put together, the 3 tools give a simple account. A backdoored input's decision rests on a few tokens whose content is moved to the class token late through attention. A clean input's decision rests on many tokens. Masking whole tokens at the attention input, before the mixing happens, removes the trigger's tokens with a probability that grows with the mask rate, and when it does the shortcut is gone and the prediction moves; on a clean input the remaining tokens still carry the class and the prediction stays. This is why token masking at the attention input separates the 2 populations, and why it should act in every block rather than a band: the mask must be in place at whatever depth the routing happens. The same mask at the MLP input acts after the block's attention has already mixed the trigger into the class token, so it removes less of the shortcut, which is the 0.109 cost of moving the position in \cref{tab:operators}. Dropout on the residual stream after the add perturbs the class token itself, on clean and triggered inputs alike, which is why the literal port inverts on 12 cells.
+Put together, the 3 tools give a simple account. A backdoored input's decision rests on a few tokens whose content is moved to the class token late through attention. A clean input's decision rests on many tokens. Masking whole tokens at the attention input, before the mixing happens, removes the trigger's tokens with a probability that grows with the mask rate. When it does, the shortcut is gone and the prediction moves. On a clean input the remaining tokens still carry the class and the prediction stays.
 
-\subsection{LayerNorm absorbs noise, not masking}
+This is why token masking at the attention input separates the 2 populations, and why it should act in every block rather than a band. The mask must be in place at whatever depth the routing happens. The same mask at the MLP input acts after the block's attention has already mixed the trigger into the class token, so it removes less of the shortcut, which is the 0.109 cost of moving the site in \cref{tab:operators}. Dropout on the residual stream after the add perturbs the class token itself, on clean and triggered inputs alike, which is why post-residual dropout falls below chance on 12 models.
+
+\subsection{LayerNorm and additive noise}
 \label{sec:mechanism:layernorm}
 
-The operator reversal in \cref{tab:operators} has a mechanical cause. Every perturbation at the attention input passes through a LayerNorm before it reaches the attention. A LayerNorm rescales each token to unit variance, so an additive perturbation that raises the token's variance is partly divided away: on the panel's checkpoints the LayerNorm removes 12 to 19\% of the norm of isotropic Gaussian noise added to its input, but 0 to 4\% of the change produced by masking, which sets whole tokens to 0 and moves the class token's variance very little. Noise at the attention input is therefore weaker than its nominal rate says, and loses 0.206 to masking at matched disturbance. At the MLP input the same noise is applied per token after the attention has done its mixing, where masking a token no longer removes routed evidence, and the more diffuse noise perturbation wins by 0.056. The reversal is not a coincidence of 2 rankings but a consequence of what sits behind each site.
+The reversal in \cref{tab:operators} has a mechanical cause. Every perturbation at the attention input passes through a LayerNorm before it reaches the attention. A LayerNorm rescales each token to unit variance, so an additive perturbation that raises the token's variance is partly divided away. On our models the LayerNorm removes 12 to 19\% of the norm of Gaussian noise added to its input, but only 0 to 4\% of the change produced by masking, which sets whole tokens to 0 and moves the class token's variance very little.
 
-\subsection{Does the prediction shift phenomenon exist on ViT?}
+Noise at the attention input is therefore weaker than its nominal rate says, and loses 0.206 to masking at matched disturbance. At the MLP input the same noise is applied per token after the attention has done its mixing. There masking a token no longer removes routed evidence, and the more diffuse noise perturbation wins by 0.056. The reversal is a consequence of what sits behind each site.
+
+\subsection{The prediction shift phenomenon on ViT}
 \label{sec:mechanism:phenomenon}
 
-The PSBD paper explains its statistic by neuron bias: under dropout the network falls back on the classes its neurons are biased toward, and because the backdoor's neurons are biased toward the target most firmly, clean inputs whose prediction shifts should land on the target class. We measured this directly on all 65 cells: among clean validation images whose prediction changes under the recommended placement at the matched rate, what share lands on the attacker's target class? \Cref{fig:shift-target} plots that share against the achieved shift ratio, per attack, with the benign models' band as the control, and \cref{tab:shift-target} gives it per dataset.
+The PSBD paper explains its statistic by neuron bias. Under dropout the network falls back on the classes its neurons are biased toward, and because the backdoor's neurons are biased toward the target most firmly, clean inputs whose prediction shifts should land on the target class. We measured this directly on all 65 models. Among clean validation images whose prediction changes under attention-input token masking at the matched rate, what share lands on the attacker's target class? \Cref{fig:shift-target} plots that share against the achieved shift ratio, per attack, with the benign models' band as the control, and \cref{tab:shift-target} gives it per dataset.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{mech_shift_target.pdf}
-\caption{Share of shifted clean predictions that land on the target class, against the achieved clean shift ratio, 1 curve per attack averaged over cells. The grey band is the benign range and the dashed line the uniform expectation.}
+\caption{Share of shifted clean predictions that land on the target class, against the achieved clean shift ratio, 1 curve per attack averaged over models. The grey band is the benign range and the dashed line the uniform expectation.}
 \label{fig:shift-target}
 \end{figure}
 
@@ -80,6 +91,7 @@ The PSBD paper explains its statistic by neuron bias: under dropout the network 
 \centering\small
 \caption{Share of shifted clean predictions landing on the target class at the matched rate, per dataset and attack, against the uniform expectation and the benign model's share. Excess is share minus benign share.}
 \label{tab:shift-target}
+\setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{llrrrr}
 \toprule
 dataset & attack & share & uniform & benign & excess \\
@@ -87,10 +99,10 @@ dataset & attack & share & uniform & benign & excess \\
 GTSRB & WaNet & 0.926 & 0.023 & 0.000 & +0.926 \\
 GTSRB & BadNets & 0.692 & 0.023 & 0.000 & +0.692 \\
 CIFAR-10 & BadNets & 0.361 & 0.100 & 0.055 & +0.306 \\
-Tiny & BPP & 0.254 & 0.005 & 0.003 & +0.251 \\
+Tiny ImageNet & BPP & 0.254 & 0.005 & 0.003 & +0.251 \\
 CIFAR-100 & LF & 0.197 & 0.010 & 0.000 & +0.197 \\
 CIFAR-100 & BPP & 0.137 & 0.010 & 0.000 & +0.137 \\
-Tiny & BadNets & 0.048 & 0.005 & 0.003 & +0.045 \\
+Tiny ImageNet & BadNets & 0.048 & 0.005 & 0.003 & +0.045 \\
 CIFAR-100 & BadNets & 0.003 & 0.010 & 0.000 & +0.003 \\
 GTSRB & Blend & 0.017 & 0.023 & 0.000 & +0.017 \\
 CIFAR-100 & Blend & 0.012 & 0.010 & 0.000 & +0.012 \\
@@ -99,9 +111,17 @@ CIFAR-10 & TaCT & 0.003 & 0.100 & 0.055 & $-$0.052 \\
 \end{tabular}
 \end{table}
 
-The phenomenon is real and it is selective. On GTSRB, with 43 classes and a local trigger, 69\% (BadNets) and 93\% (WaNet) of shifted clean predictions land on the target, far above the uniform 2.3\% and the benign model's 0\%. On CIFAR-10 BadNets it is 36\%. For Blend and TaCT it is at or below the uniform rate on every dataset, and for BadNets on CIFAR-100 it is 0.3\% against a uniform 1\%. Over the panel the mean excess over benign is +0.118 (interval +0.066 to +0.179), and it is carried entirely by the local triggers on the few-class datasets. Detection works in both regimes: Blend is among the best-detected attacks on every dataset with an excess of 0. So the neuron-bias account describes what happens when a trigger is routed through few tokens toward a target that is easy to fall into, and it is not what makes the statistic work in general. What makes it work in general is the margin: a triggered input's predicted class has a large margin over the rest because the shortcut is firm, and any perturbation that moves clean decisions more than firm ones separates the populations, whether or not the clean decisions move toward the target.
+The phenomenon is real and it is selective. On GTSRB, with 43 classes and a local trigger, 69\% (BadNets) and 93\% (WaNet) of shifted clean predictions land on the target, far above the uniform 2.3\% and the benign model's 0\%. On CIFAR-10 BadNets it is 36\%. For Blend and TaCT it is at or below the uniform rate on every dataset, and for BadNets on CIFAR-100 it is 0.3\% against a uniform 1\%. Over the 65 models the mean excess over benign is +0.118 with an interval from +0.066 to +0.179, and it is carried entirely by the local triggers on the few-class datasets.
 
-\subsection{Agreement with Karayal\c{c}{\i}n et al.}
+Detection works in both regimes. Blend is among the best-detected attacks on every dataset with an excess of 0. The neuron-bias account therefore describes what happens when a trigger is routed through few tokens toward a target that is easy to fall into, and it is not what makes the statistic work in general. What makes it work in general appears to be the margin. A triggered input's predicted class has a large margin over the rest because the shortcut is firm, and any perturbation that moves clean decisions more than firm ones separates the populations, whether or not the clean decisions move toward the target.
+
+\subsection{Comparison with Karayal\c{c}{\i}n et al.}
 \label{sec:mechanism:picek}
 
-Karayal\c{c}{\i}n et al.~\cite{karayalcin2026backdoor} studied backdoor directions in ViT-B/16 on the same 3 datasets with an overlapping attack set. We agree with them that the direction is causal and that local triggers reach the class token later than distributed ones, and we add the depth profile of \cref{fig:tac-layers}, the causal routing of \cref{fig:patching} and the LayerNorm reading. On 1 point our earlier results seemed to disagree: they report that projecting the direction out of every weight matrix that writes to the residual stream removes the backdoor (ASR from 97.7 to 6.7 on average), while our first attempt, editing only the last 2 blocks, left BadNets and Blend at ASR 1.000. Editing every write as they do, the embedding and all 24 attention and MLP output projections with the direction of the layer their selection rule picks, takes CIFAR-10 BadNets from 1.000 to 0.000 at a clean-accuracy cost of 9.5 points, while editing the last 2 blocks alone leaves it at 1.000 and a random direction leaves it at 1.000. The disagreement was the scope of the edit, and the 2 studies agree. The direction lives in the whole stream, re-created downstream by every block, so removing it means removing it everywhere, which is also why a perturbation that acts in every block wins in \cref{sec:results:depth}.
+Karayal\c{c}{\i}n et al.~\cite{karayalcin2026backdoor} studied backdoor directions in ViT-B/16 on the same 3 datasets with an overlapping attack set. We compare with them on the 3 claims our models can test.
+
+First, they report that projecting the direction out of every weight matrix that writes to the residual stream removes the backdoor, with attack success falling from 97.7 to 6.7 on average. Our first attempt edited only the last 2 blocks and left BadNets and Blend at 1.000. Editing every write as they do, the patch embedding and all 24 attention and MLP output projections with the direction of the layer their rule selects, takes CIFAR-10 BadNets, Blend and BPP from 1.000 to 0.000 and WaNet from 0.876 to 0.009, at clean-accuracy costs of 0.4 to 9.5 points. On CIFAR-100 the same edit takes BadNets from 1.000 to 0.009 but leaves Blend at 1.000, and Blend on CIFAR-100 is also the 1 survivor they report. Editing the last 2 blocks alone leaves BadNets at 1.000, and a random direction leaves it at 1.000. The direction is re-created by every block, so removing it means removing it everywhere. This is also why the perturbation that acts in every block wins in \cref{sec:results:depth}.
+
+Second, they report that distributed triggers reach the class token earlier than patch triggers. \Cref{fig:tac-layers} confirms this on CIFAR-100 and Tiny ImageNet and qualifies it on GTSRB, where the order reverses.
+
+Third, they propose a data-free detector that scores the classifier head's rows against the early layers' output projections and flags a model when 1 class stands out by 3 standard deviations. They report that it flags WaNet and BPP reliably and patch triggers never. Run with their grid over the layer count and the threshold on 15 of our backdoored models, the rule names the correct target on all 5 WaNet models, with a best $Z$ of 35 to 139, and on BPP only on CIFAR-10. On CIFAR-100 and Tiny ImageNet it names a wrong class at every rate, it never fires on BadNets, Blend or TaCT, and it raises a false alarm on 3 to 15\% of the grid on every benign model. Their WaNet result reproduces, their BPP result does not on 2 of 3 datasets, and the direction ablation of \cref{tab:direction} says why a weight-space rule reads little. The backdoor is a rotated direction, not a coordinate pattern, and a score built from coordinates of the head and the weights sees only its projection.
