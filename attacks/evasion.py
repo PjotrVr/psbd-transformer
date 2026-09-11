@@ -79,6 +79,41 @@ defender's threshold can no longer separate the 2 groups by that statistic.
    it every batch instead, which is what the hinge objective already does and
    keeps both objectives on the same training loop, at the cost of running the
    k extra probe passes more often than the paper's own recipe.
+
+A third path, multi-probe evasion, extends the hinge objective (`--evade-probes`,
+`cli.train_backdoor`) from 1 probe to several, so the attacker trains against the
+defence's own min-rank union (`defences.decision.multi_probe_auroc`,
+`docs/hypothesis/H41-multi-probe-defence.md`) rather than a single placement it
+could deploy a second probe against.
+
+    original form
+        L = L_CE(f(x), y)
+            + lambda * (1/M) * sum_{j=1}^{M}
+                ReLU( mean_{x in C} PSU_j(x) - mean_{x in P} PSU_j(x) )
+
+    descriptive form
+        loss = cross_entropy
+               + weight * mean_over_probes(hinge_j)
+               hinge_j = relu(mean_clean_psu_j - mean_poisoned_psu_j)
+
+M is the number of probes, j indexes them and PSU_j is the fractional PSU of
+`psu_for_batch` under probe j's own (position, operator, rate). Every other
+symbol is shared with the single-probe hinge above.
+
+The mean over probes, not the sum, is deliberate: it keeps `weight`'s meaning
+fixed regardless of how many probes are trained against, so a 1-probe run
+under this path is bit-for-bit the single-probe hinge (`evasion_penalty`) and
+adding a 4th probe cannot inflate the penalty's scale by counting alone. A sum
+would couple `--evade-weight` to `len(probes)`, so retuning it would be needed
+every time a probe is added or removed.
+
+Cost: `_probe_confidences` runs the unperturbed forward once and reuses it
+across every probe (passed in as `logits`), so only the `passes` stochastic
+passes are paid per probe. M probes at `passes` = k cost 1 + M*k forwards per
+step, against 1 + k for a single probe, so a 3-probe run at k=3 costs about
+2.5 times a 1-probe run's forward count (1 + 9 against 1 + 3), which is why the
+smoke test and the job generator both budget wall clock separately from the
+single-probe adaptive-attacker jobs.
 """
 
 import torch
@@ -308,6 +343,43 @@ def evasion_penalty(psu: torch.Tensor, is_poisoned: torch.Tensor) -> torch.Tenso
     return hinge
 
 
+def multi_probe_psu_for_batch(
+    model: nn.Module,
+    images: torch.Tensor,
+    probes: list[dict],
+    passes: int,
+) -> tuple[list[torch.Tensor], torch.Tensor]:
+    """Fractional PSU under each of `probes`, sharing 1 unperturbed forward pass.
+
+    Returns (psu_per_probe, logits). psu_per_probe has 1 entry per probe, each
+    shaped (batch,) and carrying grad history. logits is the shared unperturbed
+    forward, shaped (batch, num_classes), computed once on the first probe and
+    handed to every later call so the caller pays the base forward once rather
+    than once per probe (see the module docstring's cost accounting).
+    """
+    logits = None
+    psu_per_probe = []
+    for probe in probes:
+        psu, logits = psu_for_batch(model, images, probe, passes, logits)
+        psu_per_probe.append(psu)
+    return psu_per_probe, logits
+
+
+def multi_probe_evasion_penalty(
+    psu_per_probe: list[torch.Tensor], is_poisoned: torch.Tensor
+) -> torch.Tensor:
+    """The mean of `evasion_penalty` over every probe, see the module docstring's formula.
+
+    Returns a 0-dim tensor with grad history. Reduces to `evasion_penalty`'s own
+    value when `psu_per_probe` has 1 entry, which is what keeps a 1-probe call
+    through this path identical to the plain single-probe hinge.
+    """
+    hinges = torch.stack(
+        [evasion_penalty(psu, is_poisoned) for psu in psu_per_probe]
+    )  # (M,)
+    return hinges.mean()
+
+
 # The 2 evasion objectives evasive_update dispatches on, read off
 # probe.get("objective", "hinge"). Exported so cli.train_backdoor's
 # --evade-objective choices cannot drift from what this module actually handles.
@@ -337,13 +409,20 @@ def evasive_update(
     is_poisoned: torch.Tensor,
     criterion,
     optimizer,
-    probe: dict,
+    probe: dict | list[dict],
     weight: float,
     passes: int,
 ) -> tuple[torch.Tensor, dict]:
     """A single optimizer step on cross-entropy plus the chosen evasion objective.
 
-    probe.get("objective", "hinge") selects the loss:
+    `probe` is a single probe dict (unchanged behaviour) or a list of probe
+    dicts, which routes through the multi-probe hinge (module docstring's 3rd
+    formula) regardless of how many probes the list holds. A 1-entry list is
+    numerically identical to passing that entry as a plain dict. Every probe in
+    a list is read as `objective="hinge"`, since the multi-probe formula is only
+    defined for the hinge: a list with any other objective raises.
+
+    A single probe's `probe.get("objective", "hinge")` selects the loss:
 
     - "hinge" (default, unchanged behaviour): fractional PSU, additive penalty,
       loss = cross_entropy + weight * evasion_penalty(psu, is_poisoned).
@@ -352,14 +431,21 @@ def evasive_update(
       with weight read as alpha.
     """
     optimizer.zero_grad(set_to_none=True)
-    objective = probe.get("objective", "hinge")
+    probes = probe if isinstance(probe, list) else [probe]
+    objectives = {p.get("objective", "hinge") for p in probes}
+    if len(probes) > 1 and objectives != {"hinge"}:
+        raise ValueError(
+            f"multi-probe evasion only supports the hinge objective, got {objectives}"
+        )
+    objective = next(iter(objectives))
 
     if objective == "hinge":
-        psu, logits = psu_for_batch(model, images, probe, passes)
-        penalty = evasion_penalty(psu, is_poisoned)
+        psu_per_probe, logits = multi_probe_psu_for_batch(model, images, probes, passes)
+        penalty = multi_probe_evasion_penalty(psu_per_probe, is_poisoned)
         loss = criterion(logits, labels) + weight * penalty
+        psu = psu_per_probe[0]
     elif objective == "psbd_paper":
-        psu, logits = absolute_psu_for_batch(model, images, probe, passes)
+        psu, logits = absolute_psu_for_batch(model, images, probes[0], passes)
         penalty = paper_adaptive_penalty(psu)
         loss = (1.0 - weight) * criterion(logits, labels) + weight * penalty
     else:
@@ -376,6 +462,9 @@ def evasive_update(
     # active. The cheapest way to close the gap is to drag clean shift down to
     # meet poisoned rather than raise poisoned, which changes the whole model
     # rather than hiding a backdoor, and the gap alone cannot tell the 2 apart.
+    # Under multi-probe hinge these read the first listed probe only. The
+    # per-probe penalty averaged into `penalty` is the quantity multi-probe
+    # runs should track, not this single probe's own PSU split.
     stats = {
         "psu_clean": float(psu[~poisoned].mean())
         if (~poisoned).any()

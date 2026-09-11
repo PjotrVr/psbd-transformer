@@ -16,6 +16,8 @@ from attacks.evasion import (
     absolute_psu_for_batch,
     evasion_penalty,
     evasive_update,
+    multi_probe_evasion_penalty,
+    multi_probe_psu_for_batch,
     paper_adaptive_penalty,
     psu_for_batch,
 )
@@ -403,3 +405,206 @@ def test_optimising_the_paper_penalty_lowers_mean_psu():
     first_psu = first["psu_clean"]
     last_psu = last["psu_clean"]
     assert last_psu < first_psu, f"{first_psu:.4f} -> {last_psu:.4f}"
+
+
+PROBE_B = {
+    "position": "before_attention_norm",
+    "operator": "token_mask",
+    "rate": 0.5,
+    "architecture": "vit",
+}
+
+
+def test_multi_probe_penalty_equals_single_probe_hinge_for_1_probe(batch):
+    """multi_probe_evasion_penalty over a 1-element list is evasion_penalty."""
+    _, _, is_poisoned = batch
+    psu_gap = torch.tensor([0.1, 0.1, 0.1, 0.9, 0.9, 0.9, 0.9, 0.9])
+
+    single = evasion_penalty(psu_gap, is_poisoned)
+    multi = multi_probe_evasion_penalty([psu_gap], is_poisoned)
+    assert float(multi) == pytest.approx(float(single))
+
+
+def test_multi_probe_penalty_is_the_mean_over_probes():
+    """The formula is a mean, not a sum, of the per-probe hinges (module docstring)."""
+    is_poisoned = torch.tensor([1, 1, 0, 0])
+    psu_a = torch.tensor([0.9, 0.9, 0.1, 0.1])  # relu(0.0 - 0.9), hinge 0.0
+    psu_b = torch.tensor([0.1, 0.1, 0.9, 0.9])  # relu(0.9 - 0.1), hinge 0.8
+
+    combined = multi_probe_evasion_penalty([psu_a, psu_b], is_poisoned)
+    expected = (
+        float(evasion_penalty(psu_a, is_poisoned))
+        + float(evasion_penalty(psu_b, is_poisoned))
+    ) / 2
+    assert float(combined) == pytest.approx(expected)
+
+
+def test_multi_probe_penalty_decreases_when_every_probes_gap_decreases():
+    is_poisoned = torch.tensor([1, 1, 0, 0])
+    wide_a = torch.tensor([0.1, 0.1, 0.9, 0.9])
+    wide_b = torch.tensor([0.2, 0.2, 0.8, 0.8])
+    narrow_a = torch.tensor([0.4, 0.4, 0.6, 0.6])
+    narrow_b = torch.tensor([0.35, 0.35, 0.65, 0.65])
+
+    wide_penalty = multi_probe_evasion_penalty([wide_a, wide_b], is_poisoned)
+    narrow_penalty = multi_probe_evasion_penalty([narrow_a, narrow_b], is_poisoned)
+    assert float(narrow_penalty) < float(wide_penalty)
+
+
+def test_multi_probe_psu_shares_the_base_forward_pass(batch):
+    """multi_probe_psu_for_batch's shared logits equal a lone psu_for_batch's logits."""
+    images, _, _ = batch
+    torch.manual_seed(0)
+    model = TinyViT()
+
+    torch.manual_seed(7)
+    psu_per_probe, shared_logits = multi_probe_psu_for_batch(
+        model, images, [PROBE, PROBE_B], passes=3
+    )
+    assert len(psu_per_probe) == 2
+    for psu in psu_per_probe:
+        assert psu.shape == (8,)
+        assert psu.requires_grad
+
+    torch.manual_seed(7)
+    solo_psu, solo_logits = psu_for_batch(model, images, PROBE, passes=3)
+    assert torch.equal(shared_logits, solo_logits)
+    assert torch.equal(psu_per_probe[0], solo_psu)
+
+
+def test_evasive_update_with_a_1_element_list_matches_a_plain_probe_dict(batch):
+    """evasive_update([PROBE]) must be bit-for-bit evasive_update(PROBE)."""
+    images, labels, is_poisoned = batch
+    criterion = nn.CrossEntropyLoss()
+
+    torch.manual_seed(1)
+    list_model = TinyViT()
+    torch.manual_seed(1)
+    dict_model = TinyViT()
+
+    list_optimizer = torch.optim.SGD(list_model.parameters(), lr=0.1)
+    dict_optimizer = torch.optim.SGD(dict_model.parameters(), lr=0.1)
+
+    torch.manual_seed(2)
+    list_loss, list_stats = evasive_update(
+        list_model,
+        images,
+        labels,
+        is_poisoned,
+        criterion,
+        list_optimizer,
+        [PROBE],
+        1.0,
+        3,
+    )
+    torch.manual_seed(2)
+    dict_loss, dict_stats = evasive_update(
+        dict_model,
+        images,
+        labels,
+        is_poisoned,
+        criterion,
+        dict_optimizer,
+        PROBE,
+        1.0,
+        3,
+    )
+
+    assert float(list_loss) == pytest.approx(float(dict_loss), abs=1e-6)
+    assert list_stats["penalty"] == pytest.approx(dict_stats["penalty"], abs=1e-6)
+    drift = max(
+        float((p - q).abs().max())
+        for p, q in zip(list_model.parameters(), dict_model.parameters())
+    )
+    assert drift < 1e-6, f"max drift {drift:.2e}"
+
+
+def test_evasive_update_rejects_multi_probe_with_the_paper_objective(batch):
+    images, labels, is_poisoned = batch
+    model = TinyViT()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+    probes = [PROBE_PAPER, {**PROBE_B, "objective": "psbd_paper"}]
+    with pytest.raises(ValueError, match="only supports the hinge objective"):
+        evasive_update(
+            model,
+            images,
+            labels,
+            is_poisoned,
+            nn.CrossEntropyLoss(),
+            optimizer,
+            probes,
+            1.0,
+            3,
+        )
+
+
+def test_optimising_the_multi_probe_penalty_closes_every_active_gap():
+    """The multi-probe hinge falls under a real optimizer, and so does each probe's own gap.
+
+    Mirrors test_optimising_the_penalty_closes_an_active_gap, with 2 probes at
+    the same position but different operators so their PSU statistics differ.
+    """
+    torch.manual_seed(0)
+    model = TinyViT()
+    model.train()
+    images = torch.randn(64, 3, 32, 32)
+    labels = torch.randint(0, 4, (64,))
+    criterion = nn.CrossEntropyLoss()
+    probe_a = dict(PROBE, rate=0.7)
+    probe_b = dict(PROBE_B, rate=0.7)
+
+    warmup = torch.optim.Adam(model.parameters(), lr=2e-3)
+    for _ in range(60):
+        warmup.zero_grad(set_to_none=True)
+        criterion(model(images), labels).backward()
+        warmup.step()
+
+    with torch.no_grad():
+        initial_a, _ = psu_for_batch(model, images, probe_a, passes=5)
+    lowest = torch.argsort(initial_a)[:16]
+    flags = torch.zeros(64, dtype=torch.long)
+    flags[lowest] = 1
+
+    def gaps():
+        with torch.no_grad():
+            psu_a, _ = psu_for_batch(model, images, probe_a, passes=5)
+            psu_b, _ = psu_for_batch(model, images, probe_b, passes=5)
+        poisoned = flags.bool()
+        gap_a = float(psu_a[~poisoned].mean() - psu_a[poisoned].mean())
+        gap_b = float(psu_b[~poisoned].mean() - psu_b[poisoned].mean())
+        return gap_a, gap_b
+
+    first_gap_a, first_gap_b = gaps()
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=2e-3)
+    first, last = None, None
+    for step in range(40):
+        _, stats = evasive_update(
+            model,
+            images,
+            labels,
+            flags,
+            criterion,
+            optimizer,
+            [probe_a, probe_b],
+            weight=100.0,
+            passes=5,
+        )
+        if step == 0:
+            first = stats
+        last = stats
+
+    last_gap_a, last_gap_b = gaps()
+
+    assert first["penalty"] > 0, (
+        f"multi-probe hinge inactive at step 0: {first['penalty']:.4f}"
+    )
+    assert last["penalty"] < first["penalty"], (
+        f"{first['penalty']:.4f} -> {last['penalty']:.4f}"
+    )
+    assert last_gap_a < first_gap_a, (
+        f"probe a gap {first_gap_a:.4f} -> {last_gap_a:.4f}"
+    )
+    assert last_gap_b < first_gap_b, (
+        f"probe b gap {first_gap_b:.4f} -> {last_gap_b:.4f}"
+    )
