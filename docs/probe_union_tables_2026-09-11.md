@@ -214,10 +214,34 @@ Greedy triple from the top 6 solo placements: token mask, attention input + nois
 | product (best) | 17 | 0.977 | 0.925 | 0.966 |
 | weighted_mean | 17 | 0.927 | 0.732 | 0.885 |
 
+## Task 3, unions larger than pairs
+
+The pool is the 8 candidates with the best solo mean TPR at 10% on the 69 models plus the attention branch output token mask on its own 66 models, each with its solo mean TPR at 10% in parentheses: token mask, attention input (0.766), noise, MLP input after norm (0.703), token mask, both sublayer inputs (0.699), dropout, before both residual adds, blocks 5 to 8 (0.687), channel mask, attention input (0.681), dropout, after both residual adds (0.633), dropout, before both residual adds (0.630), dropout, before both residual adds, blocks 1 to 4 (0.547), token mask, attention output before the add (0.809). Every subset of size 3, 4 and 5 from this pool is scored under the min, product and z-sum rules, size 2 is added only as the trend anchor and is not itself a requested result.
+
+| Size | Rule | Subset | n | Mean AUROC | Mean TPR@10 | Mean TPR@20 | Worst model | Worst AUROC | Gain over PSBD-TM [95% CI] |
+|---|---|---|---|---|---|---|---|---|---|
+| 2 (context) | min | token mask, attention input + token mask, attention output before the add | 66 | 0.956 | 0.852 | 0.910 | Tiny ImageNet TaCT | 0.689 | +0.021 [+0.005, +0.042] |
+| 2 (context) | product | token mask, attention input + token mask, attention output before the add | 66 | 0.958 | 0.858 | 0.909 | Tiny ImageNet TaCT | 0.681 | +0.023 [+0.008, +0.044] |
+| 2 (context) | zsum | token mask, attention input + token mask, attention output before the add | 66 | 0.958 | 0.857 | 0.910 | Tiny ImageNet TaCT | 0.690 | +0.023 [+0.008, +0.044] |
+| 3 | min | token mask, attention input + dropout, before both residual adds, blocks 5 to 8 + token mask, attention output before the add | 66 | 0.959 | 0.857 | 0.909 | Tiny ImageNet TaCT | 0.693 | +0.024 [+0.006, +0.048] |
+| 3 | product | token mask, attention input + noise, MLP input after norm + token mask, attention output before the add | 66 | 0.959 | 0.853 | 0.901 | Tiny ImageNet TaCT | 0.611 | +0.024 [+0.008, +0.044] |
+| 3 | zsum | token mask, attention input + noise, MLP input after norm + token mask, attention output before the add | 66 | 0.960 | 0.854 | 0.902 | Tiny ImageNet TaCT | 0.640 | +0.025 [+0.009, +0.046] |
+| 4 | min | token mask, attention input + noise, MLP input after norm + dropout, before both residual adds, blocks 5 to 8 + token mask, attention output before the add | 66 | 0.959 | 0.857 | 0.904 | Tiny ImageNet TaCT | 0.643 | +0.023 [+0.006, +0.048] |
+| 4 | product | token mask, attention input + noise, MLP input after norm + token mask, both sublayer inputs + token mask, attention output before the add | 66 | 0.958 | 0.853 | 0.896 | Tiny ImageNet TaCT | 0.597 | +0.023 [+0.008, +0.043] |
+| 4 | zsum | token mask, attention input + noise, MLP input after norm + dropout, before both residual adds, blocks 5 to 8 + token mask, attention output before the add | 66 | 0.960 | 0.851 | 0.899 | Tiny ImageNet TaCT | 0.627 | +0.025 [+0.008, +0.049] |
+| 5 | min | token mask, attention input + noise, MLP input after norm + token mask, both sublayer inputs + dropout, before both residual adds, blocks 5 to 8 + token mask, attention output before the add | 66 | 0.960 | 0.858 | 0.903 | Tiny ImageNet TaCT | 0.642 | +0.024 [+0.007, +0.049] |
+| 5 | product | token mask, attention input + noise, MLP input after norm + token mask, both sublayer inputs + dropout, before both residual adds, blocks 5 to 8 + token mask, attention output before the add | 66 | 0.959 | 0.847 | 0.892 | Tiny ImageNet TaCT | 0.580 | +0.023 [+0.006, +0.047] |
+| 5 | zsum | token mask, attention input + noise, MLP input after norm + token mask, both sublayer inputs + dropout, before both residual adds, blocks 5 to 8 + token mask, attention output before the add | 66 | 0.960 | 0.846 | 0.896 | Tiny ImageNet TaCT | 0.613 | +0.025 [+0.008, +0.048] |
+
+Under min, mean TPR at 10% moves 2 to 3 +0.005, 3 to 4 +0.000, 4 to 5 +0.001 as the union grows.
+Under product, mean TPR at 10% moves 2 to 3 -0.005, 3 to 4 -0.000, 4 to 5 -0.005 as the union grows.
+Under zsum, mean TPR at 10% moves 2 to 3 -0.003, 3 to 4 -0.003, 4 to 5 -0.005 as the union grows.
+
 ## Summary
 
 The best-unioning pair is PSBD-TM with token mask, attention input and scale up, input pixels, mean AUROC 0.937 and mean TPR at 10% 0.803 on 69 models, a gain over PSBD-TM alone of +0.010 AUROC [-0.002, +0.024].
-At the 10% clean-validation quantile the union raises TPR by +0.037 over PSBD-TM alone, from 0.766 to 0.803.
-The min rule is not the best combination rule on the best pair, zsum reads +0.016 more mean TPR at 10% than min.
-On the 17 models where the pair's 2 probes disagree most, the best rule is product, a different answer from the whole model set.
-The greedy triple adds dropout, after both residual adds to the best pair for a further +0.017 mean TPR at 10%.
+At the 10% clean-validation quantile the pair raises TPR by +0.037 over PSBD-TM alone, from 0.766 to 0.803, and zsum beats min on it by +0.016 more mean TPR at 10%.
+The union to deploy is the 2-probe set token mask, attention input and token mask, attention output before the add under the product rule, mean AUROC 0.958, mean TPR at 10% 0.858 and mean TPR at 20% 0.909 on 66 models.
+That set gains +0.023 AUROC [+0.008, +0.044] over PSBD-TM alone and +0.054 mean TPR at 10% over the best pair.
+Every larger subset searched plateaus at or below that 2-probe ceiling, the best 3-to-5-probe union reads 0.858 mean TPR at 10%, -0.000 against the deployed pair, so adding a 3rd, 4th or 5th probe to this pool buys no further detection power.
+On the 17 models where the best pair's 2 probes disagree most, the best rule is product, a different answer from the whole model set.

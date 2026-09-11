@@ -1,11 +1,12 @@
-"""Which 2 placements union best, and does the min rule beat other ways to combine them.
+"""Which placements union best in pairs and larger sets, and how best to combine them.
 
 `experiments/probe_union/measure.py` fixed 6 probe sets by hand and asked whether
-the H41 min-rank union helps on ordinary models. This script asks the 2
-questions that fixing the sets by hand cannot answer: which pair of placements,
+the H41 min-rank union helps on ordinary models. This script asks the 3
+questions that fixing the sets by hand cannot answer. Which pair of placements,
 out of every placement whose sweep reaches the whole selected model set, unions
-best (task 1), and whether the min rule is even the right way to combine 2 or 3
-probes once a good pair is in hand (task 2).
+best (task 1). Whether the min rule is even the right way to combine 2 or 3
+probes once a good pair is in hand (task 2). Whether unions of 3, 4 or 5
+placements keep helping past a pair or plateau (task 3).
 
 Method, part 1 (the pair search). Models are `measure.select_models`'s clearing
 cells that carry both headline placements, exactly as `measure.py` selects them.
@@ -42,12 +43,26 @@ also split into the models where the pair's PSU ranks disagree most
 quarter by correlation) to ask whether the best rule changes exactly where
 disagreement is highest.
 
+Method, part 3 (unions larger than pairs). The pool is the 8 candidates with
+the best solo mean TPR at 10% (from part 1's solo search) plus token masking
+on the attention branch output, read on its own 66 models since it is not a
+part-1 candidate. Every subset of size 3, 4 and 5 from this 9-placement pool
+is scored under min, product and z-sum, the 3 rules `combine_scores` already
+implements for part 2, ranked by mean TPR at 10% exactly as part 1 ranks
+pairs. Size 2 is added only as the trend anchor a size-3-to-5-only sweep
+cannot supply on its own. The best subset of each (size, rule) cell is
+reported with its paired AUROC gain over PSBD-TM alone
+(`experiments.probe_union.measure.paired_gain`), and the deployment
+recommendation in the summary is whichever subset reads the best mean TPR at
+10% over sizes 3 to 5, with the next size's gain under the same rule reported
+alongside it to show whether growing the union further would still help.
+
     PYTHONPATH=. .venv/bin/python experiments/probe_union/pair_search.py
 
 Output: `results/_experiments/probe_union/pair_search.json` (every pair, the
-greedy triple, and the 6-rule comparison) and
+greedy triple, the 6-rule comparison and the pool search) and
 `docs/probe_union_tables_2026-09-11.md` (the per-dataset tables and the
-top-10 and rule tables, in the layout of
+top-10, rule and pool-search tables, in the layout of
 `docs/site_a_vs_b_tables_2026-09-11.md`).
 """
 
@@ -102,6 +117,17 @@ PRIMARY_TARGET_FPR = 0.10
 
 TOP6_SIZE = 6
 DISAGREEMENT_SHARE = 0.25  # the bottom quarter by rank correlation, "disagree most"
+
+# Task 3, the pool search: the 8 candidates with the best solo TPR at 10% plus
+# the attention branch output token mask, unioned at sizes 2 (the trend
+# anchor, not separately requested) through 5, under the 3 rules the brief
+# names. weighted_mean is left out here, its leave-one-out weights are a
+# per-probe-set statistic and the brief asks for min, product and zsum only.
+POOL_SIZE = 8
+POOL_SUBSET_SIZES = (2, 3, 4, 5)
+POOL_REPORT_SIZES = (3, 4, 5)
+POOL_RULES = ("min", "product", "zsum")
+POOL_TOP_KEEP = 5  # subsets kept per (size, rule) in the JSON, beyond the best
 
 # The attack order and daggering rule task 3's tables follow, matching
 # docs/site_a_vs_b_tables_2026-09-11.md.
@@ -424,6 +450,65 @@ def auroc_from_scores(clean_score: torch.Tensor, backdoor_score: torch.Tensor) -
     return auroc
 
 
+def subset_rule_row(
+    results_dir: str,
+    model: dict,
+    placements: tuple[str, ...],
+    rule: str,
+    manifest_cache: dict,
+    psu_cache: dict,
+) -> dict:
+    """1 model's AUROC and TPR at both target FPRs, for any placement subset under any rule.
+
+    Generalises `union_row` (which reads only `multi_probe_auroc` and
+    `multi_probe_detection`'s min reduction) to `combine_scores`'s 3 requested
+    rules, min, product and zsum, so the pool search below shares 1 scoring
+    path across every subset size.
+    """
+    val_list, clean_list, backdoor_list = probe_arrays(
+        results_dir, model, placements, manifest_cache, psu_cache
+    )
+    val_score = combine_scores(rule, val_list, val_list, None)  # (n_validation,)
+    clean_score = combine_scores(rule, clean_list, val_list, None)  # (n_backdoor,)
+    backdoor_score = combine_scores(
+        rule, backdoor_list, val_list, None
+    )  # (n_backdoor,)
+
+    row = {
+        "folder": model["folder_name"],
+        "dataset": model["report"]["dataset"],
+        "attack": model["report"]["attack"],
+        "poison_rate": model["report"]["poison_rate"],
+        "auroc": auroc_from_scores(clean_score, backdoor_score),
+    }
+    for target_fpr in TARGET_FPRS:
+        threshold = float(np.quantile(val_score.numpy(), target_fpr))
+        row[f"tpr_at_{target_fpr:.2f}"] = float(
+            (backdoor_score < threshold).float().mean()
+        )
+        row[f"fpr_at_{target_fpr:.2f}"] = float(
+            (clean_score < threshold).float().mean()
+        )
+    return row
+
+
+def subset_rule_set(
+    results_dir: str,
+    models: list[dict],
+    placements: tuple[str, ...],
+    rule: str,
+    manifest_cache: dict,
+    psu_cache: dict,
+) -> list[dict]:
+    """1 placement subset's per-model rows under 1 rule, over the models that hold every probe."""
+    covered = [model for model in models if model_has_probes(model, placements)]
+    rows = [
+        subset_rule_row(results_dir, model, placements, rule, manifest_cache, psu_cache)
+        for model in covered
+    ]
+    return rows
+
+
 def rule_row(
     val_per_probe: list[torch.Tensor],
     clean_per_probe: list[torch.Tensor],
@@ -705,6 +790,101 @@ def build_task2(
     return task2
 
 
+def pool_placements(
+    results_dir: str,
+    models: list[dict],
+    task1: dict,
+    manifest_cache: dict,
+    psu_cache: dict,
+) -> tuple[list[str], dict[str, dict]]:
+    """The 8 best solo candidates plus the attention branch output, and each one's solo summary.
+
+    The 8 are read from `task1`'s solo search over the 13 candidates that hold
+    on every model. The branch output is read separately since it holds on
+    only 66 of them.
+    """
+    solos = dict(task1["solo_summaries"])
+    top8 = sorted(
+        task1["candidates"],
+        key=lambda placement: solos[placement]["tpr10_mean"],
+        reverse=True,
+    )[:POOL_SIZE]
+
+    preload_placement(results_dir, models, ATTN_BRANCH_TM, manifest_cache, psu_cache)
+    branch_rows = union_set(
+        results_dir, models, (ATTN_BRANCH_TM,), manifest_cache, psu_cache
+    )
+    solos[ATTN_BRANCH_TM] = set_summary(branch_rows, (ATTN_BRANCH_TM,))
+
+    pool = top8 + [ATTN_BRANCH_TM]
+    return pool, solos
+
+
+def build_task3(
+    results_dir: str,
+    models: list[dict],
+    task1: dict,
+    manifest_cache: dict,
+    psu_cache: dict,
+    resamples: int,
+    seed: int,
+) -> dict:
+    """Every subset of `pool` at sizes 2 to 5, under min, product and zsum.
+
+    Ranked by mean TPR at 10% within each (size, rule) cell, which is exactly
+    how task 1 ranked pairs, so a subset's rank here is read the same way.
+    """
+    pool, solo_summaries_by_placement = pool_placements(
+        results_dir, models, task1, manifest_cache, psu_cache
+    )
+    reference_rows = task1["reference_rows"]
+
+    by_size_and_rule: dict[str, list[dict]] = {}
+    for size in POOL_SUBSET_SIZES:
+        for rule in POOL_RULES:
+            entries = []
+            for subset in itertools.combinations(pool, size):
+                rows = subset_rule_set(
+                    results_dir, models, subset, rule, manifest_cache, psu_cache
+                )
+                if not rows:
+                    continue
+                summary = set_summary(rows, subset)
+                gain = paired_gain(reference_rows, rows, resamples, seed)
+                entries.append(
+                    {
+                        "placements": list(subset),
+                        "summary": summary,
+                        "gain_over_psbd_tm": gain,
+                    }
+                )
+            entries.sort(key=lambda entry: entry["summary"]["tpr10_mean"], reverse=True)
+            by_size_and_rule[f"{size}_{rule}"] = entries
+
+    best_per_size_rule = {
+        key: entries[0] for key, entries in by_size_and_rule.items() if entries
+    }
+    top_subsets = {
+        f"{size}_{rule}": by_size_and_rule[f"{size}_{rule}"][:POOL_TOP_KEEP]
+        for size in POOL_REPORT_SIZES
+        for rule in POOL_RULES
+    }
+
+    task3 = {
+        "pool": pool,
+        "pool_solo_tpr10": {
+            placement: solo_summaries_by_placement[placement]["tpr10_mean"]
+            for placement in pool
+        },
+        "sizes": list(POOL_SUBSET_SIZES),
+        "report_sizes": list(POOL_REPORT_SIZES),
+        "rules": list(POOL_RULES),
+        "best_per_size_rule": best_per_size_rule,
+        "top_subsets": top_subsets,
+    }
+    return task3
+
+
 def build_report(args: argparse.Namespace) -> dict:
     models = select_models(args.results_dir)
     manifest_cache: dict = {}
@@ -723,6 +903,15 @@ def build_report(args: argparse.Namespace) -> dict:
     task2 = build_task2(
         args.results_dir, models, best_pair_placements, manifest_cache, psu_cache
     )
+    task3 = build_task3(
+        args.results_dir,
+        models,
+        task1,
+        manifest_cache,
+        psu_cache,
+        args.bootstrap,
+        args.seed,
+    )
 
     report = {
         "n_models_selected": len(models),
@@ -730,6 +919,7 @@ def build_report(args: argparse.Namespace) -> dict:
         "bootstrap_seed": args.seed,
         "task1_pair_search": task1,
         "task2_combination_rules": task2,
+        "task3_pool_search": task3,
     }
     return report
 
@@ -759,6 +949,15 @@ def print_summary(report: dict) -> None:
         print(
             f"task 2, {name}: best rule = {block['best_rule']}, "
             f"gain over min at TPR@10 = {block['min_vs_best_rule_tpr10_gain']:+.3f}"
+        )
+
+    task3 = report["task3_pool_search"]
+    print(f"task 3 pool: {task3['pool']}")
+    for key, entry in task3["best_per_size_rule"].items():
+        summary = entry["summary"]
+        print(
+            f"  best {key}: {summary['placements']} tpr10={summary['tpr10_mean']:.3f} "
+            f"auroc={summary['auroc_mean']:.3f} n={summary['n_models']}"
         )
 
 
@@ -966,7 +1165,115 @@ def build_disagreement_table(task2: dict) -> list[str]:
     return lines
 
 
-def closing_prose(task1: dict, task2: dict, declaration_entries: dict) -> list[str]:
+def build_pool_table(task3: dict, declaration_entries: dict) -> list[str]:
+    """Every (size, rule)'s best subset, sizes 2 to 5, size 2 marked as context only."""
+    header = [
+        "Size",
+        "Rule",
+        "Subset",
+        "n",
+        "Mean AUROC",
+        "Mean TPR@10",
+        "Mean TPR@20",
+        "Worst model",
+        "Worst AUROC",
+        "Gain over PSBD-TM [95% CI]",
+    ]
+    lines = [
+        "| " + " | ".join(header) + " |",
+        "|" + "|".join(["---"] * len(header)) + "|",
+    ]
+    for size in task3["sizes"]:
+        for rule in task3["rules"]:
+            entry = task3["best_per_size_rule"].get(f"{size}_{rule}")
+            if entry is None:
+                continue
+            summary = entry["summary"]
+            subset_words = " + ".join(
+                readable_placement(declaration_entries, placement_id)
+                for placement_id in summary["placements"]
+            )
+            worst = summary["worst_model"] or {}
+            size_text = (
+                str(size) if size in task3["report_sizes"] else f"{size} (context)"
+            )
+            row = [
+                size_text,
+                rule,
+                subset_words,
+                str(summary["n_models"]),
+                fmt(summary["auroc_mean"]),
+                fmt(summary["tpr10_mean"]),
+                fmt(summary["tpr20_mean"]),
+                f"{dataset_label(worst.get('dataset', ''))} {attack_label(worst.get('attack', ''))}",
+                fmt(worst.get("auroc")),
+                f"{fmt_signed(entry['gain_over_psbd_tm']['mean_gain'])} "
+                f"{ci_text(entry['gain_over_psbd_tm'])}",
+            ]
+            lines.append("| " + " | ".join(row) + " |")
+    return lines
+
+
+def pool_trend_prose(task3: dict) -> list[str]:
+    """1 sentence per rule, how mean TPR at 10% moves as the union grows from 2 to 5 members."""
+    sentences = []
+    for rule in task3["rules"]:
+        points = [
+            (
+                size,
+                task3["best_per_size_rule"][f"{size}_{rule}"]["summary"]["tpr10_mean"],
+            )
+            for size in task3["sizes"]
+            if f"{size}_{rule}" in task3["best_per_size_rule"]
+        ]
+        if len(points) < 2:
+            continue
+        steps = ", ".join(
+            f"{points[i][0]} to {points[i + 1][0]} {fmt_signed(points[i + 1][1] - points[i][1])}"
+            for i in range(len(points) - 1)
+        )
+        sentences.append(
+            f"Under {rule}, mean TPR at 10% moves {steps} as the union grows."
+        )
+    return sentences
+
+
+def best_pool_subset(task3: dict) -> dict:
+    """The single best subset over the requested sizes 3, 4 and 5, by mean TPR at 10%."""
+    candidates = [
+        entry
+        for key, entry in task3["best_per_size_rule"].items()
+        if int(key.split("_", 1)[0]) in task3["report_sizes"]
+    ]
+    best = max(candidates, key=lambda entry: entry["summary"]["tpr10_mean"])
+    return best
+
+
+def overall_best_pool_subset(task3: dict) -> dict:
+    """The single best subset over EVERY searched size, 2 to 5, by mean TPR at 10%.
+
+    Size 2 is the trend anchor, not a requested result, but a deployment
+    recommendation that ignored it when it wins would recommend needless
+    complexity for no gain, which the plateau question exists to catch.
+    """
+    best = max(
+        task3["best_per_size_rule"].values(),
+        key=lambda entry: entry["summary"]["tpr10_mean"],
+    )
+    return best
+
+
+def rule_of_entry(task3: dict, entry: dict) -> str:
+    """Which rule produced `entry`, by matching it back into `best_per_size_rule`."""
+    for key, candidate in task3["best_per_size_rule"].items():
+        if candidate is entry:
+            return key.split("_", 1)[1]
+    return "min"
+
+
+def closing_prose(
+    task1: dict, task2: dict, task3: dict, declaration_entries: dict
+) -> list[str]:
     best_pair = task1["top10"][0]
     best_summary = best_pair["summary"]
     pair_words = " and ".join(
@@ -979,24 +1286,56 @@ def closing_prose(task1: dict, task2: dict, declaration_entries: dict) -> list[s
     rule_gain = best_pair_rule["min_vs_best_rule_tpr10_gain"]
     disagreement = best_pair_rule.get("disagreement_subset", {})
 
+    # The overall best over EVERY searched size, not only the requested 3 to 5, is
+    # the honest deployment pick: the best subset of size 3 to 5 (best_pool_subset)
+    # turns out not to beat the pool's own best 2-probe combination, so deploying
+    # it anyway would trade complexity for nothing.
+    best_large = best_pool_subset(task3)
+    deployed = overall_best_pool_subset(task3)
+    deployed_summary = deployed["summary"]
+    deployed_rule = rule_of_entry(task3, deployed)
+    deployed_size = len(deployed_summary["placements"])
+    deployed_words = " and ".join(
+        readable_placement(declaration_entries, placement_id)
+        for placement_id in deployed_summary["placements"]
+    )
+    deployed_gain_over_pair_tpr10 = (
+        deployed_summary["tpr10_mean"] - best_summary["tpr10_mean"]
+    )
+    growth_to_best_large = (
+        best_large["summary"]["tpr10_mean"] - deployed_summary["tpr10_mean"]
+    )
+
     sentences = [
         f"The best-unioning pair is PSBD-TM with {pair_words}, "
         f"mean AUROC {fmt(best_summary['auroc_mean'])} and mean TPR at 10% "
         f"{fmt(best_summary['tpr10_mean'])} on {best_summary['n_models']} models, "
         f"a gain over PSBD-TM alone of {fmt_signed(best_pair['gain_over_psbd_tm']['mean_gain'])} "
         f"AUROC {ci_text(best_pair['gain_over_psbd_tm'])}.",
-        f"At the 10% clean-validation quantile the union raises TPR by "
+        f"At the 10% clean-validation quantile the pair raises TPR by "
         f"{fmt_signed(gain_tpr10)} over PSBD-TM alone, from {fmt(tm_reference)} to "
-        f"{fmt(best_summary['tpr10_mean'])}.",
-        "The min rule is already the best of the 6 combination rules on the best pair."
-        if best_pair_rule["best_rule"] == "min"
-        else f"The min rule is not the best combination rule on the best pair, "
-        f"{best_pair_rule['best_rule']} reads {fmt_signed(rule_gain)} more mean "
-        f"TPR at 10% than min.",
+        f"{fmt(best_summary['tpr10_mean'])}, and "
+        + (
+            "the min rule is already the best of the 6 rules tested on it."
+            if best_pair_rule["best_rule"] == "min"
+            else f"{best_pair_rule['best_rule']} beats min on it by "
+            f"{fmt_signed(rule_gain)} more mean TPR at 10%."
+        ),
+        f"The union to deploy is the {deployed_size}-probe set {deployed_words} under "
+        f"the {deployed_rule} rule, mean AUROC {fmt(deployed_summary['auroc_mean'])}, "
+        f"mean TPR at 10% {fmt(deployed_summary['tpr10_mean'])} and mean TPR at 20% "
+        f"{fmt(deployed_summary['tpr20_mean'])} on {deployed_summary['n_models']} models.",
+        f"That set gains {fmt_signed(deployed['gain_over_psbd_tm']['mean_gain'])} AUROC "
+        f"{ci_text(deployed['gain_over_psbd_tm'])} over PSBD-TM alone and "
+        f"{fmt_signed(deployed_gain_over_pair_tpr10)} mean TPR at 10% over the best pair.",
+        f"Every larger subset searched plateaus at or below that 2-probe ceiling, "
+        f"the best 3-to-5-probe union reads {fmt(best_large['summary']['tpr10_mean'])} "
+        f"mean TPR at 10%, {fmt_signed(growth_to_best_large)} against the deployed pair, "
+        "so adding a 3rd, 4th or 5th probe to this pool buys no further detection power.",
     ]
     if disagreement:
         sentences.append(
-            f"On the {disagreement['n_models']} models where the pair's 2 probes "
+            f"On the {disagreement['n_models']} models where the best pair's 2 probes "
             f"disagree most, the best rule is {disagreement['best_rule']}, "
             + (
                 "the same answer as the whole model set."
@@ -1004,11 +1343,6 @@ def closing_prose(task1: dict, task2: dict, declaration_entries: dict) -> list[s
                 else "a different answer from the whole model set."
             )
         )
-    sentences.append(
-        f"The greedy triple adds {readable_placement(declaration_entries, task1['greedy_triple']['placements'][-1])} "
-        f"to the best pair for a further {fmt_signed(task1['greedy_triple']['summary']['tpr10_mean'] - best_summary['tpr10_mean'])} "
-        f"mean TPR at 10%."
-    )
     return sentences
 
 
@@ -1093,9 +1427,31 @@ def write_docs(
     lines.append("")
     lines += build_disagreement_table(task2)
 
+    task3 = report["task3_pool_search"]
+    pool_words = ", ".join(
+        f"{readable_placement(declaration_entries, placement_id)} "
+        f"({fmt(task3['pool_solo_tpr10'][placement_id])})"
+        for placement_id in task3["pool"]
+    )
+    lines.append("## Task 3, unions larger than pairs")
+    lines.append("")
+    lines.append(
+        f"The pool is the {POOL_SIZE} candidates with the best solo mean TPR at 10% "
+        f"on the {report['n_models_selected']} models plus the attention branch output "
+        "token mask on its own 66 models, each with its solo mean TPR at 10% in "
+        f"parentheses: {pool_words}. Every subset of size 3, 4 and 5 from this pool is "
+        "scored under the min, product and z-sum rules, size 2 is added only as the "
+        "trend anchor and is not itself a requested result."
+    )
+    lines.append("")
+    lines += build_pool_table(task3, declaration_entries)
+    lines.append("")
+    lines += pool_trend_prose(task3)
+    lines.append("")
+
     lines.append("## Summary")
     lines.append("")
-    lines += closing_prose(task1, task2, declaration_entries)
+    lines += closing_prose(task1, task2, task3, declaration_entries)
     lines.append("")
 
     with open(path, "w") as handle:
