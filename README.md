@@ -72,15 +72,17 @@ training/       the training loop, checkpoint provenance, SAM
 defences/       PSBD: operators, inference, scores, decision rules, the stage-1 cache
 detectors/      competitor input detectors, 1 registry, 1 module per method
 analysis/       latent-space analysis: TAC, CKA, PCA, UMAP, Lipschitz
+visualization/  the figures over analysis/'s statistics, 1 module per figure family
 evaluation/     attack success rate, clean accuracy, loaders, summary
-utils/          numerics only
+utils/          numerics and provenance helpers, no subject of their own
 cli/            1 module per command, the only place a main() lives
-scripts/        repo-level tools: the coverage ledger, table generators, the prose audit
+scripts/        repo-level tools: the coverage ledger, scripts/paper/, the prose audit
 tests/          the suite
-docs/hypothesis/  47 pre-registered hypotheses with verdicts
+docs/hypothesis/  pre-registered hypotheses with verdicts
 docs/results/     detection tables, analysis reports, protocol docs
-notebooks/        executable documentation, committed with outputs (00 is the index)
-pbs/               PBS job generators for cluster scheduling
+experiments/       hypothesis-driven experiments, 1 directory per question, indexed in docs/experiments-index.md
+notebooks/          executable documentation, committed with outputs (00 is the index)
+pbs/                 PBS job generators for cluster scheduling
 ```
 
 Full layout and the rule for where a new file goes: `docs/repository-layout.md`.
@@ -91,26 +93,37 @@ Full layout and the rule for where a new file goes: `docs/repository-layout.md`.
 |---|---|
 | `cli.train_backdoor` | Train a backdoored ViT or Swin model |
 | `cli.train_benign` | Train benign ViT models, the negative controls |
-| `cli.sweep` | Stage 1: GPU sweep over dropout rates for a (checkpoint, position) pair, writes raw per-pass probabilities |
+| `cli.sweep` | Stage 1: GPU sweep over a (checkpoint, position, operator) triple, writes raw per-pass probabilities |
 | `cli.analyze` | Stage 2: CPU analysis of a checkpoint's cache, writes psbd_metrics.json |
+| `cli.baselines` | Score the competitor detectors on exactly the splits PSBD is scored on |
+| `cli.compare placements report` | Aggregate every psbd_metrics.json into a single per-checkpoint table |
 | `cli.compare placements summary` | Collapse every psbd_metrics.json into a single compact table |
 | `cli.compare placements tables` | Per-dataset detection tables, with the coverage bar enforced in code |
-| `cli.compare placements report` | Aggregate every psbd_metrics.json into a single per-checkpoint table |
 | `cli.compare placements variants` | PSBD as published against the recommended ViT configuration, head to head |
 | `cli.compare operating-points` | Detection at low false-positive rates (1%, 5%) |
-| `cli.baselines` | Score the competitor detectors on exactly the splits PSBD is scored on |
 | `cli.compare detectors` | 1 table per metric, PSBD against every competitor detector |
-| `cli.compare fused` | Fuse PSBD and STRIP, whose failures are disjoint |
+| `cli.compare fused` | Fuse PSBD with 1 named competitor detector by rank |
 | `cli.evaluate` | Attack-success, clean-accuracy and stealth metrics for every checkpoint |
+| `cli.visualize` | Render 1 registered figure tool over a checkpoint's cached statistics, 1 subcommand per tool |
 | `cli.backfill` | Recover metadata fields that are deducible from artifacts already on disk |
 | `cli.lc_bases` | Generate the adversarially perturbed base images the Label-Consistent attack needs |
 | `cli.head_profile` | Per-head sensitivity profile, ablating each attention head in turn |
 | `cli.analyze_latent` | Latent-space analysis of a checkpoint: TAC, backdoor direction, CKA, PCA |
 
+7 reporting commands were folded into `cli.compare`'s 4 subcommands
+(`placements`, `operating-points`, `detectors`, `fused`) shown above. Their
+old names still run: `cli.report`, `cli.summary`, `cli.tables` and
+`cli.variants` each forward to a `placements` action, `cli.operating_points`
+forwards to `operating-points`, `cli.compare_detectors` forwards to
+`detectors`, and `cli.fuse_detectors` forwards to `fused`. Run
+`python -m cli.compare --help` and `python -m cli.compare <subcommand> --help`
+for every flag.
+
 `scripts/` holds repo-level tools that are not commands: `coverage_ledger.py`,
-`vit_config_inventory.py`, `vit_config_tables.py`, `vit_detection_tables.py`,
-`vit_shift_target_compare.py`, `vit_top3_tables.py`, `verify_results.py`,
-`verify_splits.py`, `prose_audit.py` and `check_prose_only.py`.
+`scripts/paper/build_all.py` and its generators, `vit_config_inventory.py`,
+`vit_config_tables.py`, `vit_detection_tables.py`, `vit_shift_target_compare.py`,
+`vit_top3_tables.py`, `verify_results.py`, `verify_splits.py`, `prose_audit.py`
+and `check_prose_only.py`.
 
 ## Competitor detectors
 
