@@ -1,0 +1,40 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Placement over operator}
+\label{sec:placement}
+
+\begin{claim}{NEGATIVE}{F04}
+The project began with a binary, dropout before against after the residual add, and replaced it with a family split, positions that feed a sublayer against positions on or beside the stream. If either carried the effect, it would survive a panel where the operator is held fixed and the strength is matched. Both are tested here and neither survives, and what remains is the evidence for the specific placement and for the axes that produced it.
+\end{claim}
+
+\subsection{The founding claim on the panel}
+
+The founding claim was that dropout on each branch output, before the add, separates clean from triggered inputs better than dropout on the stream after it\finding{NEGATIVE}{F24}. \Cref{tab:pre-post} pairs the placements within cell over \PreMinusPostN{} cached cells. The gap is \PreMinusPostMatched{} at the matched rule with an interval of [\PreMinusPostMatchedLow{}, \PreMinusPostMatchedHigh{}] and \PreMinusPostAdaptive{} at the adaptive rule. The earlier reading of a large pre-residual advantage on CIFAR-10 came from sweeping the published placement outside its own rate window, which on \VitBlocks{} blocks sits an order of magnitude below the ConvNet grid, and it is the first of the conclusions in this project that a strength-matched comparison overturned. The refutation rests on the full panel, which is the evidence class of a CRITICAL claim, and it is the reason every comparison below is read at matched strength.
+
+\input{tables/pre_post}
+
+\subsection{The family split does not survive operator matching}
+
+The claim that replaced it was that the effect lives in the family, sublayer inputs against residual-adjacent positions, measured on the earlier CIFAR-10 dropout panel with an interval excluding $0$\finding{NEGATIVE}{F04}. \Cref{tab:family-split} reads the same split on the basis panel with the operator held fixed at the token mask, the input-side placements against the residual-adjacent ones, each family's cell value the mean over its members. The gap is \FamilyGapMatched{} at the matched rule, interval [\FamilyGapMatchedLow{}, \FamilyGapMatchedHigh{}], and \FamilyGapAdaptive{} at the adaptive rule, interval [\FamilyGapAdaptiveLow{}, \FamilyGapAdaptiveHigh{}]. \Cref{tab:family-split-loo} refits it with each attack dropped and the smallest refit is \FamilyGapMinLeaveOneAttackOut{}. \Cref{tab:family-split-local-global} splits it by trigger locality, \FamilyGapLocal{} on local triggers and \FamilyGapGlobal{} on global ones, neither excluding $0$. The reading that mixes operators inside the families, \cref{tab:family-split-confounded} in the appendix, gives \FamilyGapConfoundedMatched{} with interval [\FamilyGapConfoundedMatchedLow{}, \FamilyGapConfoundedMatchedHigh{}], a sign reversal produced by the gaussian and scale-up members of the input-side family, which is what confounding position with operator does. The original effect was a dropout measurement on a single dataset, the basis panel carries no dropout at any input-side position, and the operator-matched dropout row of \cref{tab:family-split} prints \pending{} until that sweep runs. On the evidence in hand the family claim is withdrawn, and the runner-up placement of \cref{tab:basis-ranking} being a residual-adjacent token mask says the same thing from the other side.
+
+\input{tables/family_split}
+\input{tables/family_split_leave_one_out}
+\input{tables/family_split_local_global}
+
+\subsection{What the axes do carry}
+
+Holding the operator fixed and moving the site, \cref{tab:operators-deltas}, the token mask at the attention input beats the token mask at the MLP input by \AttentionInputMinusMlpInputTokenMask{} with interval [\AttentionInputMinusMlpInputTokenMaskLow{}, \AttentionInputMinusMlpInputTokenMaskHigh{}]\finding{STRONG}{F05}. Both sites are sublayer inputs and both are followed by a LayerNorm, so the site effect within the input-side family is larger than the family gap ever was, and it separates the sublayers rather than the families. Holding the site fixed and moving the operator, gaussian noise at the attention input loses to the token mask by \GaussianMinusTokenMaskAttentionNorm{}, interval [\GaussianMinusTokenMaskAttentionNormLow{}, \GaussianMinusTokenMaskAttentionNormHigh{}], and to the channel mask by \GaussianMinusChannelMaskAttentionNorm{}, while at the normalised MLP input the same noise beats the token mask by \GaussianMinusTokenMaskMlp{}, interval [\GaussianMinusTokenMaskMlpLow{}, \GaussianMinusTokenMaskMlpHigh{}]\finding{STRONG}{F06}. The sign of the operator effect depends on whether a LayerNorm follows the injection point, and \cref{sec:latent} gives the measured reason.
+
+\input{tables/operators}
+\input{tables/operators_deltas}
+
+The title's claim, that position dominates operator, has to be stated with its condition\finding{SUPPORTING}{F07}. On the basis panel the range of mean AUROC across the token mask's all-blocks positions is \PositionRangeTokenMaskMatched{} at the matched rule against an operator range of \OperatorRangeAttentionNormMatched{} at the attention input, a ratio of \PositionOverOperatorRatioMatched{}, and \PositionRangeTokenMaskAdaptive{} against \OperatorRangeAttentionNormAdaptive{} at the adaptive rule, a ratio of \PositionOverOperatorRatioAdaptive{}. The operator range is carried almost entirely by gaussian noise at the single position where a LayerNorm absorbs it. With the masking operators alone the operator range is \OperatorRangeAttentionNormMasksMatched{} and \OperatorRangeAttentionNormMasksAdaptive{}, and the ratio is \PositionOverOperatorRatioMasksMatched{} and \PositionOverOperatorRatioMasksAdaptive{}. Position dominates operator among operators that survive normalisation, and an additive operator placed before a norm is the exception that the mechanism chapter explains. An earlier ratio of this project had no runnable path back to a number, and these are the ones that do.
+
+\subsection{Per-sample agreement across placements}
+
+If every placement estimated the same per-sample quantity, their rankings of individual samples would agree. \Cref{tab:mech-operator-agreement-family} gives the mean Spearman correlation between placements' per-sample fractional PSU at their matched rates, \AgreementWithinInputSideClean{} within the input-side family and \AgreementAcrossFamiliesClean{} across families on clean samples, with the full matrix against the recommended placement in \cref{tab:mech-operator-agreement} in the appendix\finding{SUPPORTING}{F11}. The agreement between gaussian noise and the token mask at the same position is \AgreementGaussianVsTokenMaskClean{}, and between the IBD-PSC amplification and the recommended placement \AgreementGainScaleVsRecommendedClean{}. The placements agree about as much across families as within them, which is consistent with a single underlying quantity read through different Jacobians, and no more than moderately, which is why probe diversity has something to add in \cref{sec:limitations}.
+
+\input{tables/mech_operator_agreement_family}
+
+\end{document}

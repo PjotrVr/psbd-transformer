@@ -39,7 +39,7 @@ same statistic. On Swin, train mode leaves stochastic depth active, which gives
 the attacker a noisier, differently centred PSU than the defender reads.
 
 See docs/plans/adaptive-attacker-and-dropout-stacking.md for the threat model, the
-success criteria, and the transfer test that is the actual point.
+success criteria and the transfer test that is the actual point.
 """
 
 import torch
@@ -47,7 +47,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
-from defences.operators import build_perturbation
+from defences.operators import build_operator
 from models.positions import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
 
 # Guards the division when the model gives its own predicted class almost no
@@ -78,7 +78,8 @@ class FlaggedPoisonedSet(Dataset):
 
     def __getitem__(self, index: int):
         image, label = self.inner[index]
-        return image, label, int(index in self.inner.poison_indices)
+        is_poisoned = int(index in self.inner.poison_indices)
+        return image, label, is_poisoned
 
 
 def psu_for_batch(
@@ -102,9 +103,9 @@ def psu_for_batch(
     model tree and explicitly set to train mode by plug_dropout, so they sample
     masks regardless.
 
-    The probe is plugged and unplugged around the stochastic passes. The finally is
-    not decoration: a probe left attached leaks into the next step's clean forward
-    pass and compounds across steps, so the model would be trained against a
+    The probe is plugged and unplugged around the stochastic passes, in a finally,
+    because a probe left attached leaks into the next step's clean forward pass
+    and compounds across steps, so the model would be trained against a
     perturbation nobody recorded.
     """
     was_training = model.training
@@ -113,17 +114,18 @@ def psu_for_batch(
     if logits is None:
         logits = model(images)  # (batch, num_classes)
     tracked = logits.argmax(dim=1).detach()  # (batch,)
-    base = F.softmax(logits, dim=1).gather(1, tracked.view(-1, 1)).squeeze(1)
+    probs = F.softmax(logits, dim=1)  # (batch, num_classes)
+    base = probs.gather(1, tracked.view(-1, 1)).squeeze(1)  # (batch,)
 
     names = DROPOUT_CONFIGS.get(probe["position"], (probe["position"],))
-    factory = {name: build_perturbation(probe["operator"]) for name in names}
+    factory = {name: build_operator(probe["operator"]) for name in names}
     handles = plug_dropout(model, probe["architecture"], names, factory, probe["rate"])
     try:
         dropped = torch.zeros_like(base)  # (batch,)
         for _ in range(passes):
-            perturbed = F.softmax(model(images), dim=1)
+            perturbed = F.softmax(model(images), dim=1)  # (batch, num_classes)
             dropped = dropped + perturbed.gather(1, tracked.view(-1, 1)).squeeze(1)
-        dropped = dropped / passes
+        dropped = dropped / passes  # (batch,)
     finally:
         unplug_dropout(handles)
 
@@ -161,15 +163,15 @@ def calibrate_probe_rate(
     operator = probe_config["operator"]
 
     names = DROPOUT_CONFIGS.get(position, (position,))
-    factory = {name: build_perturbation(operator) for name in names}
+    factory = {name: build_operator(operator) for name in names}
 
     baseline_argmax = []
     all_images = []
     for images, _ in val_loader:
-        images = images.to(device)
+        images = images.to(device)  # (batch, C, H, W)
         all_images.append(images)
-        logits = model(images)
-        baseline_argmax.append(logits.argmax(dim=1).cpu())
+        logits = model(images)  # (batch, num_classes)
+        baseline_argmax.append(logits.argmax(dim=1).cpu())  # (batch,)
     baseline_argmax = torch.cat(baseline_argmax)  # (N,)
 
     shift_by_rate = {}
@@ -178,8 +180,8 @@ def calibrate_probe_rate(
         try:
             perturbed_argmax = []
             for images in all_images:
-                logits = model(images)
-                perturbed_argmax.append(logits.argmax(dim=1).cpu())
+                logits = model(images)  # (batch, num_classes)
+                perturbed_argmax.append(logits.argmax(dim=1).cpu())  # (batch,)
             perturbed_argmax = torch.cat(perturbed_argmax)  # (N,)
             shifted = (perturbed_argmax != baseline_argmax).float().mean().item()
             shift_by_rate[rate] = shifted
@@ -237,7 +239,7 @@ def evasive_update(
     optimizer.step()
 
     poisoned = is_poisoned.bool()  # (batch,)
-    # Both group means are reported, not just the gap. The cheapest way to close
+    # Both group means are reported beside the gap. The cheapest way to close
     # the gap is to drag clean shift down to meet poisoned rather than raise
     # poisoned, which changes the whole model rather than hiding a backdoor, and
     # the gap alone cannot tell the 2 apart.
@@ -288,8 +290,9 @@ def train_one_epoch_evasive(
         )
         total_loss += float(loss)
         batches += 1
+        # A nan marks a group missing from this batch and is left out of the mean.
         for key, value in stats.items():
-            if value == value:  # skip nan from a group missing in this batch
+            if value == value:
                 sums[key] += value
                 counts[key] += 1
 

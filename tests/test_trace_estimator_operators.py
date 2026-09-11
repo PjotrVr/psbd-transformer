@@ -19,9 +19,9 @@ import pytest
 import torch
 
 from defences.operators import (
-    DETERMINISTIC_PERTURBATIONS,
-    PERTURBATIONS,
-    build_perturbation,
+    DETERMINISTIC_OPERATORS,
+    OPERATORS,
+    build_operator,
 )
 
 PROBE_DIMENSION = 64
@@ -132,7 +132,7 @@ def test_the_rademacher_advantage_is_negligible_on_a_generic_matrix():
 
 def test_rademacher_perturbs_by_exactly_the_requested_scale():
     """Every entry moves by the same magnitude, which is what makes it isotropic."""
-    module = build_perturbation("rademacher")(0.3).train()
+    module = build_operator("rademacher")(0.3).train()
     generator = torch.Generator().manual_seed(4)
     activation = torch.randn(4, 6, 8, generator=generator)
 
@@ -157,7 +157,7 @@ def test_rademacher_and_gaussian_share_the_same_covariance_scale():
     deviations = {}
     for name in ("gaussian", "rademacher"):
         torch.manual_seed(6)
-        module = build_perturbation(name)(0.25).train()
+        module = build_operator(name)(0.25).train()
         deviations[name] = module(activation) - activation
 
     for name, deviation in deviations.items():
@@ -170,17 +170,17 @@ def test_rademacher_and_gaussian_share_the_same_covariance_scale():
 
 def test_rademacher_is_registered_as_stochastic():
     """It draws fresh signs per pass, so k passes are k different estimates."""
-    assert "rademacher" in PERTURBATIONS
-    assert "rademacher" not in DETERMINISTIC_PERTURBATIONS
+    assert "rademacher" in OPERATORS
+    assert "rademacher" not in DETERMINISTIC_OPERATORS
 
-    module = build_perturbation("rademacher")(0.3).train()
+    module = build_operator("rademacher")(0.3).train()
     activation = torch.randn(2, 5, 7, generator=torch.Generator().manual_seed(7))
     assert not torch.equal(module(activation), module(activation))
 
 
 def test_rademacher_is_inert_in_eval_mode():
     """Like every probe here, it must vanish when the model is not being probed."""
-    module = build_perturbation("rademacher")(0.5).eval()
+    module = build_operator("rademacher")(0.5).eval()
     activation = torch.randn(2, 5, 7, generator=torch.Generator().manual_seed(8))
 
     assert torch.equal(module(activation), activation)

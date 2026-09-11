@@ -37,7 +37,7 @@ from attacks import build_attack, default_config
 from defences.cache import baseline_path, load_baseline
 from data.registry import DATASET_REGISTRY
 from data.loading import extract_labels, load_clean_datasets
-from attacks.poisoning import choose_poison_indices
+from attacks.poisoning import choose_indices_with_cover, choose_poison_indices
 
 # Class counts per dataset are fixed, so the training label vector can be rebuilt
 # without touching the images. CIFAR and Tiny are balanced by construction. GTSRB
@@ -79,18 +79,23 @@ def deduce_realized_poison_rate(
 ) -> dict | None:
     """Replay the seeded poison selection and report the fraction actually poisoned.
 
-    Returns None when the selection cannot be replayed from folder metadata alone,
-    which is a cover-sample attack (a different selector) or a truncated run (a
-    different pool).
+    Returns None when the selection cannot be replayed from folder metadata alone:
+    a recovered orphan with no attack recorded, or a truncated run, whose
+    eligible pool is not the full training set.
     """
+    # A checkpoint recovered from an orphaned file may record no attack at all,
+    # and default_config(None) raises, which would abort the run over 1 folder.
+    if not metadata.get("attack") or not metadata.get("dataset"):
+        return None
     if metadata["attack"] == "benign":
         return {
             "realized_poison_rate": 0.0,
             "requested_count": 0,
             "realized_count": 0,
             "capped": False,
+            "cover_count": 0,
         }
-    if metadata.get("cover_rate") or metadata.get("max_samples"):
+    if metadata.get("max_samples"):
         return None
 
     dataset = metadata["dataset"]
@@ -98,15 +103,39 @@ def deduce_realized_poison_rate(
         label_cache[dataset] = training_labels(dataset, raw_data_dir)
     labels = label_cache[dataset]
 
+    config = default_config(metadata["attack"])
     attack = build_attack(
         metadata["attack"],
-        default_config(metadata["attack"]),
+        config,
         DATASET_REGISTRY[dataset].image_size,
         metadata["target_label"],
     )
-    chosen = choose_poison_indices(
-        labels, attack, metadata["poison_rate"], metadata["seed"]
-    )
+
+    # A cover-sample attack selects through a different function, and skipping
+    # it is how TaCT's cap stayed invisible: source_classes defaults to a single
+    # class, so its eligible pool is as small as clean-label's. The chosen count
+    # depends only on the pool size and the requested rate, never on the seed.
+    cover_rate = metadata.get("cover_rate") or 0.0
+    source_classes = getattr(config, "source_classes", None)
+    # Runs predating the seeding commit record seed null, but their poison draw
+    # still went through default_rng(0): the selection always took an explicit
+    # seed and the entrypoint defaulted it to 0. Passing null through would seed
+    # from OS entropy and hand back a different index set every call.
+    selection_seed = metadata["seed"] or 0
+    cover: set = set()
+    if cover_rate > 0.0 or source_classes is not None:
+        chosen, cover = choose_indices_with_cover(
+            labels,
+            attack,
+            metadata["poison_rate"],
+            cover_rate,
+            source_classes,
+            selection_seed,
+        )
+    else:
+        chosen = choose_poison_indices(
+            labels, attack, metadata["poison_rate"], selection_seed
+        )
 
     # The count the rate asked for, before the eligible-pool cap. Comparing counts
     # rather than rates separates a real cap from the integer rounding that every
@@ -117,6 +146,7 @@ def deduce_realized_poison_rate(
         "requested_count": requested_count,
         "realized_count": len(chosen),
         "capped": len(chosen) < requested_count,
+        "cover_count": len(cover),
     }
     return selection
 
@@ -140,10 +170,23 @@ def deduce_rates_from_cache(results_dir: str, folder: str) -> dict | None:
 
 
 def apply_selection(metadata: dict, selection: dict) -> None:
-    """Record the replayed poison selection into the checkpoint's metadata."""
+    """Record the replayed poison selection into the checkpoint's metadata.
+
+    A deduced value never overwrites a measured one: n_cover is filled only when
+    the training run did not record it, and label_mode only when it is null,
+    which 60 older folders carry.
+    """
     metadata["realized_poison_rate"] = selection["realized_poison_rate"]
     metadata["poison_rate_capped"] = selection["capped"]
     metadata["n_poisoned"] = selection["realized_count"]
+    if "n_cover" not in metadata and selection["cover_count"]:
+        metadata["n_cover"] = selection["cover_count"]
+    if metadata.get("label_mode") is None and metadata["attack"] != "benign":
+        # benign has no attack config and "generated" has no default config.
+        try:
+            metadata["label_mode"] = default_config(metadata["attack"]).label_mode
+        except (KeyError, ValueError):
+            pass
 
 
 def apply_deduced_rates(metadata: dict, deduced: dict) -> None:

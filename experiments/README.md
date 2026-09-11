@@ -8,8 +8,8 @@ Throwaway work goes in `scratch/`, which is gitignored and holds smoke tests, jo
 generators, already-run migrations, and regenerable caches. Nothing in `scratch/`
 may be the only source of a published number.
 
-Repo-level tools are not experiments and stay in `scripts/`: `detection_summary.py`,
-`verify_results.py`, and `backfill_metadata.py`.
+Repo-level tools are not experiments and stay in `scripts/`:
+`verify_results.py` and the coverage ledger.
 
 ## Conventions
 

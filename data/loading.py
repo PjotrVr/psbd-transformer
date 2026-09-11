@@ -47,7 +47,7 @@ def denormalize(image: torch.Tensor, dataset_name: str) -> torch.Tensor:
     mean = torch.tensor(spec.mean).view(-1, 1, 1)  # (C, 1, 1)
     std = torch.tensor(spec.std).view(-1, 1, 1)  # (C, 1, 1)
 
-    original_range = image * std + mean
+    original_range = image * std + mean  # same shape as image
     return original_range
 
 
@@ -66,7 +66,10 @@ def split_eurosat(root: str, transform) -> tuple[Dataset, Dataset]:
         len(full), generator=torch.Generator().manual_seed(EUROSAT_SPLIT_SEED)
     ).tolist()
     cut = int(len(full) * EUROSAT_TEST_FRACTION)
-    return Subset(full, order[cut:]), Subset(full, order[:cut])
+
+    train_ds = Subset(full, order[cut:])
+    test_ds = Subset(full, order[:cut])
+    return train_ds, test_ds
 
 
 def load_clean_datasets(
@@ -93,7 +96,8 @@ def load_clean_datasets(
         return train_ds, test_ds
 
     if spec.loader_kind == "eurosat":
-        return split_eurosat(root, transform)
+        train_ds, test_ds = split_eurosat(root, transform)
+        return train_ds, test_ds
 
     if spec.loader_kind == "gtsrb":
         train_ds = tv_datasets.GTSRB(
@@ -156,12 +160,17 @@ def extract_labels(dataset: Dataset) -> list[int]:
         selected_labels = [parent_labels[i] for i in dataset.indices]
         return selected_labels
 
-    if hasattr(dataset, "targets"):  # CIFAR-10, CIFAR-100
-        return [int(y) for y in dataset.targets]
-    if hasattr(dataset, "samples"):  # ImageFolder
-        return [int(y) for _, y in dataset.samples]
-    if hasattr(dataset, "_samples"):  # torchvision GTSRB
-        return [int(y) for _, y in dataset._samples]
+    # CIFAR-10 and CIFAR-100 expose targets, ImageFolder exposes samples and
+    # torchvision's GTSRB keeps its (path, label) pairs in _samples.
+    if hasattr(dataset, "targets"):
+        target_labels = [int(y) for y in dataset.targets]
+        return target_labels
+    if hasattr(dataset, "samples"):
+        sample_labels = [int(y) for _, y in dataset.samples]
+        return sample_labels
+    if hasattr(dataset, "_samples"):
+        gtsrb_labels = [int(y) for _, y in dataset._samples]
+        return gtsrb_labels
 
     decoded_labels = [int(dataset[i][1]) for i in range(len(dataset))]
     return decoded_labels

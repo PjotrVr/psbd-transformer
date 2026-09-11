@@ -1,0 +1,59 @@
+{
+  "generator": "scripts/paper/tab_all_to_all.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+  ],
+  "written_at": "2026-09-10T23:36:41.557070+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "ATwoaCells": {
+      "value": "12",
+      "meaning": "all-to-all cells scored"
+    },
+    "ATwoaPsuAuroc": {
+      "value": "0.411",
+      "meaning": "mean PSU AUROC on all-to-all cells"
+    },
+    "ATwoaEntropyAuroc": {
+      "value": "0.761",
+      "meaning": "mean negative-entropy AUROC on all-to-all cells"
+    },
+    "ATwooPsuAuroc": {
+      "value": "0.891",
+      "meaning": "mean PSU AUROC on the all-to-one cells of the same record"
+    },
+    "ATwooEntropyAuroc": {
+      "value": "0.408",
+      "meaning": "mean negative-entropy AUROC on the all-to-one cells"
+    },
+    "BenignEntropyAuroc": {
+      "value": "0.506",
+      "meaning": "mean negative-entropy AUROC on the benign references"
+    },
+    "RouterCells": {
+      "value": "64",
+      "meaning": "cells the sign router was scored on"
+    },
+    "RouterAlwaysPsu": {
+      "value": "0.819",
+      "meaning": "mean AUROC of always choosing PSU"
+    },
+    "RouterRouted": {
+      "value": "0.865",
+      "meaning": "mean AUROC of the sign router"
+    },
+    "RouterOracle": {
+      "value": "0.883",
+      "meaning": "mean AUROC of the per-cell oracle choice"
+    },
+    "RouterDelta": {
+      "value": "+0.045",
+      "meaning": "mean gain of the sign router over always-PSU"
+    },
+    "RouterDeltaCi": {
+      "value": "[+0.017, +0.079]",
+      "meaning": "bootstrap interval on the sign router's gain"
+    }
+  }
+}

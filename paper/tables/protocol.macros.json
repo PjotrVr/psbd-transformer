@@ -1,0 +1,248 @@
+{
+  "generator": "scripts/paper/app_protocol.py",
+  "inputs": [
+    "defences/decision.py",
+    "defences/operators.py",
+    "models/positions.py",
+    "data/splits.py",
+    "detectors/__init__.py",
+    "configs/psbd_basis.json",
+    "checkpoints/<benign reference>/args.json"
+  ],
+  "written_at": "2026-09-10T23:34:14.893996+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "AdaptiveShiftTarget": {
+      "value": "0.8",
+      "meaning": "the clean-validation shift ratio PSBD's adaptive rate rule reaches for"
+    },
+    "PlacementMatchTarget": {
+      "value": "0.6",
+      "meaning": "the clean-validation shift ratio the cross-placement comparison matches at"
+    },
+    "ShiftMatchTargets": {
+      "value": "0.2, 0.4, 0.6, 0.8",
+      "meaning": "the ladder of matched shift ratios every placement is read at"
+    },
+    "HeadlineQuantile": {
+      "value": "0.25",
+      "meaning": "the clean-validation PSU quantile the headline threshold sits at"
+    },
+    "HeadlineQuantilePercent": {
+      "value": "25\\%",
+      "meaning": "the headline quantile as a false-positive budget"
+    },
+    "PsbdQuantiles": {
+      "value": "0.01, 0.05, 0.1, 0.15, 0.2, 0.25",
+      "meaning": "every quantile swept beside the headline quantile"
+    },
+    "LowestQuantilePercent": {
+      "value": "1\\%",
+      "meaning": "the smallest false-positive budget swept"
+    },
+    "HeldoutSize": {
+      "value": "2000",
+      "meaning": "clean validation images held out for the threshold"
+    },
+    "SplitSeed": {
+      "value": "0",
+      "meaning": "the seed of the held-out split"
+    },
+    "ForwardPasses": {
+      "value": "3",
+      "meaning": "perturbed forward passes per input, k, on the basis panel"
+    },
+    "MaskSeed": {
+      "value": "0",
+      "meaning": "the perturbation mask seed"
+    },
+    "AsrBar": {
+      "value": "0.85",
+      "meaning": "attack success rate a cell must reach to enter a detection table"
+    },
+    "CleanDropBar": {
+      "value": "-0.05",
+      "meaning": "the clean-accuracy drop a cell may show against its benign reference"
+    },
+    "PanelRates": {
+      "value": "1\\%, 5\\%, 10\\%",
+      "meaning": "the poison rates the panel declares"
+    },
+    "PanelRateLow": {
+      "value": "1\\%",
+      "meaning": "the lowest panel poison rate"
+    },
+    "PanelRateMid": {
+      "value": "5\\%",
+      "meaning": "the middle panel poison rate"
+    },
+    "PanelRateHigh": {
+      "value": "10\\%",
+      "meaning": "the highest panel poison rate"
+    },
+    "BasisSize": {
+      "value": "18",
+      "meaning": "placements the basis declares for every panel cell"
+    },
+    "RecommendedRateLadderLow": {
+      "value": "0.05",
+      "meaning": "the smallest rate on the recommended placement's ladder"
+    },
+    "RecommendedRateLadderHigh": {
+      "value": "0.9",
+      "meaning": "the largest rate on the recommended placement's ladder"
+    },
+    "RecommendedRateLadderSize": {
+      "value": "10",
+      "meaning": "rates on the recommended placement's ladder"
+    },
+    "RecommendedPlacement": {
+      "value": "before\\_attention\\_norm\\_token\\_mask",
+      "meaning": "the recommended placement id"
+    },
+    "PublishedPlacement": {
+      "value": "post\\_residual",
+      "meaning": "the published ConvNet placement id"
+    },
+    "TrainingEpochs": {
+      "value": "15",
+      "meaning": "the uniform training budget in epochs"
+    },
+    "VitBlocks": {
+      "value": "12",
+      "meaning": "encoder blocks in ViT-B/16"
+    },
+    "VitTokens": {
+      "value": "197",
+      "meaning": "tokens per image in ViT-B/16, patches plus the class token"
+    },
+    "VitPatches": {
+      "value": "196",
+      "meaning": "patch tokens per image in ViT-B/16"
+    },
+    "VitWidth": {
+      "value": "768",
+      "meaning": "residual width of ViT-B/16"
+    },
+    "VitHeads": {
+      "value": "12",
+      "meaning": "attention heads per block in ViT-B/16"
+    },
+    "VitTotalHeads": {
+      "value": "144",
+      "meaning": "attention heads in the whole ViT-B/16 stack"
+    },
+    "SwinBlocks": {
+      "value": "24",
+      "meaning": "transformer blocks in Swin-S"
+    },
+    "PositionCount": {
+      "value": "15",
+      "meaning": "named probe positions in the ViT registry"
+    },
+    "SinglePositionCount": {
+      "value": "9",
+      "meaning": "atomic positions swept in isolation"
+    },
+    "StructuredPositionCount": {
+      "value": "2",
+      "meaning": "positions whose channel axis indexes a transformer unit"
+    },
+    "PortedPositionCount": {
+      "value": "4",
+      "meaning": "positions that exist to host ported detectors"
+    },
+    "OperatorCount": {
+      "value": "9",
+      "meaning": "perturbation operators in the registry, scale_up included"
+    },
+    "PanelDatasetsDeclared": {
+      "value": "6",
+      "meaning": "datasets with a benign reference in the declaration"
+    },
+    "DetectorCount": {
+      "value": "11",
+      "meaning": "competitor detectors in the registry"
+    },
+    "BootstrapResamples": {
+      "value": "5000",
+      "meaning": "resamples behind every bootstrap interval"
+    },
+    "BootstrapSeed": {
+      "value": "0",
+      "meaning": "the bootstrap seed"
+    },
+    "BenignProbeAttack": {
+      "value": "badnet\\_a2o",
+      "meaning": "the trigger a benign reference is probed with"
+    },
+    "BenignProbeTarget": {
+      "value": "0",
+      "meaning": "the target class a benign reference is probed at"
+    },
+    "PanelTargetLabel": {
+      "value": "0",
+      "meaning": "the target class every panel cell attacks"
+    },
+    "BandEarly": {
+      "value": "1 to 4",
+      "meaning": "the early depth band's block range"
+    },
+    "BandEarlyFirst": {
+      "value": "1",
+      "meaning": "first block of the early depth band"
+    },
+    "BandEarlyLast": {
+      "value": "4",
+      "meaning": "last block of the early depth band"
+    },
+    "BandMiddle": {
+      "value": "5 to 8",
+      "meaning": "the middle depth band's block range"
+    },
+    "BandMiddleFirst": {
+      "value": "5",
+      "meaning": "first block of the middle depth band"
+    },
+    "BandMiddleLast": {
+      "value": "8",
+      "meaning": "last block of the middle depth band"
+    },
+    "BandLate": {
+      "value": "9 to 12",
+      "meaning": "the late depth band's block range"
+    },
+    "BandLateFirst": {
+      "value": "9",
+      "meaning": "first block of the late depth band"
+    },
+    "BandLateLast": {
+      "value": "12",
+      "meaning": "last block of the late depth band"
+    },
+    "ClassesCifarOneZero": {
+      "value": "10",
+      "meaning": "classes in cifar10"
+    },
+    "ClassesCifarOneZeroZero": {
+      "value": "100",
+      "meaning": "classes in cifar100"
+    },
+    "ClassesGtsrb": {
+      "value": "43",
+      "meaning": "classes in gtsrb"
+    },
+    "ClassesTiny": {
+      "value": "200",
+      "meaning": "classes in tiny"
+    },
+    "ClassesSvhn": {
+      "value": "10",
+      "meaning": "classes in svhn"
+    },
+    "ClassesEurosat": {
+      "value": "10",
+      "meaning": "classes in eurosat"
+    }
+  }
+}

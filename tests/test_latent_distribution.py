@@ -29,14 +29,16 @@ from analysis.distribution import (
     layer_distribution_row,
     layer_distribution_table,
     mahalanobis_distances,
-    plot_distance_distribution,
-    plot_embedding_scatter,
-    plot_layer_profile,
-    plot_projection_histogram,
     separation_auroc,
     shrunk_covariance,
     standardized_mean_shift,
     target_class_alignment,
+)
+from visualization.distribution_plots import (
+    plot_distance_distribution,
+    plot_embedding_scatter,
+    plot_layer_profile,
+    plot_projection_histogram,
 )
 from analysis.features import (
     default_reduction,

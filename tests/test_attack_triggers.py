@@ -239,7 +239,7 @@ def test_overfit_sanity_check() -> None:
         "untrained-model ASR should sit near the class-count baseline, not already high"
     )
 
-    trained = train_classifier(
+    trained, _ = train_classifier(
         "vit",
         spec.num_classes,
         train_loader,

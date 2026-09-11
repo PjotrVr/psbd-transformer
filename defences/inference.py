@@ -40,6 +40,7 @@ def forward_logits(
 ) -> torch.Tensor:
     """Logits, (batch, num_classes), float32 whatever autocast did.
 
+    images is a (batch, channels, height, width) batch, moved to device here.
     Not under no_grad. A caller that needs the gradient of a logit with respect
     to the input or to a captured activation differentiates through this call,
     which is what the gradient-based detectors do.
@@ -57,7 +58,10 @@ def forward_probs(
     device: torch.device,
     use_bfloat16: bool,
 ) -> torch.Tensor:
-    """Softmax probabilities, (batch, num_classes), float32 whatever autocast did."""
+    """Softmax probabilities, (batch, num_classes), float32 whatever autocast did.
+
+    images is a (batch, channels, height, width) batch, moved to device here.
+    """
     logits = forward_logits(model, images, device, use_bfloat16)  # (batch, num_classes)
     probs = F.softmax(logits, dim=1)  # (batch, num_classes)
     return probs
@@ -96,23 +100,27 @@ def build_baseline_cache(
     Must run before any position is plugged, which the sweep guarantees by building
     every baseline before its rate loop starts.
 
-    3 tensors per batch. probs and its argmax are what PSU is measured against.
-    loader_labels is what the loader asked for, on the backdoor split the
-    attack-success label, so comparing it to the argmax says per sample whether the
-    trigger actually flipped the image. A triggered image the model still
-    classifies correctly is behaviourally clean, and scoring it as a positive would
-    penalise the detector for the attack's failure.
+    3 tensors per batch, as 1 dict per batch in loader order. probs is the
+    (batch, num_classes) softmax and labels its (batch,) argmax, which are what
+    PSU is measured against. loader_labels is the (batch,) label the loader asked
+    for, on the backdoor split the attack-success label, so comparing it to the
+    argmax says per sample whether the trigger actually flipped the image. A
+    triggered image the model still classifies correctly is behaviourally clean,
+    and scoring it as a positive would penalise the detector for the attack's
+    failure.
     """
     model.eval()
 
     cache: list[dict] = []
     for images, labels in loader:
-        probs = forward_probs(model, images, device, use_bfloat16)
+        probs = forward_probs(
+            model, images, device, use_bfloat16
+        )  # (batch, num_classes)
         cache.append(
             {
                 "probs": probs.cpu(),
-                "labels": probs.argmax(dim=1).cpu(),
-                "loader_labels": labels.cpu().long(),
+                "labels": probs.argmax(dim=1).cpu(),  # (batch,)
+                "loader_labels": labels.cpu().long(),  # (batch,)
             }
         )
 
@@ -130,7 +138,7 @@ def compute_dropout_pass_probs(
     seed: int,
     model_dropout: float = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """The raw per-pass evidence as (probs, argmax), both shaped (forward_passes, N).
+    """The raw per-pass evidence as (probs, argmax), both shaped (passes, n).
 
     probs is float32, the probability each perturbed pass gave the baseline-argmax
     class. argmax is int16, the class each pass actually predicted. Both are kept
@@ -138,7 +146,7 @@ def compute_dropout_pass_probs(
     without a GPU rerun. argmax is what the shift ratio, the adaptive rate rule and
     the shift-target claim all need, and none of them is recoverable from probs.
 
-    baseline_labels is the (N,) no-perturbation argmax in the loader's own
+    baseline_labels is the (n,) no-perturbation argmax in the loader's own
     shuffle=False order, so a running offset pairs each batch to its labels.
     model_dropout, when set, switches the model's own dropouts on so the probe
     stacks on top of them. Removal then compounds and the nominal rate stops
@@ -163,32 +171,38 @@ def compute_dropout_pass_probs(
         for images, _ in loader:
             batch_size = images.size(0)
             images = images.to(device)
-            labels = baseline_labels[offset : offset + batch_size].to(device)
+            labels = baseline_labels[offset : offset + batch_size].to(
+                device
+            )  # (batch,)
             offset += batch_size
 
             prob_columns = []
             argmax_columns = []
             for _ in range(forward_passes):
-                probs = forward_probs(model, images, device, use_bfloat16)
+                probs = forward_probs(
+                    model, images, device, use_bfloat16
+                )  # (batch, num_classes)
                 selected = probs.gather(1, labels.view(-1, 1)).squeeze(1)  # (batch,)
                 prob_columns.append(selected.cpu())
-                argmax_columns.append(probs.argmax(dim=1).to(torch.int16).cpu())
+                argmax_columns.append(
+                    probs.argmax(dim=1).to(torch.int16).cpu()
+                )  # (batch,)
 
-            prob_batches.append(torch.stack(prob_columns, dim=0))  # (k, batch)
-            argmax_batches.append(torch.stack(argmax_columns, dim=0))  # (k, batch)
+            prob_batches.append(torch.stack(prob_columns, dim=0))  # (passes, batch)
+            argmax_batches.append(torch.stack(argmax_columns, dim=0))  # (passes, batch)
     finally:
         restore_model_dropout(restore)
 
     if not prob_batches:
         empty = (
-            torch.empty(forward_passes, 0),
-            torch.empty(forward_passes, 0, dtype=torch.int16),
+            torch.empty(forward_passes, 0),  # (passes, 0)
+            torch.empty(forward_passes, 0, dtype=torch.int16),  # (passes, 0)
         )
         return empty
 
     per_pass = (
-        torch.cat(prob_batches, dim=1).float(),  # (k, N)
-        torch.cat(argmax_batches, dim=1),  # (k, N)
+        torch.cat(prob_batches, dim=1).float(),  # (passes, n)
+        torch.cat(argmax_batches, dim=1),  # (passes, n)
     )
     return per_pass
 
@@ -196,5 +210,7 @@ def compute_dropout_pass_probs(
 def _autocast_context(device: torch.device, use_bfloat16: bool):
     """The autocast context for the forward pass, so stored scores stay float32."""
     if use_bfloat16 and device.type == "cuda":
-        return torch.autocast(device_type="cuda", dtype=torch.bfloat16)
-    return nullcontext()
+        autocast = torch.autocast(device_type="cuda", dtype=torch.bfloat16)
+        return autocast
+    no_autocast = nullcontext()
+    return no_autocast

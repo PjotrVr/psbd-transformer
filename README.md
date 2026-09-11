@@ -40,16 +40,16 @@ python -m cli.train_backdoor \
 
 ### 2. Run the PSBD sweep
 
-Stage 1 on GPU. Position and operator are separate axes: `--position-config`
-is where the perturbation is injected, `--perturbation` is what is injected.
+Stage 1 on GPU. Position and operator are separate axes: `--position`
+is where the perturbation is injected, `--operator` is what is injected.
 `--checkpoint-folder` takes bare folder names, resolved under
 `--checkpoints-dir` (default `checkpoints`).
 
 ```bash
 python -m cli.sweep \
     --checkpoint-folder vit_cifar100_badnet_a2o_0_1 \
-    --position-config before_attention_norm \
-    --perturbation token_mask
+    --position before_attention_norm \
+    --operator token_mask
 ```
 
 ### 3. Analyze detection metrics
@@ -110,8 +110,7 @@ Full layout and the rule for where a new file goes: `docs/repository-layout.md`.
 `scripts/` holds repo-level tools that are not commands: `coverage_ledger.py`,
 `vit_config_inventory.py`, `vit_config_tables.py`, `vit_detection_tables.py`,
 `vit_shift_target_compare.py`, `vit_top3_tables.py`, `verify_results.py`,
-`verify_splits.py`, `prose_audit.py`, `check_prose_only.py`,
-`backfill_metadata.py`, `detection_summary.py`.
+`verify_splits.py`, `prose_audit.py` and `check_prose_only.py`.
 
 ## Competitor detectors
 

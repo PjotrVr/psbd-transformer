@@ -59,9 +59,10 @@ Deviations from the paper, each recorded in full in docs/detectors/scale_up.md:
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from .strip import normalization_buffers
 
 from defences.inference import forward_probs
+
+from .strip import normalization_buffers
 
 # S in Eq. (2), as printed in Section 4.2.
 PAPER_SCALES: tuple[int, ...] = (3, 5, 7, 9, 11)
@@ -97,10 +98,10 @@ def amplify_pixels(
     though it were signal. The clip, where the method's whole nonlinearity lives,
     would land in the wrong place.
     """
-    pixels = (images * std + mean).clamp(0.0, 1.0)  # (batch, C, H, W)
+    pixels = (images * std + mean).clamp(0.0, 1.0)  # (batch, channels, height, width)
     amplified = (pixels * float(factor)).clamp(0.0, 1.0)
 
-    renormalized = (amplified - mean) / std
+    renormalized = (amplified - mean) / std  # (batch, channels, height, width)
     return renormalized
 
 
@@ -129,27 +130,32 @@ def spc_scores(
     predicted_batches = []
     label_batches = []
     for images, labels in loader:
-        images = images.to(device)  # (batch, C, H, W)
+        images = images.to(device)  # (batch, channels, height, width)
         mean_tensor, std_tensor = normalization_buffers(
             mean, std, images.device, images.dtype
         )
 
-        baseline_probs = forward_probs(model, images, device, use_bfloat16)
+        baseline_probs = forward_probs(
+            model, images, device, use_bfloat16
+        )  # (batch, num_classes)
         baseline_labels = baseline_probs.argmax(dim=1)  # (batch,) = C(x)
 
         agreements = torch.zeros(images.size(0), device=device)  # (batch,)
         for factor in scales:
             amplified = amplify_pixels(images, factor, mean_tensor, std_tensor)
-            probs = forward_probs(model, amplified, device, use_bfloat16)
+            probs = forward_probs(
+                model, amplified, device, use_bfloat16
+            )  # (batch, num_classes)
             agreements += (probs.argmax(dim=1) == baseline_labels).float()
 
-        spc_batches.append((agreements / len(scales)).cpu())  # Eq. (2)
+        spc_batches.append((agreements / len(scales)).cpu())  # (batch,), Eq. (2)
         predicted_batches.append(baseline_labels.cpu())
         label_batches.append(labels.cpu().long())
 
     if not spc_batches:
-        empty = (torch.empty(0), torch.empty(0, dtype=torch.long))
-        return empty[0], empty[1], empty[1]
+        empty_spc = torch.empty(0)
+        empty_labels = torch.empty(0, dtype=torch.long)
+        return empty_spc, empty_labels, empty_labels
 
     spc = torch.cat(spc_batches).float()  # (N,)
     predicted_labels = torch.cat(predicted_batches).long()  # (N,)
@@ -183,7 +189,7 @@ def fit_class_spc_statistics(
     class_stds = pooled_std.repeat(num_classes).clone()  # (num_classes,)
 
     for class_index in range(num_classes):
-        members = validation_spc[validation_labels == class_index]
+        members = validation_spc[validation_labels == class_index]  # (members,)
         if members.numel() < MIN_CLASS_SAMPLES:
             continue
 
@@ -216,7 +222,7 @@ def cross_fitted_validation_scores(
     statistics it helped fit sits closer to the class mean than a fresh sample
     would, so an in-sample threshold is too tight and the achieved false positive
     rate on the paired clean split exceeds the budget. Each fold is therefore
-    standardised against the statistics of the other folds, by position, and the
+    standardised against the statistics of the other folds, cut by position. The
     result is negated here exactly as scale_up_scores negates at its boundary.
     """
     assert spc.shape == predicted_labels.shape == true_labels.shape, (
@@ -255,7 +261,7 @@ def standardize_spc(
     means = class_means[predicted_labels]  # (N,)
     stds = class_stds[predicted_labels]  # (N,)
 
-    nspc = (spc - means) / stds
+    nspc = (spc - means) / stds  # (N,)
     return nspc
 
 

@@ -36,11 +36,13 @@ from .bases import missing_adversarial_bases as missing_adversarial_bases
 
 
 def _badnet_all_to_one() -> badnet.BadNetConfig:
-    return badnet.BadNetConfig(label_mode="all_to_one")
+    config = badnet.BadNetConfig(label_mode="all_to_one")
+    return config
 
 
 def _badnet_all_to_all() -> badnet.BadNetConfig:
-    return badnet.BadNetConfig(label_mode="all_to_all")
+    config = badnet.BadNetConfig(label_mode="all_to_all")
+    return config
 
 
 # The all_to_m family interpolates between all_to_one (m = 1) and all_to_all
@@ -50,7 +52,8 @@ def _badnet_all_to_all() -> badnet.BadNetConfig:
 # duplicated here. An m above the dataset's class count is rejected at build time.
 def _badnet_all_to_m(num_targets: int) -> Callable[[], badnet.BadNetConfig]:
     def factory() -> badnet.BadNetConfig:
-        return badnet.BadNetConfig(label_mode="all_to_m", num_targets=num_targets)
+        config = badnet.BadNetConfig(label_mode="all_to_m", num_targets=num_targets)
+        return config
 
     return factory
 
@@ -105,6 +108,7 @@ def apply_config_overrides(config, overrides: dict | None):
     """
     if not overrides:
         return config
+
     declared = {field.name: field for field in dataclass_fields(config)}
     updates = {}
     for key, value in overrides.items():
@@ -122,7 +126,9 @@ def apply_config_overrides(config, overrides: dict | None):
             updates[key] = tuple(value)
         else:
             updates[key] = value
-    return replace(config, **updates)
+
+    overridden = replace(config, **updates)
+    return overridden
 
 
 def config_overrides(config, attack_name: str) -> dict:
@@ -136,7 +142,11 @@ def config_overrides(config, attack_name: str) -> dict:
     except ValueError:
         return {}
     current, baseline = asdict(config), asdict(default)
-    return {key: value for key, value in current.items() if baseline.get(key) != value}
+
+    differences = {
+        key: value for key, value in current.items() if baseline.get(key) != value
+    }
+    return differences
 
 
 def build_attack(

@@ -52,8 +52,9 @@ from attacks.poisoning import (
     choose_poison_indices,
 )
 from training.loop import (
+    LEARNING_RATE_SCHEDULES,
+    CheckpointMetadata,
     build_model,
-    checkpoint_metadata,
     save_checkpoint,
     train_classifier,
 )
@@ -301,6 +302,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--use-sam", action="store_true")
     parser.add_argument("--rho", type=float, default=0.1)
     parser.add_argument(
+        "--lr-schedule",
+        choices=LEARNING_RATE_SCHEDULES,
+        default="constant",
+        help="constant is every panel run, cosine anneals to 0 by the last epoch",
+    )
+    parser.add_argument(
+        "--clip-grad-norm",
+        type=float,
+        default=None,
+        help="gradient norm bound, off by default as on every panel run",
+    )
+    parser.add_argument(
         "--poisoned-dir", default="", help="required only for the generated attack"
     )
     parser.add_argument("--raw-data-dir", default="raw_data")
@@ -434,7 +447,7 @@ def build_snapshot_hook(
             return
         was_training = model.training
         train_accuracy = clean_accuracy(model, train_eval_loader, device, True)
-        metadata = checkpoint_metadata(
+        metadata = CheckpointMetadata(
             dataset=args.dataset,
             attack=args.attack,
             label_mode=attack.label_mode,
@@ -453,7 +466,9 @@ def build_snapshot_hook(
             started_at=started_at,
             ended_at=utc_timestamp(),
             model_dropout=args.model_dropout_train,
-        )
+            learning_rate_schedule=args.lr_schedule,
+            clip_grad_norm=args.clip_grad_norm,
+        ).as_dict()
         # The trajectory fields the interpolation question turns on. Kept out of
         # checkpoint_metadata so its key set stays identical across entrypoints.
         metadata["epoch"] = epoch
@@ -504,7 +519,7 @@ def main() -> None:
 
     evasion, evade_rate = resolve_evasion(args, num_classes, val_loader, device)
 
-    model = train_classifier(
+    model, trajectory = train_classifier(
         args.architecture,
         num_classes,
         train_loader,
@@ -515,6 +530,8 @@ def main() -> None:
         rho=args.rho,
         model_dropout=args.model_dropout_train,
         evasion=evasion,
+        learning_rate_schedule=args.lr_schedule,
+        clip_grad_norm=args.clip_grad_norm,
         on_epoch_end=build_snapshot_hook(
             args,
             num_classes,
@@ -547,7 +564,7 @@ def main() -> None:
     n_cover = len(getattr(train_loader.dataset, "cover_indices", ()) or ())
     print(f"cover samples: {n_cover}")
 
-    metadata = checkpoint_metadata(
+    metadata = CheckpointMetadata(
         dataset=args.dataset,
         attack=args.attack,
         label_mode=attack.label_mode,
@@ -565,6 +582,10 @@ def main() -> None:
         asr=metrics["asr"],
         started_at=started_at,
         ended_at=ended_at,
+        learning_rate_schedule=args.lr_schedule,
+        clip_grad_norm=args.clip_grad_norm,
+        best_validation_accuracy=trajectory.best,
+        final_validation_accuracy=trajectory.final,
         evasion={
             "weight": args.evade_weight,
             "position": args.evade_position,
@@ -576,7 +597,7 @@ def main() -> None:
         if args.evade_psbd
         else None,
         model_dropout=args.model_dropout_train,
-    )
+    ).as_dict()
     metadata["n_cover"] = n_cover
     # Without this, evaluation rebuilds the attack from default_config() and a run
     # trained with a modified trigger is scored against a trigger it never saw.

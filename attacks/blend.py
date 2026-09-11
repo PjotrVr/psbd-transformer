@@ -23,11 +23,12 @@ class BlendConfig:
 
 def build(config: BlendConfig, image_size: int, target_label: int) -> Attack:
     """Blend built for this image size and target label."""
-    pattern = seeded_random_pattern(image_size, config.pattern_seed)  # (3, S, S)
+    pattern = seeded_random_pattern(image_size, config.pattern_seed)  # (3, H, W)
     alpha = config.alpha
 
     def apply_trigger(image: torch.Tensor, _index: int) -> torch.Tensor:
-        # original: x_poisoned = (1 - alpha) * x + alpha * pattern
+        # Original form: x_poisoned = (1 - alpha) * x + alpha * pattern, with x
+        # the clean image, alpha the blend ratio and pattern the fixed blend image.
         blended = (1.0 - alpha) * image + alpha * pattern  # (C, H, W)
         return blended
 

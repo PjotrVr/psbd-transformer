@@ -29,18 +29,20 @@ MANIFEST_FILENAME = "manifest.json"
 
 def epsilon_tag(epsilon: float) -> str:
     """The strength in the usual units, 16 for 16/255, for use in a directory name."""
-    return str(round(epsilon * 255))
+    tag = str(round(epsilon * 255))
+    return tag
 
 
 def bases_directory(
     results_dir: str, dataset: str, target_label: int, epsilon: float
 ) -> str:
     """Where the bases for this dataset, target and strength live under results_dir."""
-    return os.path.join(
+    directory = os.path.join(
         results_dir,
         "lc_adversarial",
         f"{dataset}_tl{target_label}_eps{epsilon_tag(epsilon)}",
     )
+    return directory
 
 
 def pgd_perturb(
@@ -63,23 +65,36 @@ def pgd_perturb(
 
     The step size is Madry's rule, enough total travel to cross the ball with room
     to turn around.
+
+    images is (batch, C, H, W) in 0 to 1 pixel space and labels is (batch,) long.
+    The result has the shape of images and carries no gradient history.
     """
     step_size = 2.5 * epsilon / steps
-    noise = torch.empty_like(images).uniform_(-epsilon, epsilon, generator=generator)
-    delta = (images + noise).clamp(0.0, 1.0) - images
+    noise = torch.empty_like(images).uniform_(
+        -epsilon, epsilon, generator=generator
+    )  # (batch, C, H, W)
+    delta = (images + noise).clamp(0.0, 1.0) - images  # (batch, C, H, W)
+
     for _ in range(steps):
         delta.requires_grad_(True)
         loss = F.cross_entropy(model(normalize(images + delta)), labels)
-        (gradient,) = torch.autograd.grad(loss, delta)
+        (gradient,) = torch.autograd.grad(loss, delta)  # (batch, C, H, W)
+
+        # The step is projected into the epsilon ball first and into the pixel
+        # range second, so the returned image is valid on both counts.
         delta = (delta.detach() + step_size * gradient.sign()).clamp(-epsilon, epsilon)
         delta = (images + delta).clamp(0.0, 1.0) - images
-    return (images + delta).detach()
+
+    perturbed = (images + delta).detach()  # (batch, C, H, W)
+    return perturbed
 
 
 @torch.no_grad()
 def accuracy_on(model, images: torch.Tensor, labels: torch.Tensor, normalize) -> float:
     """Top-1 accuracy of the surrogate on these images, before or after perturbing."""
-    return float((model(normalize(images)).argmax(dim=1) == labels).float().mean())
+    predicted = model(normalize(images)).argmax(dim=1)  # (batch,)
+    accuracy = float((predicted == labels).float().mean())
+    return accuracy
 
 
 def file_digest(path: str) -> str:
@@ -88,7 +103,9 @@ def file_digest(path: str) -> str:
     with open(path, "rb") as handle:
         for block in iter(lambda: handle.read(1 << 20), b""):
             digest.update(block)
-    return digest.hexdigest()
+
+    hex_digest = digest.hexdigest()
+    return hex_digest
 
 
 def save_bases(

@@ -15,7 +15,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from scripts.paper._common import GRADES, build_parser, load_json  # noqa: E402
-from training.loop import utc_timestamp  # noqa: E402
+from utils.provenance import utc_timestamp  # noqa: E402
 
 COLUMNS = (
     "id",

@@ -32,6 +32,7 @@ from data.splits import (
 )
 from models.positions import BLOCK_TYPES, POSITION_REGISTRY, resolve_targets
 from models.backbones import detect_architecture, load_checkpoint, network_core
+from experiments._paths import experiment_result_path
 
 POSITIONS = ("before_mlp", "before_attention_norm")
 MAX_BATCHES = 40
@@ -43,7 +44,12 @@ def parse_args():
     parser.add_argument("--checkpoints-dir", default="checkpoints")
     parser.add_argument("--raw-data-dir", default="raw_data")
     parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--output", default="results/gaussian_batch_coupling.json")
+    parser.add_argument(
+        "--output",
+        default=experiment_result_path(
+            "gaussian_batch_coupling", "gaussian_batch_coupling.json"
+        ),
+    )
     return parser.parse_args()
 
 

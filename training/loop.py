@@ -14,6 +14,7 @@ attack produced it.
 import json
 import os
 from collections.abc import Callable
+from dataclasses import dataclass
 
 import torch
 import torch.nn as nn
@@ -77,17 +78,50 @@ def build_optimizer(
     return optimizer
 
 
+LEARNING_RATE_SCHEDULES = ("constant", "cosine")
+
+
+def build_scheduler(
+    optimizer: torch.optim.Optimizer, schedule: str, epochs: int
+) -> torch.optim.lr_scheduler.LRScheduler | None:
+    """A per-epoch learning-rate schedule, None for the constant rate every panel run used.
+
+    The cosine option exists for the GTSRB reruns: 13 runs on the constant rate
+    collapsed to a single class in their last epochs after 3 to 4 epochs at the
+    loss floor (docs/runs/2026-09-11-diverged-gtsrb-runs.md), and annealing to 0
+    by the final epoch removes the step size that drove them off the minimum.
+    SAM wraps the base optimizer, so the schedule attaches to the base.
+    """
+    if schedule not in LEARNING_RATE_SCHEDULES:
+        raise ValueError(
+            f"unknown schedule {schedule!r}, known: {LEARNING_RATE_SCHEDULES}"
+        )
+    if schedule == "constant":
+        return None
+    stepped = getattr(optimizer, "base_optimizer", optimizer)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(stepped, T_max=epochs)
+    return scheduler
+
+
+def clip_gradients(model: nn.Module, clip_grad_norm: float | None) -> None:
+    """Clip the gradient norm in place when a bound is set, a no-op otherwise."""
+    if clip_grad_norm is not None:
+        torch.nn.utils.clip_grad_norm_(model.parameters(), clip_grad_norm)
+
+
 def plain_update(
     model: nn.Module,
     images: torch.Tensor,
     labels: torch.Tensor,
     criterion,
     optimizer,
+    clip_grad_norm: float | None = None,
 ) -> torch.Tensor:
     """A plain forward, backward and step, returning the batch loss."""
     optimizer.zero_grad()
     loss = criterion(model(images), labels)
     loss.backward()
+    clip_gradients(model, clip_grad_norm)
     optimizer.step()
     return loss
 
@@ -98,6 +132,7 @@ def sam_update(
     labels: torch.Tensor,
     criterion,
     optimizer,
+    clip_grad_norm: float | None = None,
 ) -> torch.Tensor:
     """A SAM update, returning the loss at the original weights.
 
@@ -111,9 +146,11 @@ def sam_update(
     # carry no running-statistics hazard that SAM has with BatchNorm models.
     loss = criterion(model(images), labels)
     loss.backward()
+    clip_gradients(model, clip_grad_norm)
     optimizer.first_step(zero_grad=True)
 
     criterion(model(images), labels).backward()
+    clip_gradients(model, clip_grad_norm)
     optimizer.second_step(zero_grad=True)
     return loss
 
@@ -125,78 +162,99 @@ def train_one_epoch(
     optimizer,
     device: torch.device,
     use_sam: bool,
+    clip_grad_norm: float | None = None,
 ) -> float:
     """An epoch of ordinary training, returning the mean batch loss."""
     model.train()
 
     running_loss = 0.0
     for images, labels in loader:
-        images, labels = images.to(device), labels.to(device).long()
+        images, labels = (
+            images.to(device),
+            labels.to(device).long(),
+        )  # (batch, C, H, W), (batch,)
         update = sam_update if use_sam else plain_update
-        running_loss += update(model, images, labels, criterion, optimizer).item()
+        loss = update(model, images, labels, criterion, optimizer, clip_grad_norm)
+        running_loss += loss.item()
 
     mean_loss = running_loss / max(len(loader), 1)
     return mean_loss
 
 
-def checkpoint_metadata(
-    dataset: str,
-    attack: str,
-    label_mode: str | None,
-    target_label: int,
-    poison_rate: float,
-    cover_rate: float,
-    realized_poison_rate: float | None,
-    architecture: str,
-    use_sam: bool,
-    rho: float,
-    epochs: int,
-    seed: int,
-    max_samples: int | None,
-    clean_accuracy: float | None,
-    asr: float | None,
-    started_at: str,
-    ended_at: str,
-    evasion: dict | None = None,
-    model_dropout: float = 0.0,
-) -> dict:
+@dataclass(frozen=True)
+class CheckpointMetadata:
     """Training provenance for a checkpoint, written alongside it as args.json.
 
-    Every training entrypoint builds this the same way so the key set never drifts
-    between them.
+    Every training entrypoint builds this the same way so the key set never
+    drifts between them. as_dict gives the sidecar's exact layout, which
+    data.splits.read_checkpoint_metadata and the coverage ledger read back.
     """
-    metadata = {
-        "dataset": dataset,
-        "attack": attack,
-        "label_mode": label_mode,
-        "target_label": target_label,
-        "poison_rate": poison_rate,
-        # The rate actually achieved. choose_poison_indices caps the count at the
-        # eligible pool, and a clean-label attack is eligible only on the target
-        # class, so 1%, 5% and 10% can all resolve to the same poisoned set. Any
-        # poison-rate trend has to be read against this, never against the request.
-        "realized_poison_rate": realized_poison_rate,
-        "cover_rate": cover_rate,
-        "architecture": architecture,
-        "optimizer": "sam" if use_sam else "adam",
-        "rho": rho if use_sam else None,
-        "epochs": epochs,
-        "seed": seed,
-        "max_samples": max_samples,
-        "git_commit": current_git_commit(),
-        "clean_accuracy": clean_accuracy,
-        "asr": asr,
-        "trained_started_at": started_at,
-        "trained_ended_at": ended_at,
-        # None for every normally trained checkpoint. Present and non-null only for
-        # an adaptive-attacker run, so the 2 can never be confused when a detection
-        # number is read back off this folder.
-        "evasion": evasion,
-        # Training-time dropout. 0.0 for every checkpoint trained before this
-        # existed, which is what PSBD's protocol requires.
-        "model_dropout": model_dropout,
-    }
-    return metadata
+
+    dataset: str
+    attack: str
+    label_mode: str | None
+    target_label: int
+    poison_rate: float
+    cover_rate: float
+    realized_poison_rate: float | None
+    architecture: str
+    use_sam: bool
+    rho: float
+    epochs: int
+    seed: int
+    max_samples: int | None
+    clean_accuracy: float | None
+    asr: float | None
+    started_at: str
+    ended_at: str
+    # None for every normally trained checkpoint. Present and non-null only for
+    # an adaptive-attacker run, so the 2 can never be confused when a detection
+    # number is read back off this folder.
+    evasion: dict | None = None
+    # Training-time dropout. 0.0 for every checkpoint trained before this
+    # existed, which is what PSBD's protocol requires.
+    model_dropout: float = 0.0
+    learning_rate_schedule: str = "constant"
+    clip_grad_norm: float | None = None
+    best_validation_accuracy: float | None = None
+    final_validation_accuracy: float | None = None
+
+    def as_dict(self) -> dict:
+        """The args.json layout, the same keys in the same order on every entrypoint."""
+        payload = {
+            "dataset": self.dataset,
+            "attack": self.attack,
+            "label_mode": self.label_mode,
+            "target_label": self.target_label,
+            "poison_rate": self.poison_rate,
+            # The rate actually achieved. choose_poison_indices caps the count at
+            # the eligible pool, and a clean-label attack is eligible only on the
+            # target class, so 1%, 5% and 10% can all resolve to the same poisoned
+            # set. Any poison-rate trend has to be read against this, never
+            # against the request.
+            "realized_poison_rate": self.realized_poison_rate,
+            "cover_rate": self.cover_rate,
+            "architecture": self.architecture,
+            "optimizer": "sam" if self.use_sam else "adam",
+            "rho": self.rho if self.use_sam else None,
+            "epochs": self.epochs,
+            "seed": self.seed,
+            "max_samples": self.max_samples,
+            "git_commit": current_git_commit(),
+            "clean_accuracy": self.clean_accuracy,
+            "asr": self.asr,
+            "trained_started_at": self.started_at,
+            "trained_ended_at": self.ended_at,
+            "evasion": self.evasion,
+            "model_dropout": self.model_dropout,
+            "lr_schedule": self.learning_rate_schedule,
+            "clip_grad_norm": self.clip_grad_norm,
+            # The validation trajectory's endpoints, so a collapsed run is visible
+            # in the sidecar without reading its log.
+            "best_validation_accuracy": self.best_validation_accuracy,
+            "final_validation_accuracy": self.final_validation_accuracy,
+        }
+        return payload
 
 
 def resolve_checkpoint_path(path: str) -> str:
@@ -227,6 +285,44 @@ def save_checkpoint(
             json.dump(metadata, handle, indent=2)
 
 
+# A run whose final validation accuracy falls below this share of its own best
+# collapsed rather than converged. The 13 GTSRB collapses of September 2026 all
+# fell from 0.99 to under 0.1, so the bar sits far from any real fluctuation.
+DIVERGENCE_FRACTION = 0.5
+
+
+@dataclass(frozen=True)
+class TrainingTrajectory:
+    """The validation accuracy after every epoch, in epoch order."""
+
+    validation_accuracies: tuple[float, ...]
+
+    @property
+    def best(self) -> float:
+        best = max(self.validation_accuracies)
+        return best
+
+    @property
+    def final(self) -> float:
+        final = self.validation_accuracies[-1]
+        return final
+
+
+def check_not_diverged(trajectory: TrainingTrajectory) -> None:
+    """Refuse a model whose validation accuracy collapsed after its best epoch.
+
+    Raises before any checkpoint is written, so a wrecked model never lands on
+    disk with a plausible ASR beside it, which is what let 13 GTSRB runs enter
+    the panel unnoticed (docs/runs/2026-09-11-diverged-gtsrb-runs.md).
+    """
+    if trajectory.final < DIVERGENCE_FRACTION * trajectory.best:
+        raise RuntimeError(
+            f"training diverged: validation accuracy ended at {trajectory.final:.4f} "
+            f"after a best of {trajectory.best:.4f}. No checkpoint was written. Rerun "
+            "with --lr-schedule cosine or --clip-grad-norm 1.0."
+        )
+
+
 def train_classifier(
     architecture: str,
     num_classes: int,
@@ -242,16 +338,21 @@ def train_classifier(
     evasion: dict | None = None,
     model_dropout: float = 0.0,
     on_epoch_end: Callable[[nn.Module, int, float], None] | None = None,
-) -> nn.Module:
-    """A freshly trained model, with validation accuracy printed after each epoch.
+    learning_rate_schedule: str = "constant",
+    clip_grad_norm: float | None = None,
+) -> tuple[nn.Module, TrainingTrajectory]:
+    """A freshly trained model and its validation trajectory, printed per epoch.
 
     evasion, when set, swaps in the adaptive attacker's epoch (attacks.evasion). It
     is the attacker's knob, and it is recorded in the checkpoint metadata so the
-    run can never be mistaken for an ordinary training run.
+    run can never be mistaken for an ordinary training run. A run whose
+    validation accuracy collapses raises instead of returning.
     """
     model = build_model(architecture, num_classes, model_dropout).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = build_optimizer(model, use_sam, learning_rate, weight_decay, rho)
+    scheduler = build_scheduler(optimizer, learning_rate_schedule, epochs)
+    validation_accuracies: list[float] = []
 
     for epoch in range(1, epochs + 1):
         if evasion:
@@ -272,11 +373,20 @@ def train_classifier(
             )
         else:
             average_loss = train_one_epoch(
-                model, train_loader, criterion, optimizer, device, use_sam
+                model,
+                train_loader,
+                criterion,
+                optimizer,
+                device,
+                use_sam,
+                clip_grad_norm,
             )
             extra = ""
+        if scheduler is not None:
+            scheduler.step()
 
         validation_accuracy = clean_accuracy(model, val_loader, device, use_bfloat16)
+        validation_accuracies.append(validation_accuracy)
         print(
             f"epoch {epoch}: loss={average_loss:.4f} "
             f"val_acc={validation_accuracy:.4f}{extra}"
@@ -286,4 +396,6 @@ def train_classifier(
         if on_epoch_end is not None:
             on_epoch_end(model, epoch, validation_accuracy)
 
-    return model
+    trajectory = TrainingTrajectory(tuple(validation_accuracies))
+    check_not_diverged(trajectory)
+    return model, trajectory

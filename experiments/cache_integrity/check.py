@@ -3,7 +3,7 @@
 Every headline number in the paper is computed by psbd_analyze.py from tensors it
 never recomputes, so a silently corrupt cache is indistinguishable from a real
 result. This script re-derives the invariants that stage 1 establishes and stage 2
-assumes, over the whole tree, and writes results/cache_integrity.json.
+assumes, over the whole tree, and writes results/_experiments/cache_integrity/cache_integrity.json.
 
 The audit is grouped into 4 scopes, and the check identifiers below match the
 numbering used in the accompanying README:
@@ -47,9 +47,11 @@ import torch
 from lightning import seed_everything
 
 from attacks import build_attack, default_config
-from defences.operators import DETERMINISTIC_PERTURBATIONS, PERTURBATIONS
+from defences.operators import DETERMINISTIC_OPERATORS, OPERATORS
 from defences.decision import complete_rates
 from data.registry import DATASET_REGISTRY
+from defences.cache import read_run_provenance
+from experiments._paths import experiment_result_path
 
 SPLITS: tuple[str, ...] = ("validation", "clean", "backdoor")
 
@@ -62,7 +64,7 @@ PROBABILITY_SUM_TOLERANCE = 1e-3
 # scale_up is built separately because it needs the dataset normalization constants,
 # and dropout is the unmarked default that carries no suffix at all.
 KNOWN_PERTURBATIONS: tuple[str, ...] = tuple(
-    sorted(set(PERTURBATIONS) | {"scale_up"}, key=len, reverse=True)
+    sorted(set(OPERATORS) | {"scale_up"}, key=len, reverse=True)
 )
 
 # Suffixes cache_config_name appends AFTER the operator name, which have to come off
@@ -110,7 +112,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--results-dir", default="results")
     parser.add_argument("--checkpoints-dir", default="checkpoints")
     parser.add_argument(
-        "--output", default=None, help="default: <results-dir>/cache_integrity.json"
+        "--output",
+        default=None,
+        help="default: <results-dir>/_experiments/cache_integrity/cache_integrity.json",
     )
     parser.add_argument("--seed", type=int, default=0, help="seeds the --sample draw")
     parser.add_argument(
@@ -209,7 +213,7 @@ def read_dataset_name(
     return None, "unresolved"
 
 
-def resolve_perturbation(psbd_dir: str, position_config: str) -> tuple[str, str]:
+def resolve_operator(psbd_dir: str, placement: str) -> tuple[str, str]:
     """(operator name, how it was resolved) for one position-config folder.
 
     The run provenance sidecar records the operator verbatim and is authoritative.
@@ -217,17 +221,11 @@ def resolve_perturbation(psbd_dir: str, position_config: str) -> tuple[str, str]
     the fact, have to be read off the folder name instead: cache_config_name appends
     the operator to the position, leaving the paper's dropout as the bare name.
     """
-    run_path = os.path.join(psbd_dir, f"run_{position_config}.json")
-    if os.path.exists(run_path):
-        try:
-            with open(run_path) as handle:
-                recorded = json.load(handle).get("perturbation")
-            if recorded:
-                return recorded, "run_json"
-        except (OSError, json.JSONDecodeError):
-            pass
+    recorded = read_run_provenance(psbd_dir, placement).get("operator")
+    if recorded:
+        return recorded, "run_json"
 
-    stem = TRAILING_SUFFIX_PATTERN.sub("", position_config)
+    stem = TRAILING_SUFFIX_PATTERN.sub("", placement)
     for name in KNOWN_PERTURBATIONS:
         if stem == name or stem.endswith(f"_{name}") or f"_{name}_" in stem:
             return name, "folder_name"
@@ -510,7 +508,7 @@ def split_rate_filename(name: str) -> tuple[float, str] | None:
 
 def audit_position_config(
     psbd_dir: str,
-    position_config: str,
+    placement: str,
     baseline_rows: dict[str, int | None],
     num_classes: int | None,
 ) -> dict:
@@ -519,15 +517,15 @@ def audit_position_config(
     Returns a record carrying the resolved operator, the k values actually stored,
     the complete versus partial rate coverage, and the failures found below it.
     """
-    folder = os.path.join(psbd_dir, position_config)
-    perturbation, resolved_from = resolve_perturbation(psbd_dir, position_config)
-    deterministic = perturbation in DETERMINISTIC_PERTURBATIONS
+    folder = os.path.join(psbd_dir, placement)
+    operator, resolved_from = resolve_operator(psbd_dir, placement)
+    deterministic = operator in DETERMINISTIC_OPERATORS
 
     try:
         entries = sorted(os.listdir(folder))
     except OSError as error:
         unreadable = {
-            "perturbation": perturbation,
+            "operator": operator,
             "resolved_from": resolved_from,
             "deterministic": deterministic,
             "rate_files": 0,
@@ -576,7 +574,7 @@ def audit_position_config(
             }
         )
 
-    complete = complete_rates(psbd_dir, position_config)
+    complete = complete_rates(psbd_dir, placement)
     partial = {
         rate: sorted(splits)
         for rate, splits in sorted(splits_by_rate.items())
@@ -584,7 +582,7 @@ def audit_position_config(
     }
 
     record = {
-        "perturbation": perturbation,
+        "operator": operator,
         "resolved_from": resolved_from,
         "deterministic": deterministic,
         "rate_files": rate_files,
@@ -695,7 +693,7 @@ def summarize(records: list[dict]) -> dict:
     failed: dict[str, int] = {check: 0 for check in CHECK_IDS}
 
     files_checked = 0
-    position_configs = 0
+    placements = 0
     complete_rate_slots = 0
     partial_rate_slots = 0
     identical_pass_by_operator: dict[str, int] = {}
@@ -710,7 +708,7 @@ def summarize(records: list[dict]) -> dict:
         rates_seen = sum(config["rate_files"] for config in configs.values())
         rates_loaded = sum(config["rate_files_loaded"] for config in configs.values())
         config_count = len(configs)
-        position_configs += config_count
+        placements += config_count
 
         attempted["00_checkpoint_audit_completes"] += 1
         attempted["01_manifest_parses"] += 1
@@ -746,7 +744,7 @@ def summarize(records: list[dict]) -> dict:
         attempted["17_position_k_consistent"] += config_count
 
         for config in configs.values():
-            operator = config["perturbation"]
+            operator = config["operator"]
             operator_counts[operator] = operator_counts.get(operator, 0) + 1
             for passes, count in config["k_values"].items():
                 k_counts[str(passes)] = k_counts.get(str(passes), 0) + count
@@ -775,7 +773,7 @@ def summarize(records: list[dict]) -> dict:
     summary = {
         "checkpoints_checked": len(records),
         "files_checked": files_checked,
-        "position_configs_checked": position_configs,
+        "position_configs_checked": placements,
         "complete_rate_slots": complete_rate_slots,
         "partial_rate_slots": partial_rate_slots,
         "operator_counts": dict(sorted(operator_counts.items())),
@@ -865,7 +863,9 @@ def write_report(path: str, payload: dict) -> None:
 
 def main() -> None:
     args = parse_args()
-    output = args.output or os.path.join(args.results_dir, "cache_integrity.json")
+    output = args.output or experiment_result_path(
+        "cache_integrity", "cache_integrity.json", args.results_dir
+    )
 
     folders = discover_checkpoint_folders(args.results_dir)
     selected = select_folders(folders, args.sample, args.seed)

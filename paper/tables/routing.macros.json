@@ -1,0 +1,74 @@
+{
+  "generator": "scripts/paper/mech_routing.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+  ],
+  "written_at": "2026-09-10T23:36:13.581558+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "RoutingCells": {
+      "value": "30",
+      "meaning": "checkpoints with a routing record, benign included"
+    },
+    "RoutingBadnetClsEarly": {
+      "value": "0.025",
+      "meaning": "badnet_a2o CLS attention mass on the trigger tokens, layers 1 to 4"
+    },
+    "RoutingBadnetClsRouting": {
+      "value": "0.231",
+      "meaning": "badnet_a2o CLS attention mass on the trigger tokens, layers 5 to 8"
+    },
+    "RoutingBadnetClsLate": {
+      "value": "0.550",
+      "meaning": "badnet_a2o CLS attention mass on the trigger tokens, layers 9 to 12"
+    },
+    "RoutingBenignClsLate": {
+      "value": "0.025",
+      "meaning": "benign CLS attention mass on the same trigger tokens, layers 9 to 12"
+    },
+    "RoutingBadnetAttentionShare": {
+      "value": "0.83",
+      "meaning": "badnet_a2o attention share of the summed target-logit attribution"
+    },
+    "RoutingGlobalAttentionShare": {
+      "value": "0.63",
+      "meaning": "mean attention share of the target-logit attribution over global-trigger attacks"
+    },
+    "RoutingLocalRankRouting": {
+      "value": "0.91",
+      "meaning": "mean trigger-token norm rank over the routing band, local-trigger attacks"
+    },
+    "RoutingBenignRankRouting": {
+      "value": "0.91",
+      "meaning": "benign trigger-token norm rank over the routing band under the same trigger"
+    },
+    "RoutingBenignRankLate": {
+      "value": "0.68",
+      "meaning": "benign trigger-token norm rank over the late band under the same trigger"
+    },
+    "RoutingBadnetTakeover": {
+      "value": "0.50",
+      "meaning": "badnet_a2o takeover fraction over the routing band"
+    },
+    "RoutingBenignTakeover": {
+      "value": "0.95",
+      "meaning": "benign takeover fraction over the routing band"
+    },
+    "RoutingBenignRatioPeak": {
+      "value": "3.65",
+      "meaning": "benign peak max-over-median patch-norm ratio on clean images, layer 3 on"
+    },
+    "RoutingBadnetRatioPeak": {
+      "value": "4.26",
+      "meaning": "badnet_a2o peak max-over-median patch-norm ratio on triggered images, layer 3 on"
+    },
+    "RoutingGlobalClsRouting": {
+      "value": "0.863",
+      "meaning": "mean CLS attention mass on the trigger tokens over the routing band, global-trigger attacks"
+    }
+  }
+}

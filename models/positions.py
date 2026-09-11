@@ -135,12 +135,12 @@ SWIN_POSITIONS: dict[str, PositionSpec] = {
     "after_embedding": PositionSpec("features.0", "post", scope="model"),
     "before_attention_norm": PositionSpec("norm1", "pre"),
     "before_attention": PositionSpec("attn", "pre"),
-    # Hooks attn and mlp directly, not stochastic_depth, which is a single
-    # instance called twice per block (x + stochastic_depth(attn(...)), then
-    # x + stochastic_depth(mlp(...))), so a hook on it cannot tell which branch
-    # invoked it. The cost is that the probe lands just before stochastic_depth
-    # sees the branch output rather than just after. That is the only ViT/Swin
-    # asymmetry, and stochastic_depth itself stays untouched.
+    # Hooks attn and mlp directly. stochastic_depth is a single instance called
+    # twice per block (x + stochastic_depth(attn(...)), then
+    # x + stochastic_depth(mlp(...))), so a hook on it could not tell which
+    # branch invoked it. The cost is that the probe lands just before
+    # stochastic_depth sees the branch output rather than just after. That is
+    # the only ViT/Swin asymmetry, and stochastic_depth itself stays untouched.
     "before_attention_residual": PositionSpec("attn", "post"),
     "before_mlp_norm": PositionSpec("norm2", "pre"),
     "after_attention_residual": PositionSpec("", "residual"),
@@ -405,7 +405,7 @@ def _make_pre_hook(probe: nn.Module) -> Callable:
                 f"{type(module).__name__} was called with no positional tensor, "
                 "so this position cannot perturb its input"
             )
-        perturbed = probe(args[0])
+        perturbed = probe(args[0])  # same shape as args[0]
         perturbed_args = tuple(perturbed if arg is args[0] else arg for arg in args)
         return perturbed_args
 
@@ -423,7 +423,7 @@ def _make_post_hook(probe: nn.Module) -> Callable:
                 f"{type(module).__name__} returned {type(output).__name__}, not a "
                 "Tensor, so it cannot carry a post-hook dropout position"
             )
-        perturbed = probe(output)
+        perturbed = probe(output)  # same shape as output
         return perturbed
 
     return post_hook
@@ -471,30 +471,38 @@ def _vit_post_attention_residual_forward(
 ):
     """EncoderBlock.forward with the probe on the stream after the attention add.
 
-    Mirrors torchvision's EncoderBlock.forward exactly except for the single probe
-    call. The MLP-branch add is left alone: after_mlp_residual is a plain
-    post-hook on the block, so plugging both positions composes into the full
-    post-residual placement without either mechanism knowing about the other.
+    input_tensor is the (batch, tokens, dim) residual stream entering the block
+    and the return is the stream leaving it, in the same shape. Mirrors
+    torchvision's EncoderBlock.forward exactly except for the single probe call.
+    The MLP-branch add is left alone: after_mlp_residual is a plain post-hook on
+    the block, so plugging both positions composes into the full post-residual
+    placement without either mechanism knowing about the other.
     """
-    x = block.ln_1(input_tensor)
-    x, _ = block.self_attention(x, x, x, need_weights=False)
-    x = block.dropout(x)
-    x = probe(x + input_tensor)
-    y = block.ln_2(x)
-    y = block.mlp(y)
+    x = block.ln_1(input_tensor)  # (batch, tokens, dim)
+    x, _ = block.self_attention(x, x, x, need_weights=False)  # (batch, tokens, dim)
+    x = block.dropout(x)  # (batch, tokens, dim)
+    x = probe(x + input_tensor)  # (batch, tokens, dim)
+    y = block.ln_2(x)  # (batch, tokens, dim)
+    y = block.mlp(y)  # (batch, tokens, dim)
 
-    out = x + y
+    out = x + y  # (batch, tokens, dim)
     return out
 
 
 def _swin_post_attention_residual_forward(
     block: nn.Module, probe: nn.Module, input_tensor
 ):
-    """SwinTransformerBlock.forward with the probe after the attention add."""
+    """SwinTransformerBlock.forward with the probe after the attention add.
+
+    input_tensor is the (batch, height, width, dim) feature map entering the
+    block and the return is the map leaving it, in the same shape. Mirrors
+    torchvision's SwinTransformerBlock.forward exactly except for the single
+    probe call.
+    """
     x = probe(
         input_tensor + block.stochastic_depth(block.attn(block.norm1(input_tensor)))
-    )
-    x = x + block.stochastic_depth(block.mlp(block.norm2(x)))
+    )  # (batch, height, width, dim)
+    x = x + block.stochastic_depth(block.mlp(block.norm2(x)))  # same shape
     return x
 
 

@@ -1,0 +1,38 @@
+{
+  "generator": "scripts/paper/mech_tac_layers.py",
+  "inputs": [
+    "results/_experiments/tac_layers/tac_layers.json"
+  ],
+  "written_at": "2026-09-10T23:36:32.578999+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "TacLayersCheckpoints": {
+      "value": "18",
+      "meaning": "checkpoints in the per-layer TAC pass"
+    },
+    "TacLayersSamples": {
+      "value": "500",
+      "meaning": "paired images per checkpoint in the per-layer TAC pass"
+    },
+    "TacLayersBenignPeakMax": {
+      "value": "0.12",
+      "meaning": "largest peak relative direction norm over the benign references"
+    },
+    "TacLayersBadnetOnset": {
+      "value": "8.0",
+      "meaning": "mean onset layer of badnet_a2o in the per-layer TAC pass"
+    },
+    "TacLayersBlendOnset": {
+      "value": "7.0",
+      "meaning": "mean onset layer of blend in the per-layer TAC pass"
+    },
+    "TacLayersEarliestOnsetAttack": {
+      "value": "blend",
+      "meaning": "the attack with the earliest mean onset layer in the per-layer TAC pass"
+    },
+    "TacLayersLatestOnsetAttack": {
+      "value": "tact",
+      "meaning": "the attack with the latest mean onset layer in the per-layer TAC pass"
+    }
+  }
+}

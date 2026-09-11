@@ -1,0 +1,26 @@
+{
+  "generator": "scripts/paper/tab_panel.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json"
+  ],
+  "written_at": "2026-09-10T23:39:04.917528+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "PanelCellsClearing": {
+      "value": "71",
+      "meaning": "cells in the ViT panel clearing the attack success bar"
+    },
+    "PanelCellsTotal": {
+      "value": "105",
+      "meaning": "cells the ViT panel declares, clearing and below the bar together"
+    },
+    "PanelDatasets": {
+      "value": "6",
+      "meaning": "datasets in the ViT panel"
+    },
+    "PanelAttacksClearing": {
+      "value": "7",
+      "meaning": "attacks with at least 1 cell clearing the attack success bar"
+    }
+  }
+}

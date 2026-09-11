@@ -1,0 +1,30 @@
+{
+  "generator": "scripts/paper/app_hypothesis_ledger.py",
+  "inputs": [
+    "docs/hypothesis/README.md"
+  ],
+  "written_at": "2026-09-10T23:33:23.245339+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "HypothesisCount": {
+      "value": "49",
+      "meaning": "hypotheses in the ledger index"
+    },
+    "HypothesisRefuted": {
+      "value": "16",
+      "meaning": "hypotheses whose leading verdict is refuted"
+    },
+    "HypothesisSupported": {
+      "value": "25",
+      "meaning": "hypotheses whose leading verdict is supported or confirmed"
+    },
+    "HypothesisPartial": {
+      "value": "4",
+      "meaning": "hypotheses whose leading verdict is partial"
+    },
+    "HypothesisInconclusive": {
+      "value": "2",
+      "meaning": "hypotheses whose leading verdict is inconclusive"
+    }
+  }
+}

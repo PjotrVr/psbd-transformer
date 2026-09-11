@@ -56,7 +56,7 @@ def build(config: LabelConsistentConfig, image_size: int, target_label: int) -> 
     adversarial_base = lazy_adversarial_lookup(config.adversarial_dir, image_size)
 
     def stamp(image: torch.Tensor) -> torch.Tensor:
-        stamped = image.clone()
+        stamped = image.clone()  # (C, H, W)
         stamped[:, :size, :size] = patch
         stamped[:, :size, image_size - size :] = patch
         stamped[:, image_size - size :, :size] = patch
@@ -69,12 +69,15 @@ def build(config: LabelConsistentConfig, image_size: int, target_label: int) -> 
         # checks coverage over the poisoned indices first, so a genuinely absent
         # cache fails loudly there.
         base = adversarial_base(index)
-        return stamp(image if base is None else base)
+        source = image if base is None else base  # (C, H, W)
+        stamped = stamp(source)
+        return stamped
 
     def apply_trigger_eval(image: torch.Tensor, _index: int) -> torch.Tensor:
-        return stamp(image)
+        stamped = stamp(image)
+        return stamped
 
-    return Attack(
+    attack = Attack(
         "lc",
         apply_trigger,
         resolve_clean_label_mode(config.label_mode, config.num_targets),
@@ -82,3 +85,4 @@ def build(config: LabelConsistentConfig, image_size: int, target_label: int) -> 
         apply_trigger_eval=apply_trigger_eval,
         num_targets=config.num_targets,
     )
+    return attack

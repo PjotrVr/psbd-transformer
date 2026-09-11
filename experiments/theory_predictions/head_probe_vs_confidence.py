@@ -39,6 +39,7 @@ from sklearn.metrics import roc_auc_score
 
 from defences.cache import baseline_path, load_baseline, read_split_manifest
 from defences.decision import pair_clean_to_backdoor
+from experiments._paths import experiment_results_dir
 
 # Forward order through the network. Block scope positions repeat in every block,
 # so their index is a within block phase rather than a depth in the stack; the
@@ -75,7 +76,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", default="results")
     parser.add_argument("--summary", default="results/detection_summary.csv")
-    parser.add_argument("--out-dir", default="experiments/theory_predictions")
+    parser.add_argument(
+        "--out-dir", default=experiment_results_dir("theory_predictions")
+    )
     return parser.parse_args()
 
 

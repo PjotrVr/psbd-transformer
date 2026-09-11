@@ -12,6 +12,8 @@ each shaped (num_samples, dim) for a fixed layer.
 
 import torch
 
+from .features import as_token_sequence
+
 # Guards the normalization of a direction that came out at 0, which happens on a
 # benign model where the trigger moves nothing.
 DIRECTION_NORM_FLOOR = 1e-8
@@ -122,3 +124,55 @@ def orthogonalize_weight(weight: torch.Tensor, direction: torch.Tensor) -> torch
 
     projected_out = weight - torch.outer(unit_direction, unit_direction) @ weight
     return projected_out
+
+
+def trigger_activation_change(
+    clean_tokens: torch.Tensor, backdoor_tokens: torch.Tensor, norm: str = "l1_sum"
+) -> torch.Tensor:
+    """TAC per residual dimension from token sequences, (dim,), in 2 conventions.
+
+    Zheng et al. (ECCV 2022, Channel Lipschitzness Pruning) define the trigger
+    activated change of channel k over a data set D as the per-sample L2 norm of
+    the feature map difference, averaged over samples.
+
+        original form (norm="l2")
+            TAC_k = (1 / |D|) * sum over x in D of
+                    l2_norm over positions p of ( f_{k,p}(x + delta) - f_{k,p}(x) )
+
+    BackdoorBench's visual_tac.py (lines 143 to 150) computes something else: it
+    averages the absolute difference over samples first and then sums the
+    result over the spatial positions of the channel. That is the L1 form with
+    the mean and the sum in the other order, and it is what the upstream TAC
+    heatmap shows.
+
+        BackdoorBench form (norm="l1_sum")
+            TAC_k = sum over positions p of
+                    (1 / |D|) * sum over x in D of | f_{k,p}(x + delta) - f_{k,p}(x) |
+
+    symbol table
+        D          the paired clean images
+        x          a clean image, x + delta the same image with the trigger
+        f_{k,p}    the activation of channel k at position p
+        k          a residual dimension here, a ConvNet channel upstream
+        p          a token here, a feature-map pixel upstream
+
+    Inputs are index-aligned (batch, tokens, dim) tensors, or Swin's
+    (batch, height, width, channels), which is viewed as a token sequence. The
+    pooled trigger_activated_change above is the class-token or token-mean
+    special case with a single position.
+    """
+    clean = as_token_sequence(clean_tokens).float()  # (batch, tokens, dim)
+    backdoor = as_token_sequence(backdoor_tokens).float()  # (batch, tokens, dim)
+    assert clean.shape == backdoor.shape, (
+        "TAC is only defined on index-aligned token sequences, "
+        f"got {tuple(clean.shape)} and {tuple(backdoor.shape)}"
+    )
+
+    difference = backdoor - clean  # (batch, tokens, dim)
+    if norm == "l1_sum":
+        tac = difference.abs().mean(dim=0).sum(dim=0)  # (dim,)
+        return tac
+    if norm == "l2":
+        tac = difference.norm(dim=1).mean(dim=0)  # (dim,)
+        return tac
+    raise ValueError(f"unknown TAC norm {norm!r}, expected 'l1_sum' or 'l2'")

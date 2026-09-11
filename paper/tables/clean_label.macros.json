@@ -1,0 +1,95 @@
+{
+  "generator": "scripts/paper/tab_clean_label.py",
+  "inputs": [
+    "checkpoints/<folder>/args.json",
+    "configs/psbd_basis.json"
+  ],
+  "written_at": "2026-09-10T23:36:48.650655+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "SigGtsrbTargetClass": {
+      "value": "1",
+      "meaning": "the target class of the GTSRB SIG runs with the target tag"
+    },
+    "SigGtsrbRuns": {
+      "value": "15",
+      "meaning": "GTSRB SIG runs at the tagged target class"
+    },
+    "SigGtsrbRates": {
+      "value": "3",
+      "meaning": "rates among the GTSRB SIG runs at the tagged target class"
+    },
+    "SigGtsrbSeeds": {
+      "value": "5",
+      "meaning": "seeds among the GTSRB SIG runs at the tagged target class"
+    },
+    "LcEpsilonBudgets": {
+      "value": "3",
+      "meaning": "epsilon budgets in the Label-Consistent pilot"
+    },
+    "LcGtsrbPilotRuns": {
+      "value": "3",
+      "meaning": "Label-Consistent pilot runs on GTSRB"
+    },
+    "LcGtsrbPilotDiverged": {
+      "value": "2",
+      "meaning": "Label-Consistent pilot runs on GTSRB that diverged"
+    },
+    "MultitargetSetSizes": {
+      "value": "2 and 3",
+      "meaning": "the multi-target set sizes probed"
+    },
+    "MultitargetSeeds": {
+      "value": "3",
+      "meaning": "seeds per multi-target cell"
+    },
+    "NewDatasetSeeds": {
+      "value": "3",
+      "meaning": "seeds per SVHN and EuroSAT cell"
+    },
+    "GtsrbDivergedRuns": {
+      "value": "12",
+      "meaning": "ViT GTSRB training runs whose clean accuracy collapsed below half the benign reference"
+    },
+    "GtsrbRunsScored": {
+      "value": "186",
+      "meaning": "ViT GTSRB training runs with a recorded clean accuracy"
+    },
+    "SigGtsrbTlOneFivePercentMeanAsr": {
+      "value": "0.722",
+      "meaning": "mean ASR of usable SIG GTSRB runs at target class 1 and the middle panel rate"
+    },
+    "SigGtsrbTlOneFivePercentSeedsClearing": {
+      "value": "1",
+      "meaning": "usable SIG GTSRB seeds at target class 1 and the middle rate that clear both bars"
+    },
+    "SigGtsrbTlOneFivePercentSeeds": {
+      "value": "5",
+      "meaning": "usable SIG GTSRB seeds at target class 1 and the middle rate"
+    },
+    "LcEpsilonChosen": {
+      "value": "cifar10 none, cifar100 none, gtsrb 16, tiny none",
+      "meaning": "the Label-Consistent epsilon over 255 the pilot rule picks per dataset, none where no run passes"
+    },
+    "LcDatasetsWithEpsilon": {
+      "value": "1",
+      "meaning": "datasets where some Label-Consistent epsilon passes both bars"
+    },
+    "NewDatasetCellsClearingOnMean": {
+      "value": "6",
+      "meaning": "SVHN and EuroSAT cells whose seed-mean ASR clears the bar"
+    },
+    "NewDatasetCells": {
+      "value": "8",
+      "meaning": "SVHN and EuroSAT cells trained"
+    },
+    "MultitargetRunsClearing": {
+      "value": "0",
+      "meaning": "multi-target SIG runs whose set-wide attack success clears the bar"
+    },
+    "MultitargetRuns": {
+      "value": "12",
+      "meaning": "multi-target SIG runs trained"
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "generator": "scripts/paper/tab_family_split.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+    "configs/psbd_basis.json",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+  ],
+  "written_at": "2026-09-10T23:37:46.713000+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "FamilyGapMatched": {
+      "value": "+0.005",
+      "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the matched 0.6 rate, over the 65 cells it covers"
+    },
+    "FamilyGapMatchedLow": {
+      "value": "-0.010",
+      "meaning": "lower bound of the 95% bootstrap interval on family_gap_matched"
+    },
+    "FamilyGapMatchedHigh": {
+      "value": "+0.023",
+      "meaning": "upper bound of the 95% bootstrap interval on family_gap_matched"
+    },
+    "FamilyGapAdaptive": {
+      "value": "+0.033",
+      "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the adaptive 0.8 rate, over the 65 cells it covers"
+    },
+    "FamilyGapAdaptiveLow": {
+      "value": "+0.006",
+      "meaning": "lower bound of the 95% bootstrap interval on family_gap_adaptive"
+    },
+    "FamilyGapAdaptiveHigh": {
+      "value": "+0.063",
+      "meaning": "upper bound of the 95% bootstrap interval on family_gap_adaptive"
+    },
+    "FamilyGapConfoundedMatched": {
+      "value": "-0.034",
+      "meaning": "mean paired AUROC gap under the basis file's operator-mixing family tags, at the matched 0.6 rate, over the 65 cells it covers"
+    },
+    "FamilyGapConfoundedMatchedLow": {
+      "value": "-0.052",
+      "meaning": "lower bound of the 95% bootstrap interval on family_gap_confounded_matched"
+    },
+    "FamilyGapConfoundedMatchedHigh": {
+      "value": "-0.015",
+      "meaning": "upper bound of the 95% bootstrap interval on family_gap_confounded_matched"
+    },
+    "FamilyGapLocal": {
+      "value": "-0.009",
+      "meaning": "mean paired token_mask family gap at the matched 0.6 rate, local-trigger cells only, over the 23 cells it covers"
+    },
+    "FamilyGapLocalLow": {
+      "value": "-0.032",
+      "meaning": "lower bound of the 95% bootstrap interval on family_gap_local"
+    },
+    "FamilyGapLocalHigh": {
+      "value": "+0.015",
+      "meaning": "upper bound of the 95% bootstrap interval on family_gap_local"
+    },
+    "FamilyGapGlobal": {
+      "value": "+0.013",
+      "meaning": "mean paired token_mask family gap at the matched 0.6 rate, global-trigger cells only, over the 42 cells it covers"
+    },
+    "FamilyGapGlobalLow": {
+      "value": "-0.006",
+      "meaning": "lower bound of the 95% bootstrap interval on family_gap_global"
+    },
+    "FamilyGapGlobalHigh": {
+      "value": "+0.036",
+      "meaning": "upper bound of the 95% bootstrap interval on family_gap_global"
+    },
+    "FamilyGapMinLeaveOneAttackOut": {
+      "value": "+0.000",
+      "meaning": "smallest mean matched-06 token_mask family gap over the leave-one-attack-out refits, the weakest the gap gets when any single attack is removed"
+    }
+  }
+}

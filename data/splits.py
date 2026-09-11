@@ -90,7 +90,8 @@ def resolve_probe_attack(
                 f"checkpoint was trained with {checkpoint_attack!r}; refusing to "
                 f"probe it with {probe_attack!r}, which it never saw"
             )
-        return checkpoint_attack, metadata["target_label"]
+        checkpoint_target = metadata["target_label"]
+        return checkpoint_attack, checkpoint_target
 
     if probe_attack is None:
         raise ValueError(
@@ -184,6 +185,7 @@ def build_psbd_loaders_from_checkpoint(
     attack_name, target_label = resolve_probe_attack(
         metadata, probe_attack, probe_target_label
     )
+
     # A probe attack is chosen here rather than trained, so it takes no override. A
     # backdoored checkpoint rebuilds the exact trigger it was trained with.
     overrides = (
@@ -203,8 +205,8 @@ def build_psbd_loaders_from_checkpoint(
     n_total = len(test_base)
 
     permutation = psbd_split_permutation(n_total, seed)  # (n_total,)
-    heldout_indices = permutation[:PSBD_HELDOUT_SIZE]
-    analysis_indices = permutation[PSBD_HELDOUT_SIZE:]
+    heldout_indices = permutation[:PSBD_HELDOUT_SIZE]  # (n_heldout,)
+    analysis_indices = permutation[PSBD_HELDOUT_SIZE:]  # (n_total - n_heldout,)
     if max_samples is not None:
         heldout_indices = heldout_indices[:max_samples]
         analysis_indices = analysis_indices[:max_samples]
@@ -241,9 +243,10 @@ def build_psbd_loaders_from_checkpoint(
     ]
 
     def loader(dataset: Dataset) -> DataLoader:
-        return DataLoader(
+        ordered_loader = DataLoader(
             dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers
         )
+        return ordered_loader
 
     loaders = {
         "validation": loader(validation_set),

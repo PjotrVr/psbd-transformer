@@ -39,16 +39,21 @@ DEFAULT_FLOOR = 1e-9
 def safe_ratio(numerator, denominator, floor: float = DEFAULT_FLOOR):
     """numerator / denominator, or NaN where |denominator| < floor.
 
-    Accepts floats and tensors. A tensor result is NaN only in the degenerate
-    positions, so 1 bad sample does not destroy a batch.
+    Accepts floats and tensors. A tensor result takes the broadcast shape of
+    numerator and denominator and is NaN only in the degenerate positions, so 1
+    bad sample does not destroy a batch.
     """
     if isinstance(denominator, torch.Tensor) or isinstance(numerator, torch.Tensor):
         numerator = torch.as_tensor(numerator)
         denominator = torch.as_tensor(denominator)
-        safe = denominator.abs() >= floor
+        safe = denominator.abs() >= floor  # denominator's shape, bool
         out = torch.full_like(
             torch.broadcast_tensors(numerator, denominator)[0].float(), float("nan")
-        )
+        )  # broadcast shape of numerator and denominator
+
+        # The rejected positions divide by 1 rather than by their near-zero value,
+        # so the division never overflows, and the NaN already placed there is
+        # kept because only the safe positions are written back.
         out[safe] = (numerator / denominator.masked_fill(~safe, 1.0)).float()[safe]
         return out
     if abs(denominator) < floor:
@@ -62,15 +67,20 @@ def safe_ratio_positive(numerator, denominator, floor: float = DEFAULT_FLOOR):
 
     A negative denominator here means the caller computed the wrong thing, since a
     norm cannot be negative, so the result is NaN rather than a plausible negative
-    ratio.
+    ratio. A tensor result takes the broadcast shape of numerator and denominator.
     """
     if isinstance(denominator, torch.Tensor) or isinstance(numerator, torch.Tensor):
         numerator = torch.as_tensor(numerator)
         denominator = torch.as_tensor(denominator)
-        safe = denominator >= floor
+        safe = denominator >= floor  # denominator's shape, bool
         out = torch.full_like(
             torch.broadcast_tensors(numerator, denominator)[0].float(), float("nan")
-        )
+        )  # broadcast shape of numerator and denominator
+
+        # The rejected positions divide by 1 rather than by their own value, so a
+        # negative or vanishing denominator never reaches the division, and the
+        # NaN already placed there is kept because only the safe positions are
+        # written back.
         out[safe] = (numerator / denominator.masked_fill(~safe, 1.0)).float()[safe]
         return out
     if not denominator >= floor:

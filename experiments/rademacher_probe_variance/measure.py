@@ -36,7 +36,7 @@ import torch
 from defences.decision import HEADLINE_QUANTILE, detection_report
 from defences.inference import build_baseline_cache, compute_dropout_pass_probs
 from models.backbones import detect_architecture, load_checkpoint
-from defences.operators import build_perturbation
+from defences.operators import build_operator
 from models.positions import plug_dropout, unplug_dropout
 from defences.scores import psu_from_cache, shift_ratio
 from data.splits import build_psbd_loaders_from_checkpoint
@@ -59,7 +59,7 @@ VARIANCE_REPEATS = 24
 def probe_context(model, architecture, position, operator, rate):
     """Attach one probe and return its handles, for use in a try block."""
     handles = plug_dropout(
-        model, architecture, (position,), {position: build_perturbation(operator)}, rate
+        model, architecture, (position,), {position: build_operator(operator)}, rate
     )
     return handles
 

@@ -50,6 +50,7 @@ from defences.cache import (
     load_dropout_pass_probs,
 )
 from defences.decision import complete_rates
+from experiments._paths import experiment_results_dir
 
 HEAD_PLACEMENT = "final_norm_out_gain_scale"
 # Same operator, same deterministic amplification, mid stack instead of at the
@@ -60,7 +61,9 @@ CONTROL_PLACEMENT = "mlp_norm_out_gain_scale"
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", default="results")
-    parser.add_argument("--out-dir", default="experiments/theory_predictions")
+    parser.add_argument(
+        "--out-dir", default=experiment_results_dir("theory_predictions")
+    )
     parser.add_argument("--checkpoints", type=int, default=30)
     return parser.parse_args()
 

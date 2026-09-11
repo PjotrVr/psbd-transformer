@@ -129,8 +129,10 @@ def total_variation(mask: torch.Tensor) -> torch.Tensor:
     """
     batch, channels, height, width = mask.shape
 
-    vertical = (mask[:, :, 1:, :] - mask[:, :, :-1, :]).pow(2)  # (batch, 1, h - 1, w)
-    horizontal = (mask[:, :, :, 1:] - mask[:, :, :, :-1]).pow(2)  # (batch, 1, h, w - 1)
+    # Squared differences between adjacent rows, (batch, 1, height - 1, width),
+    # and between adjacent columns, (batch, 1, height, width - 1).
+    vertical = (mask[:, :, 1:, :] - mask[:, :, :-1, :]).pow(2)
+    horizontal = (mask[:, :, :, 1:] - mask[:, :, :, :-1]).pow(2)
     summed = vertical.sum(dim=(1, 2, 3)) + horizontal.sum(dim=(1, 2, 3))  # (batch,)
 
     normalized = summed / (channels * height * width)  # (batch,)
@@ -183,7 +185,9 @@ def distill_masks(
     mean_tensor, std_tensor = normalization_buffers(
         mean, std, images.device, images.dtype
     )
-    pixels = (images * std_tensor + mean_tensor).clamp(0.0, 1.0)  # (batch, c, h, w)
+    pixels = (images * std_tensor + mean_tensor).clamp(
+        0.0, 1.0
+    )  # (batch, channels, height, width)
 
     mask_parameter = torch.full(
         (batch, MASK_CHANNELS, height, width),
@@ -204,13 +208,19 @@ def distill_masks(
 
             # Redrawn every step, as Eq. (2) prescribes, so a pixel that is 0 in
             # the image is still distinguishable from a pixel the mask removed.
-            fill = torch.rand(batch, channels, 1, 1, device=device)  # (batch, c, 1, 1)
+            fill = torch.rand(
+                batch, channels, 1, 1, device=device
+            )  # (batch, channels, 1, 1)
 
             assert mask.shape == (batch, MASK_CHANNELS, height, width), (
                 f"mask {tuple(mask.shape)} does not match pixels {tuple(pixels.shape)}"
             )
-            distilled = pixels * mask + (1 - mask) * fill  # (batch, c, h, w), Eq. (2)
-            renormalized = (distilled - mean_tensor) / std_tensor  # (batch, c, h, w)
+            distilled = (
+                pixels * mask + (1 - mask) * fill
+            )  # (batch, channels, height, width), Eq. (2)
+            renormalized = (
+                distilled - mean_tensor
+            ) / std_tensor  # (batch, channels, height, width)
             distilled_logits = forward_logits(
                 model, renormalized, device, use_bfloat16
             )  # (batch, num_classes)

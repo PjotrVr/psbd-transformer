@@ -25,7 +25,7 @@ def basis_entry_noted(fragment: str) -> dict:
 def test_the_recommended_placement_is_the_one_the_basis_declares():
     entry = basis_entry_noted("the recommended deployment config")
     assert entry["id"] == RECOMMENDED_PLACEMENT
-    assert (entry["position_config"], entry["perturbation"]) == (
+    assert (entry["position"], entry["operator"]) == (
         "before_attention_norm",
         "token_mask",
     )
@@ -34,7 +34,7 @@ def test_the_recommended_placement_is_the_one_the_basis_declares():
 def test_the_published_placement_is_dropout_after_the_residual_add():
     entry = basis_entry_noted("the published ConvNet placement")
     assert entry["id"] == PUBLISHED_PLACEMENT
-    assert (entry["position_config"], entry["perturbation"]) == (
+    assert (entry["position"], entry["operator"]) == (
         "post_residual",
         "dropout",
     )

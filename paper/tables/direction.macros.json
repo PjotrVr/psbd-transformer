@@ -1,0 +1,52 @@
+{
+  "generator": "scripts/paper/mech_direction.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+  ],
+  "written_at": "2026-09-10T23:34:45.212720+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "DirectionCheckpoints": {
+      "value": "6",
+      "meaning": "CIFAR-10 checkpoints with a backdoor_neurons record, benign included"
+    },
+    "DirectionBenignPeakRelNorm": {
+      "value": "0.09",
+      "meaning": "peak relative backdoor-direction norm on the benign reference under the same trigger"
+    },
+    "DirectionBackdooredMinFinalRelNorm": {
+      "value": "0.49",
+      "meaning": "smallest last-layer relative direction norm over the backdoored CIFAR-10 checkpoints"
+    },
+    "AblationCheckpoints": {
+      "value": "4",
+      "meaning": "checkpoints in the causal ablation outside the SAM set"
+    },
+    "AblationDirectionMaxAsr": {
+      "value": "0.57",
+      "meaning": "highest attack success left after removing the rank-1 direction, all-to-one attacks"
+    },
+    "AblationTopCoordinatesMinAsr": {
+      "value": "1.00",
+      "meaning": "lowest attack success left after zeroing the top-20 coordinates, all-to-one attacks"
+    },
+    "AblationRandomDirectionMinAsr": {
+      "value": "1.00",
+      "meaning": "lowest attack success left after removing a random direction, all-to-one attacks"
+    },
+    "CrystallisationBadnetLayer": {
+      "value": "10.4",
+      "meaning": "mean crystallisation layer of badnet_a2o on CIFAR-100 and Tiny"
+    },
+    "CrystallisationBlendLayer": {
+      "value": "8.2",
+      "meaning": "mean crystallisation layer of blend on CIFAR-100 and Tiny"
+    },
+    "CrystallisationCheckpoints": {
+      "value": "16",
+      "meaning": "checkpoints in the crystallisation record"
+    }
+  }
+}

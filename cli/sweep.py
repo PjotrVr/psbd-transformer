@@ -20,6 +20,7 @@ Example
 """
 
 import argparse
+from dataclasses import dataclass
 import json
 import os
 from data.splits import SPLITS
@@ -27,6 +28,7 @@ from data.splits import SPLITS
 import torch
 
 from defences.cache import (
+    run_provenance_path,
     dropout_pass_path,
     load_or_build_baseline,
     save_dropout_pass_probs,
@@ -36,8 +38,8 @@ from data.registry import DATASET_REGISTRY
 from defences.inference import compute_dropout_pass_probs
 from models.backbones import detect_architecture, load_checkpoint
 from defences.operators import (
-    PERTURBATIONS,
-    build_perturbation,
+    OPERATORS,
+    build_operator,
     check_operator_position,
     effective_forward_passes,
     scale_up,
@@ -73,7 +75,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint-folder", required=True, nargs="+")
     parser.add_argument(
+        "--position",
         "--position-config",
+        dest="position",
         required=True,
         nargs="+",
         choices=tuple(DROPOUT_CONFIGS)
@@ -98,10 +102,12 @@ def parse_args() -> argparse.Namespace:
     # A smoke and timing knob only. The real jobs leave it None for the full split.
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument(
+        "--operator",
         "--perturbation",
+        dest="operator",
         default="dropout",
-        choices=sorted(PERTURBATIONS) + ["scale_up"],
-        help="which perturbation operator to inject. dropout is the paper's",
+        choices=sorted(OPERATORS) + ["scale_up"],
+        help="which operator to inject. dropout is the paper's",
     )
     parser.add_argument(
         "--model-dropout",
@@ -159,9 +165,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def cache_config_name(
-    position_config: str,
+    position: str,
     block_range: tuple[int, int] | None,
-    perturbation: str = "dropout",
+    operator: str = "dropout",
     forward_passes: int = DEFAULT_FORWARD_PASSES,
     model_dropout: float = 0.0,
     mask_seed: int = PSBD_MASK_SEED,
@@ -180,14 +186,14 @@ def cache_config_name(
     skip the k=20 work while reporting success.
     """
     if block_range is None:
-        stem = position_config
+        stem = position
     else:
-        stem = f"{position_config}_blocks_{block_range[0]}_{block_range[1]}"
+        stem = f"{position}_blocks_{block_range[0]}_{block_range[1]}"
 
     # dropout keeps the bare name so every cache written before perturbations
     # existed stays addressable and --skip-existing still finds it.
-    if perturbation != "dropout":
-        stem = f"{stem}_{perturbation}"
+    if operator != "dropout":
+        stem = f"{stem}_{operator}"
     if forward_passes != DEFAULT_FORWARD_PASSES:
         stem = f"{stem}_k{forward_passes}"
     if model_dropout:
@@ -246,19 +252,19 @@ def load_model_and_loaders(
     return model, architecture, loaders, manifest, metadata
 
 
-def build_operator(perturbation: str, dataset: str | None):
+def bound_operator(operator: str, dataset: str | None):
     """The perturbation factory, with SCALE-UP's dataset constants bound in.
 
     SCALE-UP works in pixel space, so it needs the dataset's normalization
     constants to undo and redo the transform around the clip. They are not
     available at registry level, so the factory is bound here.
     """
-    if perturbation == "scale_up":
+    if operator == "scale_up":
         spec = DATASET_REGISTRY[dataset]
         return scale_up(spec.mean, spec.std)
 
-    operator = build_perturbation(perturbation)
-    return operator
+    factory = build_operator(operator)
+    return factory
 
 
 def run_one_rate(
@@ -266,7 +272,7 @@ def run_one_rate(
     loaders: dict,
     baselines: dict,
     psbd_dir: str,
-    position_config: str,
+    position: str,
     rate: float,
     device: torch.device,
     forward_passes: int,
@@ -288,29 +294,36 @@ def run_one_rate(
             model_dropout,
         )
         save_dropout_pass_probs(
-            dropout_pass_path(psbd_dir, position_config, rate, split),
+            dropout_pass_path(psbd_dir, position, rate, split),
             per_pass_probs,
             per_pass_argmax,
         )
 
 
+@dataclass(frozen=True)
+class SweepSettings:
+    """What 1 placement sweep injects, at which rates, and how it is named on disk."""
+
+    operator: str = "dropout"
+    rates: tuple[float, ...] = DROPOUT_RATES
+    block_range: tuple[int, int] | None = None
+    cache_name: str | None = None
+    model_dropout: float = 0.0
+    mask_seed: int = PSBD_MASK_SEED
+    dataset: str | None = None
+
+
 def sweep_rates(
     model: torch.nn.Module,
     architecture: str,
-    position_config: str,
+    position: str,
     loaders: dict,
     baselines: dict,
     psbd_dir: str,
     device: torch.device,
     forward_passes: int,
     use_bfloat16: bool,
-    rates: tuple[float, ...] = DROPOUT_RATES,
-    block_range: tuple[int, int] | None = None,
-    cache_name: str | None = None,
-    perturbation: str = "dropout",
-    model_dropout: float = 0.0,
-    mask_seed: int = PSBD_MASK_SEED,
-    dataset: str | None = None,
+    settings: SweepSettings,
 ) -> None:
     """For each rate: plug the position, run every split, save, unplug.
 
@@ -321,18 +334,21 @@ def sweep_rates(
     1 - (1-p1)(1-p2). Every file would still be written and every number would be
     quietly wrong.
     """
-    position_names = DROPOUT_CONFIGS.get(position_config, (position_config,))
-    cache_name = cache_name or position_config
+    position_names = DROPOUT_CONFIGS.get(position, (position,))
+    cache_name = settings.cache_name or position
+    block_range = settings.block_range
+    model_dropout = settings.model_dropout
+    mask_seed = settings.mask_seed
 
     # A deterministic operator returns the same value on every pass, so PSU's
     # expectation over k is exact at 1 pass and a k > 1 sweep would write k
     # identical rows. The cache folder name still carries the REQUESTED k, so
     # naming and --skip-existing keep working against caches written before this.
-    passes = effective_forward_passes(perturbation, forward_passes)
-    operator = build_operator(perturbation, dataset)
+    passes = effective_forward_passes(settings.operator, forward_passes)
+    operator = bound_operator(settings.operator, settings.dataset)
     factory = {name: operator for name in position_names}
 
-    for rate in rates:
+    for rate in settings.rates:
         handles = plug_dropout(
             model, architecture, position_names, factory, rate, block_range=block_range
         )
@@ -355,7 +371,7 @@ def sweep_rates(
 
 
 def write_run_provenance(
-    psbd_dir: str, args: argparse.Namespace, position_config: str, device: torch.device
+    psbd_dir: str, args: argparse.Namespace, position: str, device: torch.device
 ) -> None:
     """The commit, config and GPU behind this cache, written next to the cache.
 
@@ -366,13 +382,13 @@ def write_run_provenance(
     block_range = tuple(args.block_range) if args.block_range else None
     payload = {
         "git_commit": current_git_commit(),
-        "position_config": position_config,
-        "perturbation": args.perturbation,
+        "position": position,
+        "operator": args.operator,
         "block_range": list(args.block_range) if args.block_range else None,
         "dropout_rates": list(args.rates) if args.rates else list(DROPOUT_RATES),
         "forward_passes": args.forward_passes,
         "effective_forward_passes": effective_forward_passes(
-            args.perturbation, args.forward_passes
+            args.operator, args.forward_passes
         ),
         "mask_seed": args.mask_seed,
         "split_seed": PSBD_SPLIT_SEED,
@@ -385,14 +401,14 @@ def write_run_provenance(
     }
 
     cache_name = cache_config_name(
-        position_config,
+        position,
         block_range,
-        args.perturbation,
+        args.operator,
         args.forward_passes,
         args.model_dropout,
         args.mask_seed,
     )
-    path = os.path.join(psbd_dir, f"run_{cache_name}.json")
+    path = run_provenance_path(psbd_dir, cache_name)
     os.makedirs(psbd_dir, exist_ok=True)
     with open(path, "w") as handle:
         json.dump(payload, handle, indent=2)
@@ -424,12 +440,12 @@ def run_one_checkpoint(
         position: cache_config_name(
             position,
             block_range,
-            args.perturbation,
+            args.operator,
             args.forward_passes,
             args.model_dropout,
             args.mask_seed,
         )
-        for position in args.position_config
+        for position in args.position
     }
     pending = [
         position
@@ -453,6 +469,15 @@ def run_one_checkpoint(
 
     for position in pending:
         write_run_provenance(psbd_dir, args, position, device)
+        settings = SweepSettings(
+            operator=args.operator,
+            rates=rates,
+            block_range=block_range,
+            cache_name=cache_names[position],
+            model_dropout=args.model_dropout,
+            mask_seed=args.mask_seed,
+            dataset=metadata["dataset"],
+        )
         sweep_rates(
             model,
             architecture,
@@ -463,13 +488,7 @@ def run_one_checkpoint(
             device,
             args.forward_passes,
             use_bfloat16,
-            rates=rates,
-            block_range=block_range,
-            cache_name=cache_names[position],
-            perturbation=args.perturbation,
-            model_dropout=args.model_dropout,
-            mask_seed=args.mask_seed,
-            dataset=metadata["dataset"],
+            settings,
         )
         print(f"[ok] {folder} {cache_names[position]}", flush=True)
 
@@ -482,9 +501,9 @@ def main() -> None:
     # argparse validates the operator and the position separately, so an invalid
     # PAIR passes both checks and produces a complete, plausible sweep answering
     # a different question. Checked once here, before any GPU time is spent.
-    for position_config in args.position_config:
-        for position in DROPOUT_CONFIGS.get(position_config, (position_config,)):
-            check_operator_position(args.perturbation, position)
+    for position in args.position:
+        for position in DROPOUT_CONFIGS.get(position, (position,)):
+            check_operator_position(args.operator, position)
 
     for folder in args.checkpoint_folder:
         try:

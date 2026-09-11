@@ -257,7 +257,9 @@ def collect_reference_bank(
     served = 0
     with captured_layers(model, layers, resolved_architecture) as captured:
         for images, labels in loader:
-            probs = forward_probs(model, images, device, use_bfloat16)
+            probs = forward_probs(
+                model, images, device, use_bfloat16
+            )  # (batch, num_classes)
             predicted = probs.argmax(dim=1)  # (batch,)
             correct = predicted == labels.to(device).long()  # (batch,)
             positions = torch.arange(
@@ -371,7 +373,7 @@ def first_same_class_rank(
     if exclude_self is not None:
         assert exclude_self.shape == (batch,), exclude_self.shape
         is_bank_row = exclude_self >= 0  # (batch,)
-        owners = torch.arange(batch, device=queries.device)[is_bank_row]
+        owners = torch.arange(batch, device=queries.device)[is_bank_row]  # (bank_rows,)
         distances[owners, exclude_self[is_bank_row]] = float("inf")
 
     same_class = query_labels.view(-1, 1) == bank_labels.view(
@@ -387,7 +389,9 @@ def first_same_class_rank(
     # unstable sort may or may not do, and exact ties do not occur in practice.
     closer = (distances < nearest_same_class.view(-1, 1)).sum(dim=1)  # (batch,)
     has_same_class = torch.isfinite(nearest_same_class)  # (batch,)
-    ranks = torch.where(has_same_class, closer, torch.full_like(closer, bank_size))
+    ranks = torch.where(
+        has_same_class, closer, torch.full_like(closer, bank_size)
+    )  # (batch,)
     return ranks
 
 
@@ -424,14 +428,16 @@ def rank_trajectories(
     served = 0
     with captured_layers(model, bank.layers, bank.architecture) as captured:
         for images, _ in loader:
-            probs = forward_probs(model, images, device, use_bfloat16)
+            probs = forward_probs(
+                model, images, device, use_bfloat16
+            )  # (batch, num_classes)
             predicted = probs.argmax(dim=1)  # (batch,)
             batch = images.size(0)
             exclude_self = (
                 own_rows[served : served + batch].to(device)
                 if own_rows is not None
                 else None
-            )
+            )  # (batch,) or None
             served += batch
 
             ranks_by_layer = [
@@ -489,7 +495,9 @@ def leave_one_out_trajectories(bank: ReferenceBank) -> torch.Tensor:
         ]
         ranks_by_layer.append(torch.cat(layer_ranks))  # (bank_size,)
 
-    trajectories = torch.stack(ranks_by_layer, dim=1).float().cpu()  # (bank_size, L)
+    trajectories = (
+        torch.stack(ranks_by_layer, dim=1).float().cpu()
+    )  # (bank_size, num_layers)
     return trajectories
 
 
@@ -539,11 +547,13 @@ def fit_trajectory_model(benign: torch.Tensor) -> TrajectoryModel:
     )  # (num_layers,)
 
     standardised = (benign64 - mean) / std  # (N, num_layers)
-    covariance = standardised.T @ standardised / (num_samples - 1)  # (L, L)
+    covariance = (
+        standardised.T @ standardised / (num_samples - 1)
+    )  # (num_layers, num_layers)
     floored = covariance + COVARIANCE_FLOOR * torch.eye(
         num_layers, dtype=torch.float64
-    )  # (L, L)
-    precision = torch.linalg.pinv(floored, hermitian=True)  # (L, L)
+    )  # (num_layers, num_layers)
+    precision = torch.linalg.pinv(floored, hermitian=True)  # (num_layers, num_layers)
 
     model = TrajectoryModel(mean, std, precision)
     return model
@@ -558,7 +568,7 @@ def outlier_scores(trajectories: torch.Tensor, model: TrajectoryModel) -> torch.
     assert trajectories.dim() == 2, trajectories.shape
     assert trajectories.shape[1] == model.mean.numel(), trajectories.shape
 
-    standardised = (trajectories.double() - model.mean) / model.std  # (N, L)
+    standardised = (trajectories.double() - model.mean) / model.std  # (N, num_layers)
     squared_mahalanobis = torch.einsum(
         "nl,lk,nk->n", standardised, model.precision, standardised
     )  # (N,)

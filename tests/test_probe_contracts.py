@@ -106,9 +106,9 @@ def _sample_input(name: str, layout: str) -> torch.Tensor:
     return torch.randn(shape)
 
 
-@pytest.mark.parametrize("name", sorted(new_operators.PERTURBATIONS))
+@pytest.mark.parametrize("name", sorted(new_operators.OPERATORS))
 def test_operator_is_identity_at_rate_zero(name):
-    operator = new_operators.build_perturbation(name)(0.0)
+    operator = new_operators.build_operator(name)(0.0)
     operator.train()
     x = _sample_input(name, "token")
 
@@ -126,7 +126,7 @@ def test_scale_up_is_identity_at_rate_zero():
 @pytest.mark.parametrize("name", TOKEN_LAYOUT_OPERATORS)
 @pytest.mark.parametrize("layout", ("token", "spatial"))
 def test_operator_preserves_shape(name, layout):
-    operator = new_operators.build_perturbation(name)(0.3)
+    operator = new_operators.build_operator(name)(0.3)
     operator.train()
     x = _sample_input(name, layout)
 
@@ -135,7 +135,7 @@ def test_operator_preserves_shape(name, layout):
 
 @pytest.mark.parametrize("name", HEAD_LAYOUT_OPERATORS)
 def test_head_operator_preserves_shape(name):
-    operator = new_operators.build_perturbation(name)(0.3)
+    operator = new_operators.build_operator(name)(0.3)
     operator.train()
     x = torch.randn(HEAD_SHAPE)
 
@@ -144,9 +144,7 @@ def test_head_operator_preserves_shape(name):
 
 OPERATORS_WITHOUT_AN_ORIGINAL = frozenset({"rademacher"})
 
-PORTED_OPERATORS = sorted(
-    set(new_operators.PERTURBATIONS) - OPERATORS_WITHOUT_AN_ORIGINAL
-)
+PORTED_OPERATORS = sorted(set(new_operators.OPERATORS) - OPERATORS_WITHOUT_AN_ORIGINAL)
 
 
 def test_gaussian_noise_std_is_per_sample():
@@ -166,7 +164,7 @@ def test_gaussian_noise_std_is_per_sample():
 
 
 def test_deterministic_perturbations_need_one_pass():
-    assert new_operators.DETERMINISTIC_PERTURBATIONS == frozenset(
+    assert new_operators.DETERMINISTIC_OPERATORS == frozenset(
         {"gain_scale", "scale_up"}
     )
     assert new_operators.effective_forward_passes("gain_scale", 20) == 1

@@ -1,1 +1,3155 @@
-{}
+{
+  "PatchingCells": {
+    "value": "65",
+    "meaning": "clearing cells with activation patching",
+    "generator": "scripts/paper/mech_activation_patching.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    ]
+  },
+  "PatchingEarlyLayers": {
+    "value": "1 to 6",
+    "meaning": "the layer band the early trigger-token recovery is averaged over",
+    "generator": "scripts/paper/mech_activation_patching.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    ]
+  },
+  "PatchingBadnetLastFull": {
+    "value": "10",
+    "meaning": "badnet_a2o last layer at which the trigger tokens alone recover at least half the clean answer",
+    "generator": "scripts/paper/mech_activation_patching.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    ]
+  },
+  "PatchingRandomNullMax": {
+    "value": "1.000",
+    "meaning": "largest recovery any random token group reaches, over every attack and layer",
+    "generator": "scripts/paper/mech_activation_patching.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    ]
+  },
+  "PatchingBadnetEarlyTrigger": {
+    "value": "1.000",
+    "meaning": "badnet_a2o mean recovery from the trigger tokens over layers 1 to 6",
+    "generator": "scripts/paper/mech_activation_patching.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    ]
+  },
+  "PatchingBadnetCrossover": {
+    "value": "12",
+    "meaning": "badnet_a2o layer at which the class token first recovers more than the trigger tokens",
+    "generator": "scripts/paper/mech_activation_patching.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    ]
+  },
+  "PatchingBadnetFinalCls": {
+    "value": "0.661",
+    "meaning": "badnet_a2o class-token recovery at the last layer",
+    "generator": "scripts/paper/mech_activation_patching.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    ]
+  },
+  "PatchingLocalEarlyTrigger": {
+    "value": "1.000",
+    "meaning": "mean early trigger-token recovery over the local-trigger attacks",
+    "generator": "scripts/paper/mech_activation_patching.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    ]
+  },
+  "PatchingGlobalEarlyTrigger": {
+    "value": "0.982",
+    "meaning": "mean early trigger-token recovery over the global-trigger attacks",
+    "generator": "scripts/paper/mech_activation_patching.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    ]
+  },
+  "PatchingLocalCrossover": {
+    "value": "11.5",
+    "meaning": "mean crossover layer over the local-trigger attacks",
+    "generator": "scripts/paper/mech_activation_patching.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    ]
+  },
+  "PatchingBlendEarlyTrigger": {
+    "value": "0.934",
+    "meaning": "blend mean recovery from the trigger tokens over layers 1 to 6",
+    "generator": "scripts/paper/mech_activation_patching.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    ]
+  },
+  "AdaptiveHighAsr": {
+    "value": "0.9",
+    "meaning": "attack success an evasive checkpoint must keep to count",
+    "generator": "scripts/paper/tab_adaptive.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/adaptive_attacker_analysis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/multi_probe_analysis.json"
+    ]
+  },
+  "AdaptiveVitCells": {
+    "value": "14",
+    "meaning": "vit evasive cells keeping attack success above 0.9",
+    "generator": "scripts/paper/tab_adaptive.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/adaptive_attacker_analysis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/multi_probe_analysis.json"
+    ]
+  },
+  "AdaptiveVitProbedBase": {
+    "value": "0.966",
+    "meaning": "vit mean AUROC of the probed operator on the base checkpoints",
+    "generator": "scripts/paper/tab_adaptive.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/adaptive_attacker_analysis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/multi_probe_analysis.json"
+    ]
+  },
+  "AdaptiveVitProbedEvade": {
+    "value": "0.233",
+    "meaning": "vit mean AUROC of the probed operator on the evasive checkpoints",
+    "generator": "scripts/paper/tab_adaptive.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/adaptive_attacker_analysis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/multi_probe_analysis.json"
+    ]
+  },
+  "AdaptiveVitTransfer": {
+    "value": "0.893",
+    "meaning": "vit mean AUROC of the unprobed operators on the evasive checkpoints",
+    "generator": "scripts/paper/tab_adaptive.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/adaptive_attacker_analysis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/multi_probe_analysis.json"
+    ]
+  },
+  "AdaptiveVitUnion": {
+    "value": "0.973",
+    "meaning": "vit mean AUROC of the best probe union on the evasive checkpoints",
+    "generator": "scripts/paper/tab_adaptive.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/adaptive_attacker_analysis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/multi_probe_analysis.json"
+    ]
+  },
+  "AdaptiveVitCaCost": {
+    "value": "-0.030",
+    "meaning": "vit mean clean-accuracy cost of evasion",
+    "generator": "scripts/paper/tab_adaptive.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/adaptive_attacker_analysis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/multi_probe_analysis.json"
+    ]
+  },
+  "AdaptiveVitAsrCost": {
+    "value": "+0.000",
+    "meaning": "vit mean attack-success cost of evasion",
+    "generator": "scripts/paper/tab_adaptive.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/adaptive_attacker_analysis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/multi_probe_analysis.json"
+    ]
+  },
+  "ATwoaCells": {
+    "value": "12",
+    "meaning": "all-to-all cells scored",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "ATwoaPsuAuroc": {
+    "value": "0.411",
+    "meaning": "mean PSU AUROC on all-to-all cells",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "ATwoaEntropyAuroc": {
+    "value": "0.761",
+    "meaning": "mean negative-entropy AUROC on all-to-all cells",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "ATwooPsuAuroc": {
+    "value": "0.891",
+    "meaning": "mean PSU AUROC on the all-to-one cells of the same record",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "ATwooEntropyAuroc": {
+    "value": "0.408",
+    "meaning": "mean negative-entropy AUROC on the all-to-one cells",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "BenignEntropyAuroc": {
+    "value": "0.506",
+    "meaning": "mean negative-entropy AUROC on the benign references",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "RouterCells": {
+    "value": "64",
+    "meaning": "cells the sign router was scored on",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "RouterAlwaysPsu": {
+    "value": "0.819",
+    "meaning": "mean AUROC of always choosing PSU",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "RouterRouted": {
+    "value": "0.865",
+    "meaning": "mean AUROC of the sign router",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "RouterOracle": {
+    "value": "0.883",
+    "meaning": "mean AUROC of the per-cell oracle choice",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "RouterDelta": {
+    "value": "+0.045",
+    "meaning": "mean gain of the sign router over always-PSU",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "RouterDeltaCi": {
+    "value": "[+0.017, +0.079]",
+    "meaning": "bootstrap interval on the sign router's gain",
+    "generator": "scripts/paper/tab_all_to_all.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    ]
+  },
+  "BasisRankRecommendedAdaptive": {
+    "value": "2",
+    "meaning": "rank of the recommended placement among the basis by adaptive-rule mean AUROC",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "BasisRankRecommendedMatched": {
+    "value": "1",
+    "meaning": "rank of the recommended placement among the basis by matched-rule mean AUROC",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "BasisRankPublishedAdaptive": {
+    "value": "12",
+    "meaning": "rank of the published placement among the basis by adaptive-rule mean AUROC",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "BasisBestPlacement": {
+    "value": "before\\_attention\\_residual\\_token\\_mask",
+    "meaning": "the basis placement with the highest adaptive-rule mean AUROC",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "BasisBestAurocAdaptive": {
+    "value": "0.936",
+    "meaning": "the highest adaptive-rule mean AUROC in the basis",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "BasisWorstPlacement": {
+    "value": "input\\_pixels\\_scale\\_up",
+    "meaning": "the basis placement with the lowest adaptive-rule mean AUROC",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "BasisWorstAurocAdaptive": {
+    "value": "0.746",
+    "meaning": "the lowest adaptive-rule mean AUROC in the basis",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PublishedInversions": {
+    "value": "12",
+    "meaning": "cells below chance for the published placement at the adaptive rule",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PublishedFloorAuroc": {
+    "value": "0.222",
+    "meaning": "worst single cell of the published placement at the adaptive rule",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "RecommendedReachMatched": {
+    "value": "65",
+    "meaning": "cells the recommended placement reaches at the matched rule",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "BasisSpreadAdaptive": {
+    "value": "0.191",
+    "meaning": "adaptive-rule mean AUROC spread between the best and worst basis placement",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PositionRangeTokenMaskMatched": {
+    "value": "0.109",
+    "meaning": "range of mean AUROC across the all-blocks token_mask positions, matched rule",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "OperatorRangeAttentionNormMatched": {
+    "value": "0.206",
+    "meaning": "range of mean AUROC across the operators at before_attention_norm, matched rule",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "OperatorRangeAttentionNormMasksMatched": {
+    "value": "0.094",
+    "meaning": "range of mean AUROC across the 2 masking operators at before_attention_norm, matched rule",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PositionOverOperatorRatioMatched": {
+    "value": "0.53",
+    "meaning": "position range over operator range at matched rule, gaussian included",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PositionOverOperatorRatioMasksMatched": {
+    "value": "1.16",
+    "meaning": "position range over operator range at matched rule, masking operators only",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PositionRangeTokenMaskAdaptive": {
+    "value": "0.167",
+    "meaning": "range of mean AUROC across the all-blocks token_mask positions, adaptive rule",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "OperatorRangeAttentionNormAdaptive": {
+    "value": "0.139",
+    "meaning": "range of mean AUROC across the operators at before_attention_norm, adaptive rule",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "OperatorRangeAttentionNormMasksAdaptive": {
+    "value": "0.055",
+    "meaning": "range of mean AUROC across the 2 masking operators at before_attention_norm, adaptive rule",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PositionOverOperatorRatioAdaptive": {
+    "value": "1.19",
+    "meaning": "position range over operator range at adaptive rule, gaussian included",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PositionOverOperatorRatioMasksAdaptive": {
+    "value": "3.02",
+    "meaning": "position range over operator range at adaptive rule, masking operators only",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "SigGtsrbTargetClass": {
+    "value": "1",
+    "meaning": "the target class of the GTSRB SIG runs with the target tag",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "SigGtsrbRuns": {
+    "value": "15",
+    "meaning": "GTSRB SIG runs at the tagged target class",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "SigGtsrbRates": {
+    "value": "3",
+    "meaning": "rates among the GTSRB SIG runs at the tagged target class",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "SigGtsrbSeeds": {
+    "value": "5",
+    "meaning": "seeds among the GTSRB SIG runs at the tagged target class",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "LcEpsilonBudgets": {
+    "value": "3",
+    "meaning": "epsilon budgets in the Label-Consistent pilot",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "LcGtsrbPilotRuns": {
+    "value": "3",
+    "meaning": "Label-Consistent pilot runs on GTSRB",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "LcGtsrbPilotDiverged": {
+    "value": "2",
+    "meaning": "Label-Consistent pilot runs on GTSRB that diverged",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "MultitargetSetSizes": {
+    "value": "2 and 3",
+    "meaning": "the multi-target set sizes probed",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "MultitargetSeeds": {
+    "value": "3",
+    "meaning": "seeds per multi-target cell",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "NewDatasetSeeds": {
+    "value": "3",
+    "meaning": "seeds per SVHN and EuroSAT cell",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "GtsrbDivergedRuns": {
+    "value": "12",
+    "meaning": "ViT GTSRB training runs whose clean accuracy collapsed below half the benign reference",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "GtsrbRunsScored": {
+    "value": "186",
+    "meaning": "ViT GTSRB training runs with a recorded clean accuracy",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "SigGtsrbTlOneFivePercentMeanAsr": {
+    "value": "0.722",
+    "meaning": "mean ASR of usable SIG GTSRB runs at target class 1 and the middle panel rate",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "SigGtsrbTlOneFivePercentSeedsClearing": {
+    "value": "1",
+    "meaning": "usable SIG GTSRB seeds at target class 1 and the middle rate that clear both bars",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "SigGtsrbTlOneFivePercentSeeds": {
+    "value": "5",
+    "meaning": "usable SIG GTSRB seeds at target class 1 and the middle rate",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "LcEpsilonChosen": {
+    "value": "cifar10 none, cifar100 none, gtsrb 16, tiny none",
+    "meaning": "the Label-Consistent epsilon over 255 the pilot rule picks per dataset, none where no run passes",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "LcDatasetsWithEpsilon": {
+    "value": "1",
+    "meaning": "datasets where some Label-Consistent epsilon passes both bars",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "NewDatasetCellsClearingOnMean": {
+    "value": "6",
+    "meaning": "SVHN and EuroSAT cells whose seed-mean ASR clears the bar",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "NewDatasetCells": {
+    "value": "8",
+    "meaning": "SVHN and EuroSAT cells trained",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "MultitargetRunsClearing": {
+    "value": "0",
+    "meaning": "multi-target SIG runs whose set-wide attack success clears the bar",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "MultitargetRuns": {
+    "value": "12",
+    "meaning": "multi-target SIG runs trained",
+    "generator": "scripts/paper/tab_clean_label.py",
+    "inputs": [
+      "checkpoints/<folder>/args.json",
+      "configs/psbd_basis.json"
+    ]
+  },
+  "ConfidenceNullCheckpoints": {
+    "value": "30",
+    "meaning": "ViT backdoored checkpoints in the confidence-null record",
+    "generator": "scripts/paper/mech_confidence_null.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
+    ]
+  },
+  "ConfidenceNullPsuAuroc": {
+    "value": "0.864",
+    "meaning": "mean PSU AUROC in the confidence-null record",
+    "generator": "scripts/paper/mech_confidence_null.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
+    ]
+  },
+  "ConfidenceNullAuroc": {
+    "value": "0.627",
+    "meaning": "mean max-softmax confidence AUROC in the confidence-null record",
+    "generator": "scripts/paper/mech_confidence_null.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
+    ]
+  },
+  "ConfidenceNullPsuWins": {
+    "value": "22",
+    "meaning": "checkpoints where PSU beats the confidence null",
+    "generator": "scripts/paper/mech_confidence_null.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
+    ]
+  },
+  "ConfidenceNullBenignPsu": {
+    "value": "0.505",
+    "meaning": "mean PSU AUROC on the benign references in the confidence-null record",
+    "generator": "scripts/paper/mech_confidence_null.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
+    ]
+  },
+  "BandFiveEightMinusAllInputSide": {
+    "value": "-0.063",
+    "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_5_8_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 65 cells it covers",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandFiveEightMinusAllInputSideLow": {
+    "value": "-0.100",
+    "meaning": "lower bound of the 95% bootstrap interval on band_5_8_minus_all_input_side",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandFiveEightMinusAllInputSideHigh": {
+    "value": "-0.031",
+    "meaning": "upper bound of the 95% bootstrap interval on band_5_8_minus_all_input_side",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandNineOneTwoMinusAllInputSide": {
+    "value": "-0.062",
+    "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_9_12_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 65 cells it covers",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandNineOneTwoMinusAllInputSideLow": {
+    "value": "-0.108",
+    "meaning": "lower bound of the 95% bootstrap interval on band_9_12_minus_all_input_side",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandNineOneTwoMinusAllInputSideHigh": {
+    "value": "-0.021",
+    "meaning": "upper bound of the 95% bootstrap interval on band_9_12_minus_all_input_side",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandOneFourMinusAllResidual": {
+    "value": "-0.062",
+    "meaning": "mean paired AUROC delta, `pre_residual_blocks_1_4` minus `pre_residual`, at the matched 0.6 rate, over the 65 cells it covers",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandOneFourMinusAllResidualLow": {
+    "value": "-0.081",
+    "meaning": "lower bound of the 95% bootstrap interval on band_1_4_minus_all_residual",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandOneFourMinusAllResidualHigh": {
+    "value": "-0.042",
+    "meaning": "upper bound of the 95% bootstrap interval on band_1_4_minus_all_residual",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandFiveEightMinusAllResidual": {
+    "value": "+0.052",
+    "meaning": "mean paired AUROC delta, `pre_residual_blocks_5_8` minus `pre_residual`, at the matched 0.6 rate, over the 65 cells it covers",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandFiveEightMinusAllResidualLow": {
+    "value": "+0.027",
+    "meaning": "lower bound of the 95% bootstrap interval on band_5_8_minus_all_residual",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandFiveEightMinusAllResidualHigh": {
+    "value": "+0.079",
+    "meaning": "upper bound of the 95% bootstrap interval on band_5_8_minus_all_residual",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandNineOneTwoMinusAllResidual": {
+    "value": "+0.033",
+    "meaning": "mean paired AUROC delta, `pre_residual_blocks_9_12` minus `pre_residual`, at the matched 0.6 rate, over the 65 cells it covers",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandNineOneTwoMinusAllResidualLow": {
+    "value": "-0.012",
+    "meaning": "lower bound of the 95% bootstrap interval on band_9_12_minus_all_residual",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandNineOneTwoMinusAllResidualHigh": {
+    "value": "+0.076",
+    "meaning": "upper bound of the 95% bootstrap interval on band_9_12_minus_all_residual",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "SmokeCheckpoints": {
+    "value": "3",
+    "meaning": "checkpoints in the smoke run",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeBackdooredCheckpoints": {
+    "value": "2",
+    "meaning": "backdoored checkpoints in the smoke run",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeFollowups": {
+    "value": "4",
+    "meaning": "follow-up runs in the smoke entry",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeDetectors": {
+    "value": "10",
+    "meaning": "detectors in the smoke run",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeBenignAurocMin": {
+    "value": "0.493",
+    "meaning": "lowest benign-reference AUROC across smoke detectors",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeBenignAurocMax": {
+    "value": "0.510",
+    "meaning": "highest benign-reference AUROC across smoke detectors",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeIbdPscBadnetAuroc": {
+    "value": "0.481",
+    "meaning": "IBD-PSC AUROC on the smoke BadNet cell",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeSentinetBadnetAuroc": {
+    "value": "0.107",
+    "meaning": "SentiNet AUROC on the smoke BadNet cell",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeBeatrixBadnetAuroc": {
+    "value": "0.453",
+    "meaning": "Beatrix AUROC on the smoke BadNet cell at the truncated split",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeStripBadnetAuroc": {
+    "value": "1.000",
+    "meaning": "STRIP AUROC on the smoke BadNet cell",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeTedBlendAuroc": {
+    "value": "0.990",
+    "meaning": "TED AUROC on the smoke Blend cell",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeConfidenceBlendAuroc": {
+    "value": "0.876",
+    "meaning": "confidence-null AUROC on the smoke Blend cell",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeBeatrixBadnetFullAuroc": {
+    "value": "1.000",
+    "meaning": "Beatrix AUROC on the smoke BadNet cell at the full validation split",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SmokeIbdPscBadnetFullAuroc": {
+    "value": "0.506",
+    "meaning": "IBD-PSC AUROC on the smoke BadNet cell at the full validation split",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "RegistryDetectors": {
+    "value": "11",
+    "meaning": "detectors registered for the panel",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "CdLPasses": {
+    "value": "251",
+    "meaning": "forward passes per input for CD-L",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "TecoPasses": {
+    "value": "71",
+    "meaning": "forward passes per input for TeCo",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "SentinetPasses": {
+    "value": "202",
+    "meaning": "forward passes per input for SentiNet",
+    "generator": "scripts/paper/tab_detector_smoke.py",
+    "inputs": [
+      "docs/runs/2026-09-10-detector-smoke.md"
+    ]
+  },
+  "DirectionCheckpoints": {
+    "value": "6",
+    "meaning": "CIFAR-10 checkpoints with a backdoor_neurons record, benign included",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+    ]
+  },
+  "DirectionBenignPeakRelNorm": {
+    "value": "0.09",
+    "meaning": "peak relative backdoor-direction norm on the benign reference under the same trigger",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+    ]
+  },
+  "DirectionBackdooredMinFinalRelNorm": {
+    "value": "0.49",
+    "meaning": "smallest last-layer relative direction norm over the backdoored CIFAR-10 checkpoints",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+    ]
+  },
+  "AblationCheckpoints": {
+    "value": "4",
+    "meaning": "checkpoints in the causal ablation outside the SAM set",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+    ]
+  },
+  "AblationDirectionMaxAsr": {
+    "value": "0.57",
+    "meaning": "highest attack success left after removing the rank-1 direction, all-to-one attacks",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+    ]
+  },
+  "AblationTopCoordinatesMinAsr": {
+    "value": "1.00",
+    "meaning": "lowest attack success left after zeroing the top-20 coordinates, all-to-one attacks",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+    ]
+  },
+  "AblationRandomDirectionMinAsr": {
+    "value": "1.00",
+    "meaning": "lowest attack success left after removing a random direction, all-to-one attacks",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+    ]
+  },
+  "CrystallisationBadnetLayer": {
+    "value": "10.4",
+    "meaning": "mean crystallisation layer of badnet_a2o on CIFAR-100 and Tiny",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+    ]
+  },
+  "CrystallisationBlendLayer": {
+    "value": "8.2",
+    "meaning": "mean crystallisation layer of blend on CIFAR-100 and Tiny",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+    ]
+  },
+  "CrystallisationCheckpoints": {
+    "value": "16",
+    "meaning": "checkpoints in the crystallisation record",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+    ]
+  },
+  "FamilyGapMatched": {
+    "value": "+0.005",
+    "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the matched 0.6 rate, over the 65 cells it covers",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapMatchedLow": {
+    "value": "-0.010",
+    "meaning": "lower bound of the 95% bootstrap interval on family_gap_matched",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapMatchedHigh": {
+    "value": "+0.023",
+    "meaning": "upper bound of the 95% bootstrap interval on family_gap_matched",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapAdaptive": {
+    "value": "+0.033",
+    "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the adaptive 0.8 rate, over the 65 cells it covers",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapAdaptiveLow": {
+    "value": "+0.006",
+    "meaning": "lower bound of the 95% bootstrap interval on family_gap_adaptive",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapAdaptiveHigh": {
+    "value": "+0.063",
+    "meaning": "upper bound of the 95% bootstrap interval on family_gap_adaptive",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapConfoundedMatched": {
+    "value": "-0.034",
+    "meaning": "mean paired AUROC gap under the basis file's operator-mixing family tags, at the matched 0.6 rate, over the 65 cells it covers",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapConfoundedMatchedLow": {
+    "value": "-0.052",
+    "meaning": "lower bound of the 95% bootstrap interval on family_gap_confounded_matched",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapConfoundedMatchedHigh": {
+    "value": "-0.015",
+    "meaning": "upper bound of the 95% bootstrap interval on family_gap_confounded_matched",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapLocal": {
+    "value": "-0.009",
+    "meaning": "mean paired token_mask family gap at the matched 0.6 rate, local-trigger cells only, over the 23 cells it covers",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapLocalLow": {
+    "value": "-0.032",
+    "meaning": "lower bound of the 95% bootstrap interval on family_gap_local",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapLocalHigh": {
+    "value": "+0.015",
+    "meaning": "upper bound of the 95% bootstrap interval on family_gap_local",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapGlobal": {
+    "value": "+0.013",
+    "meaning": "mean paired token_mask family gap at the matched 0.6 rate, global-trigger cells only, over the 42 cells it covers",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapGlobalLow": {
+    "value": "-0.006",
+    "meaning": "lower bound of the 95% bootstrap interval on family_gap_global",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapGlobalHigh": {
+    "value": "+0.036",
+    "meaning": "upper bound of the 95% bootstrap interval on family_gap_global",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "FamilyGapMinLeaveOneAttackOut": {
+    "value": "+0.000",
+    "meaning": "smallest mean matched-06 token_mask family gap over the leave-one-attack-out refits, the weakest the gap gets when any single attack is removed",
+    "generator": "scripts/paper/tab_family_split.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "HeadlineAurocAdaptive": {
+    "value": "0.935",
+    "meaning": "mean AUROC of the recommended placement at the adaptive rule, over the 65 cells it covers of the 65-cell panel",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "HeadlineAurocMatched": {
+    "value": "0.926",
+    "meaning": "mean AUROC of the recommended placement at the matched 0.6 rule, over the 65 cells it covers of the 65-cell panel",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "PublishedAurocAdaptive": {
+    "value": "0.832",
+    "meaning": "mean AUROC of the published placement at the adaptive rule, over the 65 cells it covers of the 65-cell panel",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "HeadlineGainAdaptiveAuroc": {
+    "value": "+0.103",
+    "meaning": "mean AUROC gain of the recommended placement over the published placement, both at the adaptive rule, paired over the 65-cell panel",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "HeadlineGainAdaptiveAurocLow": {
+    "value": "+0.048",
+    "meaning": "lower bound of the 95% bootstrap interval on headline_gain_adaptive_auroc",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "HeadlineGainAdaptiveAurocHigh": {
+    "value": "+0.160",
+    "meaning": "upper bound of the 95% bootstrap interval on headline_gain_adaptive_auroc",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "HeadlineGainMatchedAuroc": {
+    "value": "+0.094",
+    "meaning": "mean AUROC gain of the recommended placement at the matched 0.6 rule over the published placement at the adaptive rule, paired over the 65-cell panel",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "HeadlineTprAtOnePercent": {
+    "value": "0.629",
+    "meaning": "mean TPR of the recommended placement at the adaptive rule, at the 1% FPR budget, over the 65 cells it covers",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "HeadlineFloorAuroc": {
+    "value": "0.418",
+    "meaning": "minimum single-cell AUROC of the recommended placement at the adaptive rule, over the 65-cell panel",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "HeadlineInversions": {
+    "value": "2",
+    "meaning": "cells where the recommended placement at the adaptive rule scores AUROC below 0.5, out of the 65-cell panel",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "PrimaryGainAdaptiveAuroc": {
+    "value": "+0.096",
+    "meaning": "mean paired AUROC gain of recommended over published, both at the adaptive rule, on the primary datasets cifar100 and tiny",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "HardGainAdaptiveAuroc": {
+    "value": "+0.110",
+    "meaning": "mean paired AUROC gain of recommended over published, both at the adaptive rule, on the hard attacks",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "CifarOneZeroZeroOnePercentGain": {
+    "value": "+0.163",
+    "meaning": "mean paired AUROC gain of recommended over published, both at the adaptive rule, on cifar100 at 1% poisoning only, n=5",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "PanelCellsCached": {
+    "value": "65",
+    "meaning": "clearing cells whose sweep has landed and that carry the recommended placement",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PanelCellsDiverged": {
+    "value": "3",
+    "meaning": "declared cells whose training diverged, excluded from every table",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PanelCellsAwaitingSweep": {
+    "value": "6",
+    "meaning": "clearing cells whose PSBD sweep has not landed",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PanelDatasetsCached": {
+    "value": "4",
+    "meaning": "datasets among the clearing cells whose sweep has landed",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PanelAttacksDeclared": {
+    "value": "8",
+    "meaning": "attacks the panel declares, clearing or not",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "HeadlineGainMinLeaveOneAttackOutAdaptive": {
+    "value": "+0.046",
+    "meaning": "smallest leave-one-attack-out refit of the adaptive-rule headline gain",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "HeadlineGainMinLeaveOneAttackOutAdaptiveLow": {
+    "value": "-0.004",
+    "meaning": "lowest bootstrap lower bound over the adaptive-rule leave-one-attack-out refits",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "HeadlineGainMinLeaveOneAttackOutMatched": {
+    "value": "+0.049",
+    "meaning": "smallest leave-one-attack-out refit of the matched-rule headline gain",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "HeadlineGainMinLeaveOneAttackOutMatchedLow": {
+    "value": "+0.005",
+    "meaning": "lowest bootstrap lower bound over the matched-rule leave-one-attack-out refits",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PreMinusPostMatched": {
+    "value": "+0.009",
+    "meaning": "pre_residual minus post_residual dropout, matched rule, paired over the basis panel",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PreMinusPostMatchedLow": {
+    "value": "-0.028",
+    "meaning": "lower bootstrap bound of pre_minus_post_matched",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PreMinusPostMatchedHigh": {
+    "value": "+0.047",
+    "meaning": "upper bootstrap bound of pre_minus_post_matched",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PreMinusPostAdaptive": {
+    "value": "+0.001",
+    "meaning": "pre_residual minus post_residual dropout, adaptive rule, paired over the basis panel",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PreMinusPostAdaptiveLow": {
+    "value": "-0.027",
+    "meaning": "lower bootstrap bound of pre_minus_post_adaptive",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PreMinusPostAdaptiveHigh": {
+    "value": "+0.027",
+    "meaning": "upper bootstrap bound of pre_minus_post_adaptive",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PreMinusPostN": {
+    "value": "65",
+    "meaning": "cells behind the pre against post comparison",
+    "generator": "scripts/paper/tab_headline_checks.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "HypothesisCount": {
+    "value": "49",
+    "meaning": "hypotheses in the ledger index",
+    "generator": "scripts/paper/app_hypothesis_ledger.py",
+    "inputs": [
+      "docs/hypothesis/README.md"
+    ]
+  },
+  "HypothesisRefuted": {
+    "value": "16",
+    "meaning": "hypotheses whose leading verdict is refuted",
+    "generator": "scripts/paper/app_hypothesis_ledger.py",
+    "inputs": [
+      "docs/hypothesis/README.md"
+    ]
+  },
+  "HypothesisSupported": {
+    "value": "25",
+    "meaning": "hypotheses whose leading verdict is supported or confirmed",
+    "generator": "scripts/paper/app_hypothesis_ledger.py",
+    "inputs": [
+      "docs/hypothesis/README.md"
+    ]
+  },
+  "HypothesisPartial": {
+    "value": "4",
+    "meaning": "hypotheses whose leading verdict is partial",
+    "generator": "scripts/paper/app_hypothesis_ledger.py",
+    "inputs": [
+      "docs/hypothesis/README.md"
+    ]
+  },
+  "HypothesisInconclusive": {
+    "value": "2",
+    "meaning": "hypotheses whose leading verdict is inconclusive",
+    "generator": "scripts/paper/app_hypothesis_ledger.py",
+    "inputs": [
+      "docs/hypothesis/README.md"
+    ]
+  },
+  "AgreementWithinInputSideClean": {
+    "value": "0.456",
+    "meaning": "B1: mean clean-split PSU Spearman rho within the input-side family, 21 placement pairs",
+    "generator": "scripts/paper/mech_operator_agreement.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd/<placement>/rate_*_{clean,backdoor}.pt"
+    ]
+  },
+  "AgreementAcrossFamiliesClean": {
+    "value": "0.511",
+    "meaning": "B1: mean clean-split PSU Spearman rho between input-side and residual-adjacent placements, 28 placement pairs",
+    "generator": "scripts/paper/mech_operator_agreement.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd/<placement>/rate_*_{clean,backdoor}.pt"
+    ]
+  },
+  "AgreementGainScaleVsRecommendedClean": {
+    "value": "0.385",
+    "meaning": "B1: clean-split PSU Spearman rho, mlp_norm_out_gain_scale vs the recommended placement, n=65 cells",
+    "generator": "scripts/paper/mech_operator_agreement.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd/<placement>/rate_*_{clean,backdoor}.pt"
+    ]
+  },
+  "AgreementGaussianVsTokenMaskClean": {
+    "value": "0.370",
+    "meaning": "B1: clean-split PSU Spearman rho, before_attention_norm_gaussian vs before_attention_norm_token_mask, same position different operator, n=65 cells",
+    "generator": "scripts/paper/mech_operator_agreement.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd/<placement>/rate_*_{clean,backdoor}.pt"
+    ]
+  },
+  "ShiftToTargetShareAll": {
+    "value": "0.134",
+    "meaning": "A1: mean target-class share of shifted clean predictions, all clearing cells, recommended placement, matched-0.6 rate rule",
+    "generator": "scripts/paper/mech_shift_target.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "ShiftToTargetExcessAll": {
+    "value": "+0.118 [+0.066, +0.179]",
+    "meaning": "A1: mean paired excess over the matched-dataset benign reference, all clearing cells, matched-0.6 rate rule, 95% bootstrap interval",
+    "generator": "scripts/paper/mech_shift_target.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "ShiftToTargetBenignShare": {
+    "value": "0.016",
+    "meaning": "A1: mean target-class share on the 4 benign references, matched-0.6 rate rule",
+    "generator": "scripts/paper/mech_shift_target.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "ShiftToTargetHeadlineCell": {
+    "value": "0.0002",
+    "meaning": "A1: target-class share on vit_cifar100_badnet_a2o_0_01, recommended placement, adaptive-0.8 rate rule",
+    "generator": "scripts/paper/mech_shift_target.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "GaussianMinusTokenMaskAttentionNorm": {
+    "value": "-0.206",
+    "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus token_mask at before_attention_norm, over the 65 cells it covers of the 65-cell panel",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "GaussianMinusTokenMaskAttentionNormLow": {
+    "value": "-0.259",
+    "meaning": "lower bound of the 95% bootstrap interval on gaussian_minus_token_mask_attention_norm",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "GaussianMinusTokenMaskAttentionNormHigh": {
+    "value": "-0.156",
+    "meaning": "upper bound of the 95% bootstrap interval on gaussian_minus_token_mask_attention_norm",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "GaussianMinusChannelMaskAttentionNorm": {
+    "value": "-0.113",
+    "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus channel_mask at before_attention_norm, over the 65 cells it covers of the 65-cell panel",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "GaussianMinusChannelMaskAttentionNormLow": {
+    "value": "-0.151",
+    "meaning": "lower bound of the 95% bootstrap interval on gaussian_minus_channel_mask_attention_norm",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "GaussianMinusChannelMaskAttentionNormHigh": {
+    "value": "-0.078",
+    "meaning": "upper bound of the 95% bootstrap interval on gaussian_minus_channel_mask_attention_norm",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "GaussianMinusTokenMaskMlp": {
+    "value": "+0.056",
+    "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus token_mask at before_mlp, over the 65 cells it covers of the 65-cell panel",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "GaussianMinusTokenMaskMlpLow": {
+    "value": "+0.026",
+    "meaning": "lower bound of the 95% bootstrap interval on gaussian_minus_token_mask_mlp",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "GaussianMinusTokenMaskMlpHigh": {
+    "value": "+0.087",
+    "meaning": "upper bound of the 95% bootstrap interval on gaussian_minus_token_mask_mlp",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "AttentionInputMinusMlpInputTokenMask": {
+    "value": "+0.109",
+    "meaning": "mean paired AUROC delta at the matched 0.6 rate, C1: before_attention_norm minus before_mlp_norm, both token_mask, over the 65 cells it covers of the 65-cell panel",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "AttentionInputMinusMlpInputTokenMaskLow": {
+    "value": "+0.079",
+    "meaning": "lower bound of the 95% bootstrap interval on attention_input_minus_mlp_input_token_mask",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "AttentionInputMinusMlpInputTokenMaskHigh": {
+    "value": "+0.138",
+    "meaning": "upper bound of the 95% bootstrap interval on attention_input_minus_mlp_input_token_mask",
+    "generator": "scripts/paper/tab_operators.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "PanelCellsClearing": {
+    "value": "71",
+    "meaning": "cells in the ViT panel clearing the attack success bar",
+    "generator": "scripts/paper/tab_panel.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json"
+    ]
+  },
+  "PanelCellsTotal": {
+    "value": "105",
+    "meaning": "cells the ViT panel declares, clearing and below the bar together",
+    "generator": "scripts/paper/tab_panel.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json"
+    ]
+  },
+  "PanelDatasets": {
+    "value": "6",
+    "meaning": "datasets in the ViT panel",
+    "generator": "scripts/paper/tab_panel.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json"
+    ]
+  },
+  "PanelAttacksClearing": {
+    "value": "7",
+    "meaning": "attacks with at least 1 cell clearing the attack success bar",
+    "generator": "scripts/paper/tab_panel.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json"
+    ]
+  },
+  "DepthCells": {
+    "value": "65",
+    "meaning": "clearing cells carrying both prediction depth and the recommended placement",
+    "generator": "scripts/paper/mech_prediction_depth.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "DepthAurocAll": {
+    "value": "0.911",
+    "meaning": "mean AUROC of prediction depth over the clearing cells",
+    "generator": "scripts/paper/mech_prediction_depth.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "DepthMinusPsbdAuroc": {
+    "value": "-0.024",
+    "meaning": "mean paired AUROC delta, prediction depth minus PSBD, all clearing cells",
+    "generator": "scripts/paper/mech_prediction_depth.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "DepthMinusPsbdAurocCi": {
+    "value": "[-0.078, +0.023]",
+    "meaning": "bootstrap interval on depth_minus_psbd_auroc",
+    "generator": "scripts/paper/mech_prediction_depth.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "DepthMinusPsbdTpr": {
+    "value": "+0.019",
+    "meaning": "mean paired low-budget TPR delta, prediction depth minus PSBD, all clearing cells",
+    "generator": "scripts/paper/mech_prediction_depth.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "DepthMinusPsbdTprCi": {
+    "value": "[-0.079, +0.113]",
+    "meaning": "bootstrap interval on depth_minus_psbd_tpr",
+    "generator": "scripts/paper/mech_prediction_depth.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "DepthMinusPsbdTprHard": {
+    "value": "+0.183",
+    "meaning": "mean paired low-budget TPR delta on the hard attacks",
+    "generator": "scripts/paper/mech_prediction_depth.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "DepthMinusPsbdTprHardCi": {
+    "value": "[+0.062, +0.296]",
+    "meaning": "bootstrap interval on depth_minus_psbd_tpr_hard",
+    "generator": "scripts/paper/mech_prediction_depth.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "DepthMinusPsbdAurocHard": {
+    "value": "+0.007",
+    "meaning": "mean paired AUROC delta on the hard attacks",
+    "generator": "scripts/paper/mech_prediction_depth.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "DepthTprWins": {
+    "value": "41",
+    "meaning": "clearing cells where prediction depth beats PSBD at the low budget",
+    "generator": "scripts/paper/mech_prediction_depth.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "DepthBenignAuroc": {
+    "value": "0.491",
+    "meaning": "mean prediction-depth AUROC on the 4 benign references",
+    "generator": "scripts/paper/mech_prediction_depth.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "AdaptiveShiftTarget": {
+    "value": "0.8",
+    "meaning": "the clean-validation shift ratio PSBD's adaptive rate rule reaches for",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "PlacementMatchTarget": {
+    "value": "0.6",
+    "meaning": "the clean-validation shift ratio the cross-placement comparison matches at",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "ShiftMatchTargets": {
+    "value": "0.2, 0.4, 0.6, 0.8",
+    "meaning": "the ladder of matched shift ratios every placement is read at",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "HeadlineQuantile": {
+    "value": "0.25",
+    "meaning": "the clean-validation PSU quantile the headline threshold sits at",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "HeadlineQuantilePercent": {
+    "value": "25\\%",
+    "meaning": "the headline quantile as a false-positive budget",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "PsbdQuantiles": {
+    "value": "0.01, 0.05, 0.1, 0.15, 0.2, 0.25",
+    "meaning": "every quantile swept beside the headline quantile",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "LowestQuantilePercent": {
+    "value": "1\\%",
+    "meaning": "the smallest false-positive budget swept",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "HeldoutSize": {
+    "value": "2000",
+    "meaning": "clean validation images held out for the threshold",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "SplitSeed": {
+    "value": "0",
+    "meaning": "the seed of the held-out split",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "ForwardPasses": {
+    "value": "3",
+    "meaning": "perturbed forward passes per input, k, on the basis panel",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "MaskSeed": {
+    "value": "0",
+    "meaning": "the perturbation mask seed",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "AsrBar": {
+    "value": "0.85",
+    "meaning": "attack success rate a cell must reach to enter a detection table",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "CleanDropBar": {
+    "value": "-0.05",
+    "meaning": "the clean-accuracy drop a cell may show against its benign reference",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "PanelRates": {
+    "value": "1\\%, 5\\%, 10\\%",
+    "meaning": "the poison rates the panel declares",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "PanelRateLow": {
+    "value": "1\\%",
+    "meaning": "the lowest panel poison rate",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "PanelRateMid": {
+    "value": "5\\%",
+    "meaning": "the middle panel poison rate",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "PanelRateHigh": {
+    "value": "10\\%",
+    "meaning": "the highest panel poison rate",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BasisSize": {
+    "value": "18",
+    "meaning": "placements the basis declares for every panel cell",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "RecommendedRateLadderLow": {
+    "value": "0.05",
+    "meaning": "the smallest rate on the recommended placement's ladder",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "RecommendedRateLadderHigh": {
+    "value": "0.9",
+    "meaning": "the largest rate on the recommended placement's ladder",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "RecommendedRateLadderSize": {
+    "value": "10",
+    "meaning": "rates on the recommended placement's ladder",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "RecommendedPlacement": {
+    "value": "before\\_attention\\_norm\\_token\\_mask",
+    "meaning": "the recommended placement id",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "PublishedPlacement": {
+    "value": "post\\_residual",
+    "meaning": "the published ConvNet placement id",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "TrainingEpochs": {
+    "value": "15",
+    "meaning": "the uniform training budget in epochs",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "VitBlocks": {
+    "value": "12",
+    "meaning": "encoder blocks in ViT-B/16",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "VitTokens": {
+    "value": "197",
+    "meaning": "tokens per image in ViT-B/16, patches plus the class token",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "VitPatches": {
+    "value": "196",
+    "meaning": "patch tokens per image in ViT-B/16",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "VitWidth": {
+    "value": "768",
+    "meaning": "residual width of ViT-B/16",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "VitHeads": {
+    "value": "12",
+    "meaning": "attention heads per block in ViT-B/16",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "VitTotalHeads": {
+    "value": "144",
+    "meaning": "attention heads in the whole ViT-B/16 stack",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "SwinBlocks": {
+    "value": "24",
+    "meaning": "transformer blocks in Swin-S",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "PositionCount": {
+    "value": "15",
+    "meaning": "named probe positions in the ViT registry",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "SinglePositionCount": {
+    "value": "9",
+    "meaning": "atomic positions swept in isolation",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "StructuredPositionCount": {
+    "value": "2",
+    "meaning": "positions whose channel axis indexes a transformer unit",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "PortedPositionCount": {
+    "value": "4",
+    "meaning": "positions that exist to host ported detectors",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "OperatorCount": {
+    "value": "9",
+    "meaning": "perturbation operators in the registry, scale_up included",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "PanelDatasetsDeclared": {
+    "value": "6",
+    "meaning": "datasets with a benign reference in the declaration",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "DetectorCount": {
+    "value": "11",
+    "meaning": "competitor detectors in the registry",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BootstrapResamples": {
+    "value": "5000",
+    "meaning": "resamples behind every bootstrap interval",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BootstrapSeed": {
+    "value": "0",
+    "meaning": "the bootstrap seed",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BenignProbeAttack": {
+    "value": "badnet\\_a2o",
+    "meaning": "the trigger a benign reference is probed with",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BenignProbeTarget": {
+    "value": "0",
+    "meaning": "the target class a benign reference is probed at",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "PanelTargetLabel": {
+    "value": "0",
+    "meaning": "the target class every panel cell attacks",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BandEarly": {
+    "value": "1 to 4",
+    "meaning": "the early depth band's block range",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BandEarlyFirst": {
+    "value": "1",
+    "meaning": "first block of the early depth band",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BandEarlyLast": {
+    "value": "4",
+    "meaning": "last block of the early depth band",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BandMiddle": {
+    "value": "5 to 8",
+    "meaning": "the middle depth band's block range",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BandMiddleFirst": {
+    "value": "5",
+    "meaning": "first block of the middle depth band",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BandMiddleLast": {
+    "value": "8",
+    "meaning": "last block of the middle depth band",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BandLate": {
+    "value": "9 to 12",
+    "meaning": "the late depth band's block range",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BandLateFirst": {
+    "value": "9",
+    "meaning": "first block of the late depth band",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "BandLateLast": {
+    "value": "12",
+    "meaning": "last block of the late depth band",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "ClassesCifarOneZero": {
+    "value": "10",
+    "meaning": "classes in cifar10",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "ClassesCifarOneZeroZero": {
+    "value": "100",
+    "meaning": "classes in cifar100",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "ClassesGtsrb": {
+    "value": "43",
+    "meaning": "classes in gtsrb",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "ClassesTiny": {
+    "value": "200",
+    "meaning": "classes in tiny",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "ClassesSvhn": {
+    "value": "10",
+    "meaning": "classes in svhn",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "ClassesEurosat": {
+    "value": "10",
+    "meaning": "classes in eurosat",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "RoutingCells": {
+    "value": "30",
+    "meaning": "checkpoints with a routing record, benign included",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingBadnetClsEarly": {
+    "value": "0.025",
+    "meaning": "badnet_a2o CLS attention mass on the trigger tokens, layers 1 to 4",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingBadnetClsRouting": {
+    "value": "0.231",
+    "meaning": "badnet_a2o CLS attention mass on the trigger tokens, layers 5 to 8",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingBadnetClsLate": {
+    "value": "0.550",
+    "meaning": "badnet_a2o CLS attention mass on the trigger tokens, layers 9 to 12",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingBenignClsLate": {
+    "value": "0.025",
+    "meaning": "benign CLS attention mass on the same trigger tokens, layers 9 to 12",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingBadnetAttentionShare": {
+    "value": "0.83",
+    "meaning": "badnet_a2o attention share of the summed target-logit attribution",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingGlobalAttentionShare": {
+    "value": "0.63",
+    "meaning": "mean attention share of the target-logit attribution over global-trigger attacks",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingLocalRankRouting": {
+    "value": "0.91",
+    "meaning": "mean trigger-token norm rank over the routing band, local-trigger attacks",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingBenignRankRouting": {
+    "value": "0.91",
+    "meaning": "benign trigger-token norm rank over the routing band under the same trigger",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingBenignRankLate": {
+    "value": "0.68",
+    "meaning": "benign trigger-token norm rank over the late band under the same trigger",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingBadnetTakeover": {
+    "value": "0.50",
+    "meaning": "badnet_a2o takeover fraction over the routing band",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingBenignTakeover": {
+    "value": "0.95",
+    "meaning": "benign takeover fraction over the routing band",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingBenignRatioPeak": {
+    "value": "3.65",
+    "meaning": "benign peak max-over-median patch-norm ratio on clean images, layer 3 on",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingBadnetRatioPeak": {
+    "value": "4.26",
+    "meaning": "badnet_a2o peak max-over-median patch-norm ratio on triggered images, layer 3 on",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "RoutingGlobalClsRouting": {
+    "value": "0.863",
+    "meaning": "mean CLS attention mass on the trigger tokens over the routing band, global-trigger attacks",
+    "generator": "scripts/paper/mech_routing.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/cls_routing.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/logit_attribution.json (30)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/artifact_tokens.json (69)",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/sink_anatomy.json (69)"
+    ]
+  },
+  "SeedsPerCell": {
+    "value": "3",
+    "meaning": "training seeds per replicated cell",
+    "generator": "scripts/paper/tab_seeds.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
+      "checkpoints/<folder>_seed_N/args.json"
+    ]
+  },
+  "SeedCells": {
+    "value": "14",
+    "meaning": "clearing cells with 3 training seeds at both placements",
+    "generator": "scripts/paper/tab_seeds.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
+      "checkpoints/<folder>_seed_N/args.json"
+    ]
+  },
+  "SeedSdRecommended": {
+    "value": "0.012",
+    "meaning": "mean over replicated cells of the recommended placement's AUROC standard deviation across 3 seeds",
+    "generator": "scripts/paper/tab_seeds.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
+      "checkpoints/<folder>_seed_N/args.json"
+    ]
+  },
+  "SeedSdPublished": {
+    "value": "0.076",
+    "meaning": "mean over replicated cells of the published placement's AUROC standard deviation across 3 seeds",
+    "generator": "scripts/paper/tab_seeds.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
+      "checkpoints/<folder>_seed_N/args.json"
+    ]
+  },
+  "SeedSdGain": {
+    "value": "0.069",
+    "meaning": "mean over replicated cells of the paired gain's standard deviation across 3 seeds",
+    "generator": "scripts/paper/tab_seeds.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
+      "checkpoints/<folder>_seed_N/args.json"
+    ]
+  },
+  "SeedSdGainMax": {
+    "value": "0.259",
+    "meaning": "largest per-cell standard deviation of the paired gain across 3 seeds",
+    "generator": "scripts/paper/tab_seeds.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
+      "checkpoints/<folder>_seed_N/args.json"
+    ]
+  },
+  "SeedGainMean": {
+    "value": "+0.128",
+    "meaning": "mean over replicated cells of the seed-averaged paired gain, recommended minus published at the adaptive rule",
+    "generator": "scripts/paper/tab_seeds.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
+      "checkpoints/<folder>_seed_N/args.json"
+    ]
+  },
+  "SeedGainSignFlips": {
+    "value": "4",
+    "meaning": "replicated cells where the paired gain changes sign across seeds",
+    "generator": "scripts/paper/tab_seeds.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+      "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
+      "checkpoints/<folder>_seed_N/args.json"
+    ]
+  },
+  "SwinCells": {
+    "value": "64",
+    "meaning": "Swin cells whose attack cleared the bar and carry PSBD metrics",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinDatasets": {
+    "value": "3",
+    "meaning": "datasets with at least 1 implanted Swin cell",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusPublished": {
+    "value": "+0.091",
+    "meaning": "Swin paired AUROC gain, recommended minus published, adaptive rule, over 53 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusPublishedN": {
+    "value": "53",
+    "meaning": "cells behind swin_gain_recommended_minus_published",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusPublishedLow": {
+    "value": "+0.044",
+    "meaning": "lower bootstrap bound of swin_gain_recommended_minus_published",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusPublishedHigh": {
+    "value": "+0.142",
+    "meaning": "upper bootstrap bound of swin_gain_recommended_minus_published",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainDropoutInputMinusPublished": {
+    "value": "-0.022",
+    "meaning": "Swin paired AUROC gain, dropout at the attention input minus published, adaptive rule, over 56 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainDropoutInputMinusPublishedN": {
+    "value": "56",
+    "meaning": "cells behind swin_gain_dropout_input_minus_published",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainDropoutInputMinusPublishedLow": {
+    "value": "-0.084",
+    "meaning": "lower bootstrap bound of swin_gain_dropout_input_minus_published",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainDropoutInputMinusPublishedHigh": {
+    "value": "+0.039",
+    "meaning": "upper bootstrap bound of swin_gain_dropout_input_minus_published",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusPreResidual": {
+    "value": "+0.128",
+    "meaning": "Swin paired AUROC gain, recommended minus pre_residual, adaptive rule, over 51 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusPreResidualN": {
+    "value": "51",
+    "meaning": "cells behind swin_gain_recommended_minus_pre_residual",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusPreResidualLow": {
+    "value": "+0.064",
+    "meaning": "lower bootstrap bound of swin_gain_recommended_minus_pre_residual",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusPreResidualHigh": {
+    "value": "+0.197",
+    "meaning": "upper bootstrap bound of swin_gain_recommended_minus_pre_residual",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinSeedReplicates": {
+    "value": "44",
+    "meaning": "Swin training-seed replicate checkpoints on disk",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinRecommendedAurocAdaptive": {
+    "value": "0.968",
+    "meaning": "Swin mean AUROC of the recommended placement at the adaptive rule over 53 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinRecommendedN": {
+    "value": "53",
+    "meaning": "Swin cells carrying the recommended placement",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "TacLayersCheckpoints": {
+    "value": "18",
+    "meaning": "checkpoints in the per-layer TAC pass",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
+  "TacLayersSamples": {
+    "value": "500",
+    "meaning": "paired images per checkpoint in the per-layer TAC pass",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
+  "TacLayersBenignPeakMax": {
+    "value": "0.12",
+    "meaning": "largest peak relative direction norm over the benign references",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
+  "TacLayersBadnetOnset": {
+    "value": "8.0",
+    "meaning": "mean onset layer of badnet_a2o in the per-layer TAC pass",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
+  "TacLayersBlendOnset": {
+    "value": "7.0",
+    "meaning": "mean onset layer of blend in the per-layer TAC pass",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
+  "TacLayersEarliestOnsetAttack": {
+    "value": "blend",
+    "meaning": "the attack with the earliest mean onset layer in the per-layer TAC pass",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
+  "TacLayersLatestOnsetAttack": {
+    "value": "tact",
+    "meaning": "the attack with the latest mean onset layer in the per-layer TAC pass",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  }
+}

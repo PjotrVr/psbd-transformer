@@ -63,7 +63,6 @@ where this project applies triggers too, and the result is requantized to the
 
 import io
 import math
-from .strip import normalization_buffers
 
 import numpy as np
 import torch
@@ -74,6 +73,8 @@ from PIL import Image
 from torch.utils.data import DataLoader
 
 from defences.inference import forward_probs
+
+from .strip import normalization_buffers
 
 # N in Algorithm 1. Severities run 1..MAX_SEVERITY.
 MAX_SEVERITY = 5
@@ -117,6 +118,7 @@ def _quantize(images: torch.Tensor) -> torch.Tensor:
 def _gaussian_kernel_1d(sigma: float, truncate: float) -> torch.Tensor:
     """scipy's gaussian_filter kernel, radius int(truncate * sigma + 0.5)."""
     radius = int(truncate * sigma + 0.5)
+    # The kernel has 2 * radius + 1 taps, so every tensor here is (2 * radius + 1,).
     positions = torch.arange(-radius, radius + 1, dtype=torch.float64)
     weights = torch.exp(-(positions**2) / (2.0 * sigma**2))
 
@@ -127,14 +129,22 @@ def _gaussian_kernel_1d(sigma: float, truncate: float) -> torch.Tensor:
 def _separable_blur(
     images: torch.Tensor, kernel: torch.Tensor, pad_mode: str
 ) -> torch.Tensor:
-    """Blur each channel independently with a 1-D kernel applied on both axes."""
+    """Blur each channel independently with a 1-D kernel applied on both axes.
+
+    images is (batch, channels, height, width) and the result has the same shape.
+    """
     channels = images.shape[1]
     radius = (kernel.numel() - 1) // 2
-    kernel = kernel.to(images.device, images.dtype)
+    kernel = kernel.to(images.device, images.dtype)  # (2 * radius + 1,)
 
+    # The 1-D kernel as a depthwise conv weight along each axis in turn,
+    # (channels, 1, 1, 2 * radius + 1) for the rows and its transpose for the
+    # columns.
     horizontal = kernel.view(1, 1, 1, -1).expand(channels, 1, 1, -1)
     vertical = kernel.view(1, 1, -1, 1).expand(channels, 1, -1, 1)
 
+    # Padding by radius on the axis being blurred keeps every output at the
+    # (batch, channels, height, width) of images.
     padded = F.pad(images, (radius, radius, 0, 0), mode=pad_mode)
     blurred = F.conv2d(padded, horizontal, groups=channels)
     padded = F.pad(blurred, (0, 0, radius, radius), mode=pad_mode)
@@ -158,7 +168,7 @@ def _disk_kernel(radius: int, alias_blur: float) -> torch.Tensor:
         kernel_size = 5
 
     grid_x, grid_y = torch.meshgrid(positions, positions, indexing="xy")
-    aliased = ((grid_x**2 + grid_y**2) <= radius**2).float()
+    aliased = ((grid_x**2 + grid_y**2) <= radius**2).float()  # (size, size)
     aliased = aliased / aliased.sum()
 
     # cv2.getGaussianKernel with an explicit positive sigma, which is the
@@ -170,16 +180,18 @@ def _disk_kernel(radius: int, alias_blur: float) -> torch.Tensor:
 
     antialiased = _separable_blur(
         aliased.view(1, 1, *aliased.shape), weights, "reflect"
-    )
-    return antialiased.view(*aliased.shape)
+    )  # (1, 1, size, size)
+
+    kernel = antialiased.view(*aliased.shape)  # (size, size)
+    return kernel
 
 
 def _rgb_to_hsv(images: torch.Tensor) -> torch.Tensor:
-    """skimage.color.rgb2hsv on a (batch, 3, H, W) tensor, same shape out."""
+    """skimage.color.rgb2hsv on a (batch, 3, height, width) tensor, same shape out."""
     red, green, blue = images[:, 0], images[:, 1], images[:, 2]
-    highest = images.max(dim=1).values  # (batch, H, W)
-    lowest = images.min(dim=1).values
-    span = highest - lowest
+    highest = images.max(dim=1).values  # (batch, height, width)
+    lowest = images.min(dim=1).values  # (batch, height, width)
+    span = highest - lowest  # (batch, height, width)
 
     value = highest
     saturation = torch.where(
@@ -200,11 +212,12 @@ def _rgb_to_hsv(images: torch.Tensor) -> torch.Tensor:
     hue = (hue / 6.0) % 1.0
     hue = torch.where(span == 0, torch.zeros_like(hue), hue)
 
-    return torch.stack([hue, saturation, value], dim=1)
+    hsv = torch.stack([hue, saturation, value], dim=1)  # (batch, 3, height, width)
+    return hsv
 
 
 def _hsv_to_rgb(images: torch.Tensor) -> torch.Tensor:
-    """skimage.color.hsv2rgb on a (batch, 3, H, W) tensor, same shape out."""
+    """skimage.color.hsv2rgb on a (batch, 3, height, width) tensor, same shape out."""
     hue, saturation, value = images[:, 0], images[:, 1], images[:, 2]
     sector = torch.floor(hue * 6.0)
     fraction = hue * 6.0 - sector
@@ -223,10 +236,13 @@ def _hsv_to_rgb(images: torch.Tensor) -> torch.Tensor:
             torch.stack([value, dimmed, falling], dim=1),
         ],
         dim=0,
-    )  # (6, batch, 3, H, W)
+    )  # (6, batch, 3, height, width)
 
-    index = (sector % 6).long().unsqueeze(1).unsqueeze(0).expand(1, -1, 3, -1, -1)
-    return options.gather(0, index).squeeze(0)
+    index = (
+        (sector % 6).long().unsqueeze(1).unsqueeze(0).expand(1, -1, 3, -1, -1)
+    )  # (1, batch, 3, height, width)
+    rgb = options.gather(0, index).squeeze(0)  # (batch, 3, height, width)
+    return rgb
 
 
 def _clipped_zoom(images: torch.Tensor, zoom_factor: float) -> torch.Tensor:
@@ -241,13 +257,15 @@ def _clipped_zoom(images: torch.Tensor, zoom_factor: float) -> torch.Tensor:
     top = (height - crop_height) // 2
     left = (width - crop_width) // 2
 
-    cropped = images[:, :, top : top + crop_height, left : left + crop_width]
+    cropped = images[
+        :, :, top : top + crop_height, left : left + crop_width
+    ]  # (batch, channels, crop_height, crop_width)
     out_height = int(round(crop_height * zoom_factor))
     out_width = int(round(crop_width * zoom_factor))
 
     zoomed = F.interpolate(
         cropped, size=(out_height, out_width), mode="bilinear", align_corners=True
-    )
+    )  # (batch, channels, out_height, out_width)
     return zoomed
 
 
@@ -288,7 +306,7 @@ def _directional_blur(
     weights = torch.exp(-(positions**2) / (2.0 * sigma**2)) / (
         math.sqrt(2 * math.pi) * sigma
     )
-    weights = (weights / weights.sum()).to(images.device, images.dtype)
+    weights = (weights / weights.sum()).to(images.device, images.dtype)  # (width,)
 
     point = (
         width * math.sin(math.radians(angle)),
@@ -296,7 +314,7 @@ def _directional_blur(
     )
     hypotenuse = math.hypot(point[0], point[1])
 
-    blurred = torch.zeros_like(images)
+    blurred = torch.zeros_like(images)  # (batch, channels, height, width)
     for step in range(width):
         dy = -math.ceil(((step * point[0]) / hypotenuse) - 0.5)
         dx = -math.ceil(((step * point[1]) / hypotenuse) - 0.5)
@@ -324,7 +342,8 @@ def _plasma_fractal(batch: int, map_size: int, wibble_decay: float) -> np.ndarra
     wibble = 100.0
 
     def wibbled_mean(array: np.ndarray) -> np.ndarray:
-        return array / 4 + wibble * np.random.uniform(-wibble, wibble, array.shape)
+        perturbed = array / 4 + wibble * np.random.uniform(-wibble, wibble, array.shape)
+        return perturbed
 
     while step >= 2:
         corner = maparray[:, 0:map_size:step, 0:map_size:step]
@@ -355,7 +374,10 @@ def _plasma_fractal(batch: int, map_size: int, wibble_decay: float) -> np.ndarra
         wibble /= wibble_decay
 
     maparray -= maparray.min(axis=(1, 2), keepdims=True)
-    return maparray / maparray.max(axis=(1, 2), keepdims=True)
+    normalized = maparray / maparray.max(
+        axis=(1, 2), keepdims=True
+    )  # (batch, map, map)
+    return normalized
 
 
 def _next_power_of_2(value: int) -> int:
@@ -368,14 +390,16 @@ def gaussian_noise(images: torch.Tensor, severity: int) -> torch.Tensor:
     """Additive Gaussian noise at the reference's per-severity scale."""
     scale = (0.08, 0.12, 0.18, 0.26, 0.38)[severity - 1]
     noised = images + torch.randn_like(images) * scale
-    return _quantize(noised)
+    quantized = _quantize(noised)
+    return quantized
 
 
 def shot_noise(images: torch.Tensor, severity: int) -> torch.Tensor:
     """Poisson noise, each pixel resampled at the reference's per-severity rate."""
     rate = (60, 25, 12, 5, 3)[severity - 1]
     sampled = torch.poisson(images.clamp_min(0.0) * rate) / float(rate)
-    return _quantize(sampled)
+    quantized = _quantize(sampled)
+    return quantized
 
 
 def impulse_noise(images: torch.Tensor, severity: int) -> torch.Tensor:
@@ -389,7 +413,8 @@ def impulse_noise(images: torch.Tensor, severity: int) -> torch.Tensor:
         torch.where(salted, torch.ones_like(images), torch.zeros_like(images)),
         images,
     )
-    return _quantize(corrupted)
+    quantized = _quantize(corrupted)
+    return quantized
 
 
 def defocus_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
@@ -402,10 +427,14 @@ def defocus_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
     channels = images.shape[1]
     pad = (kernel.shape[-1] - 1) // 2
 
+    # Reflect padding by the kernel's half width keeps the depthwise convolution
+    # at the (batch, channels, height, width) of images. The weight is the disk
+    # as a (channels, 1, size, size) filter.
     padded = F.pad(images, (pad, pad, pad, pad), mode="reflect")
     weight = kernel.view(1, 1, *kernel.shape).expand(channels, 1, -1, -1)
     blurred = F.conv2d(padded, weight, groups=channels)
-    return _quantize(blurred)
+    quantized = _quantize(blurred)
+    return quantized
 
 
 def glass_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
@@ -435,7 +464,7 @@ def glass_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
             for w in range(width - max_delta, max_delta, -1):
                 offsets = torch.randint(
                     -max_delta, max_delta, (2, batch), device=working.device
-                )
+                )  # (2, batch)
                 target_h = h + offsets[1]  # (batch,)
                 target_w = w + offsets[0]  # (batch,)
 
@@ -444,7 +473,9 @@ def glass_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
                 working[rows, :, h, w] = there
                 working[rows, :, target_h, target_w] = here
 
-    return _quantize(_skimage_gaussian(working, sigma))
+    reblurred = _skimage_gaussian(working, sigma)
+    quantized = _quantize(reblurred)
+    return quantized
 
 
 def motion_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
@@ -454,7 +485,8 @@ def motion_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
     # 1 angle per batch rather than per image, see deviation 4.
     angle = float(torch.empty(1).uniform_(-45.0, 45.0).item())
     blurred = _directional_blur(images, radius, sigma, angle)
-    return _quantize(blurred)
+    quantized = _quantize(blurred)
+    return quantized
 
 
 def zoom_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
@@ -474,11 +506,16 @@ def zoom_blur(images: torch.Tensor, severity: int) -> torch.Tensor:
         accumulated = accumulated + zoomed[:, :, :height, :width]
 
     averaged = (images + accumulated) / (len(factors) + 1)
-    return _quantize(averaged)
+    quantized = _quantize(averaged)
+    return quantized
 
 
 def snow(images: torch.Tensor, severity: int) -> torch.Tensor:
-    """Smeared flakes over a faded image, both drawn per batch as in the reference."""
+    """Smeared flakes over a faded image.
+
+    The flake field is drawn per image as in the reference and the smear angle
+    once per batch, see deviation 4.
+    """
     location, spread, zoom_factor, cutoff, radius, sigma, mix = (
         (0.1, 0.3, 3, 0.5, 10, 4, 0.8),
         (0.2, 0.3, 2, 0.5, 12, 4, 0.7),
@@ -490,8 +527,8 @@ def snow(images: torch.Tensor, severity: int) -> torch.Tensor:
     batch, _, height, width = images.shape
     flakes = (
         torch.randn(batch, 1, height, width, device=images.device) * spread + location
-    )
-    flakes = _clipped_zoom(flakes, zoom_factor)
+    )  # (batch, 1, height, width)
+    flakes = _clipped_zoom(flakes, zoom_factor)  # (batch, 1, >= height, >= width)
     flakes = torch.where(flakes < cutoff, torch.zeros_like(flakes), flakes).clamp(
         0.0, 1.0
     )
@@ -499,14 +536,17 @@ def snow(images: torch.Tensor, severity: int) -> torch.Tensor:
     angle = float(torch.empty(1).uniform_(-135.0, -45.0).item())
     flakes = _directional_blur(flakes, radius, sigma, angle)
     flakes = (flakes * 255.0).round() / 255.0
-    flakes = flakes[:, :, :height, :width]
+    flakes = flakes[:, :, :height, :width]  # (batch, 1, height, width)
 
     # cv2.COLOR_RGB2GRAY's luminance weights, which is what the reference calls.
-    luminance = 0.299 * images[:, 0:1] + 0.587 * images[:, 1:2] + 0.114 * images[:, 2:3]
+    luminance = (
+        0.299 * images[:, 0:1] + 0.587 * images[:, 1:2] + 0.114 * images[:, 2:3]
+    )  # (batch, 1, height, width)
     faded = mix * images + (1.0 - mix) * torch.maximum(images, luminance * 1.5 + 0.5)
 
     snowed = faded + flakes + torch.flip(flakes, dims=(-2, -1))
-    return _quantize(snowed)
+    quantized = _quantize(snowed)
+    return quantized
 
 
 def fog(images: torch.Tensor, severity: int) -> torch.Tensor:
@@ -517,21 +557,29 @@ def fog(images: torch.Tensor, severity: int) -> torch.Tensor:
 
     batch, _, height, width = images.shape
     map_size = _next_power_of_2(max(height, width, images.shape[1]))
-    fractal = _plasma_fractal(batch, map_size, decay)[:, :height, :width]
-    haze = torch.from_numpy(fractal).to(images.device, images.dtype).unsqueeze(1)
+    fractal = _plasma_fractal(batch, map_size, decay)[
+        :, :height, :width
+    ]  # (batch, height, width)
+    haze = (
+        torch.from_numpy(fractal).to(images.device, images.dtype).unsqueeze(1)
+    )  # (batch, 1, height, width)
 
     peak = images.amax(dim=(1, 2, 3), keepdim=True)  # (batch, 1, 1, 1)
     fogged = (images + strength * haze) * peak / (peak + strength)
-    return _quantize(fogged)
+    quantized = _quantize(fogged)
+    return quantized
 
 
 def brightness(images: torch.Tensor, severity: int) -> torch.Tensor:
     """The HSV value channel lifted by a per-severity constant."""
     lift = (0.1, 0.2, 0.3, 0.4, 0.5)[severity - 1]
 
-    hsv = _rgb_to_hsv(images)
+    hsv = _rgb_to_hsv(images)  # (batch, 3, height, width)
     hsv[:, 2] = (hsv[:, 2] + lift).clamp(0.0, 1.0)
-    return _quantize(_hsv_to_rgb(hsv))
+
+    lifted = _hsv_to_rgb(hsv)  # (batch, 3, height, width)
+    quantized = _quantize(lifted)
+    return quantized
 
 
 def contrast(images: torch.Tensor, severity: int) -> torch.Tensor:
@@ -540,8 +588,9 @@ def contrast(images: torch.Tensor, severity: int) -> torch.Tensor:
 
     # Per channel, over the spatial axes only, matching np.mean(x, axis=(0, 1)).
     means = images.mean(dim=(2, 3), keepdim=True)  # (batch, channels, 1, 1)
-    flattened = (images - means) * factor + means
-    return _quantize(flattened)
+    flattened = (images - means) * factor + means  # (batch, channels, height, width)
+    quantized = _quantize(flattened)
+    return quantized
 
 
 def elastic_transform(images: torch.Tensor, severity: int) -> torch.Tensor:
@@ -553,23 +602,26 @@ def elastic_transform(images: torch.Tensor, severity: int) -> torch.Tensor:
 
     field = torch.empty(batch, 2, height, width, device=images.device).uniform_(
         -max_shift, max_shift
-    )
+    )  # (batch, 2, height, width)
     field = _separable_blur(field, _gaussian_kernel_1d(sigma, 3.0), "reflect") * alpha
 
-    rows = torch.arange(height, device=images.device, dtype=images.dtype)
-    cols = torch.arange(width, device=images.device, dtype=images.dtype)
-    grid_y, grid_x = torch.meshgrid(rows, cols, indexing="ij")
+    rows = torch.arange(height, device=images.device, dtype=images.dtype)  # (height,)
+    cols = torch.arange(width, device=images.device, dtype=images.dtype)  # (width,)
+    grid_y, grid_x = torch.meshgrid(rows, cols, indexing="ij")  # (height, width) each
 
-    sample_x = grid_x.unsqueeze(0) + field[:, 0]  # (batch, H, W)
-    sample_y = grid_y.unsqueeze(0) + field[:, 1]
+    sample_x = grid_x.unsqueeze(0) + field[:, 0]  # (batch, height, width)
+    sample_y = grid_y.unsqueeze(0) + field[:, 1]  # (batch, height, width)
     normalized_x = 2.0 * sample_x / max(width - 1, 1) - 1.0
     normalized_y = 2.0 * sample_y / max(height - 1, 1) - 1.0
 
-    grid = torch.stack([normalized_x, normalized_y], dim=-1)  # (batch, H, W, 2)
+    grid = torch.stack(
+        [normalized_x, normalized_y], dim=-1
+    )  # (batch, height, width, 2)
     warped = F.grid_sample(
         images, grid, mode="bilinear", padding_mode="reflection", align_corners=True
-    )
-    return _quantize(warped)
+    )  # (batch, channels, height, width)
+    quantized = _quantize(warped)
+    return quantized
 
 
 def pixelate(images: torch.Tensor, severity: int) -> torch.Tensor:
@@ -579,9 +631,12 @@ def pixelate(images: torch.Tensor, severity: int) -> torch.Tensor:
     height, width = images.shape[-2], images.shape[-1]
     small = F.interpolate(
         images, size=(int(height * factor), int(width * factor)), mode="area"
-    )
-    restored = F.interpolate(small, size=(height, width), mode="nearest")
-    return _quantize(restored)
+    )  # (batch, channels, height * factor, width * factor)
+    restored = F.interpolate(
+        small, size=(height, width), mode="nearest"
+    )  # (batch, channels, height, width)
+    quantized = _quantize(restored)
+    return quantized
 
 
 def jpeg_compression(images: torch.Tensor, severity: int) -> torch.Tensor:
@@ -592,16 +647,21 @@ def jpeg_compression(images: torch.Tensor, severity: int) -> torch.Tensor:
     """
     quality = (25, 18, 15, 10, 7)[severity - 1]
 
-    as_bytes = (images.clamp(0.0, 1.0) * 255.0).round().to(torch.uint8).cpu()
+    as_bytes = (
+        (images.clamp(0.0, 1.0) * 255.0).round().to(torch.uint8).cpu()
+    )  # (batch, channels, height, width) uint8
     decoded = []
-    for image in as_bytes.permute(0, 2, 3, 1).numpy():  # (H, W, channels)
+    for image in as_bytes.permute(0, 2, 3, 1).numpy():  # (height, width, channels)
         buffer = io.BytesIO()
         Image.fromarray(image).save(buffer, "JPEG", quality=quality)
         buffer.seek(0)
         decoded.append(torch.from_numpy(np.array(Image.open(buffer))))
 
-    stacked = torch.stack(decoded).permute(0, 3, 1, 2).float() / 255.0
-    return stacked.to(images.device, images.dtype)
+    stacked = (
+        torch.stack(decoded).permute(0, 3, 1, 2).float() / 255.0
+    )  # (batch, channels, height, width)
+    quantized = stacked.to(images.device, images.dtype)
+    return quantized
 
 
 # Keyed by the reference's own corruption names, in its own order, minus frost.
@@ -660,31 +720,37 @@ def hardness_thresholds(
 
     batch_thresholds = []
     for images, _ in loader:
-        images = images.to(device)  # (batch, C, H, W)
+        images = images.to(device)  # (batch, channels, height, width)
         mean_tensor, std_tensor = normalization_buffers(
             mean, std, images.device, images.dtype
         )
         pixels = (images * std_tensor + mean_tensor).clamp(0.0, 1.0)
 
-        baseline_probs = forward_probs(model, images, device, use_bfloat16)
+        baseline_probs = forward_probs(
+            model, images, device, use_bfloat16
+        )  # (batch, num_classes)
         reference_labels = baseline_probs.argmax(dim=1)  # (batch,) = P_org
 
         thresholds = torch.full(
             (images.size(0), len(corruptions)),
             float(max_severity + 1),
             device=device,
-        )
+        )  # (batch, K)
         for column, name in enumerate(corruptions):
             corrupt = CORRUPTIONS[name]
             for severity in range(1, max_severity + 1):
-                # Applied to the pristine pixels every time, per Algorithm 1 line
-                # 5, NOT to the output of the previous severity. See deviation 2.
+                # Every severity corrupts the pristine pixels, as Algorithm 1 line
+                # 5 writes it, and the corrupted batch keeps the shape of pixels.
+                # The released code corrupts the previous severity's output
+                # instead, see deviation 2.
                 corrupted = corrupt(pixels, severity)
                 renormalized = (corrupted - mean_tensor) / std_tensor
-                probs = forward_probs(model, renormalized, device, use_bfloat16)
+                probs = forward_probs(
+                    model, renormalized, device, use_bfloat16
+                )  # (batch, num_classes)
 
                 moved = probs.argmax(dim=1) != reference_labels  # (batch,)
-                first = moved & (thresholds[:, column] > max_severity)
+                first = moved & (thresholds[:, column] > max_severity)  # (batch,)
                 thresholds[first, column] = float(severity)
 
         batch_thresholds.append(thresholds.cpu())

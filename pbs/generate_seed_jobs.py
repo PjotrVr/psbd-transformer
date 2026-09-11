@@ -7,7 +7,11 @@ honest. This regenerates a chosen tier at additional seeds.
 Arguments are read back from each checkpoint's own args.json rather than restated
 here, so a rerun cannot silently differ from the original in a way nobody notices.
 The only field that changes is the seed, and the output folder gains a seed tag so
-the new run never overwrites the seed 0 one.
+the new run never overwrites the seed 0 run.
+
+Reads every checkpoints/<folder>/args.json under --checkpoints-dir and writes 1
+seed_NNN.pbs per wall clock budget into --out-dir (pbs/psbd_seed by default), with
+logs under logs/psbd_seed.
 
 Example
     python pbs/generate_seed_jobs.py --tier 1 --seeds 1 2 --dry-run
@@ -88,7 +92,7 @@ def tier_of(metadata: dict) -> int | None:
 
     Adaptive attacker and SAM checkpoints are excluded on purpose. The evasion
     claim rests on a 0.952 to 0.322 collapse, which no plausible seed noise
-    threatens, and the SAM effect is +0.009 AUROC, which no affordable number of
+    threatens. The SAM effect is +0.009 AUROC, which no affordable number of
     seeds could establish.
     """
     if metadata.get("evasion") or metadata.get("model_dropout"):
@@ -119,6 +123,7 @@ def seeded_folder(folder: str, seed: int) -> str:
 
 
 def discover(tier: int, checkpoints_dir: str) -> list[dict]:
+    """The args.json records of every checkpoint in the tier, each tagged with its folder."""
     selected = []
     for path in sorted(glob.glob(os.path.join(checkpoints_dir, "*", "args.json"))):
         with open(path) as handle:
@@ -131,6 +136,7 @@ def discover(tier: int, checkpoints_dir: str) -> list[dict]:
 
 
 def command_for(metadata: dict, seed: int) -> str:
+    """The training command that reruns a checkpoint's recorded arguments at a new seed."""
     folder = seeded_folder(metadata["folder"], seed)
     shared = {
         "dataset": metadata["dataset"],
@@ -140,13 +146,15 @@ def command_for(metadata: dict, seed: int) -> str:
         "folder": folder,
     }
     if metadata["attack"] == "benign":
-        return TRAIN_BENIGN.format(**shared)
-    return TRAIN.format(
+        command = TRAIN_BENIGN.format(**shared)
+        return command
+    command = TRAIN.format(
         attack=metadata["attack"],
         poison_rate=metadata["poison_rate"],
         target_label=metadata["target_label"],
         **shared,
     )
+    return command
 
 
 def pack(runs: list[tuple[dict, int]], target_minutes: float) -> list[list]:
@@ -164,7 +172,26 @@ def pack(runs: list[tuple[dict, int]], target_minutes: float) -> list[list]:
     return jobs
 
 
+def write_jobs(jobs: list[list], out_dir: str, hours: float) -> None:
+    """Write 1 seed_NNN.pbs per packed job into out_dir, creating the log directory too."""
+    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(os.path.join(BASE, "logs", "psbd_seed"), exist_ok=True)
+    for index, job in enumerate(jobs, start=1):
+        commands = "\n".join(command_for(metadata, seed) for metadata, seed in job)
+        path = os.path.join(out_dir, f"seed_{index:03d}.pbs")
+        with open(path, "w") as handle:
+            handle.write(
+                TEMPLATE.format(
+                    base=BASE,
+                    index=index,
+                    walltime=f"{int(hours):02d}:00:00",
+                    commands=commands,
+                )
+            )
+
+
 def parse_args() -> argparse.Namespace:
+    """The command line: tier, seeds, wall clock budget, directories and dry-run flag."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tier", type=int, default=1, choices=(1, 2, 3))
     parser.add_argument("--seeds", type=int, nargs="+", default=[1, 2])
@@ -172,10 +199,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoints-dir", default=os.path.join(BASE, "checkpoints"))
     parser.add_argument("--out-dir", default=os.path.join(BASE, "pbs", "psbd_seed"))
     parser.add_argument("--dry-run", action="store_true")
-    return parser.parse_args()
+    arguments = parser.parse_args()
+    return arguments
 
 
 def main() -> None:
+    """Select the tier, pack its runs into jobs, report the plan and write the job files."""
     args = parse_args()
     selected = discover(args.tier, args.checkpoints_dir)
     runs = [(metadata, seed) for metadata in selected for seed in args.seeds]
@@ -196,20 +225,7 @@ def main() -> None:
         print(f"  ... and {max(len(runs) - 5, 0)} more")
         return
 
-    os.makedirs(args.out_dir, exist_ok=True)
-    os.makedirs(os.path.join(BASE, "logs", "psbd_seed"), exist_ok=True)
-    for index, job in enumerate(jobs, start=1):
-        commands = "\n".join(command_for(metadata, seed) for metadata, seed in job)
-        path = os.path.join(args.out_dir, f"seed_{index:03d}.pbs")
-        with open(path, "w") as handle:
-            handle.write(
-                TEMPLATE.format(
-                    base=BASE,
-                    index=index,
-                    walltime=f"{int(args.hours):02d}:00:00",
-                    commands=commands,
-                )
-            )
+    write_jobs(jobs, args.out_dir, args.hours)
     print(f"\nwrote {len(jobs)} job files to {args.out_dir}")
 
 

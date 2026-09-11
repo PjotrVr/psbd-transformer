@@ -237,3 +237,87 @@ def figure_sidecar(path: str, generator: str, inputs: list[str], plotted: dict) 
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as handle:
         json.dump(payload, handle, indent=2)
+
+
+# Okabe-Ito, colourblind safe, in 1 fixed order so every figure colours the same
+# attack the same way.
+OKABE_ITO = (
+    "#0072B2",
+    "#D55E00",
+    "#009E73",
+    "#CC79A7",
+    "#E69F00",
+    "#56B4E9",
+    "#F0E442",
+    "#000000",
+)
+DEFAULT_CHECKPOINTS_DIR = "checkpoints"
+# Folder tokens that mark a checkpoint as outside the ViT panel: SAM ablations,
+# adaptive-attacker evasions, seed replicates, strength and trigger sweeps.
+NON_PANEL_TOKENS = ("sam_rho", "evade", "_ep", "a2m", "seed_", "_trig", "_pilot")
+
+
+def build_parser_with_checkpoints(description: str) -> argparse.ArgumentParser:
+    """build_parser plus --checkpoints-dir, for generators reading args.json sidecars."""
+    parser = build_parser(description)
+    parser.add_argument("--checkpoints-dir", default=DEFAULT_CHECKPOINTS_DIR)
+    return parser
+
+
+def load_args_json(checkpoints_dir: str, folder: str) -> dict | None:
+    """A checkpoint's training-provenance sidecar, or None when the folder has none."""
+    sidecar = load_json(os.path.join(checkpoints_dir, folder, "args.json"))
+    return sidecar
+
+
+def is_panel_folder(folder: str) -> bool:
+    """Whether a folder name carries none of the tokens that exclude it from the panel."""
+    excluded = any(token in folder for token in NON_PANEL_TOKENS)
+    return not excluded
+
+
+def save_figure(figure, path: str) -> None:
+    """Write a figure as PDF, creating the directory, and release it."""
+    import matplotlib.pyplot as plt
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    figure.tight_layout()
+    figure.savefig(path)
+    plt.close(figure)
+
+
+def markdown_table_rows(path: str, first_header: str) -> list[dict[str, str]]:
+    """The rows of the markdown table whose header starts with first_header, as dicts.
+
+    A run entry under docs/runs/ is sometimes the only surviving record of a
+    measurement, so a generator reading it names the entry as its input the same
+    way it would name a JSON file. Cell text is returned verbatim, backticks
+    stripped, and the caller parses numbers.
+    """
+    with open(path) as handle:
+        lines = handle.read().split("\n")
+    rows = []
+    header = None
+    for line in lines:
+        if not line.startswith("|"):
+            header = None if header is not None and rows else header
+            continue
+        cells = [cell.strip().strip("`") for cell in line.strip().strip("|").split("|")]
+        if header is None:
+            if cells and cells[0] == first_header:
+                header = cells
+            continue
+        if all(set(cell) <= set("-: ") for cell in cells):
+            continue
+        if len(cells) != len(header):
+            continue
+        rows.append(dict(zip(header, cells)))
+    return rows
+
+
+def std_or_none(values: list[float]) -> float | None:
+    """The sample standard deviation, or None below 2 values."""
+    if len(values) < 2:
+        return None
+    deviation = statistics.stdev(values)
+    return deviation

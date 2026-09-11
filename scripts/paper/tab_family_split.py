@@ -43,7 +43,7 @@ from scripts.paper._common import (  # noqa: E402
 
 GENERATOR = "scripts/paper/tab_family_split.py"
 PENDING = r"\pending"
-DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny")
+DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny", "svhn", "eurosat")
 RATE_ORDER = (0.01, 0.05, 0.1)
 RULES = ("matched", "adaptive")
 FAMILIES = ("input_side", "residual_adjacent")

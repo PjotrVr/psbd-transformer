@@ -9,7 +9,8 @@ models/         the 2 architectures and the probe position registry.
 training/       the training loop, checkpoint provenance and SAM.
 defences/       PSBD itself: operators, inference, scores, decision rules and the stage-1 cache.
 detectors/      the competitor input detectors, 1 registry, 1 module per method.
-analysis/       latent-space tools: CKA, backdoor direction, TAC, Lipschitz, PCA and UMAP.
+analysis/       latent-space statistics, no matplotlib: CKA, backdoor direction, TAC, Lipschitz, PCA, UMAP and the BackdoorBench ports.
+visualization/  the figures over those statistics, 1 module per figure family, tools registered for cli.visualize.
 evaluation/     attack success rate, clean accuracy, loaders and summary.
 utils/          numerics only, helpers with no subject of their own.
 cli/            1 module per command, the only place a main() lives.

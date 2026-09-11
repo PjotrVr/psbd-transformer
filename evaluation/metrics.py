@@ -365,3 +365,75 @@ def auroc(clean_scores: torch.Tensor, backdoor_scores: torch.Tensor) -> float:
 
     area = float(roc_auc_score(labels, scores))
     return area
+
+
+def confusion_matrix(
+    predictions: torch.Tensor,
+    labels: torch.Tensor,
+    num_classes: int,
+    normalise: bool = False,
+) -> torch.Tensor:
+    """Counts of (true class, predicted class), (num_classes, num_classes) float32.
+
+    Row i is the true class and column j the prediction, as
+    visual_utils.plot_confusion_matrix (lines 627 to 632) fills it. With
+    normalise the rows are divided by their totals plus 1e-24, upstream's guard
+    against a class with no rows, so an empty row stays 0 rather than NaN.
+    """
+    if predictions.shape != labels.shape:
+        raise ValueError(
+            f"predictions {tuple(predictions.shape)} and labels {tuple(labels.shape)} "
+            "must be the same length"
+        )
+
+    flat = labels.long() * num_classes + predictions.long()  # (N,)
+    counts = torch.bincount(flat, minlength=num_classes * num_classes).float()
+    matrix = counts.view(num_classes, num_classes)  # (num_classes, num_classes)
+    if not normalise:
+        return matrix
+
+    normalised = matrix / (matrix.sum(dim=1, keepdim=True) + 1e-24)
+    return normalised
+
+
+def defense_effectiveness_rate(
+    acc_bd: float, acc_def: float, asr_bd: float, asr_def: float
+) -> float:
+    """DER of a defence against the backdoored model it started from, in [0, 1].
+
+    BackdoorBench's utils/metric.py ships 2 versions that disagree in sign.
+    defense_effectiveness_rate (line 64) ADDS the clean-accuracy drop, so a
+    defence that destroys clean accuracy scores higher, while
+    defense_effectiveness_rate_simplied (line 94) subtracts it, which is the
+    version visual_metric.py calls and the paper's definition. The simplified
+    one is implemented, quoted here exactly:
+
+        return (max(0, asr_bd - asr_defense) - max(0, acc_bd - acc_defnese) + 1) / 2
+
+    symbol table
+        asr_bd, asr_def    attack success rate before and after the defence
+        acc_bd, acc_def    clean accuracy before and after the defence
+    """
+    rate = (max(0.0, asr_bd - asr_def) - max(0.0, acc_bd - acc_def) + 1.0) / 2.0
+    return rate
+
+
+def robust_improvement_rate(
+    acc_bd: float, acc_def: float, ra_bd: float, ra_def: float
+) -> float:
+    """RIR of a defence against the backdoored model it started from, in [0, 1].
+
+    The same 2 versions exist for RIR. robust_improvement_rate (utils/metric.py
+    line 80) adds the clean-accuracy drop, robust_improvement_rate_simplied
+    (line 98) subtracts it and is the version visual_metric.py calls. The
+    simplified one is implemented, quoted here exactly:
+
+        return (max(0, -ra_bd + ra_defense) - max(0, acc_bd - acc_defnese) + 1) / 2
+
+    symbol table
+        ra_bd, ra_def      robust accuracy before and after the defence, the
+                           accuracy on triggered images against their true label
+        acc_bd, acc_def    clean accuracy before and after the defence
+    """
+    rate = (max(0.0, ra_def - ra_bd) - max(0.0, acc_bd - acc_def) + 1.0) / 2.0
+    return rate

@@ -32,6 +32,7 @@ from defences.decision import (
     pair_clean_to_backdoor,
 )
 from defences.scores import psu_from_cache, shift_ratio
+from experiments._paths import experiment_result_path
 
 # The shift ratio every probe is read at, so probes are compared at a matched
 # disturbance rather than at a shared nominal rate.
@@ -160,7 +161,8 @@ def main():
     parser.add_argument("--pattern", default="*evade*")
     parser.add_argument("--results-dir", default="results")
     parser.add_argument(
-        "--output", default="experiments/median_rank_union/union_on_evasive.csv"
+        "--output",
+        default=experiment_result_path("median_rank_union", "union_on_evasive.csv"),
     )
     arguments = parser.parse_args()
 

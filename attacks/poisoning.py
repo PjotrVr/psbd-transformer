@@ -69,10 +69,10 @@ def _grouped_target(
 ) -> int:
     """The all_to_m target class.
 
-        original form
-            y_poisoned = (y + 1) mod m
-        descriptive form
-            the next class, wrapping within the first m classes only
+    original form
+        y_poisoned = (y + 1) mod m
+    descriptive form
+        the next class, wrapping within the first m classes only
 
     m is how many distinct classes the trigger maps onto. PSBD's premise is that a
     trigger is a constant shortcut that never has to read the image. all_to_one
@@ -96,7 +96,9 @@ def _grouped_target(
             f"all_to_m needs num_targets <= num_classes, got m={num_targets} for "
             f"{num_classes} classes. m = num_classes is already all_to_all."
         )
-    return (original_label + 1) % num_targets
+
+    target = (original_label + 1) % num_targets
+    return target
 
 
 def clean_label_target_set(
@@ -118,7 +120,9 @@ def clean_label_target_set(
     """
     if not num_targets or num_targets <= 1:
         return (target_label,)
-    return tuple(target_label + offset for offset in range(num_targets))
+
+    targets = tuple(target_label + offset for offset in range(num_targets))
+    return targets
 
 
 def is_poisonable(
@@ -138,11 +142,13 @@ def is_poisonable(
     if label_mode == "all_to_all":
         return True
     if label_mode == "all_to_m":
-        return _grouped_target(original_label, num_targets) != original_label
+        grouped_target = _grouped_target(original_label, num_targets)
+        return grouped_target != original_label
     if label_mode == "clean_label":
         return original_label == target_label
     if label_mode == "clean_label_multi":
-        return original_label in clean_label_target_set(target_label, num_targets)
+        targets = clean_label_target_set(target_label, num_targets)
+        return original_label in targets
     raise ValueError(f"Unknown label mode: {label_mode}")
 
 
@@ -163,9 +169,11 @@ def poisoned_label(
     if label_mode == "all_to_one":
         return target_label
     if label_mode == "all_to_all":
-        return (original_label + 1) % num_classes
+        next_class = (original_label + 1) % num_classes
+        return next_class
     if label_mode == "all_to_m":
-        return _grouped_target(original_label, num_targets, num_classes)
+        grouped_target = _grouped_target(original_label, num_targets, num_classes)
+        return grouped_target
     if label_mode in ("clean_label", "clean_label_multi"):
         return original_label
     raise ValueError(f"Unknown label mode: {label_mode}")
@@ -189,11 +197,13 @@ def is_eval_poisonable(
     if label_mode == "all_to_all":
         return True
     if label_mode == "all_to_m":
-        return _grouped_target(original_label, num_targets) != original_label
+        grouped_target = _grouped_target(original_label, num_targets)
+        return grouped_target != original_label
     if label_mode == "clean_label":
         return original_label != target_label
     if label_mode == "clean_label_multi":
-        return original_label not in clean_label_target_set(target_label, num_targets)
+        targets = clean_label_target_set(target_label, num_targets)
+        return original_label not in targets
     raise ValueError(f"Unknown label mode: {label_mode}")
 
 
@@ -271,9 +281,10 @@ def choose_indices_with_cover(
         label = int(labels[index])
         if source_classes is not None and label not in source_classes:
             return False
-        return is_poisonable(
+        eligible = is_poisonable(
             attack.label_mode, label, attack.target_label, attack.num_targets
         )
+        return eligible
 
     poison_pool = [i for i in range(dataset_size) if is_poison_eligible(i)]
     poison_count = min(int(round(poison_rate * dataset_size)), len(poison_pool))
@@ -338,7 +349,8 @@ class PoisonedTrainingSet(Dataset):
                 self.attack.num_targets,
             )
 
-        return self.normalize(image), label
+        normalized = self.normalize(image)  # (C, H, W)
+        return normalized, label
 
 
 class AttackSuccessSet(Dataset):
@@ -400,7 +412,8 @@ class AttackSuccessSet(Dataset):
             self.attack.num_targets,
         )
 
-        return self.normalize(poisoned), target
+        normalized = self.normalize(poisoned)  # (C, H, W)
+        return normalized, target
 
 
 class CoverPoisonedTrainingSet(Dataset):
@@ -446,4 +459,5 @@ class CoverPoisonedTrainingSet(Dataset):
             cover = self.attack.apply_cover or self.attack.apply_trigger
             image = cover(image, index)
 
-        return self.normalize(image), label
+        normalized = self.normalize(image)  # (C, H, W)
+        return normalized, label

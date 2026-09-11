@@ -1,0 +1,82 @@
+{
+  "generator": "scripts/paper/tab_detector_smoke.py",
+  "inputs": [
+    "docs/runs/2026-09-10-detector-smoke.md"
+  ],
+  "written_at": "2026-09-10T23:37:23.205133+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "SmokeCheckpoints": {
+      "value": "3",
+      "meaning": "checkpoints in the smoke run"
+    },
+    "SmokeBackdooredCheckpoints": {
+      "value": "2",
+      "meaning": "backdoored checkpoints in the smoke run"
+    },
+    "SmokeFollowups": {
+      "value": "4",
+      "meaning": "follow-up runs in the smoke entry"
+    },
+    "SmokeDetectors": {
+      "value": "10",
+      "meaning": "detectors in the smoke run"
+    },
+    "SmokeBenignAurocMin": {
+      "value": "0.493",
+      "meaning": "lowest benign-reference AUROC across smoke detectors"
+    },
+    "SmokeBenignAurocMax": {
+      "value": "0.510",
+      "meaning": "highest benign-reference AUROC across smoke detectors"
+    },
+    "SmokeIbdPscBadnetAuroc": {
+      "value": "0.481",
+      "meaning": "IBD-PSC AUROC on the smoke BadNet cell"
+    },
+    "SmokeSentinetBadnetAuroc": {
+      "value": "0.107",
+      "meaning": "SentiNet AUROC on the smoke BadNet cell"
+    },
+    "SmokeBeatrixBadnetAuroc": {
+      "value": "0.453",
+      "meaning": "Beatrix AUROC on the smoke BadNet cell at the truncated split"
+    },
+    "SmokeStripBadnetAuroc": {
+      "value": "1.000",
+      "meaning": "STRIP AUROC on the smoke BadNet cell"
+    },
+    "SmokeTedBlendAuroc": {
+      "value": "0.990",
+      "meaning": "TED AUROC on the smoke Blend cell"
+    },
+    "SmokeConfidenceBlendAuroc": {
+      "value": "0.876",
+      "meaning": "confidence-null AUROC on the smoke Blend cell"
+    },
+    "SmokeBeatrixBadnetFullAuroc": {
+      "value": "1.000",
+      "meaning": "Beatrix AUROC on the smoke BadNet cell at the full validation split"
+    },
+    "SmokeIbdPscBadnetFullAuroc": {
+      "value": "0.506",
+      "meaning": "IBD-PSC AUROC on the smoke BadNet cell at the full validation split"
+    },
+    "RegistryDetectors": {
+      "value": "11",
+      "meaning": "detectors registered for the panel"
+    },
+    "CdLPasses": {
+      "value": "251",
+      "meaning": "forward passes per input for CD-L"
+    },
+    "TecoPasses": {
+      "value": "71",
+      "meaning": "forward passes per input for TeCo"
+    },
+    "SentinetPasses": {
+      "value": "202",
+      "meaning": "forward passes per input for SentiNet"
+    }
+  }
+}

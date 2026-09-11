@@ -1,0 +1,55 @@
+{
+  "generator": "scripts/paper/mech_activation_patching.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+  ],
+  "written_at": "2026-09-10T23:34:30.110956+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "PatchingCells": {
+      "value": "65",
+      "meaning": "clearing cells with activation patching"
+    },
+    "PatchingEarlyLayers": {
+      "value": "1 to 6",
+      "meaning": "the layer band the early trigger-token recovery is averaged over"
+    },
+    "PatchingBadnetLastFull": {
+      "value": "10",
+      "meaning": "badnet_a2o last layer at which the trigger tokens alone recover at least half the clean answer"
+    },
+    "PatchingRandomNullMax": {
+      "value": "1.000",
+      "meaning": "largest recovery any random token group reaches, over every attack and layer"
+    },
+    "PatchingBadnetEarlyTrigger": {
+      "value": "1.000",
+      "meaning": "badnet_a2o mean recovery from the trigger tokens over layers 1 to 6"
+    },
+    "PatchingBadnetCrossover": {
+      "value": "12",
+      "meaning": "badnet_a2o layer at which the class token first recovers more than the trigger tokens"
+    },
+    "PatchingBadnetFinalCls": {
+      "value": "0.661",
+      "meaning": "badnet_a2o class-token recovery at the last layer"
+    },
+    "PatchingLocalEarlyTrigger": {
+      "value": "1.000",
+      "meaning": "mean early trigger-token recovery over the local-trigger attacks"
+    },
+    "PatchingGlobalEarlyTrigger": {
+      "value": "0.982",
+      "meaning": "mean early trigger-token recovery over the global-trigger attacks"
+    },
+    "PatchingLocalCrossover": {
+      "value": "11.5",
+      "meaning": "mean crossover layer over the local-trigger attacks"
+    },
+    "PatchingBlendEarlyTrigger": {
+      "value": "0.934",
+      "meaning": "blend mean recovery from the trigger tokens over layers 1 to 6"
+    }
+  }
+}
