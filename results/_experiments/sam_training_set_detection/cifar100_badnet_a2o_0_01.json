@@ -1,0 +1,27 @@
+{
+  "dataset": "cifar100",
+  "attack": "badnet_a2o",
+  "poison_rate_tag": "0_01",
+  "adam": {
+    "folder_name": "vit_cifar100_badnet_a2o_0_01",
+    "n_poisoned": 500,
+    "n_clean_target": 500,
+    "ss_tpr": 0.734,
+    "ss_fpr": 0.766,
+    "ac_tpr": 0.0,
+    "ac_fpr": 1.0,
+    "silhouette": 0.6242195963859558,
+    "singular_ratio": 3.181410312652588
+  },
+  "sam": {
+    "folder_name": "vit_cifar100_badnet_a2o_0_01_sam_rho_0_1",
+    "n_poisoned": 500,
+    "n_clean_target": 500,
+    "ss_tpr": 0.748,
+    "ss_fpr": 0.752,
+    "ac_tpr": 0.0,
+    "ac_fpr": 1.0,
+    "silhouette": 0.5294883847236633,
+    "singular_ratio": 2.6011996269226074
+  }
+}

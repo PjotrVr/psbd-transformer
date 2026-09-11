@@ -1,0 +1,27 @@
+{
+  "dataset": "cifar100",
+  "attack": "wanet",
+  "poison_rate_tag": "0_05",
+  "adam": {
+    "folder_name": "vit_cifar100_wanet_0_05",
+    "n_poisoned": 2500,
+    "n_clean_target": 500,
+    "ss_tpr": 1.0,
+    "ss_fpr": 1.0,
+    "ac_tpr": 0.0052,
+    "ac_fpr": 0.998,
+    "silhouette": 0.41663336753845215,
+    "singular_ratio": 1.8907561302185059
+  },
+  "sam": {
+    "folder_name": "vit_cifar100_wanet_0_05_sam_rho_0_1",
+    "n_poisoned": 2500,
+    "n_clean_target": 500,
+    "ss_tpr": 1.0,
+    "ss_fpr": 1.0,
+    "ac_tpr": 0.0148,
+    "ac_fpr": 1.0,
+    "silhouette": 0.4124287962913513,
+    "singular_ratio": 2.10722279548645
+  }
+}
