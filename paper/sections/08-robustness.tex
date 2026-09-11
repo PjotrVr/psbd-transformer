@@ -34,6 +34,10 @@ and $x$ is flagged when $u(x)$ falls below the 25th percentile of $u$ over the c
 
 The union restores a mean AUROC of 0.967 on the evasive models, with a worst case of 0.852 on LF at 1\%, and at the 25\% budget it flags 0.97 of the triggered inputs at a measured false-positive rate of 0.26. This is within 0.004 of a union that drops the attacked probe as if the defender knew which one it was, so the defender does not need to know. The cost is 1 sweep per probe, 3 times PSBD-TM alone. The open question is an attacker who trains against the union itself. That attack has to evade 3 probes with 3 different Jacobians at once, and evading 1 already costs up to 4.5 clean-accuracy points, but we have not run it. We are also training the PSBD paper's own adaptive attacker, whose loss is a convex combination of the backdoor loss and the absolute prediction shift, and \cref{app:rate} will carry its numbers.
 
+The union is not only for the adaptive case. \Cref{tab:probe-union} reads the same rule on the 65 ordinary models, where nobody trained against a probe. Adding PSBD-RD to PSBD-TM rescues the 2 models PSBD-TM misses, WaNet on CIFAR-10 from 0.459 to 0.910 and SIG on CIFAR-10 from 0.418 to 0.908, but it costs 0.08 on TaCT, where PSBD-RD reads a coin and its rank drags the minimum down, so the paired gain over all models is +0.006 with an interval that crosses 0. Pairing PSBD-TM with token masking on the attention branch output instead gains +0.022 with an interval that excludes 0, at 0.957 AUROC and 0.85 TPR at a 10\% budget, because the 2 probes fail on different models. The 3-probe union of the adaptive section reads 0.988 on the 37 models that hold all 3 probes, and a union of every fully swept placement gains less than the 2-probe one. More probes help when they disagree in the right way, not by number.
+
+\IfFileExists{tables/probe_union.tex}{\input{tables/probe_union}}{}
+
 \subsection{Forward passes and their cost}
 \label{sec:robustness:passes}
 
