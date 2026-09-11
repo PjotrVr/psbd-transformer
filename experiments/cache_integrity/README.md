@@ -22,7 +22,7 @@ the same `--seed` returns the same N and any failure it reports is reproducible.
 `--full` audits every checkpoint carrying a `psbd/` subtree. Exactly 1 of the 2
 is required, because the full pass reads about 73 GB.
 
-The report goes to `results/cache_integrity.json` by default: per-check pass and
+The report goes to `results/_experiments/cache_integrity/cache_integrity.json` by default: per-check pass and
 fail counts, the complete failure list grouped by check, and a per-checkpoint
 record of the resolved operator, stored k, and rate coverage for every position
 config. Stdout carries the same summary with failing paths capped at

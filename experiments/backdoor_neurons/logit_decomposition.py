@@ -56,6 +56,7 @@ from attacks import build_attack, default_config
 from data.splits import read_checkpoint_metadata, resolve_probe_attack
 from models.backbones import load_checkpoint, network_core
 from experiments.backdoor_direction_layers.measure import build_paired_loaders
+from experiments._paths import experiment_result_path
 from data.registry import DATASET_REGISTRY
 
 FINAL_BLOCK = 12
@@ -207,7 +208,9 @@ def main() -> None:
             )
 
     if rows:
-        out = os.path.join(args.results_dir, "logit_decomposition.json")
+        out = experiment_result_path(
+            "backdoor_neurons", "logit_decomposition.json", args.results_dir
+        )
         with open(out, "w") as handle:
             json.dump(rows, handle, indent=2)
         print(f"\nwrote {out}")

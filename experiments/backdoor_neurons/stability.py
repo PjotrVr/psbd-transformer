@@ -34,6 +34,7 @@ from attacks import build_attack, default_config
 from data.splits import read_checkpoint_metadata, resolve_probe_attack
 from models.backbones import load_checkpoint
 from experiments.backdoor_direction_layers.measure import build_paired_loaders
+from experiments._paths import experiment_result_path
 from data.registry import DATASET_REGISTRY
 
 TOP_K = 20
@@ -162,7 +163,9 @@ def main() -> None:
         print(
             f"\nmean split-half Jaccard {average:.2f} against a chance floor of {mean:.3f}"
         )
-        out = os.path.join(args.results_dir, "backdoor_neuron_stability.json")
+        out = experiment_result_path(
+            "backdoor_neurons", "backdoor_neuron_stability.json", args.results_dir
+        )
         with open(out, "w") as handle:
             json.dump(
                 {"chance_mean": mean, "chance_p95": p95, "rows": rows}, handle, indent=2

@@ -43,6 +43,7 @@ from defences.cache import (
 )
 from defences.decision import pair_clean_to_backdoor
 from defences.scores import psu_from_cache
+from experiments._paths import experiment_result_path
 
 
 def parse_args() -> argparse.Namespace:
@@ -147,7 +148,9 @@ def main() -> None:
         wins = sum(1 for _, v in backdoored if v["psu"] > v["confidence"])
         print(f"  PSU beats confidence on {wins}/{len(backdoored)} checkpoints")
 
-    output = os.path.join(args.results_dir, "psu_vs_confidence.json")
+    output = experiment_result_path(
+        "psu_vs_confidence", "psu_vs_confidence.json", args.results_dir
+    )
     with open(output, "w") as handle:
         json.dump({"placement": args.placement, "rows": dict(rows)}, handle, indent=2)
     print(f"\nwritten to {output}")

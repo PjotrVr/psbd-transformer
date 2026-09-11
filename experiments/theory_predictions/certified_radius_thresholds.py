@@ -52,6 +52,7 @@ from defences.cache import (
 )
 from defences.decision import pair_clean_to_backdoor
 from defences.scores import psu_from_cache
+from experiments._paths import experiment_results_dir
 
 QUANTILES = (0.01, 0.05, 0.10, 0.25)
 
@@ -66,7 +67,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", default="results")
     parser.add_argument("--summary", default="results/detection_summary.csv")
-    parser.add_argument("--out-dir", default="experiments/theory_predictions")
+    parser.add_argument(
+        "--out-dir", default=experiment_results_dir("theory_predictions")
+    )
     parser.add_argument("--cells", type=int, default=140)
     parser.add_argument("--seed", type=int, default=0)
     return parser.parse_args()

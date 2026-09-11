@@ -3,7 +3,7 @@
 Every headline number in the paper is computed by psbd_analyze.py from tensors it
 never recomputes, so a silently corrupt cache is indistinguishable from a real
 result. This script re-derives the invariants that stage 1 establishes and stage 2
-assumes, over the whole tree, and writes results/cache_integrity.json.
+assumes, over the whole tree, and writes results/_experiments/cache_integrity/cache_integrity.json.
 
 The audit is grouped into 4 scopes, and the check identifiers below match the
 numbering used in the accompanying README:
@@ -51,6 +51,7 @@ from defences.operators import DETERMINISTIC_OPERATORS, OPERATORS
 from defences.decision import complete_rates
 from data.registry import DATASET_REGISTRY
 from defences.cache import read_run_provenance
+from experiments._paths import experiment_result_path
 
 SPLITS: tuple[str, ...] = ("validation", "clean", "backdoor")
 
@@ -111,7 +112,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--results-dir", default="results")
     parser.add_argument("--checkpoints-dir", default="checkpoints")
     parser.add_argument(
-        "--output", default=None, help="default: <results-dir>/cache_integrity.json"
+        "--output",
+        default=None,
+        help="default: <results-dir>/_experiments/cache_integrity/cache_integrity.json",
     )
     parser.add_argument("--seed", type=int, default=0, help="seeds the --sample draw")
     parser.add_argument(
@@ -860,7 +863,9 @@ def write_report(path: str, payload: dict) -> None:
 
 def main() -> None:
     args = parse_args()
-    output = args.output or os.path.join(args.results_dir, "cache_integrity.json")
+    output = args.output or experiment_result_path(
+        "cache_integrity", "cache_integrity.json", args.results_dir
+    )
 
     folders = discover_checkpoint_folders(args.results_dir)
     selected = select_folders(folders, args.sample, args.seed)

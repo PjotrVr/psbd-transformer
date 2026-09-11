@@ -30,6 +30,7 @@ import torch
 
 from analysis.cases import case_distribution_table, load_latent_case
 from data.splits import BENIGN_PROBE_ATTACK
+from experiments._paths import experiment_result_path
 
 # Probed on a benign checkpoint, which has no trigger of its own. Chance level
 # detection is the expected result and it is the control the correlation needs at
@@ -129,7 +130,9 @@ def main():
     parser.add_argument("--checkpoints-dir", default="checkpoints")
     parser.add_argument(
         "--output",
-        default="experiments/latent_geometry_predicts_detection/geometry_vs_detection.csv",
+        default=experiment_result_path(
+            "latent_geometry_predicts_detection", "geometry_vs_detection.csv"
+        ),
     )
     parser.add_argument("--limit", type=int, default=None)
     # Sharding so the work splits across several single-GPU jobs rather than 1

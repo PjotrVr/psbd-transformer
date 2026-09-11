@@ -104,8 +104,8 @@ def main():
     print(
         '  python -c "import glob,pandas as pd; '
         "pd.concat([pd.read_csv(f) for f in sorted(glob.glob("
-        "'experiments/latent_geometry_predicts_detection/geometry_shard_*.csv'))])"
-        ".to_csv('experiments/latent_geometry_predicts_detection/"
+        "'results/_experiments/latent_geometry_predicts_detection/geometry_shard_*.csv'))])"
+        ".to_csv('results/_experiments/latent_geometry_predicts_detection/"
         "geometry_vs_detection.csv', index=False)\""
     )
 

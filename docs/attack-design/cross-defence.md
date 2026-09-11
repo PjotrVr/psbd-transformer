@@ -628,7 +628,7 @@ depend on a Taylor expansion.
 
 ### 4.2 Our `adaptive_blend` is not Qi et al.'s attack, and the difference is the whole point
 
-Measured, `experiments/latent_geometry_predicts_detection/geometry_vs_detection.csv`:
+Measured, `results/_experiments/latent_geometry_predicts_detection/geometry_vs_detection.csv`:
 
 | checkpoint | min rank ratio | best deployable AUROC |
 |---|---:|---:|

@@ -47,6 +47,7 @@ from data.splits import (
 from evaluation.metrics import attack_success_rate, clean_accuracy
 from models.backbones import load_checkpoint, network_core
 from experiments.backdoor_direction_layers.measure import build_paired_loaders
+from experiments._paths import experiment_result_path
 from data.registry import DATASET_REGISTRY
 
 PSBD_SPLIT_SEED = 0
@@ -346,7 +347,9 @@ def main() -> None:
             )
 
     if rows:
-        out = os.path.join(args.results_dir, "backdoor_neuron_ablation.json")
+        out = experiment_result_path(
+            "backdoor_neurons", "backdoor_neuron_ablation.json", args.results_dir
+        )
         with open(out, "w") as handle:
             json.dump(rows, handle, indent=2)
         print(f"\nwrote {out}")
