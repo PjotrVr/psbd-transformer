@@ -110,6 +110,56 @@ ordinary panel models they add nothing, and here that finding survives
 leave-one-dataset-family-out selection rather than only holding when measured
 on the same models the pair was picked on.
 
+### Follow-up: relaxing coverage to let the deployment pair enter the search
+
+**Question.** The pair a deployer would actually reach for is PSBD-TM plus
+token masking on the attention branch output
+(`before_attention_residual_token_mask`), but that placement sits on 66 of
+the 69 panel models rather than all of them, so the strict "present on every
+model" candidate rule above excludes it. Does relaxing that rule change which
+pair the search picks, and how does PSBD-TM plus the attention branch output
+read on the held-out half specifically?
+
+**Method.** Same selection protocol and same search
+(`experiments.probe_union.pair_search.search_pairs`, ranked by mean TPR at
+10% on the selection models), but the candidate rule now admits any basis
+placement present on at least 60 of the 69 panel models
+(`placements_present_on_at_least`, `CHECK2B_MIN_COVERAGE = 60` in
+`measure.py`), which raises the candidate count from 13 to 15 and adds
+`before_attention_residual_token_mask` and `mlp_norm_out_gain_scale`. Each
+pair's own model coverage still comes from `union_set`'s existing
+`model_has_probes` filter, so a wider candidate list never changes which
+models a specific pair is scored on. Beside the pair the search actually
+picks, PSBD-TM plus the attention branch output is read on the held-out
+models directly, regardless of whether the search selects it.
+
+| Configuration | Models | Mean AUROC | Mean TPR @ 10% | Mean TPR @ 20% |
+|---|---:|---:|---:|---:|
+| Best pair on selection models (`mlp_norm_out_gain_scale` + `post_residual`) | 33 (selection) | 0.956 | 0.857 | 0.899 |
+| PSBD-TM alone, held-out models | 32 (held-out) | 0.944 | 0.850 | 0.901 |
+| Best pair, held-out models | 32 (held-out) | 0.919 | 0.857 | 0.870 |
+| Paired gain, best pair minus PSBD-TM alone, held-out models | 32 | -0.025 [-0.072, +0.008] | -- | -- |
+| PSBD-TM + attention branch output, held-out models | 32 (held-out) | 0.951 | 0.878 | 0.924 |
+| Paired gain, PSBD-TM + attention branch output minus PSBD-TM alone, held-out models | 32 | +0.008 [-0.002, +0.018] | -- | -- |
+
+**Answer.** Relaxing the coverage bar does not hand the search the
+deployment pair. It instead picks `mlp_norm_out_gain_scale` plus PSBD-RD,
+and `mlp_norm_out_gain_scale` is the placement whose earlier standalone
+`gain_scale` headline this repo already withdrew after audit
+(`docs/audit-2026-09-07.md`), so a pair search on a single selection half
+can still surface a placement that does not hold up, and this pair does not
+generalise either: held-out AUROC drops from 0.944 (PSBD-TM alone) to 0.919,
+and the gain interval [-0.072, +0.008] again straddles 0 while leaning
+negative. PSBD-TM plus the attention branch output, read directly rather
+than because the search chose it, is the more promising pair: held-out AUROC
+rises to 0.951 and TPR at both quantiles rises too (0.878 at 10%, 0.924 at
+20%, both above PSBD-TM alone), with a gain interval of [-0.002, +0.018] that
+leans positive but still touches 0. On this held-out half the deployment
+pair reads better than the pair either search (strict or relaxed coverage)
+actually selects, which argues the mean-TPR-at-10%-on-selection criterion is
+not reliably picking the pair that generalises best, more than it argues the
+attention branch pair is a settled win.
+
 ## Check 3: the mask seed
 
 **Question.** Every PSBD-TM number elsewhere in this repo comes from 1 draw

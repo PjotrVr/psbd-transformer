@@ -255,6 +255,146 @@
         "ci_low": -0.02499108137466061,
         "ci_high": 0.0025194469666196054
       }
+    },
+    "relaxed_coverage": {
+      "min_coverage": 60,
+      "select_on_datasets": [
+        "cifar10",
+        "gtsrb"
+      ],
+      "report_on_datasets": [
+        "cifar100",
+        "tiny"
+      ],
+      "n_selection_models": 33,
+      "n_heldout_models": 32,
+      "n_candidate_placements": 15,
+      "candidate_placements": [
+        "after_attention_residual_token_mask",
+        "before_attention_norm_channel_mask",
+        "before_attention_norm_gaussian",
+        "before_attention_norm_token_mask",
+        "before_attention_residual_token_mask",
+        "before_mlp_gaussian",
+        "before_mlp_norm_token_mask",
+        "both_sublayer_inputs_token_mask",
+        "input_pixels_scale_up",
+        "mlp_neurons_channel_mask",
+        "mlp_norm_out_gain_scale",
+        "post_residual",
+        "pre_residual",
+        "pre_residual_blocks_1_4",
+        "pre_residual_blocks_5_8"
+      ],
+      "best_pair_on_selection": {
+        "placements": [
+          "mlp_norm_out_gain_scale",
+          "post_residual"
+        ],
+        "selection_summary": {
+          "placements": [
+            "mlp_norm_out_gain_scale",
+            "post_residual"
+          ],
+          "n_models": 33,
+          "auroc_mean": 0.955504989525674,
+          "tpr10_mean": 0.8573324816569573,
+          "tpr20_mean": 0.898798598597447,
+          "worst_model": {
+            "folder": "vit_cifar10_tact_0_01",
+            "dataset": "cifar10",
+            "attack": "tact",
+            "poison_rate": 0.01,
+            "auroc": 0.49308413928941186,
+            "tpr_at_0.10": 0.008793969638645649,
+            "fpr_at_0.10": 0.01256281416863203,
+            "tpr_at_0.20": 0.016331657767295837,
+            "fpr_at_0.20": 0.016331657767295837
+          }
+        }
+      },
+      "held_out": {
+        "psbd_tm_alone": {
+          "placements": [
+            "before_attention_norm_token_mask"
+          ],
+          "n_models": 32,
+          "auroc_mean": 0.9436876999349224,
+          "tpr10_mean": 0.8501692889840342,
+          "tpr20_mean": 0.9013534497935325,
+          "worst_model": {
+            "folder": "vit_tiny_tact_0_01",
+            "dataset": "tiny",
+            "attack": "tact",
+            "poison_rate": 0.01,
+            "auroc": 0.5756802721088435,
+            "tpr_at_0.10": 0.02380952425301075,
+            "fpr_at_0.10": 0.0,
+            "tpr_at_0.20": 0.1190476194024086,
+            "fpr_at_0.20": 0.1190476194024086
+          }
+        },
+        "best_pair": {
+          "placements": [
+            "mlp_norm_out_gain_scale",
+            "post_residual"
+          ],
+          "n_models": 32,
+          "auroc_mean": 0.9187812932169644,
+          "tpr10_mean": 0.8566021680017002,
+          "tpr20_mean": 0.8697638692101464,
+          "worst_model": {
+            "folder": "vit_tiny_tact_0_1",
+            "dataset": "tiny",
+            "attack": "tact",
+            "poison_rate": 0.1,
+            "auroc": 0.38662131519274373,
+            "tpr_at_0.10": 0.02380952425301075,
+            "fpr_at_0.10": 0.0476190485060215,
+            "tpr_at_0.20": 0.0476190485060215,
+            "fpr_at_0.20": 0.095238097012043
+          }
+        },
+        "pair_gain_over_psbd_tm": {
+          "n": 32,
+          "mean_gain": -0.024906406717957994,
+          "ci_low": -0.07158628525407519,
+          "ci_high": 0.008362103013247982
+        }
+      },
+      "held_out_attention_branch_pair": {
+        "placements": [
+          "before_attention_norm_token_mask",
+          "before_attention_residual_token_mask"
+        ],
+        "summary": {
+          "placements": [
+            "before_attention_norm_token_mask",
+            "before_attention_residual_token_mask"
+          ],
+          "n_models": 32,
+          "auroc_mean": 0.9511933200135989,
+          "tpr10_mean": 0.877751051040832,
+          "tpr20_mean": 0.9237357745878398,
+          "worst_model": {
+            "folder": "vit_tiny_tact_0_01",
+            "dataset": "tiny",
+            "attack": "tact",
+            "poison_rate": 0.01,
+            "auroc": 0.6890589569160998,
+            "tpr_at_0.10": 0.02380952425301075,
+            "fpr_at_0.10": 0.02380952425301075,
+            "tpr_at_0.20": 0.2142857164144516,
+            "fpr_at_0.20": 0.0476190485060215
+          }
+        },
+        "gain_over_psbd_tm": {
+          "n": 32,
+          "mean_gain": 0.0075056200786764865,
+          "ci_low": -0.001712268485802703,
+          "ci_high": 0.017962024135436027
+        }
+      }
     }
   },
   "check3_mask_seed": {

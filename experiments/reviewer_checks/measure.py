@@ -84,6 +84,7 @@ from defences.decision import (  # noqa: E402
 from defences.scores import psu_ratio_from_cache, shift_ratio  # noqa: E402
 from experiments._paths import experiment_result_path, experiment_results_dir  # noqa: E402
 from experiments.probe_union.measure import (  # noqa: E402
+    ATTN_BRANCH_TM,
     basis_ids_present_on_all_models,
     paired_gain,
     select_models,
@@ -117,6 +118,13 @@ CHECK2_TARGET_FPRS = (0.10, 0.20)
 CHECK2_PRIMARY_FPR = 0.10
 CHECK2_BOOTSTRAP_RESAMPLES = 2000
 CHECK2_BOOTSTRAP_SEED = 0
+# The deployment candidate, PSBD-TM plus token masking on the attention branch
+# output, sits on 66 of the 69 panel models, so the strict "on every model"
+# candidate rule excludes it. This relaxed rule follows up on that: a
+# placement qualifies once it covers at least this many of the 69, and a
+# pair's own coverage (union_set's model_has_probes filter) still decides
+# which models that particular pair is read on.
+CHECK2B_MIN_COVERAGE = 60
 
 CHECK3_POSITION = "before_attention_norm"
 CHECK3_OPERATOR = "token_mask"
@@ -157,6 +165,14 @@ def parse_args() -> argparse.Namespace:
         "--skip-check3",
         action="store_true",
         help="skip the GPU mask-seed rerun, e.g. when it already ran and only checks 1 and 2 changed",
+    )
+    parser.add_argument(
+        "--check2-relaxed-only",
+        action="store_true",
+        help=(
+            "only run check 2's relaxed-coverage follow-up and merge it into the "
+            "existing --output file, without rerunning checks 1 and 3"
+        ),
     )
     return parser.parse_args()
 
@@ -453,6 +469,127 @@ def run_check2(
     return report
 
 
+def placements_present_on_at_least(
+    models: list[dict], declaration_path: str, min_count: int
+) -> list[str]:
+    """Every basis placement id whose `adaptive_rate` is set on at least `min_count` of `models`.
+
+    The strict rule (`basis_ids_present_on_all_models`) requires every model,
+    which drops a placement like the attention branch output token mask that
+    covers all but a few of the panel. Each surviving candidate pair still
+    reads its own model coverage through `union_set`'s `model_has_probes`
+    filter, so relaxing this rule only widens which pairs are considered, not
+    which models a given pair is scored on.
+    """
+    with open(declaration_path) as handle:
+        basis_ids = [entry["id"] for entry in json.load(handle)["basis"]]
+
+    present = []
+    for placement in basis_ids:
+        covering = sum(
+            1
+            for model in models
+            if (model["report"]["placements"].get(placement) or {}).get("adaptive_rate")
+            is not None
+        )
+        if covering >= min_count:
+            present.append(placement)
+    return present
+
+
+def run_check2_relaxed_coverage(
+    results_dir: str,
+    declaration_path: str,
+    resamples: int,
+    seed: int,
+    min_coverage: int,
+) -> dict:
+    """Check 2 again with the coverage bar relaxed, so the deployment pair can enter the search.
+
+    Same selection protocol as `run_check2`: the pair is chosen on the
+    CIFAR-10 and GTSRB selection models by mean TPR at 10%, then read fresh on
+    the CIFAR-100 and Tiny ImageNet held-out models. The 1 addition is a
+    direct held-out reading of PSBD-TM plus the attention branch output token
+    mask, reported whether or not the search actually picks that pair.
+    """
+    declaration = load_declaration(declaration_path)
+    protocol = declaration["selection_protocol"]
+    select_datasets = set(protocol["select_on_datasets"])
+    heldout_datasets = set(protocol["report_on_datasets"])
+
+    models = select_models(results_dir)
+    candidates = placements_present_on_at_least(models, declaration_path, min_coverage)
+    selection_models = [
+        model for model in models if model["dataset"] in select_datasets
+    ]
+    heldout_models = [model for model in models if model["dataset"] in heldout_datasets]
+
+    manifest_cache: dict = {}
+    psu_cache: dict = {}
+    for placement in set(candidates) | {CHECK2_REFERENCE, ATTN_BRANCH_TM}:
+        preload_placement(results_dir, models, placement, manifest_cache, psu_cache)
+
+    reference_rows = union_set(
+        results_dir, selection_models, (CHECK2_REFERENCE,), manifest_cache, psu_cache
+    )
+    pairs = search_pairs(
+        results_dir,
+        selection_models,
+        candidates,
+        reference_rows,
+        manifest_cache,
+        psu_cache,
+        resamples,
+        seed,
+    )
+    best_pair = tuple(pairs[0]["summary"]["placements"])
+
+    heldout_reference_rows = union_set(
+        results_dir, heldout_models, (CHECK2_REFERENCE,), manifest_cache, psu_cache
+    )
+    heldout_pair_rows = union_set(
+        results_dir, heldout_models, best_pair, manifest_cache, psu_cache
+    )
+    heldout_gain = paired_gain(
+        heldout_reference_rows, heldout_pair_rows, resamples, seed
+    )
+
+    # Reported directly regardless of whether the search actually picked this
+    # pair, since it is the pair a deployer would reach for.
+    branch_pair = tuple(sorted((CHECK2_REFERENCE, ATTN_BRANCH_TM)))
+    heldout_branch_rows = union_set(
+        results_dir, heldout_models, branch_pair, manifest_cache, psu_cache
+    )
+    heldout_branch_gain = paired_gain(
+        heldout_reference_rows, heldout_branch_rows, resamples, seed
+    )
+
+    report = {
+        "min_coverage": min_coverage,
+        "select_on_datasets": sorted(select_datasets),
+        "report_on_datasets": sorted(heldout_datasets),
+        "n_selection_models": len(selection_models),
+        "n_heldout_models": len(heldout_models),
+        "n_candidate_placements": len(candidates),
+        "candidate_placements": sorted(candidates),
+        "best_pair_on_selection": {
+            "placements": list(best_pair),
+            "selection_summary": pairs[0]["summary"],
+        },
+        "held_out": {
+            "psbd_tm_alone": set_summary(heldout_reference_rows, (CHECK2_REFERENCE,)),
+            "best_pair": set_summary(heldout_pair_rows, best_pair),
+            "pair_gain_over_psbd_tm": heldout_gain,
+        },
+        "held_out_attention_branch_pair": {
+            "placements": list(branch_pair),
+            "summary": set_summary(heldout_branch_rows, branch_pair),
+            "gain_over_psbd_tm": heldout_branch_gain,
+        },
+    }
+    return report
+
+
 def run_sweep_subprocess(
     python_bin: str,
     folder: str,
@@ -576,8 +713,39 @@ def run_check3(python_bin: str, results_dir_main: str, checkpoints_dir: str) -> 
     return report
 
 
+def merge_check2_relaxed(
+    output_path: str, results_dir: str, declaration_path: str
+) -> None:
+    """Load the existing report, add check 2's relaxed-coverage follow-up, write it back.
+
+    Checks 1 and 3 are left exactly as they were, since this follow-up only
+    concerns which placements check 2's candidate search considers.
+    """
+    with open(output_path) as handle:
+        report = json.load(handle)
+
+    relaxed = run_check2_relaxed_coverage(
+        results_dir,
+        declaration_path,
+        CHECK2_BOOTSTRAP_RESAMPLES,
+        CHECK2_BOOTSTRAP_SEED,
+        CHECK2B_MIN_COVERAGE,
+    )
+    report["check2_union_generalisation"]["relaxed_coverage"] = relaxed
+    with open(output_path, "w") as handle:
+        json.dump(report, handle, indent=2)
+    print(
+        f"check 2 relaxed-coverage follow-up done, best pair "
+        f"{relaxed['best_pair_on_selection']['placements']}, merged into {output_path}"
+    )
+
+
 def main() -> None:
     args = parse_args()
+
+    if args.check2_relaxed_only:
+        merge_check2_relaxed(args.output, args.results_dir, args.declaration)
+        return
 
     cells = selected_cells(args.results_dir)
     print(f"{len(cells)} panel models (tab_headline.py's common_coverage selection)")
