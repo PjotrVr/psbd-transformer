@@ -1,0 +1,303 @@
+{
+  "gpu_name": "NVIDIA A100-PCIE-40GB",
+  "torch_version": "2.6.0+cu124",
+  "batch_size": 128,
+  "num_images": 512,
+  "model_resize_size": 224,
+  "perturbation_rate": 0.3,
+  "forward_pass_counts": [
+    1,
+    3,
+    5,
+    10,
+    20
+  ],
+  "num_warmup": 1,
+  "num_repeats": 3,
+  "architectures": {
+    "vit": {
+      "checkpoint": "vit_cifar100_badnet_a2o_0_1",
+      "dataset": "cifar100",
+      "native_image_size": 32,
+      "plain": {
+        "forward_passes": 1,
+        "repeat_seconds": [
+          1.1228050799109042,
+          1.1244696750072762,
+          1.1265276769408956
+        ],
+        "mean_seconds": 1.124600810619692,
+        "seconds_per_input": 0.002196485958241586,
+        "images_per_second": 455.2726577867849
+      },
+      "placements": {
+        "token_mask_before_attention_norm": {
+          "operator": "token_mask",
+          "position": "before_attention_norm",
+          "rate": 0.3,
+          "by_k": {
+            "1": {
+              "forward_passes": 1,
+              "repeat_seconds": [
+                1.132207154063508,
+                1.1323911579092965,
+                1.134229458984919
+              ],
+              "mean_seconds": 1.1329425903192412,
+              "seconds_per_input": 0.002212778496717268,
+              "images_per_second": 451.92051598636465
+            },
+            "3": {
+              "forward_passes": 3,
+              "repeat_seconds": [
+                3.418346495949663,
+                3.4231123849749565,
+                3.4258390279719606
+              ],
+              "mean_seconds": 3.42243263629886,
+              "seconds_per_input": 0.006684438742771211,
+              "images_per_second": 149.60119143607014
+            },
+            "5": {
+              "forward_passes": 5,
+              "repeat_seconds": [
+                5.729999084025621,
+                5.734515557996929,
+                5.741663728025742
+              ],
+              "mean_seconds": 5.735392790016097,
+              "seconds_per_input": 0.01120193904300019,
+              "images_per_second": 89.27025902938428
+            },
+            "10": {
+              "forward_passes": 10,
+              "repeat_seconds": [
+                11.545256857993081,
+                11.592584841069765,
+                11.635500126052648
+              ],
+              "mean_seconds": 11.591113941705165,
+              "seconds_per_input": 0.0226388944173929,
+              "images_per_second": 44.17176835418804
+            },
+            "20": {
+              "forward_passes": 20,
+              "repeat_seconds": [
+                23.489843115909025,
+                23.553455486078747,
+                23.596995932981372
+              ],
+              "mean_seconds": 23.546764844989713,
+              "seconds_per_input": 0.045989775087870534,
+              "images_per_second": 21.743963698220885
+            }
+          }
+        },
+        "dropout_post_residual": {
+          "operator": "dropout",
+          "position": "post_residual",
+          "rate": 0.3,
+          "by_k": {
+            "1": {
+              "forward_passes": 1,
+              "repeat_seconds": [
+                1.1910194780211896,
+                1.1888698149705306,
+                1.1890456229448318
+              ],
+              "mean_seconds": 1.1896449719788507,
+              "seconds_per_input": 0.0023235253358961927,
+              "images_per_second": 430.38050179654965
+            },
+            "3": {
+              "forward_passes": 3,
+              "repeat_seconds": [
+                3.570768086006865,
+                3.5706485520349815,
+                3.5713003609562293
+              ],
+              "mean_seconds": 3.570905666332692,
+              "seconds_per_input": 0.006974425129556039,
+              "images_per_second": 143.3809929025155
+            },
+            "5": {
+              "forward_passes": 5,
+              "repeat_seconds": [
+                5.949426934006624,
+                5.948199036996812,
+                5.946522739017382
+              ],
+              "mean_seconds": 5.94804957000694,
+              "seconds_per_input": 0.011617284316419804,
+              "images_per_second": 86.07863703452671
+            },
+            "10": {
+              "forward_passes": 10,
+              "repeat_seconds": [
+                11.88723689795006,
+                11.880163289024495,
+                11.874015302979387
+              ],
+              "mean_seconds": 11.880471829984648,
+              "seconds_per_input": 0.023204046542938766,
+              "images_per_second": 43.09593148546371
+            },
+            "20": {
+              "forward_passes": 20,
+              "repeat_seconds": [
+                23.721139113069512,
+                23.72077235695906,
+                23.71714208391495
+              ],
+              "mean_seconds": 23.719684517981175,
+              "seconds_per_input": 0.04632750882418198,
+              "images_per_second": 21.585447294287086
+            }
+          }
+        }
+      }
+    },
+    "swin": {
+      "checkpoint": "swin_cifar100_badnet_a2o_0_1",
+      "dataset": "cifar100",
+      "native_image_size": 32,
+      "plain": {
+        "forward_passes": 1,
+        "repeat_seconds": [
+          0.8599337179912254,
+          0.8573483990039676,
+          0.8581291800364852
+        ],
+        "mean_seconds": 0.8584704323438928,
+        "seconds_per_input": 0.0016767000631716655,
+        "images_per_second": 596.4095916525393
+      },
+      "placements": {
+        "token_mask_before_attention_norm": {
+          "operator": "token_mask",
+          "position": "before_attention_norm",
+          "rate": 0.3,
+          "by_k": {
+            "1": {
+              "forward_passes": 1,
+              "repeat_seconds": [
+                0.8645717779872939,
+                0.865372266038321,
+                0.8686427669599652
+              ],
+              "mean_seconds": 0.86619560366186,
+              "seconds_per_input": 0.0016917882884020703,
+              "images_per_second": 591.090508697469
+            },
+            "3": {
+              "forward_passes": 3,
+              "repeat_seconds": [
+                2.5993246829602867,
+                2.5998062640428543,
+                2.6024637880036607
+              ],
+              "mean_seconds": 2.6005315783356004,
+              "seconds_per_input": 0.00507916323893672,
+              "images_per_second": 196.88282359858582
+            },
+            "5": {
+              "forward_passes": 5,
+              "repeat_seconds": [
+                4.332982997992076,
+                4.333618076983839,
+                4.329740039072931
+              ],
+              "mean_seconds": 4.332113704682949,
+              "seconds_per_input": 0.008461159579458885,
+              "images_per_second": 118.1871102428673
+            },
+            "10": {
+              "forward_passes": 10,
+              "repeat_seconds": [
+                8.666932601947337,
+                8.667602685978636,
+                8.673913958016783
+              ],
+              "mean_seconds": 8.66948308198092,
+              "seconds_per_input": 0.016932584144493983,
+              "images_per_second": 59.057731027143475
+            },
+            "20": {
+              "forward_passes": 20,
+              "repeat_seconds": [
+                17.354000295046717,
+                17.361642216914333,
+                17.356874724966474
+              ],
+              "mean_seconds": 17.35750574564251,
+              "seconds_per_input": 0.033901378409458026,
+              "images_per_second": 29.49732568163109
+            }
+          }
+        },
+        "dropout_post_residual": {
+          "operator": "dropout",
+          "position": "post_residual",
+          "rate": 0.3,
+          "by_k": {
+            "1": {
+              "forward_passes": 1,
+              "repeat_seconds": [
+                0.8775158539647236,
+                0.8779643529560417,
+                0.8788881429936737
+              ],
+              "mean_seconds": 0.878122783304813,
+              "seconds_per_input": 0.0017150835611422128,
+              "images_per_second": 583.0619700733527
+            },
+            "3": {
+              "forward_passes": 3,
+              "repeat_seconds": [
+                2.633956148987636,
+                2.6317761479876935,
+                2.6332257019821554
+              ],
+              "mean_seconds": 2.632985999652495,
+              "seconds_per_input": 0.0051425507805712796,
+              "images_per_second": 194.4560282764794
+            },
+            "5": {
+              "forward_passes": 5,
+              "repeat_seconds": [
+                4.391551294946112,
+                4.388615962001495,
+                4.388765544979833
+              ],
+              "mean_seconds": 4.389644267309147,
+              "seconds_per_input": 0.008573523959588178,
+              "images_per_second": 116.63815307609337
+            },
+            "10": {
+              "forward_passes": 10,
+              "repeat_seconds": [
+                8.778378941002302,
+                8.77727809001226,
+                8.7790026179282
+              ],
+              "mean_seconds": 8.77821988298092,
+              "seconds_per_input": 0.01714496070894711,
+              "images_per_second": 58.32617624362063
+            },
+            "20": {
+              "forward_passes": 20,
+              "repeat_seconds": [
+                17.562229339964688,
+                17.55798366398085,
+                17.56308352900669
+              ],
+              "mean_seconds": 17.56109884431741,
+              "seconds_per_input": 0.03429902118030744,
+              "images_per_second": 29.155350957191263
+            }
+          }
+        }
+      }
+    }
+  }
+}
