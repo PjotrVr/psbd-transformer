@@ -1,1 +1,0 @@
-Retired. The paper is now a subfiles project rooted at `paper/main.tex` with 1 chapter per file under `paper/chapters/`, the preamble at `paper/preamble.tex` and the bibliography at `paper/references.bib`. See `paper/README.md`.

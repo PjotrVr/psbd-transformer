@@ -5,8 +5,8 @@
     "configs/psbd_basis.json",
     "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
   ],
-  "written_at": "2026-09-10T23:37:46.713000+00:00",
-  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "written_at": "2026-09-11T02:56:24.473662+00:00",
+  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
   "macros": {
     "FamilyGapMatched": {
       "value": "+0.005",

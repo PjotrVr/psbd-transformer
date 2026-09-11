@@ -1,0 +1,14 @@
+\section{Experimental setup}
+\label{sec:setup}
+
+\paragraph{Models and training.}
+Every checkpoint is a torchvision ViT-B/16 or Swin-S with ImageNet weights, fine-tuned for 15 epochs with Adam at a constant learning rate of $10^{-4}$ and weight decay $10^{-4}$, batch size 128, no dropout and no augmentation beyond the dataset's normalisation. Training a backdoored model takes 45 to 170 minutes on 1 A100 depending on the dataset. A training run that collapsed in its last epochs, which happened on 13 GTSRB runs, is excluded from the panel and rerun with a cosine schedule (\cref{sec:limitations}).
+
+\paragraph{Datasets, attacks and rates.}
+The panel covers CIFAR-10, CIFAR-100, GTSRB and Tiny ImageNet, with SVHN and EuroSAT added for the clean-label attacks that the other datasets cannot carry. The attacks are BadNets \cite{gu2017badnets} (a 3 by 3 patch, all-to-one), Blend \cite{chen2017targeted}, WaNet \cite{nguyen2021wanet}, BPP, low-frequency (LF), TaCT \cite{tang2021demon}, SIG and Label-Consistent \cite{turner2019label}, at poison rates of 1\%, 5\% and 10\%. We call BadNets, Blend and LF the easy attacks and BPP, WaNet, TaCT, SIG, Label-Consistent and Adaptive-Blend the hard ones. A checkpoint enters the panel only if its attack success rate is at least 0.85 and its clean accuracy is within 5 points of the benign reference on the same dataset, which leaves 71 of 105 trained cells. 65 of them carry every placement of the basis and every number in \cref{sec:results} is read on those 65. \Cref{tab:panel} in the appendix lists every cell.
+
+\paragraph{Splits.}
+A fixed permutation of each test set gives a 2000-image clean validation set for the threshold and the rate rule, and an analysis pool for the paired clean and triggered sets. The triggered set contains every analysis image whose class the attack can flip, so a clean-label attack is read on non-target images and an all-to-one attack on every non-target image. Nothing from the validation set enters the analysis pool.
+
+\paragraph{Uncertainty.}
+Every gain is a paired difference within a cell, and every interval is a 95\% bootstrap interval over cells with 5000 resamples. 14 cells carry 3 training seeds; \cref{sec:robustness:seeds} reports how much a seed moves a placement.

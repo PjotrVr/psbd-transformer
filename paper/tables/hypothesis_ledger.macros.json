@@ -3,8 +3,8 @@
   "inputs": [
     "docs/hypothesis/README.md"
   ],
-  "written_at": "2026-09-10T23:33:23.245339+00:00",
-  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "written_at": "2026-09-11T02:50:03.252876+00:00",
+  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
   "macros": {
     "HypothesisCount": {
       "value": "49",

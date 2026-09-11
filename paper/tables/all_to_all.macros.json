@@ -4,8 +4,8 @@
     "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
     "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
   ],
-  "written_at": "2026-09-10T23:36:41.557070+00:00",
-  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "written_at": "2026-09-11T02:54:21.447041+00:00",
+  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
   "macros": {
     "ATwoaCells": {
       "value": "12",

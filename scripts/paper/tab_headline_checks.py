@@ -110,7 +110,7 @@ def main() -> None:
         deltas = paired(cells, PRE_RESIDUAL, PUBLISHED_PLACEMENT, rule)
         low, high = bootstrap_ci(deltas, args.bootstrap, args.seed)
         pre_post[rule] = (mean_or_none(deltas), low, high, len(deltas))
-        pre_post_rows.append(["pre\\_residual minus post\\_residual", rule, str(len(deltas)), fmt(mean_or_none(deltas), signed=True), ci_text(low, high)])
+        pre_post_rows.append(["pre_residual minus post_residual", rule, str(len(deltas)), fmt(mean_or_none(deltas), signed=True), ci_text(low, high)])
     write_table(
         path=os.path.join(args.paper_dir, "tables", "pre_post.tex"),
         generator=GENERATOR,

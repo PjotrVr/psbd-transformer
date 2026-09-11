@@ -1,0 +1,16 @@
+\section{Negative results and limitations}
+\label{sec:limitations}
+
+We list what did not work or could not be tested, because a deployer needs these as much as the gains.
+
+\paragraph{All-to-all attacks.} PSBD does poorly on BadNets in its all-to-all form, where every class is mapped to the next one. The recommended placement reads a mean AUROC of 0.411 over the 12 all-to-all cells against 0.891 for the all-to-one form, and the direction analysis of \cref{sec:mechanism} shows why: an all-to-all backdoor has no single direction, since each class pushes toward a different target and the pushes partly cancel. An entropy statistic over the perturbed predictions recovers 0.761 on these cells, but we do not pursue all-to-all attacks further in this work.
+
+\paragraph{2 inverted cells.} CIFAR-10 SIG and WaNet at 10\% poisoning invert under the recommended placement at the adaptive rule. SIG reads 0.878 at the matched rule, so its inversion is the 0.8 shift target overshooting for a cell whose prediction moves easily, and a lower target would fix it. WaNet on CIFAR-10 inverts under both rules and remains a failure.
+
+\paragraph{Clean-label attacks.} A clean-label attack can poison only the target class, so its reachable rate is the class's share of the training set: 10\% on CIFAR-10, 1\% on CIFAR-100, 0.5\% on Tiny ImageNet and 5.6\% on GTSRB at the largest class. SIG never clears the success bar on GTSRB even at its ceiling (0.72 mean attack success over 5 seeds at 5\%), Label-Consistent clears only on GTSRB at $\epsilon = 16/255$ and on CIFAR-10 at a clean-accuracy cost of 9 points, and poisoning 2 or 3 target classes at once lifts attack success on Tiny ImageNet from 0.08 to 0.62 without clearing the bar. SVHN and EuroSAT, added for this reason, carry SIG at 5\% and 10\% with 3 seeds each; their detection sweeps are running.
+
+\paragraph{Training collapses.} 13 GTSRB runs on the constant learning rate collapsed to a single class in their last epochs and saved with a plausible attack success rate. The coverage ledger now marks such cells and the training loop refuses to save a collapsed model; the reruns use a cosine schedule.
+
+\paragraph{Single seeds and the panel's shape.} Most cells carry 1 training seed, the gains are read as paired differences with bootstrap intervals over cells rather than over seeds, and \cref{sec:robustness:seeds} shows the recommended placement is stable across the seeds we have. The Swin panel covers 3 datasets and 5 placements. The comparison to other detectors is a smoke test until the panel run completes.
+
+\paragraph{Scope.} Everything here is ViT-B/16 and Swin-S fine-tuned from ImageNet weights for 15 epochs at 224 pixels, on 4 to 6 datasets of small images. Larger models, other pretraining, and triggers designed against token masking are untested.

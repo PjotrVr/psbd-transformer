@@ -1,0 +1,100 @@
+\section{Which placement detects, and by how much}
+\label{sec:results}
+
+\subsection{The literal port and the recommended placement}
+\label{sec:results:headline}
+
+We start with the 2 placements that frame the paper. The literal port puts dropout on the residual stream after each residual add, the site the PSBD paper uses on ResNets. The recommended placement masks whole tokens at the input of every attention block, before its LayerNorm. \Cref{tab:headline} compares them on the 65 cells, at the paper's own rate rule and at the matched rule.
+
+\begin{table}[t]
+\centering\small
+\caption{The literal port against the recommended placement on 65 ViT-B/16 cells. AUROC is the mean over cells, TPR is read at thresholds set on the clean validation set at 1\% and 25\% false-positive budgets, and inverted cells score AUROC below 0.5.}
+\label{tab:headline}
+\begin{tabular}{lcc}
+\toprule
+ & literal port & recommended \\
+ & dropout, after add & token mask, attn input \\
+\midrule
+AUROC, adaptive rule & 0.832 & \textbf{0.935} \\
+AUROC, matched rule & 0.832 & \textbf{0.926} \\
+TPR at 1\% FPR & 0.370 & \textbf{0.629} \\
+worst cell AUROC & 0.222 & \textbf{0.418} \\
+inverted cells & 12 & \textbf{2} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The recommended placement is better on every summary: 0.103 higher mean AUROC at the adaptive rule and 0.094 at the matched rule, a TPR at 1\% false positives that rises from 0.370 to 0.629, and 2 inverted cells instead of 12. An inverted cell is one where poisoned inputs move more under the perturbation than clean ones, so the one-sided rule flags the wrong tail. The literal port inverts on 12 cells because dropout on the residual stream disturbs the class token directly, and for some attacks it disturbs the backdoor's shortcut as much as the clean decision. The 2 cells that remain inverted under the recommended placement are both on CIFAR-10 at 10\% poisoning: SIG, which reaches 0.878 at the matched rule and falls to 0.418 only because the adaptive rule's 0.8 target overshoots for it, and WaNet at 0.459 under both rules.
+
+\Cref{tab:gains} breaks the paired gain down. The intervals are bootstrap intervals over cells, so they measure how consistent the gain is across the panel.
+
+\begin{table}[t]
+\centering\small
+\caption{Paired AUROC gain of the recommended placement over the literal port at the adaptive rule, by subset, with 95\% bootstrap intervals over cells.}
+\label{tab:gains}
+\begin{tabular}{lrrl}
+\toprule
+subset & cells & gain & 95\% interval \\
+\midrule
+all & 65 & +0.103 & [+0.048, +0.160] \\
+hard attacks & 29 & +0.110 & [+0.011, +0.210] \\
+easy attacks & 36 & +0.098 & [+0.041, +0.166] \\
+\midrule
+1\% poisoning & 19 & +0.161 & [+0.059, +0.283] \\
+5\% poisoning & 22 & +0.091 & [+0.031, +0.159] \\
+10\% poisoning & 24 & +0.069 & [$-$0.040, +0.177] \\
+\midrule
+CIFAR-10 & 18 & +0.083 & [$-$0.058, +0.235] \\
+CIFAR-100 & 15 & +0.150 & [+0.062, +0.245] \\
+GTSRB & 15 & +0.142 & [+0.036, +0.277] \\
+Tiny ImageNet & 17 & +0.049 & [+0.007, +0.105] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+2 patterns stand out. The gain grows as the poison rate falls, from +0.069 at 10\% to +0.161 at 1\%, which is the regime where the literal port struggles most and where a defender most needs help, since an attacker who can poison only 1\% of the data plants a weaker shortcut. The gain is also positive on every dataset, but its size varies: large on CIFAR-100 and GTSRB, small on Tiny ImageNet, where the literal port is already strong on the easy attacks. Removing any single attack from the panel leaves a gain of at least +0.046, so no one attack carries the result.
+
+\subsection{Position and operator are separate axes}
+\label{sec:results:operator}
+
+A placement fixes 2 things at once, so the gain above could come from where the perturbation goes or from what it does. \Cref{tab:operators} separates them by holding 1 axis fixed and moving the other, all at the matched rule so that every comparison has the same disturbance budget.
+
+\begin{table}[t]
+\centering\small
+\caption{Position and operator effects at matched disturbance, paired over 65 cells. Each row moves 1 axis and holds the other fixed.}
+\label{tab:operators}
+\begin{tabular}{p{4.3cm}rl}
+\toprule
+comparison & $\Delta$ AUROC & 95\% interval \\
+\midrule
+\multicolumn{3}{l}{\emph{same operator (token mask), different position}} \\
+attention input minus MLP input & +0.109 & [+0.079, +0.138] \\
+\midrule
+\multicolumn{3}{l}{\emph{same position, different operator}} \\
+attention input: noise minus token mask & $-$0.206 & [$-$0.259, $-$0.156] \\
+attention input: noise minus channel mask & $-$0.113 & [$-$0.151, $-$0.078] \\
+MLP input: noise minus token mask & +0.056 & [+0.026, +0.087] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Both axes matter. Moving token masking from the attention input to the MLP input of the same block costs 0.109, so the position of the perturbation relative to attention matters on its own. Holding the position at the attention input and switching from token masking to Gaussian noise costs 0.206, so the operator matters on its own too. The surprising row is the last one: at the MLP input the same comparison reverses sign, and noise beats token masking by 0.056. An account that ranks operators once for all positions cannot produce a reversal, and neither can one that ranks positions once for all operators. \Cref{sec:mechanism:layernorm} explains the reversal through LayerNorm, which sits directly behind the attention input and absorbs additive noise but not masking.
+
+A tempting simplification is to sort the positions into 2 families, those on a sublayer's input and those adjacent to the residual stream, and to credit the family. An earlier reading of our own data, with dropout on CIFAR-10, suggested an input-side advantage of +0.054. On the full panel, with the operator held at token masking, the family gap is +0.005 (interval $-$0.010 to +0.023): there is no family effect once the operator is matched. The advantage belongs to 1 specific position, the attention input, and not to a family of positions.
+
+\subsection{The full basis}
+\label{sec:results:basis}
+
+\Cref{fig:basis} ranks all 18 placements by mean AUROC at the adaptive rule. The recommended placement is second by 0.001 behind token masking on the attention branch before its residual add, and first at the matched rule; we recommend it over the nominal first because it has the higher matched AUROC and because its position has a clean mechanistic reading. The literal port is twelfth. The spread from best to worst placement is 0.19 AUROC, larger than any gain a detector change of a different kind would buy on this panel, which is the practical content of the title: on a transformer, the placement is the method.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{basis_ranking.pdf}
+\caption{Mean AUROC of every placement in the basis over 65 cells at the adaptive rule (dark) and the matched rule (light). Placements that perturb whole tokens before attention lead, noise before a LayerNorm and the pixel-space perturbation trail.}
+\label{fig:basis}
+\end{figure}
+
+\subsection{Depth}
+\label{sec:results:depth}
+
+The recommended placement perturbs all 12 blocks. Restricting it to blocks 5 to 8 or to blocks 9 to 12 costs 0.06 in both cases, so the input-side perturbation works best when it acts everywhere. Restricting dropout before the residual add behaves differently: blocks 5 to 8 gain 0.052 over all blocks, and blocks 1 to 4 lose 0.062. The difference fits the mechanism of \cref{sec:mechanism}. A token mask that acts before routing removes the trigger's tokens at whatever depth routing happens, so more blocks is simply more chances to remove them. A residual-adjacent perturbation hits the stream itself, and in early blocks the stream carries mostly clean content, so perturbing it there spends budget on the wrong signal.

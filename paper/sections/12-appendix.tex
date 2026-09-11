@@ -1,0 +1,37 @@
+\section{The panel}
+\label{app:panel}
+\Cref{tab:panel} lists every trained cell of the ViT panel with its attack success rate and clean accuracy. A cell enters the detection results when its attack success rate is at least 0.85; cells below the bar are marked with a dagger. \Cref{tab:panel-benign} gives the benign references.
+
+\input{tables/panel}
+\input{tables/panel_benign}
+
+\section{The placement basis}
+\label{app:basis}
+\Cref{tab:basis-declaration} declares the 18 placements with their position, operator, family and rate ladder, and \cref{tab:basis-ranking} ranks them on the 65 cells at both rules with each placement's worst cell and number of inverted cells. \Cref{fig:basis} in the main text plots the same ranking.
+
+\input{tables/basis_declaration}
+\input{tables/basis_ranking}
+
+\section{Depth bands}
+\label{app:bands}
+\Cref{tab:depth-bands} gives the depth-band placements behind \cref{sec:results:depth}: the recommended placement and dropout before the residual add, each restricted to a third of the network, against their all-blocks versions at the matched rule.
+
+\input{tables/depth_bands}
+
+\section{Per-layer profiles}
+\label{app:layers}
+\Cref{tab:tac-layers} lists, per checkpoint behind \cref{fig:tac-layers}, the block where the backdoor direction's relative norm peaks, the block where it first reaches half its final value, and the final-layer CKA between clean and triggered activations.
+
+\input{tables/tac_layers}
+
+\section{Seeds}
+\label{app:seeds}
+\Cref{tab:seeds} gives the 3-seed readings behind \cref{sec:robustness:seeds}.
+
+\input{tables/seeds}
+
+\section{Detector smoke test}
+\label{app:smoke}
+\Cref{tab:detector-smoke} gives the smoke test behind \cref{sec:robustness:detectors}: every ported detector on a benign, a BadNets and a Blend GTSRB checkpoint at 5\% poisoning, with its forward passes per input and measured seconds per input on 1 A100.
+
+\input{tables/detector_smoke}

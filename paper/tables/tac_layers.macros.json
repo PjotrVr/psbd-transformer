@@ -3,8 +3,8 @@
   "inputs": [
     "results/_experiments/tac_layers/tac_layers.json"
   ],
-  "written_at": "2026-09-10T23:36:32.578999+00:00",
-  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "written_at": "2026-09-11T02:53:51.669730+00:00",
+  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
   "macros": {
     "TacLayersCheckpoints": {
       "value": "18",

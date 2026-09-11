@@ -184,7 +184,7 @@ def main() -> None:
             "the paired delta against the family's all-blocks placement with a "
             f"{args.bootstrap}-resample bootstrap 95\\% interval, and the mean "
             "achieved clean-validation shift ratio at the chosen rate. "
-            "`before_attention_norm_blocks_1_4_token_mask` has no cache anywhere "
+            "\\code{before\\_attention\\_norm\\_blocks\\_1\\_4\\_token\\_mask} has no cache anywhere "
             r"in the 65-cell panel and prints \pending throughout."
         ),
         label="tab:depth-bands",

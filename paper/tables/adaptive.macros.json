@@ -4,8 +4,8 @@
     "/lustre/home/pstika/projects/PSBD-ViT/results/adaptive_attacker_analysis.json",
     "/lustre/home/pstika/projects/PSBD-ViT/results/multi_probe_analysis.json"
   ],
-  "written_at": "2026-09-10T23:36:37.425132+00:00",
-  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "written_at": "2026-09-11T02:54:05.698344+00:00",
+  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
   "macros": {
     "AdaptiveHighAsr": {
       "value": "0.9",

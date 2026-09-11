@@ -1,0 +1,42 @@
+\section{Robustness and cost}
+\label{sec:robustness}
+
+\subsection{The adaptive attacker and the union of probes}
+\label{sec:robustness:adaptive}
+
+The PSBD paper tests an attacker who knows the defence and adds a loss term that lowers the prediction shift of poisoned samples, and reports that the defence survives because its rate rule moves to a higher dropout rate. We trained a stronger version of that attacker on ViT: a hinge loss that pushes the poisoned samples' fractional shift up to the clean samples' shift under the exact probe the defender uses, trained jointly with the backdoor on CIFAR-100 for BadNets, Blend, BPP, LF and Adaptive-Blend at 3 rates, 14 cells in all. \Cref{tab:adaptive} summarises the outcome.
+
+\begin{table}[t]
+\centering\small
+\caption{The adaptive attacker on CIFAR-100 ViT, 14 cells. The probed column is the placement the attacker trained against, transfer is the mean over the other basis placements, union is the min-rank combination of all probes. Cost is the attacker's own clean-accuracy loss.}
+\label{tab:adaptive}
+\begin{tabular}{lrrrrr}
+\toprule
+ & ASR & cost & probed & transfer & union \\
+\midrule
+before the attack & 0.966 & & 0.966 & & \\
+after the attack, mean & 0.981 & $-$0.030 & \textbf{0.233} & 0.893 & \textbf{0.973} \\
+worst cell (BadNets 5\%) & 1.000 & $-$0.026 & 0.004 & 0.785 & 0.996 \\
+best cell for the attacker (Blend 5\%) & 1.000 & $-$0.032 & 0.807 & 0.978 & 0.991 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Against a single fixed probe the attacker wins: the probed placement falls from a mean AUROC of 0.966 to 0.233, and to 0.004 on BadNets at 5\%, while the attack keeps its success and costs the attacker 3 points of clean accuracy. The paper's rate adaptation is already inside these numbers and does not rescue the probe. So the claim that PSBD survives an adaptive attacker, obtained with a weaker attacker on ResNet-18, does not transfer to ViT as stated.
+
+What does hold is that the evasion does not transfer between probes. The attacker shaped the model against 1 position and 1 operator, and every other placement in the basis keeps detecting at a mean of 0.893. Combining all placements by taking each input's most suspicious rank across probes, the union, restores a mean AUROC of 0.973 with a worst cell of 0.882, above the single-probe defence before the attack on most cells. The defender does not need to know which probe was attacked: using all of them is within 0.006 of an oracle that drops the attacked one, and attempting to identify the attacked probe and exclude it does worse. The union of probes is therefore the defence we recommend against an adaptive attacker, at $k$ times the cost of a single probe. The open question is an attacker who trains against the union itself; that attack is more expensive for the attacker, since evading 1 probe already costs up to 4.5 clean-accuracy points, and we have not run it.
+
+\subsection{Forward passes}
+\label{sec:robustness:passes}
+
+PSBD uses $k = 3$ passes. On the cached sweeps the third pass adds +0.027 AUROC over a single pass at 1\% poisoning, +0.010 at 5\% and +0.017 at 10\%, and on the 10 cells that were still improving at $k = 3$, 20 passes add a further +0.046 on BadNets at 1\% (0.839 to 0.885) and +0.014 on LF at 5\%. The benign controls move by 0.001. More passes therefore help exactly where the shortcut is weak, at 1\% poisoning, and $k = 3$ is a floor rather than a converged choice there. A full table of AUROC and TPR at 10\% and 20\% false positives against $k$ on the hard cells is being computed.
+
+\subsection{Seeds}
+\label{sec:robustness:seeds}
+
+On the 14 cells that carry 3 training seeds (BadNets, Blend and WaNet on CIFAR-100 and Tiny ImageNet), the recommended placement's AUROC has a seed standard deviation of 0.012 on average, while the literal port's is 0.076 and reaches 0.278 on CIFAR-100 BadNets at 5\%, where its 3 seeds read 0.826, 0.493 and 0.274. The gain of the recommended placement over the literal port is +0.128 on these cells and changes sign on 4 of 14, all on Blend and WaNet where both placements are near 1.0. A single seed is therefore a fair reading of the recommended placement and an unreliable reading of the literal port, which is part of why the literal port inverts on 12 cells: it is not only weaker on average, it is also far less stable.
+
+\subsection{Other detectors}
+\label{sec:robustness:detectors}
+
+We ported 10 input-level detectors to the same splits and threshold rule (confidence, STRIP, SCALE-UP in 2 variants, IBD-PSC, TeCo, CD-L, Beatrix, TED, SentiNet), each checked numerically against its reference implementation. On a smoke test of 3 GTSRB checkpoints every detector reads chance on the benign model, and on BadNets STRIP, CD-L, TED and TeCo all reach 0.99 or more, so on an easy patch attack PSBD has no edge. 2 ports fail for reasons specific to transformers: IBD-PSC amplifies LayerNorm gains at the paper's factor of 1.5 and a 99\%-accurate ViT keeps every prediction, so its score saturates (AUROC 0.506), and SentiNet's Grad-CAM mask covers 0 to 2\% of the trigger at every block, so its transplant carries nothing (0.107). The full comparison over the 71 clearing cells, which is where the hard attacks decide the ranking, is running. A cheaper alternative to PSBD from our own work, reading the class token through the final LayerNorm and head at every block (a logit lens, 1 pass), ties PSBD on AUROC over the panel (0.911 against 0.935) and beats it on TPR at 1\% false positives on the hard attacks (+0.183, interval +0.062 to +0.296), and loses on BadNets; the 2 statistics are complementary rather than redundant.
