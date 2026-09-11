@@ -1,0 +1,26 @@
+{
+  "generator": "scripts/paper/mech_shift_target.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+  ],
+  "written_at": "2026-09-10T23:36:26.794976+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "ShiftToTargetShareAll": {
+      "value": "0.134",
+      "meaning": "A1: mean target-class share of shifted clean predictions, all clearing cells, recommended placement, matched-0.6 rate rule"
+    },
+    "ShiftToTargetExcessAll": {
+      "value": "+0.118 [+0.066, +0.179]",
+      "meaning": "A1: mean paired excess over the matched-dataset benign reference, all clearing cells, matched-0.6 rate rule, 95% bootstrap interval"
+    },
+    "ShiftToTargetBenignShare": {
+      "value": "0.016",
+      "meaning": "A1: mean target-class share on the 4 benign references, matched-0.6 rate rule"
+    },
+    "ShiftToTargetHeadlineCell": {
+      "value": "0.0002",
+      "meaning": "A1: target-class share on vit_cifar100_badnet_a2o_0_01, recommended placement, adaptive-0.8 rate rule"
+    }
+  }
+}

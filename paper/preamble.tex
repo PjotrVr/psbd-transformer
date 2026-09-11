@@ -1,0 +1,48 @@
+% Packages and the macros every chapter relies on. A chapter compiles alone through
+% the subfiles class, which reads this preamble from main.tex.
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs,longtable,graphicx,xcolor,marginnote,array}
+\usepackage[margin=1in,marginparwidth=1.1in]{geometry}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage[capitalize]{cleveref}
+\usepackage{subfiles}
+
+\graphicspath{{figures/}{../figures/}}
+\makeatletter
+% \input{tables/x} resolves from the root and from a chapter compiled alone.
+\def\input@path{{tables/}{../tables/}{./}{../}}
+\makeatother
+
+% Draft notes carry the criticality grade of a claim in the margin. Submission
+% mode turns them off without touching the chapters.
+\newif\ifdraftnotes
+\draftnotestrue
+\definecolor{gradecritical}{RGB}{0,114,178}
+\definecolor{gradestrong}{RGB}{0,158,115}
+\definecolor{gradesupporting}{RGB}{230,159,0}
+\definecolor{gradeweak}{RGB}{204,121,167}
+\definecolor{gradenegative}{RGB}{213,94,0}
+\newcommand{\gradecolor}[1]{\csname gradecolor@#1\endcsname}
+\makeatletter
+\newcommand{\gradecolor@CRITICAL}{gradecritical}
+\newcommand{\gradecolor@STRONG}{gradestrong}
+\newcommand{\gradecolor@SUPPORTING}{gradesupporting}
+\newcommand{\gradecolor@WEAK}{gradeweak}
+\newcommand{\gradecolor@NEGATIVE}{gradenegative}
+\makeatother
+% \finding{GRADE}{id}: a margin tag beside the sentence that states the claim.
+\newcommand{\finding}[2]{\ifdraftnotes\marginnote{\footnotesize\textcolor{\gradecolor{#1}}{\textbf{#1}}\ \texttt{#2}}\fi}
+% The claim block that opens a chapter: the grade, the finding id and the claim
+% in 1 framed paragraph, so the reader sees what the chapter would refute first.
+\newenvironment{claim}[2]{%
+  \par\medskip\noindent\begin{minipage}{\linewidth}\small
+  \textcolor{\gradecolor{#1}}{\textbf{#1}}\ \texttt{#2}\quad\itshape}{%
+  \end{minipage}\par\medskip}
+\newcommand{\pending}{\textsc{pending}}
+\newcommand{\num}[1]{#1}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\psu}{\phi_{\mathrm{PSU}}}
+\newcommand{\ps}{\phi_{\mathrm{PS}}}

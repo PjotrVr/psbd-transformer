@@ -48,7 +48,7 @@ CONFIG_HEADERS = {
     "pub_adapt": "pub-adapt",
 }
 RATE_ORDER = (0.01, 0.05, 0.1)
-DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny")
+DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny", "svhn", "eurosat")
 
 
 def measure_cell(results_dir: str, folder: str) -> dict[str, dict | None]:

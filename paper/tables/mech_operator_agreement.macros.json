@@ -1,0 +1,26 @@
+{
+  "generator": "scripts/paper/mech_operator_agreement.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd/<placement>/rate_*_{clean,backdoor}.pt"
+  ],
+  "written_at": "2026-09-10T23:35:45.858144+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "AgreementWithinInputSideClean": {
+      "value": "0.456",
+      "meaning": "B1: mean clean-split PSU Spearman rho within the input-side family, 21 placement pairs"
+    },
+    "AgreementAcrossFamiliesClean": {
+      "value": "0.511",
+      "meaning": "B1: mean clean-split PSU Spearman rho between input-side and residual-adjacent placements, 28 placement pairs"
+    },
+    "AgreementGainScaleVsRecommendedClean": {
+      "value": "0.385",
+      "meaning": "B1: clean-split PSU Spearman rho, mlp_norm_out_gain_scale vs the recommended placement, n=65 cells"
+    },
+    "AgreementGaussianVsTokenMaskClean": {
+      "value": "0.370",
+      "meaning": "B1: clean-split PSU Spearman rho, before_attention_norm_gaussian vs before_attention_norm_token_mask, same position different operator, n=65 cells"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "generator": "scripts/paper/tab_seeds.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
+    "checkpoints/<folder>_seed_N/args.json"
+  ],
+  "written_at": "2026-09-10T23:39:28.704158+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "SeedsPerCell": {
+      "value": "3",
+      "meaning": "training seeds per replicated cell"
+    },
+    "SeedCells": {
+      "value": "14",
+      "meaning": "clearing cells with 3 training seeds at both placements"
+    },
+    "SeedSdRecommended": {
+      "value": "0.012",
+      "meaning": "mean over replicated cells of the recommended placement's AUROC standard deviation across 3 seeds"
+    },
+    "SeedSdPublished": {
+      "value": "0.076",
+      "meaning": "mean over replicated cells of the published placement's AUROC standard deviation across 3 seeds"
+    },
+    "SeedSdGain": {
+      "value": "0.069",
+      "meaning": "mean over replicated cells of the paired gain's standard deviation across 3 seeds"
+    },
+    "SeedSdGainMax": {
+      "value": "0.259",
+      "meaning": "largest per-cell standard deviation of the paired gain across 3 seeds"
+    },
+    "SeedGainMean": {
+      "value": "+0.128",
+      "meaning": "mean over replicated cells of the seed-averaged paired gain, recommended minus published at the adaptive rule"
+    },
+    "SeedGainSignFlips": {
+      "value": "4",
+      "meaning": "replicated cells where the paired gain changes sign across seeds"
+    }
+  }
+}

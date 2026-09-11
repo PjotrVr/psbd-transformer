@@ -1,0 +1,75 @@
+{
+  "generator": "scripts/paper/tab_headline_checks.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+  ],
+  "written_at": "2026-09-10T23:38:32.372465+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "PanelCellsCached": {
+      "value": "65",
+      "meaning": "clearing cells whose sweep has landed and that carry the recommended placement"
+    },
+    "PanelCellsDiverged": {
+      "value": "3",
+      "meaning": "declared cells whose training diverged, excluded from every table"
+    },
+    "PanelCellsAwaitingSweep": {
+      "value": "6",
+      "meaning": "clearing cells whose PSBD sweep has not landed"
+    },
+    "PanelDatasetsCached": {
+      "value": "4",
+      "meaning": "datasets among the clearing cells whose sweep has landed"
+    },
+    "PanelAttacksDeclared": {
+      "value": "8",
+      "meaning": "attacks the panel declares, clearing or not"
+    },
+    "HeadlineGainMinLeaveOneAttackOutAdaptive": {
+      "value": "+0.046",
+      "meaning": "smallest leave-one-attack-out refit of the adaptive-rule headline gain"
+    },
+    "HeadlineGainMinLeaveOneAttackOutAdaptiveLow": {
+      "value": "-0.004",
+      "meaning": "lowest bootstrap lower bound over the adaptive-rule leave-one-attack-out refits"
+    },
+    "HeadlineGainMinLeaveOneAttackOutMatched": {
+      "value": "+0.049",
+      "meaning": "smallest leave-one-attack-out refit of the matched-rule headline gain"
+    },
+    "HeadlineGainMinLeaveOneAttackOutMatchedLow": {
+      "value": "+0.005",
+      "meaning": "lowest bootstrap lower bound over the matched-rule leave-one-attack-out refits"
+    },
+    "PreMinusPostMatched": {
+      "value": "+0.009",
+      "meaning": "pre_residual minus post_residual dropout, matched rule, paired over the basis panel"
+    },
+    "PreMinusPostMatchedLow": {
+      "value": "-0.028",
+      "meaning": "lower bootstrap bound of pre_minus_post_matched"
+    },
+    "PreMinusPostMatchedHigh": {
+      "value": "+0.047",
+      "meaning": "upper bootstrap bound of pre_minus_post_matched"
+    },
+    "PreMinusPostAdaptive": {
+      "value": "+0.001",
+      "meaning": "pre_residual minus post_residual dropout, adaptive rule, paired over the basis panel"
+    },
+    "PreMinusPostAdaptiveLow": {
+      "value": "-0.027",
+      "meaning": "lower bootstrap bound of pre_minus_post_adaptive"
+    },
+    "PreMinusPostAdaptiveHigh": {
+      "value": "+0.027",
+      "meaning": "upper bootstrap bound of pre_minus_post_adaptive"
+    },
+    "PreMinusPostN": {
+      "value": "65",
+      "meaning": "cells behind the pre against post comparison"
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "generator": "scripts/paper/tab_headline.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+  ],
+  "written_at": "2026-09-10T23:38:08.081469+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "HeadlineAurocAdaptive": {
+      "value": "0.935",
+      "meaning": "mean AUROC of the recommended placement at the adaptive rule, over the 65 cells it covers of the 65-cell panel"
+    },
+    "HeadlineAurocMatched": {
+      "value": "0.926",
+      "meaning": "mean AUROC of the recommended placement at the matched 0.6 rule, over the 65 cells it covers of the 65-cell panel"
+    },
+    "PublishedAurocAdaptive": {
+      "value": "0.832",
+      "meaning": "mean AUROC of the published placement at the adaptive rule, over the 65 cells it covers of the 65-cell panel"
+    },
+    "HeadlineGainAdaptiveAuroc": {
+      "value": "+0.103",
+      "meaning": "mean AUROC gain of the recommended placement over the published placement, both at the adaptive rule, paired over the 65-cell panel"
+    },
+    "HeadlineGainAdaptiveAurocLow": {
+      "value": "+0.048",
+      "meaning": "lower bound of the 95% bootstrap interval on headline_gain_adaptive_auroc"
+    },
+    "HeadlineGainAdaptiveAurocHigh": {
+      "value": "+0.160",
+      "meaning": "upper bound of the 95% bootstrap interval on headline_gain_adaptive_auroc"
+    },
+    "HeadlineGainMatchedAuroc": {
+      "value": "+0.094",
+      "meaning": "mean AUROC gain of the recommended placement at the matched 0.6 rule over the published placement at the adaptive rule, paired over the 65-cell panel"
+    },
+    "HeadlineTprAtOnePercent": {
+      "value": "0.629",
+      "meaning": "mean TPR of the recommended placement at the adaptive rule, at the 1% FPR budget, over the 65 cells it covers"
+    },
+    "HeadlineFloorAuroc": {
+      "value": "0.418",
+      "meaning": "minimum single-cell AUROC of the recommended placement at the adaptive rule, over the 65-cell panel"
+    },
+    "HeadlineInversions": {
+      "value": "2",
+      "meaning": "cells where the recommended placement at the adaptive rule scores AUROC below 0.5, out of the 65-cell panel"
+    },
+    "PrimaryGainAdaptiveAuroc": {
+      "value": "+0.096",
+      "meaning": "mean paired AUROC gain of recommended over published, both at the adaptive rule, on the primary datasets cifar100 and tiny"
+    },
+    "HardGainAdaptiveAuroc": {
+      "value": "+0.110",
+      "meaning": "mean paired AUROC gain of recommended over published, both at the adaptive rule, on the hard attacks"
+    },
+    "CifarOneZeroZeroOnePercentGain": {
+      "value": "+0.163",
+      "meaning": "mean paired AUROC gain of recommended over published, both at the adaptive rule, on cifar100 at 1% poisoning only, n=5"
+    }
+  }
+}

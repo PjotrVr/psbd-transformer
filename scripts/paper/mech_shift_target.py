@@ -57,7 +57,7 @@ HEADLINE_CELL_FOLDER = "vit_cifar100_badnet_a2o_0_01"
 # trusting that precomputed field.
 PANEL_TARGET_LABEL = 0
 RULES = ("matched", "adaptive")
-DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny")
+DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny", "svhn", "eurosat")
 RULE_LABEL = {"matched": "matched 0.6", "adaptive": "adaptive 0.8"}
 # The macros headline on the matched-0.6 rule, the project's standard placement
 # comparison operator (defences.decision.PLACEMENT_MATCH_TARGET), so a target-share

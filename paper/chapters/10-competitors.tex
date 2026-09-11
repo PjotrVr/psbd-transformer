@@ -1,0 +1,20 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Competitor detectors}
+\label{sec:competitors}
+
+\begin{claim}{WEAK}{F18}
+A placement result is only worth reporting against the input-level detectors a defender would otherwise deploy, on the same splits, the same threshold rule and the same quantile grid. \RegistryDetectors{} detectors are ported and registered, each with a numerical cross-check against its reference implementation, and they have been run on \SmokeCheckpoints{} checkpoints as an acceptance test. The panel sweep is pending, and nothing in this chapter is a comparison.
+\end{claim}
+
+The registry holds STRIP \citep{gao2019strip}, SCALE-UP in both of its variants \citep{guo2023scale}, IBD-PSC in its faithful form and a calibrated form \citep{hou2024ibdpsc}, TeCo \citep{liu2023teco}, CD-L \citep{huang2023distilling}, Beatrix \citep{ma2023beatrix}, TED \citep{mo2024ted}, SentiNet \citep{chou2020sentinet} and the max-softmax confidence as the null model. Every detector returns a score where low means poisoned, is negated at most once at its own boundary, reads the same \HeldoutSize{}-image clean split PSBD reads, and states its forward passes per input, from a single pass for the confidence null, Beatrix and TED to \CdLPasses{} for CD-L and \SentinetPasses{} for SentiNet, which is a deployment cost a comparison table has to carry beside its AUROC.
+
+\Cref{tab:detector-smoke} is the smoke run, \SmokeDetectors{} detectors on the GTSRB benign reference and on the \SmokeBackdooredCheckpoints{} backdoored cells at \PanelRateMid{}, BadNets and Blend. The acceptance criterion was chance on the benign reference, which every detector meets between \SmokeBenignAurocMin{} and \SmokeBenignAurocMax{}, and separation in the expected direction on the backdoored cells. STRIP reads \SmokeStripBadnetAuroc{} on BadNets and TED \SmokeTedBlendAuroc{} on Blend, the confidence null alone reaches \SmokeConfidenceBlendAuroc{} on Blend, and a pair of detectors failed acceptance. IBD-PSC reads \SmokeIbdPscBadnetAuroc{} on BadNets and \SmokeIbdPscBadnetFullAuroc{} on the full split, because the paper's amplification factor collapses a ConvNet's clean accuracy within a few layers while on a ViT it scales a single branch input of a residual block and a model at high accuracy keeps every prediction through every amplified layer, so the faithful port saturates and a calibrated variant that searches the factor upward runs beside it. SentiNet reads \SmokeSentinetBadnetAuroc{} on BadNets, inverted, because its class-activation mask covers none of the trigger's pixels at any block of the ViT. Beatrix reads \SmokeBeatrixBadnetAuroc{} at the truncated split and \SmokeBeatrixBadnetFullAuroc{} at the full one, so its chance reading was the truncation and not the port, which is the reason the detectors that fit per-class statistics are rerun at the full split before being judged. \Cref{tab:detector-smoke-followups} records the \SmokeFollowups{} follow-ups.
+
+\input{tables/detector_smoke}
+\input{tables/detector_smoke_followups}
+
+The smoke run was recorded under an untracked directory that has since been cleared, so the table above is generated from the run entry that transcribed it, which the generator names as its input. The panel sweep over the cached cells and the benign references is job-generated from the coverage ledger, grouped by cost, and is the single largest pending item of this paper, at \CdLPasses{} forward passes per input for the most expensive method. Until it lands the only defensible statement is that the ports work and that a ConvNet-native parameter amplification does not transfer to LayerNorm.
+
+\end{document}

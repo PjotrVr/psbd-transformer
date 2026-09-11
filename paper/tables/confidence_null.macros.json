@@ -1,0 +1,30 @@
+{
+  "generator": "scripts/paper/mech_confidence_null.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
+  ],
+  "written_at": "2026-09-10T23:34:39.873238+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "ConfidenceNullCheckpoints": {
+      "value": "30",
+      "meaning": "ViT backdoored checkpoints in the confidence-null record"
+    },
+    "ConfidenceNullPsuAuroc": {
+      "value": "0.864",
+      "meaning": "mean PSU AUROC in the confidence-null record"
+    },
+    "ConfidenceNullAuroc": {
+      "value": "0.627",
+      "meaning": "mean max-softmax confidence AUROC in the confidence-null record"
+    },
+    "ConfidenceNullPsuWins": {
+      "value": "22",
+      "meaning": "checkpoints where PSU beats the confidence null"
+    },
+    "ConfidenceNullBenignPsu": {
+      "value": "0.505",
+      "meaning": "mean PSU AUROC on the benign references in the confidence-null record"
+    }
+  }
+}

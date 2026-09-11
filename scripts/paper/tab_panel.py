@@ -25,7 +25,7 @@ from scripts.paper._common import (  # noqa: E402
 )
 
 GENERATOR = "scripts/paper/tab_panel.py"
-DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny")
+DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny", "svhn", "eurosat")
 RATE_ORDER = (0.01, 0.05, 0.1)
 RATE_HEADERS = ("1%", "5%", "10%")
 

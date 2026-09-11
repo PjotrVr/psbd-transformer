@@ -1,0 +1,79 @@
+{
+  "generator": "scripts/paper/tab_swin.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+    "checkpoints/swin_*/args.json"
+  ],
+  "written_at": "2026-09-10T23:39:47.660927+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "SwinCells": {
+      "value": "64",
+      "meaning": "Swin cells whose attack cleared the bar and carry PSBD metrics"
+    },
+    "SwinDatasets": {
+      "value": "3",
+      "meaning": "datasets with at least 1 implanted Swin cell"
+    },
+    "SwinGainRecommendedMinusPublished": {
+      "value": "+0.091",
+      "meaning": "Swin paired AUROC gain, recommended minus published, adaptive rule, over 53 cells"
+    },
+    "SwinGainRecommendedMinusPublishedN": {
+      "value": "53",
+      "meaning": "cells behind swin_gain_recommended_minus_published"
+    },
+    "SwinGainRecommendedMinusPublishedLow": {
+      "value": "+0.044",
+      "meaning": "lower bootstrap bound of swin_gain_recommended_minus_published"
+    },
+    "SwinGainRecommendedMinusPublishedHigh": {
+      "value": "+0.142",
+      "meaning": "upper bootstrap bound of swin_gain_recommended_minus_published"
+    },
+    "SwinGainDropoutInputMinusPublished": {
+      "value": "-0.022",
+      "meaning": "Swin paired AUROC gain, dropout at the attention input minus published, adaptive rule, over 56 cells"
+    },
+    "SwinGainDropoutInputMinusPublishedN": {
+      "value": "56",
+      "meaning": "cells behind swin_gain_dropout_input_minus_published"
+    },
+    "SwinGainDropoutInputMinusPublishedLow": {
+      "value": "-0.084",
+      "meaning": "lower bootstrap bound of swin_gain_dropout_input_minus_published"
+    },
+    "SwinGainDropoutInputMinusPublishedHigh": {
+      "value": "+0.039",
+      "meaning": "upper bootstrap bound of swin_gain_dropout_input_minus_published"
+    },
+    "SwinGainRecommendedMinusPreResidual": {
+      "value": "+0.128",
+      "meaning": "Swin paired AUROC gain, recommended minus pre_residual, adaptive rule, over 51 cells"
+    },
+    "SwinGainRecommendedMinusPreResidualN": {
+      "value": "51",
+      "meaning": "cells behind swin_gain_recommended_minus_pre_residual"
+    },
+    "SwinGainRecommendedMinusPreResidualLow": {
+      "value": "+0.064",
+      "meaning": "lower bootstrap bound of swin_gain_recommended_minus_pre_residual"
+    },
+    "SwinGainRecommendedMinusPreResidualHigh": {
+      "value": "+0.197",
+      "meaning": "upper bootstrap bound of swin_gain_recommended_minus_pre_residual"
+    },
+    "SwinSeedReplicates": {
+      "value": "44",
+      "meaning": "Swin training-seed replicate checkpoints on disk"
+    },
+    "SwinRecommendedAurocAdaptive": {
+      "value": "0.968",
+      "meaning": "Swin mean AUROC of the recommended placement at the adaptive rule over 53 cells"
+    },
+    "SwinRecommendedN": {
+      "value": "53",
+      "meaning": "Swin cells carrying the recommended placement"
+    }
+  }
+}

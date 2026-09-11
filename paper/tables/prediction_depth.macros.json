@@ -1,0 +1,56 @@
+{
+  "generator": "scripts/paper/mech_prediction_depth.py",
+  "inputs": [
+    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/prediction_depth.json (65 cells)",
+    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json"
+  ],
+  "written_at": "2026-09-10T23:36:07.785769+00:00",
+  "git_commit": "831df7ef5e8bc9285264b261f848e1f2cad5ef61-dirty",
+  "macros": {
+    "DepthCells": {
+      "value": "65",
+      "meaning": "clearing cells carrying both prediction depth and the recommended placement"
+    },
+    "DepthAurocAll": {
+      "value": "0.911",
+      "meaning": "mean AUROC of prediction depth over the clearing cells"
+    },
+    "DepthMinusPsbdAuroc": {
+      "value": "-0.024",
+      "meaning": "mean paired AUROC delta, prediction depth minus PSBD, all clearing cells"
+    },
+    "DepthMinusPsbdAurocCi": {
+      "value": "[-0.078, +0.023]",
+      "meaning": "bootstrap interval on depth_minus_psbd_auroc"
+    },
+    "DepthMinusPsbdTpr": {
+      "value": "+0.019",
+      "meaning": "mean paired low-budget TPR delta, prediction depth minus PSBD, all clearing cells"
+    },
+    "DepthMinusPsbdTprCi": {
+      "value": "[-0.079, +0.113]",
+      "meaning": "bootstrap interval on depth_minus_psbd_tpr"
+    },
+    "DepthMinusPsbdTprHard": {
+      "value": "+0.183",
+      "meaning": "mean paired low-budget TPR delta on the hard attacks"
+    },
+    "DepthMinusPsbdTprHardCi": {
+      "value": "[+0.062, +0.296]",
+      "meaning": "bootstrap interval on depth_minus_psbd_tpr_hard"
+    },
+    "DepthMinusPsbdAurocHard": {
+      "value": "+0.007",
+      "meaning": "mean paired AUROC delta on the hard attacks"
+    },
+    "DepthTprWins": {
+      "value": "41",
+      "meaning": "clearing cells where prediction depth beats PSBD at the low budget"
+    },
+    "DepthBenignAuroc": {
+      "value": "0.491",
+      "meaning": "mean prediction-depth AUROC on the 4 benign references"
+    }
+  }
+}
