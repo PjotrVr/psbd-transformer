@@ -1,0 +1,203 @@
+{
+  "folder": "vit_cifar100_bpp_0_01",
+  "attack": "bpp",
+  "dataset": "cifar100",
+  "poison_rate": 0.01,
+  "target_label": 0,
+  "n_estimate": 500,
+  "n_eval_clean": 491,
+  "n_eval_backdoor": 491,
+  "epsilon": 0.03137254901960784,
+  "step_size": 0.00784313725490196,
+  "clean_start_steps": 5,
+  "backdoor_start_steps": 15,
+  "clean_start_target_share_model": 0.13238288462162018,
+  "clean_start_target_share_benign_reference": 0.0020366599783301353,
+  "backdoor_start_reversion_share": 0.48472505807876587,
+  "clean_start_layerwise_cosine": [
+    {
+      "layer": 0,
+      "direction_cosine_mean": 0.0,
+      "direction_cosine_median": 0.0,
+      "random_cosine_mean": 0.0,
+      "random_cosine_median": 0.0
+    },
+    {
+      "layer": 1,
+      "direction_cosine_mean": 0.2826186716556549,
+      "direction_cosine_median": 0.28246358036994934,
+      "random_cosine_mean": 0.008285378105938435,
+      "random_cosine_median": 0.0078011006116867065
+    },
+    {
+      "layer": 2,
+      "direction_cosine_mean": 0.5918473601341248,
+      "direction_cosine_median": 0.6224985718727112,
+      "random_cosine_mean": 0.00618909252807498,
+      "random_cosine_median": 0.006312708370387554
+    },
+    {
+      "layer": 3,
+      "direction_cosine_mean": 0.8046404123306274,
+      "direction_cosine_median": 0.8406879901885986,
+      "random_cosine_mean": -0.03868020698428154,
+      "random_cosine_median": -0.04153100401163101
+    },
+    {
+      "layer": 4,
+      "direction_cosine_mean": 0.8353962898254395,
+      "direction_cosine_median": 0.86260986328125,
+      "random_cosine_mean": -0.025214482098817825,
+      "random_cosine_median": -0.026594702154397964
+    },
+    {
+      "layer": 5,
+      "direction_cosine_mean": 0.7690963745117188,
+      "direction_cosine_median": 0.7933246493339539,
+      "random_cosine_mean": 0.003929129336029291,
+      "random_cosine_median": 0.005158828105777502
+    },
+    {
+      "layer": 6,
+      "direction_cosine_mean": 0.4800923764705658,
+      "direction_cosine_median": 0.4794231653213501,
+      "random_cosine_mean": 0.007728691678494215,
+      "random_cosine_median": 0.009313752874732018
+    },
+    {
+      "layer": 7,
+      "direction_cosine_mean": 0.35873711109161377,
+      "direction_cosine_median": 0.33450210094451904,
+      "random_cosine_mean": 0.015751345083117485,
+      "random_cosine_median": 0.015615688636898994
+    },
+    {
+      "layer": 8,
+      "direction_cosine_mean": 0.21078366041183472,
+      "direction_cosine_median": 0.1666654348373413,
+      "random_cosine_mean": 0.009447806514799595,
+      "random_cosine_median": 0.01261967048048973
+    },
+    {
+      "layer": 9,
+      "direction_cosine_mean": 0.15218274295330048,
+      "direction_cosine_median": 0.09835541248321533,
+      "random_cosine_mean": 0.008651332929730415,
+      "random_cosine_median": 0.008784452453255653
+    },
+    {
+      "layer": 10,
+      "direction_cosine_mean": 0.10765562951564789,
+      "direction_cosine_median": 0.051582470536231995,
+      "random_cosine_mean": 0.004944938700646162,
+      "random_cosine_median": 0.003526045475155115
+    },
+    {
+      "layer": 11,
+      "direction_cosine_mean": 0.08210588991641998,
+      "direction_cosine_median": 0.026219166815280914,
+      "random_cosine_mean": 0.0006252556340768933,
+      "random_cosine_median": -0.001981117995455861
+    },
+    {
+      "layer": 12,
+      "direction_cosine_mean": 0.07880471646785736,
+      "direction_cosine_median": 0.0170773733407259,
+      "random_cosine_mean": -0.0023093423806130886,
+      "random_cosine_median": -0.0030481284484267235
+    }
+  ],
+  "backdoor_start_layerwise_cosine": [
+    {
+      "layer": 0,
+      "direction_cosine_mean": 0.0,
+      "direction_cosine_median": 0.0,
+      "random_cosine_mean": 0.0,
+      "random_cosine_median": 0.0
+    },
+    {
+      "layer": 1,
+      "direction_cosine_mean": 0.3236757516860962,
+      "direction_cosine_median": 0.3457769453525543,
+      "random_cosine_mean": 0.004161866847425699,
+      "random_cosine_median": 0.003625823650509119
+    },
+    {
+      "layer": 2,
+      "direction_cosine_mean": 0.5745110511779785,
+      "direction_cosine_median": 0.7254167795181274,
+      "random_cosine_mean": 0.00633470993489027,
+      "random_cosine_median": 0.005460701882839203
+    },
+    {
+      "layer": 3,
+      "direction_cosine_mean": 0.65976482629776,
+      "direction_cosine_median": 0.8035660982131958,
+      "random_cosine_mean": -0.009429654106497765,
+      "random_cosine_median": -0.013496343977749348
+    },
+    {
+      "layer": 4,
+      "direction_cosine_mean": 0.22027811408042908,
+      "direction_cosine_median": 0.271937757730484,
+      "random_cosine_mean": -0.015192289836704731,
+      "random_cosine_median": -0.013360650278627872
+    },
+    {
+      "layer": 5,
+      "direction_cosine_mean": 0.05288530886173248,
+      "direction_cosine_median": 0.08627422153949738,
+      "random_cosine_mean": -0.03812563046813011,
+      "random_cosine_median": -0.03778163343667984
+    },
+    {
+      "layer": 6,
+      "direction_cosine_mean": -0.45639342069625854,
+      "direction_cosine_median": -0.45476198196411133,
+      "random_cosine_mean": 0.02999316155910492,
+      "random_cosine_median": 0.03184501454234123
+    },
+    {
+      "layer": 7,
+      "direction_cosine_mean": -0.6721307039260864,
+      "direction_cosine_median": -0.6820094585418701,
+      "random_cosine_mean": 0.010243128053843975,
+      "random_cosine_median": 0.01117957103997469
+    },
+    {
+      "layer": 8,
+      "direction_cosine_mean": -0.703067421913147,
+      "direction_cosine_median": -0.7233477830886841,
+      "random_cosine_mean": -0.008702727034687996,
+      "random_cosine_median": -0.009173628874123096
+    },
+    {
+      "layer": 9,
+      "direction_cosine_mean": -0.7211411595344543,
+      "direction_cosine_median": -0.7428489327430725,
+      "random_cosine_mean": -0.004558592103421688,
+      "random_cosine_median": -0.004867839626967907
+    },
+    {
+      "layer": 10,
+      "direction_cosine_mean": -0.7143517136573792,
+      "direction_cosine_median": -0.7326021790504456,
+      "random_cosine_mean": 0.02674999088048935,
+      "random_cosine_median": 0.027207957580685616
+    },
+    {
+      "layer": 11,
+      "direction_cosine_mean": -0.6867397427558899,
+      "direction_cosine_median": -0.7025374174118042,
+      "random_cosine_mean": 0.01886524073779583,
+      "random_cosine_median": 0.01911502331495285
+    },
+    {
+      "layer": 12,
+      "direction_cosine_mean": -0.6362425088882446,
+      "direction_cosine_median": -0.6494297385215759,
+      "random_cosine_mean": 0.036381129175424576,
+      "random_cosine_median": 0.039491284638643265
+    }
+  ]
+}

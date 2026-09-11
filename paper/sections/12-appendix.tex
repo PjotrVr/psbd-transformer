@@ -88,6 +88,8 @@ Their third contribution is a data-free detector that scores the classifier head
 \IfFileExists{tables/sam.tex}{\input{tables/sam}}{}
 \FloatBarrier
 
+Their fourth observation concerns projected gradient descent \cite{madry2018pgd}. They report that an adversarial perturbation of a clean image at $\epsilon = 8/255$ lands on the attacker's target class far more often for distributed triggers than for a patch trigger, 18.7 to 41.5\% for BPP and WaNet against under 8\% for BadNets, that the adversarial shift has a high cosine to the backdoor direction in the middle layers for those attacks, and that 20 to 50\% of triggered images revert to their true class under 15 steps. We ran their protocol on 7 backdoored CIFAR-100 models and the benign reference, with 5 steps from clean images and 15 from triggered ones and the 2 choices they leave unstated set to a step of $\epsilon/4$ and no random start. The capture rate reproduces in direction for WaNet, at 16\% against 0 to 0.6\% for BadNets, but not for BPP, which reaches 13\% at 1\% poisoning and 3\% at 10\%. The mid-layer cosine reproduces for BPP, at 0.82 to 0.84 around layer 4 against 0.11 to 0.29 for BadNets, and the same high cosine appears for Blend and LF, while WaNet's runs negative. The reversion rate reproduces for BPP and LF at 49 to 53\% and 26\%, exceeds their range for WaNet at 75\%, and is 0 for Blend, the CIFAR-100 model that also resists their weight erasure. Each reading is 1 model and 1 seed, so we treat the agreement as partial and the disagreement on BPP capture as open.
+
 \section{Seed replicates}
 \label{app:seeds}
 

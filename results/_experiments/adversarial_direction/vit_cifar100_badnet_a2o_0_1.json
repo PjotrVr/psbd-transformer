@@ -1,0 +1,203 @@
+{
+  "folder": "vit_cifar100_badnet_a2o_0_1",
+  "attack": "badnet_a2o",
+  "dataset": "cifar100",
+  "poison_rate": 0.1,
+  "target_label": 0,
+  "n_estimate": 500,
+  "n_eval_clean": 491,
+  "n_eval_backdoor": 491,
+  "epsilon": 0.03137254901960784,
+  "step_size": 0.00784313725490196,
+  "clean_start_steps": 5,
+  "backdoor_start_steps": 15,
+  "clean_start_target_share_model": 0.0,
+  "clean_start_target_share_benign_reference": 0.0020366599783301353,
+  "backdoor_start_reversion_share": 0.11405295133590698,
+  "clean_start_layerwise_cosine": [
+    {
+      "layer": 0,
+      "direction_cosine_mean": 0.0,
+      "direction_cosine_median": 0.0,
+      "random_cosine_mean": 0.0,
+      "random_cosine_median": 0.0
+    },
+    {
+      "layer": 1,
+      "direction_cosine_mean": 0.18153713643550873,
+      "direction_cosine_median": 0.18005017936229706,
+      "random_cosine_mean": 0.020624276250600815,
+      "random_cosine_median": 0.020535986870527267
+    },
+    {
+      "layer": 2,
+      "direction_cosine_mean": 0.2621428966522217,
+      "direction_cosine_median": 0.27546432614326477,
+      "random_cosine_mean": 0.011249645613133907,
+      "random_cosine_median": 0.012014149688184261
+    },
+    {
+      "layer": 3,
+      "direction_cosine_mean": 0.296588659286499,
+      "direction_cosine_median": 0.2996026873588562,
+      "random_cosine_mean": -0.03197132423520088,
+      "random_cosine_median": -0.03512540087103844
+    },
+    {
+      "layer": 4,
+      "direction_cosine_mean": 0.14394111931324005,
+      "direction_cosine_median": 0.14503560960292816,
+      "random_cosine_mean": -0.0218025054782629,
+      "random_cosine_median": -0.023291122168302536
+    },
+    {
+      "layer": 5,
+      "direction_cosine_mean": 0.12098931521177292,
+      "direction_cosine_median": 0.11821950972080231,
+      "random_cosine_mean": -0.009150351397693157,
+      "random_cosine_median": -0.009452997706830502
+    },
+    {
+      "layer": 6,
+      "direction_cosine_mean": 0.09673256427049637,
+      "direction_cosine_median": 0.09882530570030212,
+      "random_cosine_mean": -0.010125822387635708,
+      "random_cosine_median": -0.011330490000545979
+    },
+    {
+      "layer": 7,
+      "direction_cosine_mean": 0.04537161439657211,
+      "direction_cosine_median": 0.046341683715581894,
+      "random_cosine_mean": -0.010904975235462189,
+      "random_cosine_median": -0.011095011606812477
+    },
+    {
+      "layer": 8,
+      "direction_cosine_mean": 0.023655705153942108,
+      "direction_cosine_median": 0.02444746345281601,
+      "random_cosine_mean": -0.010788226500153542,
+      "random_cosine_median": -0.010412655770778656
+    },
+    {
+      "layer": 9,
+      "direction_cosine_mean": 0.01317583303898573,
+      "direction_cosine_median": 0.01286446675658226,
+      "random_cosine_mean": -0.006136773619800806,
+      "random_cosine_median": -0.007286952808499336
+    },
+    {
+      "layer": 10,
+      "direction_cosine_mean": -0.00046243463293649256,
+      "direction_cosine_median": -0.0024882054422050714,
+      "random_cosine_mean": -0.0010676055680960417,
+      "random_cosine_median": -0.0006621414795517921
+    },
+    {
+      "layer": 11,
+      "direction_cosine_mean": -0.002070245798677206,
+      "direction_cosine_median": -0.0037803268060088158,
+      "random_cosine_mean": -0.003009217558428645,
+      "random_cosine_median": -0.0024091936647892
+    },
+    {
+      "layer": 12,
+      "direction_cosine_mean": -0.001138112274929881,
+      "direction_cosine_median": -0.002137844916433096,
+      "random_cosine_mean": -0.0011020624078810215,
+      "random_cosine_median": -0.0036921165883541107
+    }
+  ],
+  "backdoor_start_layerwise_cosine": [
+    {
+      "layer": 0,
+      "direction_cosine_mean": 0.0,
+      "direction_cosine_median": 0.0,
+      "random_cosine_mean": 0.0,
+      "random_cosine_median": 0.0
+    },
+    {
+      "layer": 1,
+      "direction_cosine_mean": 0.03308728709816933,
+      "direction_cosine_median": 0.005669239908456802,
+      "random_cosine_mean": 0.008210880681872368,
+      "random_cosine_median": 0.009522022679448128
+    },
+    {
+      "layer": 2,
+      "direction_cosine_mean": 0.15773317217826843,
+      "direction_cosine_median": 0.14339995384216309,
+      "random_cosine_mean": -0.003302098950371146,
+      "random_cosine_median": -0.005364648997783661
+    },
+    {
+      "layer": 3,
+      "direction_cosine_mean": 0.2533862292766571,
+      "direction_cosine_median": 0.2539443075656891,
+      "random_cosine_mean": -0.04812609404325485,
+      "random_cosine_median": -0.048704635351896286
+    },
+    {
+      "layer": 4,
+      "direction_cosine_mean": 0.15320000052452087,
+      "direction_cosine_median": 0.15908417105674744,
+      "random_cosine_mean": -0.0402064248919487,
+      "random_cosine_median": -0.04085628688335419
+    },
+    {
+      "layer": 5,
+      "direction_cosine_mean": 0.16781534254550934,
+      "direction_cosine_median": 0.16672556102275848,
+      "random_cosine_mean": -0.029122792184352875,
+      "random_cosine_median": -0.02923041209578514
+    },
+    {
+      "layer": 6,
+      "direction_cosine_mean": 0.14460651576519012,
+      "direction_cosine_median": 0.13116765022277832,
+      "random_cosine_mean": -0.019150838255882263,
+      "random_cosine_median": -0.01866997592151165
+    },
+    {
+      "layer": 7,
+      "direction_cosine_mean": -0.07904498279094696,
+      "direction_cosine_median": -0.12560921907424927,
+      "random_cosine_mean": 0.007864286191761494,
+      "random_cosine_median": 0.008953545242547989
+    },
+    {
+      "layer": 8,
+      "direction_cosine_mean": -0.21329347789287567,
+      "direction_cosine_median": -0.2912914752960205,
+      "random_cosine_mean": 0.026862377300858498,
+      "random_cosine_median": 0.027134103700518608
+    },
+    {
+      "layer": 9,
+      "direction_cosine_mean": -0.24842123687267303,
+      "direction_cosine_median": -0.29361915588378906,
+      "random_cosine_mean": 0.02817556820809841,
+      "random_cosine_median": 0.029610522091388702
+    },
+    {
+      "layer": 10,
+      "direction_cosine_mean": -0.3597969114780426,
+      "direction_cosine_median": -0.36998122930526733,
+      "random_cosine_mean": 0.02618858404457569,
+      "random_cosine_median": 0.025267980992794037
+    },
+    {
+      "layer": 11,
+      "direction_cosine_mean": -0.27234265208244324,
+      "direction_cosine_median": -0.2280789315700531,
+      "random_cosine_mean": 0.023560473695397377,
+      "random_cosine_median": 0.022045129910111427
+    },
+    {
+      "layer": 12,
+      "direction_cosine_mean": -0.28848010301589966,
+      "direction_cosine_median": -0.2435399442911148,
+      "random_cosine_mean": 0.04025047644972801,
+      "random_cosine_median": 0.0424213707447052
+    }
+  ]
+}

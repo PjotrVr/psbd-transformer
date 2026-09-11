@@ -38,8 +38,8 @@ the true label from a clean start, the trigger-induced target label from a
 triggered start, which is what lets "reverts to the original class" be measured
 on the far side. The clean-image share is compared against the same PGD run on
 the benign checkpoint of the same dataset, at the same target class, since
-Table 2 has no such baseline and one clarifies whether the target-class pull is
-backdoor-specific or a generic PGD artifact of that class.
+Table 2 has no such baseline, and this comparison clarifies whether the
+target-class pull is backdoor-specific or a generic PGD artifact of that class.
 
 paired_rows, residual_stream and directions are imported from
 experiments.whole_network_erasure.measure rather than reimplemented: they
@@ -110,7 +110,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def benign_checkpoint_path(checkpoints_dir: str, architecture: str, dataset: str) -> str:
+def benign_checkpoint_path(
+    checkpoints_dir: str, architecture: str, dataset: str
+) -> str:
     """Where this dataset's benign reference checkpoint lives, by naming convention."""
     folder = f"{architecture}_{dataset}_benign"
     path = os.path.join(checkpoints_dir, folder, "attack_result.pt")
@@ -118,7 +120,11 @@ def benign_checkpoint_path(checkpoints_dir: str, architecture: str, dataset: str
 
 
 def reference_model(
-    metadata: dict, model: nn.Module, args: argparse.Namespace, device: torch.device, cache: dict
+    metadata: dict,
+    model: nn.Module,
+    args: argparse.Namespace,
+    device: torch.device,
+    cache: dict,
 ) -> nn.Module:
     """The benign checkpoint of this dataset, a fresh load cached by dataset.
 
@@ -133,7 +139,9 @@ def reference_model(
     if dataset in cache:
         return cache[dataset]
 
-    path = benign_checkpoint_path(args.checkpoints_dir, metadata["architecture"], dataset)
+    path = benign_checkpoint_path(
+        args.checkpoints_dir, metadata["architecture"], dataset
+    )
     loaded = load_checkpoint(metadata["architecture"], path, device)
     cache[dataset] = loaded
     return loaded
@@ -283,7 +291,9 @@ def analyse(
     clean_images = pairs["clean"][evaluation]  # (n_clean, C, H, W)
     true_label = pairs["true_label"][evaluation]  # (n_clean,)
     backdoor_images = pairs["backdoor"][evaluation]  # (n_backdoor, C, H, W)
-    trigger_label = pairs["target"][evaluation]  # (n_backdoor,), the label the trigger induces
+    trigger_label = pairs["target"][
+        evaluation
+    ]  # (n_backdoor,), the label the trigger induces
 
     generator = torch.Generator().manual_seed(args.seed)
     embedding_dim = found["cls"].shape[-1]
@@ -304,10 +314,19 @@ def analyse(
         args.batch_size,
     )
     reference_clean_start = pgd_adversarial(
-        reference, device, clean_images, true_label, mean, std, CLEAN_STEPS, args.batch_size
+        reference,
+        device,
+        clean_images,
+        true_label,
+        mean,
+        std,
+        CLEAN_STEPS,
+        args.batch_size,
     )
 
-    clean_original_stream = residual_stream(model, clean_images, device, args.batch_size)
+    clean_original_stream = residual_stream(
+        model, clean_images, device, args.batch_size
+    )
     clean_adversarial_stream = residual_stream(
         model, clean_start["images"], device, args.batch_size
     )
@@ -341,7 +360,10 @@ def analyse(
             (backdoor_start["predicted"] == true_label).float().mean()
         ),
         "clean_start_layerwise_cosine": layerwise_cosine(
-            clean_adversarial_stream, clean_original_stream, found["cls"], random_direction
+            clean_adversarial_stream,
+            clean_original_stream,
+            found["cls"],
+            random_direction,
         ),
         "backdoor_start_layerwise_cosine": layerwise_cosine(
             backdoor_adversarial_stream,
@@ -355,7 +377,9 @@ def analyse(
 
 def summary_line(report: dict) -> str:
     """1 line: the 2 target-class shares, the reversion share and the peak middle-layer cosine."""
-    middle_layers = report["clean_start_layerwise_cosine"][NUM_LAYERS // 2 : NUM_LAYERS + 1]
+    middle_layers = report["clean_start_layerwise_cosine"][
+        NUM_LAYERS // 2 : NUM_LAYERS + 1
+    ]
     peak_middle = max(row["direction_cosine_mean"] for row in middle_layers)
     line = (
         f"{report['folder']:32s} clean->target model {report['clean_start_target_share_model']:.3f} "
