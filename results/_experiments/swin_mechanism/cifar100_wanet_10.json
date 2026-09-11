@@ -1,0 +1,255 @@
+{
+  "slug": "cifar100_wanet_10",
+  "vit": {
+    "folder": "vit_cifar100_wanet_0_1",
+    "architecture": "vit",
+    "dataset": "cifar100",
+    "attack": "wanet",
+    "poison_rate": 0.1,
+    "n_pairs": 300,
+    "n_estimate": 150,
+    "n_eval": 150,
+    "margin_clean": 5.9301300048828125,
+    "margin_triggered": 6.044511795043945,
+    "margin_gap": 0.11438179016113281,
+    "eval_ra_triggered": 0.12666666507720947,
+    "eval_asr_triggered": 0.8666666746139526,
+    "num_layers": 12,
+    "direction_relative_norm": [
+      0.0,
+      0.0018113137143355613,
+      0.015159605062047138,
+      0.028440187740161684,
+      0.05196926933713939,
+      0.08227827427690812,
+      0.1694571814590526,
+      0.4166033485717988,
+      0.600218394773904,
+      0.6965717243713357,
+      0.9064214849113765,
+      0.9685818944789302,
+      1.0
+    ],
+    "direction_onset_layer": 8,
+    "direction_onset_fraction": 0.6666666666666666,
+    "last_layer_token_share": {
+      "mean_share": 0.05099830776453018,
+      "mean_tokens": 10.046667098999023,
+      "total_tokens": 197
+    },
+    "window_patch": null,
+    "auroc_ladders": {
+      "before_attention_norm_token_mask": {
+        "ladder": [
+          {
+            "rate": 0.05,
+            "shift_ratio": 0.09449999779462814,
+            "auroc": 0.5878137619024625
+          },
+          {
+            "rate": 0.1,
+            "shift_ratio": 0.16300000250339508,
+            "auroc": 0.6059015702610929
+          },
+          {
+            "rate": 0.2,
+            "shift_ratio": 0.3161666691303253,
+            "auroc": 0.63411734518169
+          },
+          {
+            "rate": 0.3,
+            "shift_ratio": 0.5288333296775818,
+            "auroc": 0.707913103892471
+          },
+          {
+            "rate": 0.4,
+            "shift_ratio": 0.7543333172798157,
+            "auroc": 0.7928821268619639
+          },
+          {
+            "rate": 0.5,
+            "shift_ratio": 0.9020000100135803,
+            "auroc": 0.8422633803811741
+          },
+          {
+            "rate": 0.6,
+            "shift_ratio": 0.9545000195503235,
+            "auroc": 0.8573252207100953
+          },
+          {
+            "rate": 0.7,
+            "shift_ratio": 0.9703333377838135,
+            "auroc": 0.861387675192317
+          },
+          {
+            "rate": 0.8,
+            "shift_ratio": 0.9761666655540466,
+            "auroc": 0.864262295736164
+          },
+          {
+            "rate": 0.9,
+            "shift_ratio": 0.9801666736602783,
+            "auroc": 0.8749525856891507
+          }
+        ],
+        "adaptive_rate": 0.5,
+        "adaptive_auroc": 0.8422633803811741,
+        "adaptive_shift_ratio": 0.9020000100135803
+      },
+      "before_attention_norm_blocks_5_8_token_mask": null,
+      "before_attention_norm_blocks_9_12_token_mask": null
+    }
+  },
+  "swin": {
+    "folder": "swin_cifar100_wanet_0_1",
+    "architecture": "swin",
+    "dataset": "cifar100",
+    "attack": "wanet",
+    "poison_rate": 0.1,
+    "n_pairs": 300,
+    "n_estimate": 150,
+    "n_eval": 150,
+    "margin_clean": 8.0146484375,
+    "margin_triggered": 8.40612506866455,
+    "margin_gap": 0.3914766311645508,
+    "eval_ra_triggered": 0.07333333045244217,
+    "eval_asr_triggered": 0.9200000166893005,
+    "num_layers": 24,
+    "direction_relative_norm": [
+      0.00025954038164194027,
+      0.0009966630000549568,
+      0.0019146924515691579,
+      0.007496584007023751,
+      0.011395729447222384,
+      0.02099042685960454,
+      0.021368029361225532,
+      0.02276072014089695,
+      0.023787125554257778,
+      0.025425005008393693,
+      0.02715754663844488,
+      0.03356782479098699,
+      0.04199770282695065,
+      0.07317075920522123,
+      0.09296863755716658,
+      0.11934449929324514,
+      0.15247545352046318,
+      0.20393630699049464,
+      0.2442437868210569,
+      0.296012863832763,
+      0.337934303785887,
+      0.4118169963136235,
+      0.47589344125526817,
+      0.58512067954864,
+      1.0
+    ],
+    "direction_onset_layer": 23,
+    "direction_onset_fraction": 0.9583333333333334,
+    "last_layer_token_share": {
+      "mean_share": 0.40204083919525146,
+      "mean_tokens": 19.700000762939453,
+      "total_tokens": 49
+    },
+    "window_patch": {
+      "stage_1": {
+        "grid": [
+          56,
+          56
+        ],
+        "windows": [
+          8,
+          8
+        ],
+        "window_tokens": 49,
+        "ra_top_window_patch": 0.1666666716337204,
+        "ra_control_patch": 0.07333333045244217
+      },
+      "stage_2": {
+        "grid": [
+          28,
+          28
+        ],
+        "windows": [
+          4,
+          4
+        ],
+        "window_tokens": 49,
+        "ra_top_window_patch": 0.20666666328907013,
+        "ra_control_patch": 0.07333333045244217
+      },
+      "stage_3": {
+        "grid": [
+          14,
+          14
+        ],
+        "windows": [
+          2,
+          2
+        ],
+        "window_tokens": 49,
+        "ra_top_window_patch": 0.5933333039283752,
+        "ra_control_patch": 0.06666667014360428
+      }
+    },
+    "auroc_ladders": {
+      "before_attention_norm_token_mask": {
+        "ladder": [
+          {
+            "rate": 0.05,
+            "shift_ratio": 0.03466666489839554,
+            "auroc": 0.2897758839278196
+          },
+          {
+            "rate": 0.1,
+            "shift_ratio": 0.06549999862909317,
+            "auroc": 0.2726848954602538
+          },
+          {
+            "rate": 0.2,
+            "shift_ratio": 0.14499999582767487,
+            "auroc": 0.33343816106778873
+          },
+          {
+            "rate": 0.3,
+            "shift_ratio": 0.375166654586792,
+            "auroc": 0.622835528628762
+          },
+          {
+            "rate": 0.4,
+            "shift_ratio": 0.8418333530426025,
+            "auroc": 0.9265479835699028
+          },
+          {
+            "rate": 0.5,
+            "shift_ratio": 0.9879999756813049,
+            "auroc": 0.9504390976615485
+          },
+          {
+            "rate": 0.6,
+            "shift_ratio": 0.9925000071525574,
+            "auroc": 0.9512852325063081
+          },
+          {
+            "rate": 0.7,
+            "shift_ratio": 0.9925000071525574,
+            "auroc": 0.9540786682889784
+          },
+          {
+            "rate": 0.8,
+            "shift_ratio": 0.9925000071525574,
+            "auroc": 0.9584289168434835
+          },
+          {
+            "rate": 0.9,
+            "shift_ratio": 0.9925000071525574,
+            "auroc": 0.9636990465260034
+          }
+        ],
+        "adaptive_rate": 0.4,
+        "adaptive_auroc": 0.9265479835699028,
+        "adaptive_shift_ratio": 0.8418333530426025
+      },
+      "before_attention_norm_blocks_5_8_token_mask": null,
+      "before_attention_norm_blocks_9_12_token_mask": null
+    }
+  }
+}
