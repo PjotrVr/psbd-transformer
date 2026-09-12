@@ -153,6 +153,10 @@ def train_argv(metadata: dict, alpha: float, folder: str) -> list[str]:
         metadata["architecture"],
         "--epochs",
         str(metadata["epochs"]),
+        # 3 probe passes per batch on top of the plain one overflow the 40 GB
+        # card at the panel's batch of 64, so the attacker trains at 32.
+        "--batch-size",
+        "32",
         "--seed",
         str(metadata["seed"]),
         "--evade-psbd",
