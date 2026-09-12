@@ -200,6 +200,19 @@ def limit_dataset(dataset: Dataset, max_samples: int | None, seed: int) -> Datas
     return subset
 
 
+def exclude_indices(dataset: Dataset, excluded: set[int]) -> Dataset:
+    """dataset with every index in excluded dropped, order otherwise preserved.
+
+    A plain Subset over the complement, so a caller placing this after poisoning
+    and before augmentation, evasion flagging or index wrapping (cli.train_backdoor's
+    --exclude-indices-file) hands every later wrapper an ordinary 2-tuple dataset,
+    just shorter.
+    """
+    kept = [index for index in range(len(dataset)) if index not in excluded]
+    subset = Subset(dataset, kept)
+    return subset
+
+
 def extract_labels(dataset: Dataset) -> list[int]:
     """The integer labels of a dataset, read without decoding images where possible.
 

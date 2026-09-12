@@ -15,6 +15,7 @@ Example
 """
 
 import argparse
+import json
 import os
 import time
 from dataclasses import replace
@@ -40,6 +41,7 @@ from data.loading import (
     AugmentedTrainingSet,
     base_image_transform,
     build_augmentation_transform,
+    exclude_indices,
     extract_labels,
     limit_dataset,
     load_clean_datasets,
@@ -219,6 +221,17 @@ def build_training_loader(
         normalize,
         spec.num_classes,
     )
+
+    if getattr(args, "exclude_indices_file", None):
+        # After poisoning, so the indices in the file address the same poisoned
+        # dataset a sanitising pass (experiments/training_aware/flag_by_loss.py)
+        # scored. Before augmentation, evasion flagging and index wrapping too, so
+        # none of those has to know a sample went missing.
+        with open(args.exclude_indices_file) as handle:
+            excluded = set(json.load(handle))
+        print(f"excluding {len(excluded)} indices from {args.exclude_indices_file}")
+        poisoned_train = exclude_indices(poisoned_train, excluded)
+
     if args.augment == "standard":
         # After the trigger is stamped and the sample normalized, so the crop and
         # flip see exactly the image an attacker's data would present at deploy
@@ -505,6 +518,17 @@ def parse_args() -> argparse.Namespace:
             "per-sample cross entropy (reduction='none', scattered by index) "
             "plus the poison index set. Off by default, and not supported "
             "together with --evade-psbd (experiments/early_loss_signal)."
+        ),
+    )
+    parser.add_argument(
+        "--exclude-indices-file",
+        default=None,
+        help=(
+            "path to a JSON list of poisoned-training-set indices "
+            "(IndexedTrainingSet's numbering) to drop before training, for a "
+            "sanitised retrain. Written by "
+            "experiments/training_aware/flag_by_loss.py. Applied after "
+            "poisoning and before augmentation, evasion or index wrapping."
         ),
     )
     parser.add_argument(
@@ -848,6 +872,15 @@ def main() -> None:
     ).as_dict()
     metadata["n_cover"] = n_cover
     metadata["augment"] = args.augment
+    # Read back rather than threaded out of build_training_loader, since the
+    # count is cheap to recompute and this keeps that function's return
+    # signature untouched for every other caller.
+    excluded_count = 0
+    if args.exclude_indices_file:
+        with open(args.exclude_indices_file) as handle:
+            excluded_count = len(json.load(handle))
+    metadata["exclude_indices_file"] = args.exclude_indices_file
+    metadata["n_excluded"] = excluded_count
     # Without this, evaluation rebuilds the attack from default_config() and a run
     # trained with a modified trigger is scored against a trigger it never saw.
     metadata["attack_config_overrides"] = config_overrides(config, args.attack)
