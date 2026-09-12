@@ -10,12 +10,17 @@ ran in CI before.
 import pytest
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader, Dataset
 from torchvision.models.vision_transformer import VisionTransformer
 
+import training.loop as loop
 from attacks.evasion import (
+    DEFAULT_FLOOR_MARGIN,
     absolute_psu_for_batch,
+    basis_rate_ladder,
     evasion_penalty,
     evasive_update,
+    floor_penalty,
     multi_probe_evasion_penalty,
     multi_probe_psu_for_batch,
     paper_adaptive_penalty,
@@ -32,6 +37,9 @@ PROBE = {
 # "psu_mean" is the canonical name for the objective that used to be
 # "psbd_paper" (attacks.evasion.EVASION_OBJECTIVE_ALIASES).
 PROBE_PAPER = {**PROBE, "objective": "psu_mean"}
+
+# The defender-side mirror objective, floor_penalty's margin read from here.
+PROBE_FLOOR = {**PROBE, "objective": "psu_floor", "margin": 0.8}
 
 
 class TinyViT(nn.Module):
@@ -338,6 +346,137 @@ def test_paper_weight_one_drops_cross_entropy_entirely(batch):
     torch.manual_seed(5)
     psu, _ = absolute_psu_for_batch(model, images, PROBE_PAPER, passes=3)
     assert float(batch_loss) == pytest.approx(float(psu.mean()), abs=1e-5)
+
+
+def test_floor_penalty_is_zero_when_every_psu_clears_the_margin():
+    psu = torch.tensor([0.9, 0.85, 1.0, 0.81])
+    assert float(floor_penalty(psu, margin=0.8)) == 0.0
+
+
+def test_floor_penalty_is_positive_when_some_psu_is_below_the_margin():
+    psu = torch.tensor([0.9, 0.3, 1.0, 0.81])
+    assert float(floor_penalty(psu, margin=0.8)) > 0.0
+
+
+def test_floor_penalty_ignores_which_samples_are_poisoned():
+    """floor_penalty takes no is_poisoned argument: relabeling the batch cannot change it."""
+    psu = torch.tensor([0.9, 0.3, 0.5, 0.81])
+    penalty_a = floor_penalty(psu, margin=0.8)
+    permuted = psu[torch.tensor([2, 0, 3, 1])]
+    penalty_b = floor_penalty(permuted, margin=0.8)
+    assert float(penalty_a) == pytest.approx(float(penalty_b))
+
+
+def test_evasive_update_psu_floor_matches_the_hand_computed_loss(batch):
+    """evasive_update's psu_floor branch reproduces cross_entropy + weight * floor_penalty by hand."""
+    images, labels, is_poisoned = batch
+    criterion = nn.CrossEntropyLoss()
+    weight = 2.0
+
+    torch.manual_seed(6)
+    model = TinyViT()
+    torch.manual_seed(6)
+    reference = TinyViT()
+    assert all(
+        torch.equal(p, q) for p, q in zip(model.parameters(), reference.parameters())
+    )
+
+    torch.manual_seed(7)
+    psu, logits = psu_for_batch(reference, images, PROBE_FLOOR, passes=3)
+    expected_loss = criterion(logits, labels) + weight * floor_penalty(psu, margin=0.8)
+
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.0)
+    torch.manual_seed(7)
+    batch_loss, _ = evasive_update(
+        model, images, labels, is_poisoned, criterion, optimizer, PROBE_FLOOR, weight, 3
+    )
+    assert float(batch_loss) == pytest.approx(float(expected_loss), abs=1e-5)
+
+
+def test_evasive_update_psu_floor_falls_back_to_the_default_margin(batch):
+    """A probe dict with no "margin" key uses DEFAULT_FLOOR_MARGIN, not 0."""
+    images, labels, is_poisoned = batch
+    criterion = nn.CrossEntropyLoss()
+    probe_no_margin = {k: v for k, v in PROBE_FLOOR.items() if k != "margin"}
+
+    torch.manual_seed(6)
+    model = TinyViT()
+    torch.manual_seed(6)
+    reference = TinyViT()
+
+    torch.manual_seed(7)
+    psu, logits = psu_for_batch(reference, images, probe_no_margin, passes=3)
+    expected_loss = criterion(logits, labels) + 1.0 * floor_penalty(
+        psu, margin=DEFAULT_FLOOR_MARGIN
+    )
+
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.0)
+    torch.manual_seed(7)
+    batch_loss, _ = evasive_update(
+        model,
+        images,
+        labels,
+        is_poisoned,
+        criterion,
+        optimizer,
+        probe_no_margin,
+        1.0,
+        3,
+    )
+    assert float(batch_loss) == pytest.approx(float(expected_loss), abs=1e-5)
+
+
+def test_optimising_the_floor_penalty_lowers_it_for_poisoned_and_clean_alike():
+    """psu_floor, run on a real optimizer, raises PSU regardless of the poisoned flag.
+
+    Mirrors test_optimising_the_paper_penalty_lowers_mean_psu: warm up first
+    since PSU is 0 at random init, then check the hinge itself falls and both
+    group means move toward the margin, with no is_poisoned in the loss at all.
+    """
+    torch.manual_seed(0)
+    model = TinyViT()
+    model.train()
+    images = torch.randn(64, 3, 32, 32)
+    labels = torch.randint(0, 4, (64,))
+    criterion = nn.CrossEntropyLoss()
+    strong_probe = {**PROBE_FLOOR, "rate": 0.7}
+
+    warmup = torch.optim.Adam(model.parameters(), lr=2e-3)
+    for _ in range(60):
+        warmup.zero_grad(set_to_none=True)
+        criterion(model(images), labels).backward()
+        warmup.step()
+
+    with torch.no_grad():
+        initial, _ = psu_for_batch(model, images, strong_probe, passes=5)
+    lowest = torch.argsort(initial)[:16]
+    is_poisoned = torch.zeros(64, dtype=torch.long)
+    is_poisoned[lowest] = 1
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=2e-3)
+    first, last = None, None
+    for step in range(40):
+        _, stats = evasive_update(
+            model,
+            images,
+            labels,
+            is_poisoned,
+            criterion,
+            optimizer,
+            strong_probe,
+            weight=1.0,
+            passes=5,
+        )
+        if step == 0:
+            first = stats
+        last = stats
+
+    assert first["penalty"] > 0, (
+        f"floor penalty inactive at step 0: {first['penalty']:.4f}"
+    )
+    assert last["penalty"] < first["penalty"], (
+        f"{first['penalty']:.4f} -> {last['penalty']:.4f}"
+    )
 
 
 def test_deprecated_objective_aliases_still_dispatch(batch):
@@ -653,3 +792,160 @@ def test_optimising_the_multi_probe_penalty_closes_every_active_gap():
     assert last_gap_b < first_gap_b, (
         f"probe b gap {first_gap_b:.4f} -> {last_gap_b:.4f}"
     )
+
+
+def test_basis_rate_ladder_reaches_the_adaptive_target():
+    """The published placement's ladder must reach 0.8, the adaptive rule's target.
+
+    calibrate_probe_rate's default candidate list comes from this ladder, so a
+    recalibration aimed at ADAPTIVE_SHIFT_TARGET (0.8) is never capped below it
+    by a smaller, hand-picked candidate list.
+    """
+    ladder = basis_rate_ladder("post_residual", "dropout")
+    assert 0.8 in ladder
+
+
+class TinyFlaggedResNetDataset(Dataset):
+    """A CIFAR-scale 3-tuple dataset, for train_one_epoch_evasive over resnet18."""
+
+    def __init__(self, n: int, num_classes: int, seed: int):
+        generator = torch.Generator().manual_seed(seed)
+        self.images = torch.randn(n, 3, 32, 32, generator=generator)
+        self.labels = torch.randint(0, num_classes, (n,), generator=generator)
+        # Half the batch flagged poisoned, so evasion_penalty's hinge is active.
+        self.is_poisoned = [1 if index < n // 2 else 0 for index in range(n)]
+
+    def __len__(self) -> int:
+        return len(self.images)
+
+    def __getitem__(self, index: int):
+        return self.images[index], self.labels[index], self.is_poisoned[index]
+
+
+class TinyCleanDataset(Dataset):
+    """A plain 2-tuple dataset for the val_loader clean_accuracy and calibration read."""
+
+    def __init__(self, n: int, num_classes: int, seed: int):
+        generator = torch.Generator().manual_seed(seed)
+        self.images = torch.randn(n, 3, 32, 32, generator=generator)
+        self.labels = torch.randint(0, num_classes, (n,), generator=generator)
+
+    def __len__(self) -> int:
+        return len(self.images)
+
+    def __getitem__(self, index: int):
+        return self.images[index], self.labels[index]
+
+
+def _tiny_resnet_loaders() -> tuple[DataLoader, DataLoader]:
+    train_loader = DataLoader(
+        TinyFlaggedResNetDataset(n=8, num_classes=2, seed=0), batch_size=4
+    )
+    val_loader = DataLoader(TinyCleanDataset(n=8, num_classes=2, seed=1), batch_size=4)
+    return train_loader, val_loader
+
+
+def _resnet_probe(rate: float) -> dict:
+    return {
+        "position": "post_residual",
+        "operator": "dropout",
+        "architecture": "resnet18",
+        "rate": rate,
+    }
+
+
+def test_recalibrate_every_zero_leaves_the_rate_untouched(monkeypatch):
+    calls = []
+
+    def fake_calibrate(model, val_loader, probe_config, device, target_sigma=0.6):
+        calls.append(target_sigma)
+        return 0.99
+
+    monkeypatch.setattr(loop, "calibrate_probe_rate", fake_calibrate)
+    train_loader, val_loader = _tiny_resnet_loaders()
+    evasion = {
+        "probe": _resnet_probe(0.1),
+        "weight": 1.0,
+        "passes": 2,
+        "recalibrate_every": 0,
+        "calibration_target": 0.6,
+    }
+
+    loop.train_classifier(
+        "resnet18",
+        2,
+        train_loader,
+        val_loader,
+        torch.device("cpu"),
+        epochs=3,
+        use_sam=False,
+        use_bfloat16=False,
+        evasion=evasion,
+    )
+
+    assert calls == []
+    assert evasion["rate_history"] == [0.1, 0.1, 0.1]
+
+
+def test_recalibrate_every_one_recalibrates_each_epoch_after_warmup(monkeypatch):
+    counter = {"n": 0}
+
+    def fake_calibrate(model, val_loader, probe_config, device, target_sigma=0.6):
+        counter["n"] += 1
+        return 0.1 + 0.1 * counter["n"]
+
+    monkeypatch.setattr(loop, "calibrate_probe_rate", fake_calibrate)
+    train_loader, val_loader = _tiny_resnet_loaders()
+    evasion = {
+        "probe": _resnet_probe(0.1),
+        "weight": 1.0,
+        "passes": 2,
+        "recalibrate_every": 1,
+        "calibration_target": 0.6,
+    }
+
+    loop.train_classifier(
+        "resnet18",
+        2,
+        train_loader,
+        val_loader,
+        torch.device("cpu"),
+        epochs=3,
+        use_sam=False,
+        use_bfloat16=False,
+        evasion=evasion,
+    )
+
+    # Epoch 1 keeps the initial calibration (the warm-up), epochs 2 and 3 each
+    # recalibrate, so calibrate_probe_rate is called twice, not 3 times.
+    assert counter["n"] == 2
+    assert evasion["rate_history"] == pytest.approx([0.1, 0.2, 0.3])
+
+
+def test_rate_history_has_1_entry_per_epoch(monkeypatch):
+    def fake_calibrate(model, val_loader, probe_config, device, target_sigma=0.6):
+        return 0.5
+
+    monkeypatch.setattr(loop, "calibrate_probe_rate", fake_calibrate)
+    train_loader, val_loader = _tiny_resnet_loaders()
+    evasion = {
+        "probe": _resnet_probe(0.1),
+        "weight": 1.0,
+        "passes": 2,
+        "recalibrate_every": 2,
+        "calibration_target": 0.6,
+    }
+
+    loop.train_classifier(
+        "resnet18",
+        2,
+        train_loader,
+        val_loader,
+        torch.device("cpu"),
+        epochs=5,
+        use_sam=False,
+        use_bfloat16=False,
+        evasion=evasion,
+    )
+
+    assert len(evasion["rate_history"]) == 5

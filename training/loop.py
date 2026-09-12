@@ -16,12 +16,13 @@ import os
 from collections.abc import Callable
 from dataclasses import dataclass
 
+import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 from evaluation.metrics import clean_accuracy
-from attacks.evasion import train_one_epoch_evasive
+from attacks.evasion import calibrate_probe_rate, train_one_epoch_evasive
 from models.backbones import build_resnet18, build_swin, build_vit
 from utils.provenance import current_git_commit
 from .sam import SAM
@@ -164,6 +165,63 @@ def sam_update(
     return loss
 
 
+class IndexedTrainingSet(Dataset):
+    """A training set wrapper that also reports each sample's dataset index.
+
+    Mirrors attacks.evasion.FlaggedPoisonedSet, but carries the plain index
+    rather than a poisoned/clean flag: --record-sample-loss needs every
+    sample's index to scatter its per-epoch loss into place, not just the
+    poisoned ones.
+    """
+
+    def __init__(self, inner: Dataset):
+        self.inner = inner
+
+    def __len__(self) -> int:
+        return len(self.inner)
+
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, int, int]:
+        image, label = self.inner[index]
+        return image, label, index
+
+
+def locate_poison_indices(dataset) -> set[int]:
+    """The poison index set from a (possibly wrapped) training dataset, or empty.
+
+    Walks the .inner / .base_dataset chain the loader's Augmented/Flagged/Indexed
+    wrappers use, since poison_indices only lives on the innermost
+    PoisonedTrainingSet or CoverPoisonedTrainingSet.
+    """
+    current = dataset
+    while current is not None:
+        poison_indices = getattr(current, "poison_indices", None)
+        if poison_indices is not None:
+            return poison_indices
+        current = getattr(current, "inner", None) or getattr(
+            current, "base_dataset", None
+        )
+    return set()
+
+
+def save_sample_loss_record(
+    checkpoint_dir: str, sample_loss_history: torch.Tensor, poison_indices: set[int]
+) -> None:
+    """Write the per epoch per sample loss trajectory as <checkpoint_dir>/sample_loss.npz.
+
+    sample_loss_history is (epochs_so_far, num_samples). Called after every
+    epoch so a run interrupted mid training still leaves a usable partial
+    trajectory. poison_indices travels alongside it, so the record is
+    self-contained and needs no other file to know which columns are poisoned.
+    """
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    path = os.path.join(checkpoint_dir, "sample_loss.npz")
+    np.savez(
+        path,
+        sample_loss=sample_loss_history.numpy(),
+        poison_indices=np.array(sorted(poison_indices), dtype=np.int64),
+    )
+
+
 def train_one_epoch(
     model: nn.Module,
     loader: DataLoader,
@@ -172,16 +230,41 @@ def train_one_epoch(
     device: torch.device,
     use_sam: bool,
     clip_grad_norm: float | None = None,
+    sample_loss_row: torch.Tensor | None = None,
 ) -> float:
-    """An epoch of ordinary training, returning the mean batch loss."""
+    """An epoch of ordinary training, returning the mean batch loss.
+
+    sample_loss_row, when given, is a (num_training_samples,) tensor this epoch
+    fills in place. The loader is then expected to yield (image, label, index)
+    triples (IndexedTrainingSet) rather than plain (image, label) pairs. Just
+    before each batch's update, the per-sample cross entropy is computed with
+    reduction="none" from the weights that batch is about to train on and
+    scattered into the row by index. Left None (the default), the loader keeps
+    its ordinary 2-tuple contract and nothing about a plain run changes.
+    """
     model.train()
+    per_sample_criterion = (
+        nn.CrossEntropyLoss(reduction="none") if sample_loss_row is not None else None
+    )
 
     running_loss = 0.0
-    for images, labels in loader:
+    for batch in loader:
+        if sample_loss_row is not None:
+            images, labels, indices = batch
+        else:
+            images, labels = batch
         images, labels = (
             images.to(device),
             labels.to(device).long(),
         )  # (batch, C, H, W), (batch,)
+
+        if sample_loss_row is not None:
+            with torch.no_grad():
+                per_sample_losses = per_sample_criterion(
+                    model(images), labels
+                )  # (batch,)
+            sample_loss_row[indices] = per_sample_losses.cpu()
+
         update = sam_update if use_sam else plain_update
         loss = update(model, images, labels, criterion, optimizer, clip_grad_norm)
         running_loss += loss.item()
@@ -349,6 +432,8 @@ def train_classifier(
     on_epoch_end: Callable[[nn.Module, int, float], None] | None = None,
     learning_rate_schedule: str = "constant",
     clip_grad_norm: float | None = None,
+    record_sample_loss: bool = False,
+    checkpoint_dir: str | None = None,
 ) -> tuple[nn.Module, TrainingTrajectory]:
     """A freshly trained model and its validation trajectory, printed per epoch.
 
@@ -356,6 +441,14 @@ def train_classifier(
     is the attacker's knob, and it is recorded in the checkpoint metadata so the
     run can never be mistaken for an ordinary training run. A run whose
     validation accuracy collapses raises instead of returning.
+
+    record_sample_loss, off by default, additionally scatters every training
+    sample's cross entropy into a per-epoch row (train_one_epoch's
+    sample_loss_row) and writes the stacked (epoch, sample) history plus the
+    poison index set to <checkpoint_dir>/sample_loss.npz after every epoch
+    (save_sample_loss_record). It requires train_loader.dataset to yield
+    (image, label, index) triples (IndexedTrainingSet) and is not supported
+    together with the evasive path.
     """
     model = build_model(architecture, num_classes, model_dropout).to(device)
     criterion = nn.CrossEntropyLoss()
@@ -363,8 +456,54 @@ def train_classifier(
     scheduler = build_scheduler(optimizer, learning_rate_schedule, epochs)
     validation_accuracies: list[float] = []
 
+    if record_sample_loss and evasion:
+        raise ValueError(
+            "record_sample_loss is not supported together with the evasive path"
+        )
+    if record_sample_loss and checkpoint_dir is None:
+        raise ValueError("record_sample_loss requires checkpoint_dir")
+    num_training_samples = len(train_loader.dataset)
+    poison_indices = (
+        locate_poison_indices(train_loader.dataset) if record_sample_loss else set()
+    )
+    sample_loss_history: list[torch.Tensor] = []
+
+    # The rate this evasion run's probe(s) train against, 1 entry per epoch,
+    # mutated onto the caller's `evasion` dict so cli.train_backdoor can drop
+    # it straight into the checkpoint's args.json without a second return
+    # value threading through every other train_classifier caller.
+    recalibrate_every = evasion.get("recalibrate_every", 0) if evasion else 0
+    rate_history: list = []
+
     for epoch in range(1, epochs + 1):
         if evasion:
+            # A warm-up of `recalibrate_every` epochs keeps the initial
+            # calibration, then the probe rate is recalibrated on the
+            # CURRENT model every `recalibrate_every` epochs after that: the
+            # whole reason to recalibrate at all is that the initial
+            # calibration was measured on random init weights, whose shift
+            # curve has nothing to do with the trained model's.
+            if (
+                recalibrate_every > 0
+                and epoch > recalibrate_every
+                and (epoch - recalibrate_every - 1) % recalibrate_every == 0
+            ):
+                probes = evasion["probe"]
+                probes = probes if isinstance(probes, list) else [probes]
+                for probe in probes:
+                    probe["rate"] = calibrate_probe_rate(
+                        model,
+                        val_loader,
+                        probe,
+                        device,
+                        target_sigma=evasion.get("calibration_target", 0.6),
+                    )
+            current_probes = evasion["probe"]
+            rate_history.append(
+                [p["rate"] for p in current_probes]
+                if isinstance(current_probes, list)
+                else current_probes["rate"]
+            )
             average_loss, stats = train_one_epoch_evasive(
                 model,
                 train_loader,
@@ -381,6 +520,11 @@ def train_classifier(
                 f" penalty={stats['penalty']:.4f}"
             )
         else:
+            sample_loss_row = (
+                torch.full((num_training_samples,), float("nan"))
+                if record_sample_loss
+                else None
+            )
             average_loss = train_one_epoch(
                 model,
                 train_loader,
@@ -389,7 +533,13 @@ def train_classifier(
                 device,
                 use_sam,
                 clip_grad_norm,
+                sample_loss_row,
             )
+            if record_sample_loss:
+                sample_loss_history.append(sample_loss_row)
+                save_sample_loss_record(
+                    checkpoint_dir, torch.stack(sample_loss_history), poison_indices
+                )
             extra = ""
         if scheduler is not None:
             scheduler.step()
@@ -404,6 +554,9 @@ def train_classifier(
         # checkpoint paths. Every write stays on the caller's side.
         if on_epoch_end is not None:
             on_epoch_end(model, epoch, validation_accuracy)
+
+    if evasion:
+        evasion["rate_history"] = rate_history
 
     trajectory = TrainingTrajectory(tuple(validation_accuracies))
     check_not_diverged(trajectory)

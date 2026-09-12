@@ -47,6 +47,7 @@ from data.loading import (
 from evaluation.loaders import build_clean_loader
 from evaluation.metrics import clean_accuracy, evaluate_attack
 from attacks.evasion import (
+    DEFAULT_FLOOR_MARGIN,
     EVASION_OBJECTIVES,
     FlaggedPoisonedSet,
     calibrate_probe_rate,
@@ -62,6 +63,7 @@ from attacks.poisoning import (
 from training.loop import (
     LEARNING_RATE_SCHEDULES,
     CheckpointMetadata,
+    IndexedTrainingSet,
     build_model,
     save_checkpoint,
     train_classifier,
@@ -232,6 +234,13 @@ def build_training_loader(
         # the defender's side of any evaluation.
         poisoned_train = FlaggedPoisonedSet(poisoned_train)
 
+    if getattr(args, "record_sample_loss", False):
+        if getattr(args, "evade_psbd", False):
+            # Both wrappers add a 3rd tuple element, and each expects the
+            # other's 2-tuple contract from its inner dataset.
+            raise ValueError("--record-sample-loss and --evade-psbd cannot be combined")
+        poisoned_train = IndexedTrainingSet(poisoned_train)
+
     train_loader = DataLoader(
         poisoned_train,
         batch_size=args.batch_size,
@@ -342,6 +351,9 @@ def resolve_evasion(
             # already normalized, so args.json and every downstream reader see
             # the canonical name regardless of which spelling was passed.
             "objective": objective,
+            # Read by evasive_update's psu_floor branch only, and harmless on
+            # the other objectives since neither reads probe["margin"].
+            "margin": args.evade_margin,
         }
         rate = args.evade_rate
         if rate == 0.0:
@@ -349,7 +361,13 @@ def resolve_evasion(
                 calibration_model = build_model(args.architecture, num_classes).to(
                     device
                 )
-            rate = calibrate_probe_rate(calibration_model, val_loader, probe, device)
+            rate = calibrate_probe_rate(
+                calibration_model,
+                val_loader,
+                probe,
+                device,
+                target_sigma=args.evade_calibration_target,
+            )
         probes.append({**probe, "rate": rate})
 
     if calibration_model is not None:
@@ -361,6 +379,11 @@ def resolve_evasion(
         "probe": probes if len(probes) > 1 else probes[0],
         "weight": args.evade_weight,
         "passes": args.evade_passes,
+        # Read by training.loop.train_classifier at each epoch boundary.
+        # recalibrate_every 0 is the historical behaviour: the rate calibrated
+        # above on the initial weights is never touched again.
+        "recalibrate_every": args.evade_recalibrate_every,
+        "calibration_target": args.evade_calibration_target,
     }
     return evasion, probes
 
@@ -427,8 +450,21 @@ def parse_args() -> argparse.Namespace:
             "Potential Adaptive Attacks'), a convex combination "
             "(1 - alpha) * cross_entropy + alpha * L_ada with --evade-weight read "
             "as alpha, pushing every sample's PSU down, benign and poisoned alike. "
+            "psu_floor: this project's own label-free mirror of psu_gap_hinge, "
+            "fractional PSU, additive penalty pushing every sample's shift up to "
+            "--evade-margin with no reference to is_poisoned at all. "
             "'hinge' and 'psbd_paper' are still accepted as deprecated aliases"
         ),
+    )
+    parser.add_argument(
+        "--evade-margin",
+        type=float,
+        default=DEFAULT_FLOOR_MARGIN,
+        help="the psu_floor objective's hinge target: every sample's fractional "
+        "PSU is pushed to stay above this margin. Default matches "
+        "ADAPTIVE_SHIFT_TARGET, the shift level clean samples already sit near "
+        "at the rate the deployable adaptive rule selects. Ignored by every "
+        "other --evade-objective.",
     )
     parser.add_argument(
         "--evade-rate",
@@ -437,7 +473,40 @@ def parse_args() -> argparse.Namespace:
         help="perturbation rate for the evasion probe. 0 (default) auto-calibrates "
         "to the sigma=0.6 matched rate on the validation set before training.",
     )
+    parser.add_argument(
+        "--evade-recalibrate-every",
+        type=int,
+        default=0,
+        help="recalibrate the probe rate on the current model at the start of "
+        "every N-th epoch, after a warm-up of N epochs at the initial "
+        "calibration. 0 (default) keeps the current behaviour: calibrated once "
+        "on the model's initial weights and never touched again, which is a "
+        "poor target on a from-scratch model since the initial weights' shift "
+        "curve differs sharply from the trained model's.",
+    )
+    parser.add_argument(
+        "--evade-calibration-target",
+        type=float,
+        default=0.6,
+        help="the target_sigma calibrate_probe_rate matches, both for the "
+        "initial calibration and every recalibration. Default 0.6 matches the "
+        "defender's cross-placement matched rule "
+        "(defences.decision.select_rate_at_matched_shift); pass 0.8 to match "
+        "the deployable adaptive rule instead "
+        "(defences.decision.select_rate_adaptively, ADAPTIVE_SHIFT_TARGET).",
+    )
     parser.add_argument("--evade-passes", type=int, default=3)
+    parser.add_argument(
+        "--record-sample-loss",
+        action="store_true",
+        help=(
+            "wrap the training set in IndexedTrainingSet and write "
+            "<output folder>/sample_loss.npz after every epoch: the per-epoch, "
+            "per-sample cross entropy (reduction='none', scattered by index) "
+            "plus the poison index set. Off by default, and not supported "
+            "together with --evade-psbd (experiments/early_loss_signal)."
+        ),
+    )
     parser.add_argument(
         "--model-dropout-train",
         type=float,
@@ -690,6 +759,8 @@ def main() -> None:
         evasion=evasion,
         learning_rate_schedule=args.lr_schedule,
         clip_grad_norm=args.clip_grad_norm,
+        record_sample_loss=args.record_sample_loss,
+        checkpoint_dir=os.path.dirname(args.output),
         on_epoch_end=build_snapshot_hook(
             args,
             num_classes,
@@ -759,8 +830,17 @@ def main() -> None:
                 }
                 for p in evade_probes
             ],
+            "margin": args.evade_margin,
             "rate_requested": args.evade_rate,
             "passes": args.evade_passes,
+            "recalibrate_every": args.evade_recalibrate_every,
+            "calibration_target": args.evade_calibration_target,
+            # 1 entry per epoch, mutated onto `evasion` in place by
+            # training.loop.train_classifier. Each entry is a probe's rate at
+            # that epoch (a float for a single probe, a list of floats for
+            # the multi-probe hinge), constant across epochs when
+            # --evade-recalibrate-every is 0.
+            "rate_history": evasion.get("rate_history", []),
         }
         if args.evade_psbd
         else None,

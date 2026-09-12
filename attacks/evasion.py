@@ -120,7 +120,28 @@ step, against 1 + k for a single probe, so a 3-probe run at k=3 costs about
 2.5 times a 1-probe run's forward count (1 + 9 against 1 + 3), which is why the
 smoke test and the job generator both budget wall clock separately from the
 single-probe adaptive-attacker jobs.
+
+A fourth objective, `psu_floor`, is the defender-side mirror of psu_gap_hinge:
+the attacker has no poisoned flag to train against on this side of the
+comparison, so the label-free hinge below is applied to every sample.
+
+    original form
+        L = L_CE(f(x), y)
+            + lambda * mean_x ReLU( margin - PSU(x) ), x in D^c union D^b
+    descriptive form
+        loss = cross_entropy + weight * floor_penalty(psu, margin)
+        floor_penalty(psu, margin) = relu(margin - psu).mean()
+
+margin (`--evade-margin`, default `DEFAULT_FLOOR_MARGIN` 0.8) is the shift
+level clean samples already sit near at the rate the defender's own adaptive
+rule selects, so the term should concentrate its gradient on the poisoned
+samples, which sit lower, without needing is_poisoned to say which is which.
+Selected with `probe["objective"] = "psu_floor"`, single-probe only like
+psu_mean.
 """
+
+import json
+import os
 
 import torch
 import torch.nn as nn
@@ -133,6 +154,34 @@ from models.positions import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
 # Guards the division when the model gives its own predicted class almost no
 # probability, which would otherwise make the ratio diverge.
 BASE_PROBABILITY_FLOOR = 1e-6
+
+# configs/psbd_basis.json declares the defender's own swept rate ladder per
+# (position, operator), so a recalibration target the defender's own rules can
+# reach (the 0.8 adaptive rule, not just the 0.6 matched rule) is never capped
+# by a smaller, hand-picked candidate list. Derived from this file's own path
+# rather than the working directory, since a recalibrating run's cwd is
+# whatever the training entrypoint was launched from.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASIS_DECLARATION_PATH = os.path.join(_REPO_ROOT, "configs", "psbd_basis.json")
+
+# Falls back to this ladder only for a (position, operator) pair the basis
+# declaration never swept, which is the historical default candidate list.
+_FALLBACK_CANDIDATE_RATES = (0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5)
+
+
+def basis_rate_ladder(position: str, operator: str) -> tuple[float, ...]:
+    """The candidate rates configs/psbd_basis.json declares for (position, operator).
+
+    Falls back to `_FALLBACK_CANDIDATE_RATES` when no basis entry names this
+    pair, which is only the case for a probe placement this project never
+    swept into the panel.
+    """
+    with open(BASIS_DECLARATION_PATH) as handle:
+        basis = json.load(handle)["basis"]
+    for entry in basis:
+        if entry["position"] == position and entry["operator"] == operator:
+            return tuple(entry["rates"])
+    return _FALLBACK_CANDIDATE_RATES
 
 
 class FlaggedPoisonedSet(Dataset):
@@ -275,14 +324,22 @@ def calibrate_probe_rate(
     probe_config: dict,
     device: torch.device,
     target_sigma: float = 0.6,
-    candidate_rates: tuple[float, ...] = (0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5),
+    candidate_rates: tuple[float, ...] | None = None,
 ) -> float:
     """Find the probe rate whose clean-validation shift ratio is closest to target.
 
     Shift ratio is the fraction of samples whose argmax changes under the
     perturbation. This matches the defender's sigma-matching rule
-    (defences.decision.select_rate_at_matched_shift), so the attacker optimizes at the
-    same perturbation strength the defender would choose.
+    (defences.decision.select_rate_at_matched_shift) at the historical default
+    target_sigma=0.6, and the defender's adaptive 0.8 rule
+    (defences.decision.select_rate_adaptively) when the caller recalibrates
+    against that target instead, so the attacker optimizes at whichever
+    perturbation strength the defender would choose.
+
+    candidate_rates defaults to `basis_rate_ladder(position, operator)`, the
+    same ladder the defender's own sweep covers for this placement, rather
+    than a hand-picked list capped below the rates a high target_sigma (0.8)
+    needs to reach.
 
     Runs a forward pass per candidate rate over the validation set, a small cost
     beside a 15-epoch training run.
@@ -291,6 +348,8 @@ def calibrate_probe_rate(
     architecture = probe_config["architecture"]
     position = probe_config["position"]
     operator = probe_config["operator"]
+    if candidate_rates is None:
+        candidate_rates = basis_rate_ladder(position, operator)
 
     names = DROPOUT_CONFIGS.get(position, (position,))
     factory = {name: build_operator(operator) for name in names}
@@ -392,7 +451,7 @@ def multi_probe_evasion_penalty(
 # "hinge" and "psbd_paper" are the pre-rename names, kept as accepted choices
 # (translated by normalize_evasion_objective) so an already-queued job script
 # still runs, and every new script should name the canonical pair instead.
-EVASION_OBJECTIVES = ("psu_gap_hinge", "psu_mean", "hinge", "psbd_paper")
+EVASION_OBJECTIVES = ("psu_gap_hinge", "psu_mean", "psu_floor", "hinge", "psbd_paper")
 
 # Canonical objective names state what the loss computes, not whose loss it
 # is: "psu_gap_hinge" was "hinge", "psu_mean" was "psbd_paper".
@@ -421,6 +480,32 @@ def paper_adaptive_penalty(psu_absolute: torch.Tensor) -> torch.Tensor:
     is_poisoned: it pushes PSU down for benign and poisoned samples alike.
     """
     penalty = psu_absolute.mean()
+    return penalty
+
+
+# The psu_floor objective's own hinge target, read from probe["margin"] when
+# --evade-margin overrides it. 0.8 matches ADAPTIVE_SHIFT_TARGET
+# (defences.decision), the shift level clean samples already sit near at the
+# rate the deployable adaptive rule selects.
+DEFAULT_FLOOR_MARGIN = 0.8
+
+
+def floor_penalty(psu: torch.Tensor, margin: float) -> torch.Tensor:
+    """The defender-side mirror of `evasion_penalty`, with no poisoned flag at all.
+
+        original form
+            L_floor = mean_x relu(margin - PSU(x)), x in D^c union D^b
+        descriptive form
+            loss = relu(margin - psu).mean()
+
+    Every sample, clean and poisoned alike, is pushed to keep its fractional PSU
+    above `margin`. Clean samples already sit near the defender's own target shift
+    (PSU close to 1 at the rate the adaptive rule selects), so they clear the
+    margin for free and contribute little gradient, leaving the term to
+    concentrate on the poisoned ones, the label-free mirror of `evasion_penalty`
+    argued for in docs/plans (Idea 1, the defender-side PSU hinge).
+    """
+    penalty = torch.relu(margin - psu).mean()
     return penalty
 
 
@@ -454,6 +539,12 @@ def evasive_update(
     - "psu_mean": absolute PSU, convex combination as the paper defines it,
       loss = (1 - weight) * cross_entropy + weight * paper_adaptive_penalty(psu),
       with weight read as alpha.
+    - "psu_floor": fractional PSU, additive penalty with no reference to
+      is_poisoned at all, loss = cross_entropy + weight * floor_penalty(psu,
+      margin), margin read from probe["margin"] (default DEFAULT_FLOOR_MARGIN).
+      The defender-side mirror of psu_gap_hinge: every sample is pushed to keep
+      its shift above margin rather than only the poisoned ones pushed to match
+      the clean ones.
     """
     optimizer.zero_grad(set_to_none=True)
     probes = probe if isinstance(probe, list) else [probe]
@@ -476,6 +567,11 @@ def evasive_update(
         psu, logits = absolute_psu_for_batch(model, images, probes[0], passes)
         penalty = paper_adaptive_penalty(psu)
         loss = (1.0 - weight) * criterion(logits, labels) + weight * penalty
+    elif objective == "psu_floor":
+        psu, logits = psu_for_batch(model, images, probes[0], passes)
+        margin = probes[0].get("margin", DEFAULT_FLOOR_MARGIN)
+        penalty = floor_penalty(psu, margin)
+        loss = criterion(logits, labels) + weight * penalty
     else:
         raise ValueError(
             f"unknown evasion objective {objective!r}, expected one of "

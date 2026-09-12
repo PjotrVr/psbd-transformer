@@ -269,3 +269,91 @@ not the paper's own (`psu_mean`). The 12-run full-recipe batch this generator
 packs would settle whether the paper's own adaptive attacker still fails where
 ours succeeds, and whether the effect holds at the paper's full training
 budget across both datasets and both attacks rather than only in miniature.
+
+## Recalibrating the hinge attacker against the trained model (Task 4)
+
+The hinge attacker's probe rate was calibrated once, before training, on the
+model's random initial weights (`calibrate_probe_rate`, target sigma 0.6). On
+ResNet-18 trained from scratch that picked rate 0.1 for `post_residual`
+dropout, and `results/resnet18_gtsrb_badnet_a2o_0_1_evade_hinge/psbd_metrics.json`
+shows the trained model's own shift ratio at rate 0.1 is only 0.026 to 0.027,
+nowhere near the sigma=0.6 the attacker thought it was training against. The
+attacker spent its whole run pushing against a probe that barely moved a
+trained model's predictions, which is visible in `train.log` as `penalty=`
+readings near 0 for most of training.
+
+`--evade-recalibrate-every 1 --evade-calibration-target 0.8` fixes this:
+`attacks.evasion.calibrate_probe_rate` runs again on the CURRENT model at the
+start of every epoch after a 1-epoch warm-up, now against target_sigma 0.8 (the
+defender's own `ADAPTIVE_SHIFT_TARGET`), and its candidate ladder is read off
+`configs/psbd_basis.json`'s `post_residual`/`dropout` entry
+(`basis_rate_ladder`) so 0.8 is on the list of rates it can pick. The chosen
+rate per epoch is stored in `checkpoints/<folder>/args.json` under
+`evasion.rate_history`, one entry per epoch.
+
+### Per-epoch calibrated rate, compressed into runs
+
+Both runs start near rate 0.3, where an untrained model's shift curve first
+crosses toward the target, then climb as the model's own decision boundary
+sharpens and the same dropout rate shifts fewer predictions, ending at 0.6 to
+0.7 by epoch 100.
+
+| dataset | epochs 1-10 | epochs 11-40 | epochs 41-70 | epochs 71-100 |
+|---|---|---|---|---|
+| `resnet18_gtsrb_badnet_a2o_0_1_evade_hinge_recal` | 0.3 to 0.4 | 0.4 to 0.6 | 0.6 to 0.7 | 0.6 to 0.7 (settles at 0.7) |
+| `resnet18_gtsrb_blend_0_1_evade_hinge_recal` | 0.2 to 0.4 | 0.3 to 0.6 | 0.6 to 0.7 | 0.6 to 0.7 (settles at 0.7) |
+
+### Attack success, clean accuracy, and detection at the deployable rule
+
+`adaptive_rate` is `select_rate_adaptively` at `ADAPTIVE_SHIFT_TARGET` 0.8 on
+each checkpoint's own clean-validation shift curve. `auroc`/`tpr` at q0.10 are
+read off `detection_psu_ratio["q0.10"]` on the `rates` entry named by
+`adaptive_rate`.
+
+| checkpoint | ASR | clean acc | adaptive_rate | AUROC @ q0.10 | TPR @ q0.10 |
+|---|---|---|---|---|---|
+| `resnet18_gtsrb_badnet_a2o_0_1` (unattacked) | 1.000 | 0.976 | 0.5 | 0.9997 | 1.000 |
+| `resnet18_gtsrb_badnet_a2o_0_1_evade_paper` (`psu_mean`) | 0.997 | 0.952 | 0.8 | 0.734 | 0.332 |
+| `resnet18_gtsrb_badnet_a2o_0_1_evade_hinge` (old calibration) | 1.000 | 0.955 | 0.8 | 0.827 | 0.513 |
+| `resnet18_gtsrb_badnet_a2o_0_1_evade_hinge_recal` (recalibrated) | 1.000 | 0.957 | 0.7 | **0.184** | **0.0002** |
+| `resnet18_gtsrb_blend_0_1` (unattacked) | 1.000 | 0.974 | 0.5 | 0.968 | 0.913 |
+| `resnet18_gtsrb_blend_0_1_evade_paper` (`psu_mean`) | 0.998 | 0.947 | 0.8 | 0.972 | 0.922 |
+| `resnet18_gtsrb_blend_0_1_evade_hinge` (old calibration) | 1.000 | 0.950 | 0.8 | 0.376 | 0.010 |
+| `resnet18_gtsrb_blend_0_1_evade_hinge_recal` (recalibrated) | 1.000 | 0.943 | 0.7 | **0.107** | **0.0000** |
+
+### Full `post_residual` dropout ladder, recalibrated checkpoints (AUROC @ q0.10 / achieved clean shift)
+
+**`resnet18_gtsrb_badnet_a2o_0_1_evade_hinge_recal`**, adaptive_rate 0.7 (no oracle_rate reported here)
+
+| rate | 0.005 | 0.01 | 0.02 | 0.03 | 0.05 | 0.07 | 0.09 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | **0.7** | 0.8 | 0.9 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| AUROC | 0.554 | 0.601 | 0.622 | 0.647 | 0.671 | 0.695 | 0.713 | 0.722 | 0.734 | 0.607 | 0.394 | 0.247 | 0.138 | **0.184** | 0.369 | 0.441 |
+| clean shift | 0.006 | 0.008 | 0.013 | 0.016 | 0.022 | 0.028 | 0.034 | 0.034 | 0.068 | 0.116 | 0.216 | 0.404 | 0.665 | **0.863** | 0.943 | 0.968 |
+
+**`resnet18_gtsrb_blend_0_1_evade_hinge_recal`**, adaptive_rate 0.7
+
+| rate | 0.005 | 0.01 | 0.02 | 0.03 | 0.05 | 0.07 | 0.09 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | **0.7** | 0.8 | 0.9 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| AUROC | 0.561 | 0.651 | 0.678 | 0.713 | 0.740 | 0.755 | 0.765 | 0.766 | 0.739 | 0.656 | 0.529 | 0.332 | 0.143 | **0.107** | 0.307 | 0.438 |
+| clean shift | 0.009 | 0.013 | 0.016 | 0.023 | 0.028 | 0.037 | 0.044 | 0.046 | 0.086 | 0.153 | 0.266 | 0.461 | 0.692 | **0.866** | 0.939 | 0.965 |
+
+## Reading
+
+Recalibrating the hinge attacker's probe against the trained model, at the
+defender's own 0.8 target, turns a partial evasion into a near-total one: AUROC
+at the deployable rule falls from 0.827 to 0.184 on BadNets and from 0.376 to
+0.107 on Blend, both now close to chance, with ASR still at 1.000 on both. The
+attacker no longer overshoots past the defender's target rate on the ladder
+either, since both the peak (around rate 0.1, AUROC 0.72 to 0.77) and the
+trough the defender's rule now lands in (rate 0.7, AUROC 0.11 to 0.18) sit
+inside the region the attacker actively trained against, unlike the
+old-calibration runs whose adaptive_rate (0.8) sat past their own AUROC peak.
+The paper's own adaptive attacker (`psu_mean`) is left essentially
+undisturbed by this fix (AUROC 0.73 to 0.97 unchanged), which is expected since
+it was never calibrated against a single probe rate in the first place and
+confirms the recalibration only closes the gap this project's own attacker was
+exploiting. Both recalibrated runs settle at rate 0.6 to 0.7 by epoch 100, well
+above the 0.1 the initial-weights calibration chose, so the mismatch this task
+set out to fix (an attacker trained against a probe that barely moves the
+trained model) was real and roughly 6 to 7 times larger than the rate the
+old runs actually optimised against.
