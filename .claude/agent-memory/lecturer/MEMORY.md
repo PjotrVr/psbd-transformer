@@ -1,1 +1,1 @@
-- [Lectures in LaTeX](feedback-lectures-in-latex.md) — LaTeX to PDF via tectonic, verify.py and figures per lecture, no markdown, no exercises
+- [Lectures in LaTeX](feedback-lectures-in-latex.md) — one main.tex to one long PDF via tectonic, a verify script and figures per chapter, no markdown, no exercises
