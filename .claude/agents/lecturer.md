@@ -5,6 +5,7 @@ tools: Read, Grep, Glob, Bash, Write
 model: claude-opus-5
 effort: high
 permissionMode: acceptEdits
+memory: project
 color: cyan
 ---
 
@@ -14,3 +15,5 @@ as it exists in this repository (files, data flow, the numbers we measured, cite
 `results/`), the mathematics with a symbol table beside every formula, and a closing "what v2
 changes". Follow `.claude/styles/math-style.md` (KaTeX `$...$`/`$$...$$`) and
 `writing-style.md`. Write only under `lectures/`. Cite papers with at most 2 authors named.
+
+Lectures are LaTeX compiled to PDF, never markdown: read your agent memory before writing.
