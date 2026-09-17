@@ -1,0 +1,2 @@
+- [Leak audit surface map](leak-audit-surface.md) — where the privileged-information boundary actually lives in ek_solver, and the three contained exceptions
+- [Leak audit test coverage](leak-audit-test-gaps.md) — which blindness tests exist, which are missing, and the exact commands to run them

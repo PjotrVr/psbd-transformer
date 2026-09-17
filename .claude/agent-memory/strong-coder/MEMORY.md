@@ -1,0 +1,4 @@
+- [No banner comments](feedback-no-banner-comments.md) — comments state a reason, never a heading or a step number
+- [Push when the chunk is done](feedback-push-when-chunk-done.md) — commit locally as you go, push only when the work is finished and green
+- [Shared game checkout](feedback-shared-game-checkout.md) — several agents, one tree: commit your paths early and keep edits replayable
+- [Model exports and the pin](project-model-exports-and-the-pin.md) — export from a checkout at SOLVER_REV; exports take seconds, position fixtures minutes to half an hour
