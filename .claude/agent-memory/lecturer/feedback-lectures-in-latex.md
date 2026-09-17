@@ -12,9 +12,9 @@ numbers, and they read and teach from the PDF.
 
 **How to apply:**
 - One document per course: `lectures/<version>/main.tex` compiled to `main.pdf`, chapters in
-  `chapters/NN-name.tex`, one abstract, one table of contents, one bibliography, one appendix of
-  what was verified, a ranked "future lectures" section and a course synthesis chapter. `verify/NN-name.py`
-  and `figures/NN-name/` per chapter. No per-lecture PDFs. A markdown `README.md`
+  `chapters/<name>.tex` (no numeric prefixes anywhere: order is the `\input` order in main.tex), one abstract, one table of contents, one bibliography, one appendix of
+  what was verified, a ranked "future lectures" section and a course synthesis chapter. `verify/<name>.py`
+  and `figures/<name>/` per chapter. No per-lecture PDFs. A markdown `README.md`
   is the table of contents only.
 - Compile with `~/.local/bin/tectonic main.tex` (no pdflatex on the cluster). Fix every error;
   check the log for overfull boxes and undefined references before delivering.
@@ -36,3 +36,5 @@ numbers, and they read and teach from the PDF.
 - Colours: blue accent, green for positive results, red for negative results. Packages: amsmath,
   amsthm, booktabs, tikz, hyperref. Clean, direct, real university lecture notes.
 - Prose follows `.claude/styles/math-style.md` and `writing-style.md`; results before derivations.
+- When the course is done, clean up: no markdown drafts, no per-lecture PDFs, no build files; the tree holds
+  only main.tex, chapters/, figures/, verify/, main.pdf, README.md and the verify venv.
