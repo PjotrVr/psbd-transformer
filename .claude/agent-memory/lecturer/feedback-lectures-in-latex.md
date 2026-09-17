@@ -13,7 +13,7 @@ numbers, and they read and teach from the PDF.
 **How to apply:**
 - One document per course: `lectures/<version>/main.tex` compiled to `main.pdf`, chapters in
   `chapters/<name>.tex` (no numeric prefixes anywhere: order is the `\input` order in main.tex), one abstract, one table of contents, one bibliography, one appendix of
-  what was verified, a ranked "future lectures" section and a course synthesis chapter. `verify/<name>.py`
+  what was verified, a ranked "future lectures" section and a course synthesis chapter. `verify/<snake_case_name>.py` (snake_case for python files)
   and `figures/<name>/` per chapter. No per-lecture PDFs. A markdown `README.md`
   is the table of contents only.
 - Compile with `~/.local/bin/tectonic main.tex` (no pdflatex on the cluster). Fix every error;
@@ -38,3 +38,6 @@ numbers, and they read and teach from the PDF.
 - Prose follows `.claude/styles/math-style.md` and `writing-style.md`; results before derivations.
 - When the course is done, clean up: no markdown drafts, no per-lecture PDFs, no build files; the tree holds
   only main.tex, chapters/, figures/, verify/, main.pdf, README.md and the verify venv.
+- `lectures/v1` is the living course: every smaller change (bug fix, lab feature, new champion, new
+  measurement) is folded into v1 in the present tense; only a true architecture change starts v2.
+  "What v2 changes" sections cover only unbuilt architectural work.
