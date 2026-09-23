@@ -56,8 +56,13 @@ NUMBER_IDIOMS = re.compile(
     r"three-|one\'s|someone|anyone|everyone|none|all-to-one|to-one\b|one-sided|"
     r"one another|"
     # "one" as a pronoun standing in for a noun already named, as in "the
-    # BadNets one" or "a token-level one". A count would name its unit.
-    r"(?:the|a|an|that|this|next|another)\s+[\w-]*\s*one\b|one that\b)",
+    # BadNets one" or "a token-level one". A count always names its unit, so
+    # "one" followed by punctuation or by a verb or preposition is a pronoun.
+    r"(?:the|a|an|that|this|next|another)\s+(?:[\w-]+\s+){0,2}one\b|"
+    r"one\s*[.,;:)\]]|"
+    r"one\s+(?:would|will|is|was|were|wins?|means?|has|have|had|does|do|did|"
+    r"can|could|should|may|might|sits?|reads?|gives?|shows?|in|of|to|for|and|"
+    r"or|but|that|which)\b)",
     re.IGNORECASE,
 )
 # British spellings and their American forms. The project writes American English,

@@ -35,7 +35,7 @@ Full detection tables: [cifar100-detection-tables.md](../results/cifar100-detect
 anti-correlated at 1% poisoning. A different placement on the same checkpoints,
 same one-sided rule, same defender-legal rate rule, reaches **0.936** mean AUROC at
 1%. Out-of-sample test on GTSRB and Tiny is pre-registered and in flight
-([2026-08-14-h16-out-of-sample](../runs/2026-08-14-h16-out-of-sample.md)).
+(the 2026-08-14 H16 out-of-sample run, whose record under `docs/runs/` is missing).
 
 ## Claim
 
