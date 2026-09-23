@@ -6,11 +6,19 @@ copied_codebase/
 vit_b_16_weights/
 unzip_script.py
 colab_run_uncertainty_defenses.ipynb
-# archive/ holds superseded output kept for reference: the .npz score files the
-# pre-rewrite sweep wrote into a directory now used for experiment CODE. Nothing
-# reads them, the current pipeline writes results/<checkpoint>/psbd/ instead.
-archive/
-figures/
+# archive/ holds 2 different things and only 1 of them is dead.
+#
+# archive/legacy_sweep_*/ is the .npz score files the pre-rewrite sweep wrote,
+# 15 MB from 2026-05. Nothing reads them and the script that made them is gone,
+# so they are the only surviving record of that sweep.
+#
+# archive/gaussian_batchstd/ is 16 GB of stage-1 tensors from the batch-coupled
+# Gaussian arm, written as late as 2026-08-17, and it IS read:
+# pbs/generate_gaussian_rerun_jobs.py enumerates it, cli/compare.py classifies
+# against it, and experiments/theory_predictions needs it to recompute a named
+# cell. Do not delete archive/ as a whole on the strength of the paragraph above.
+/archive/
+/figures/
 **/__pycache__/
 tmp**
 checkpoints/
@@ -18,7 +26,7 @@ logs/
 tmp/
 backdoor_bench_checkpoints/
 backdoor_bench_weights/
-scratch/
+/scratch/
 
 # Other people's papers, kept on disk for reading and for porting from, never
 # committed: the arXiv tarballs plus their extracted figure trees are tens of

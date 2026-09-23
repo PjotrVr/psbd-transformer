@@ -1,21 +1,87 @@
 \section{Introduction}
 \label{sec:intro}
 
-A backdoored classifier behaves normally on clean inputs and predicts an attacker's class whenever a trigger appears in the input \cite{li2022backdoorsurvey}. The attacker plants the behaviour by poisoning a small share of the training data, often 1\% or less, and the defender receives the trained model without ever seeing that data. Input-level detection asks the most practical question in this setting. Given the deployed model and one incoming input, is that input carrying a trigger? A detector that answers well runs in front of the model in production, needs no retraining, and can be paired with a removal defence later.
+A backdoored classifier behaves normally on clean inputs and predicts an
+attacker's class whenever a trigger appears in the input
+\cite{li2022backdoorsurvey}. The attacker plants the behavior by poisoning a
+small share of the training data, often 1\% or less, and the defender receives
+the trained model without ever seeing that data. Input-level detection asks the
+most practical question in this setting. Given the deployed model and 1 incoming
+input, is that input carrying a trigger? A detector that answers well runs in
+front of the model in production, needs no retraining and can be paired with a
+removal defense later.
 
-Prediction Shift Backdoor Detection (PSBD) \cite{li2025psbd} is such a detector. Its observation is that a backdoored input is decided by a shortcut the model learned quickly and firmly, while a clean input is decided by a broad set of features. When the network is perturbed at inference the broad decision wobbles and the shortcut holds. PSBD therefore runs the model a few times with dropout active, measures how much the probability of the predicted class falls, and flags the inputs whose prediction barely moves. It needs only a small clean validation set to set its threshold, and on ResNet-18 and VGG-16 it reports strong results across 7 attacks.
+Prediction Shift Backdoor Detection (PSBD) \cite{li2025psbd} is such a detector.
+Its observation is that a backdoored input is decided by a shortcut the model
+learned quickly and firmly, while a clean input is decided by a broad set of
+features. When the network is perturbed at inference the broad decision wobbles
+and the shortcut holds. PSBD therefore runs the model a few times with dropout
+active, measures how much the probability of the predicted class falls and flags
+the inputs whose prediction barely moves. It needs only a small clean validation
+set to set its threshold, and on ResNet-18 and VGG-16 it reports strong results
+across 7 attacks.
 
-Vision Transformers (ViTs) \cite{dosovitskiy2021an} now sit in most vision pipelines, and the PSBD paper lists them as future work. Nothing in the prediction shift argument depends on convolutions, but the perturbation itself does not carry over unchanged. In a ResNet basic block there is 1 natural place for dropout, the residual stream after the add, and the original work put it there. A ViT block offers several. There is the input to attention, the input to the MLP, each branch output before its residual add, the residual stream after each add, the attention heads and the MLP hidden units, and each of these sees a different tensor with a different role. Dropout is also not the only way to perturb them. Whole tokens can be masked, channels can be masked, noise can be added before a LayerNorm, or its gain can be scaled, and each interacts differently with the attention and the normalisation that follow. Adapting PSBD to a ViT is therefore a design question with 2 axes, where to perturb and what to inject, and this paper answers it.
+Nothing in that argument depends on convolutions, yet the perturbation does not
+carry over unchanged. A ResNet basic block has 1 natural place for dropout, the
+residual stream after the add, and the original work put it there. A transformer
+block has no such default. The input to attention, the input to the MLP, each
+branch output before its residual add, the stream after each add, the attention
+heads and the MLP hidden units are all different tensors with different roles.
+Dropout is also not the only thing that can be injected. Whole tokens can be
+masked, channels can be masked, noise can be added before a LayerNorm or its
+gain can be scaled, and each interacts differently with the attention and the
+normalization that follow.
 
-We answer it by evaluating the design space on a fixed set of backdoored ViT-B/16 models. The story has 4 parts. Our reading of the original placement, dropout on the residual stream after each add, works but leaves several attacks undetected. Keeping dropout and moving it to the input of the attention block already changes the picture. Replacing dropout by masking whole tokens at that input gives the best detector we found, which we call PSBD-TM, and restricting it to a band of blocks only takes away from it. PSBD-TM reaches a mean AUROC of 0.935 across 4 datasets, 7 attacks and 3 poison rates, and 0.968 on Swin-S.
+\paragraph{Research questions.} Adapting PSBD to a Vision Transformer (ViT)
+\cite{dosovitskiy2021an} is therefore a design problem on 2 axes, where to
+perturb and what to inject, and we ask 3 questions about it.
 
-The rest of the paper asks why. Following the backdoor through the network with activation patching, direction ablation and a per-layer read of the class token gives an account that predicts which sites and perturbations work, why the ranking of perturbations reverses between 2 sites, which attacks show the prediction shift phenomenon the original paper describes, and how the picture carries over to Swin.
-
-The contributions are as follows.
 \begin{enumerate}
-  \item An adaptation of PSBD to ViTs, PSBD-TM, selected over a declared basis of placements under 1 decision rule, with a mean AUROC of 0.935 on ViT-B/16 and 0.968 on Swin-S and its largest advantage at 1\% poisoning (\cref{sec:results,sec:swin}).
-  \item A separation of the site from the perturbation, showing that both matter and that neither reduces to a family of sites. The same perturbation moves by 0.11 between the attention input and the MLP input, the same site moves by 0.14 between masking and noise, and the effect of the perturbation reverses sign between the 2 sites (\cref{sec:results:operator}).
-  \item A mechanistic account, tested on the same models, in which the backdoor is 1 direction routed through attention from the trigger's tokens to the class token in the last third of the network. It explains the winning placement, the choice of whole-token masking over dropout, the reversal through LayerNorm absorption, and the attacks on which the original paper's prediction shift phenomenon does and does not appear (\cref{sec:mechanism}).
-  \item The qualified results a deployer needs. A union over probes defends against an adaptive attacker who trains against a single probe, extra forward passes buy little beyond 3, and the all-to-all attack remains the open case (\cref{sec:robustness,sec:limitations}).
+  \item \textbf{Does the choice matter?} If every site and operator scored alike,
+    the original placement would transfer and there would be nothing to study. We
+    measure the whole design space on 1 fixed set of backdoored models under 1
+    decision rule.
+  \item \textbf{Do the 2 axes separate?} A ranking of placements is only a search
+    result. It becomes a finding when the site and the operator can be shown to
+    act independently, so that neither collapses into the other.
+  \item \textbf{Why does the winner win?} A ranking that no mechanism explains
+    predicts nothing about the next architecture or the next attack. We ask what
+    a ViT backdoor is, and whether knowing that predicts the ranking we measured.
 \end{enumerate}
-Every number in this paper is produced by a script from a coverage ledger that declares the models, and the code, the ledger and the generators are released.
+
+The answers are that the choice decides the outcome, that the axes separate, and
+that 1 mechanism predicts both. Masking whole tokens at the input of every
+attention block, which we call PSBD-TM, reaches a mean AUROC of
+\HeadlineAurocAdaptive against \PublishedAurocAdaptive for our reading of the
+original placement, which we call PSBD-RD. The 2 axes separate because the same
+operator moves by \AttentionInputMinusMlpInputTokenMask between the attention
+input and the MLP input, while at the attention input alone the operator moves the
+score by \GaussianMinusTokenMaskAttentionNorm, and that operator effect reverses
+sign at the MLP input. The mechanism is that a backdoor in a ViT is 1 direction in
+the residual stream, written in the last third of the network and routed through
+attention from the trigger's patch tokens to the class token.
+
+\paragraph{Contributions.} We make 3 claims and we name the kind of claim that
+each of them is.
+
+\begin{enumerate}
+  \item A systematic result. Over \PanelCellsCached backdoored ViT-B/16 models on
+    \PanelDatasets datasets, PSBD-TM beats PSBD-RD by
+    \HeadlineGainAdaptiveAuroc [\HeadlineGainAdaptiveAurocLow,
+    \HeadlineGainAdaptiveAurocHigh], with its largest advantage at 1\% poisoning
+    and \SwinGainRecommendedMinusPreResidual on Swin-S
+    (\cref{sec:results,sec:swin}).
+  \item A refutation. The claim that dropout before the residual add beats
+    dropout after it, which motivated this project, does not hold at matched
+    disturbance. Neither does the reading that the winning
+    family is the input-side family, once the operator is held fixed (\cref{sec:results:operator}).
+  \item A mechanistic account, tested on the same models and hedged to the
+    regimes where we tested it. It explains the winning site, the choice of whole
+    tokens over coordinates and the reversal through LayerNorm absorption, and it
+    predicts which attacks show the shift toward the target class that the
+    original work describes (\cref{sec:mechanism}).
+\end{enumerate}
+
+Every number in this paper is produced by a script from a coverage ledger that
+declares the models, and the code, the ledger and the generators are released.
+\Cref{sec:limitations} states what the evidence does not cover.
