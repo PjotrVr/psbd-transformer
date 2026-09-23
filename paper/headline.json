@@ -278,6 +278,386 @@
       "results/regime_router.json"
     ]
   },
+  "AttackLcPgdSteps": {
+    "value": "100",
+    "meaning": "PGD steps behind the Label-Consistent bases",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackLcPgdStepFactor": {
+    "value": "2.5",
+    "meaning": "PGD step size as this multiple of epsilon over the step count",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackBlendAlpha": {
+    "value": "0.2",
+    "meaning": "blend blend ratio",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackSigAmplitude": {
+    "value": "0.157",
+    "meaning": "sig signal amplitude in 0-to-1 pixel units",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackSigFrequency": {
+    "value": "6",
+    "meaning": "sig cycles across the width",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackWanetControlGridSize": {
+    "value": "4",
+    "meaning": "wanet control grid side",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackWanetStrength": {
+    "value": "0.5",
+    "meaning": "wanet warp strength",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackLfStrength": {
+    "value": "0.1",
+    "meaning": "lf pattern strength",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackLfCutoff": {
+    "value": "4",
+    "meaning": "lf low-pass radius",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackBppBitDepth": {
+    "value": "3",
+    "meaning": "bpp bits per channel",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackAdaptiveBlendAlpha": {
+    "value": "0.2",
+    "meaning": "adaptive_blend blend ratio",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackAdaptiveBlendCells": {
+    "value": "4",
+    "meaning": "adaptive_blend grid side",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackAdaptiveBlendTrainCellFraction": {
+    "value": "0.5",
+    "meaning": "adaptive_blend share of cells revealed in training",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackTactPatchSize": {
+    "value": "3",
+    "meaning": "tact trigger side",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackAdaptiveBlendAsrMin": {
+    "value": "0.505",
+    "meaning": "lowest attack success of adaptive_blend over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackAdaptiveBlendAsrMax": {
+    "value": "0.838",
+    "meaning": "highest attack success of adaptive_blend over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackBadnetATwooAsrMin": {
+    "value": "0.997",
+    "meaning": "lowest attack success of badnet_a2o over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackBadnetATwooAsrMax": {
+    "value": "1.000",
+    "meaning": "highest attack success of badnet_a2o over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackBlendAsrMin": {
+    "value": "0.989",
+    "meaning": "lowest attack success of blend over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackBlendAsrMax": {
+    "value": "1.000",
+    "meaning": "highest attack success of blend over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackBppAsrMin": {
+    "value": "0.868",
+    "meaning": "lowest attack success of bpp over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackBppAsrMax": {
+    "value": "0.996",
+    "meaning": "highest attack success of bpp over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackLfAsrMin": {
+    "value": "0.922",
+    "meaning": "lowest attack success of lf over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackLfAsrMax": {
+    "value": "0.999",
+    "meaning": "highest attack success of lf over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackSigAsrMin": {
+    "value": "0.076",
+    "meaning": "lowest attack success of sig over its 11 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackSigAsrMax": {
+    "value": "0.901",
+    "meaning": "highest attack success of sig over its 11 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackTactAsrMin": {
+    "value": "0.929",
+    "meaning": "lowest attack success of tact over its 11 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackTactAsrMax": {
+    "value": "1.000",
+    "meaning": "highest attack success of tact over its 11 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackWanetAsrMin": {
+    "value": "0.057",
+    "meaning": "lowest attack success of wanet over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackWanetAsrMax": {
+    "value": "0.968",
+    "meaning": "highest attack success of wanet over its 12 main-dataset cells",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackAdaptiveBlendCoverRatio": {
+    "value": "1",
+    "meaning": "adaptive_blend cover rate as a multiple of its poison rate, the same on every cell",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackBadnetATwooCoverRate": {
+    "value": "0",
+    "meaning": "badnet_a2o cover rate, the same on every cell whatever the poison rate",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackBlendCoverRate": {
+    "value": "0",
+    "meaning": "blend cover rate, the same on every cell whatever the poison rate",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackBppCoverRatio": {
+    "value": "1",
+    "meaning": "bpp cover rate as a multiple of its poison rate, the same on every cell",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackLfCoverRate": {
+    "value": "0",
+    "meaning": "lf cover rate, the same on every cell whatever the poison rate",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackSigCoverRate": {
+    "value": "0",
+    "meaning": "sig cover rate, the same on every cell whatever the poison rate",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackTactCoverRate": {
+    "value": "0.01",
+    "meaning": "tact cover rate, the same on every cell whatever the poison rate",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
+  "AttackWanetCoverRatio": {
+    "value": "2",
+    "meaning": "wanet cover rate as a multiple of its poison rate, the same on every cell",
+    "generator": "scripts/paper/app_attacks.py",
+    "inputs": [
+      "attacks.default_config",
+      "results/coverage/coverage.json",
+      "checkpoints/<folder>/args.json"
+    ]
+  },
   "AttentionProbesTotal": {
     "value": "19",
     "meaning": "attention-side probes measured on at least 5 clearing models",
@@ -827,6 +1207,14 @@
       "results/_experiments/psu_vs_confidence/psu_vs_confidence.json"
     ]
   },
+  "CostBatchSize": {
+    "value": "128",
+    "meaning": "batch size the cost timing ran at",
+    "generator": "scripts/paper/tab_cost.py",
+    "inputs": [
+      "results/_experiments/psbd_cost/cost.json"
+    ]
+  },
   "CostPlainSecondsVit": {
     "value": "0.0022",
     "meaning": "ViT-B/16 seconds per input, 1 plain unperturbed forward pass",
@@ -900,6 +1288,15 @@
       "results/<folder>/psbd_metrics.json (65 cells)"
     ]
   },
+  "BandFiveEightMinusAllInputSideN": {
+    "value": "71",
+    "meaning": "cells behind band_5_8_minus_all_input_side",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
   "BandFiveEightMinusAllInputSideLow": {
     "value": "$-$0.089",
     "meaning": "lower bound of the 95% bootstrap interval on band_5_8_minus_all_input_side",
@@ -921,6 +1318,15 @@
   "BandNineOneTwoMinusAllInputSide": {
     "value": "$-$0.077",
     "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_9_12_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 71 cells it covers",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandNineOneTwoMinusAllInputSideN": {
+    "value": "71",
+    "meaning": "cells behind band_9_12_minus_all_input_side",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -954,6 +1360,15 @@
       "results/<folder>/psbd_metrics.json (65 cells)"
     ]
   },
+  "BandOneFourMinusAllInputSideN": {
+    "value": "65",
+    "meaning": "cells behind band_1_4_minus_all_input_side",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
   "BandOneFourMinusAllInputSideLow": {
     "value": "$-$0.139",
     "meaning": "lower bound of the 95% bootstrap interval on band_1_4_minus_all_input_side",
@@ -975,6 +1390,15 @@
   "BandOneFourMinusAllResidual": {
     "value": "$-$0.060",
     "meaning": "mean paired AUROC delta, `pre_residual_blocks_1_4` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandOneFourMinusAllResidualN": {
+    "value": "71",
+    "meaning": "cells behind band_1_4_minus_all_residual",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1008,6 +1432,15 @@
       "results/<folder>/psbd_metrics.json (65 cells)"
     ]
   },
+  "BandFiveEightMinusAllResidualN": {
+    "value": "71",
+    "meaning": "cells behind band_5_8_minus_all_residual",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
   "BandFiveEightMinusAllResidualLow": {
     "value": "+0.018",
     "meaning": "lower bound of the 95% bootstrap interval on band_5_8_minus_all_residual",
@@ -1029,6 +1462,15 @@
   "BandNineOneTwoMinusAllResidual": {
     "value": "+0.014",
     "meaning": "mean paired AUROC delta, `pre_residual_blocks_9_12` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers",
+    "generator": "scripts/paper/tab_depth_bands.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "BandNineOneTwoMinusAllResidualN": {
+    "value": "71",
+    "meaning": "cells behind band_9_12_minus_all_residual",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1695,6 +2137,14 @@
       "results/vit_cifar10_*/backdoor_neurons.json (5)",
       "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
       "results/direction_persistence.json"
+    ]
+  },
+  "ErasureLfAsrAfterAllWritesMax": {
+    "value": "0.034",
+    "meaning": "highest LF attack success left after the whole-network edit",
+    "generator": "scripts/paper/tab_erasure.py",
+    "inputs": [
+      "results/_experiments/whole_network_erasure/<folder>.json (10 checkpoints)"
     ]
   },
   "ErasureCheckpoints": {
@@ -2384,6 +2834,105 @@
   "GainsTiny": {
     "value": "+0.049",
     "meaning": "mean paired gain on Tiny ImageNet over 17 models",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsSelectionHalfN": {
+    "value": "33",
+    "meaning": "models on the selection half",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsSelectionHalfOurs": {
+    "value": "0.927",
+    "meaning": "mean AUROC of the recommended placement on the selection half",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsSelectionHalfTwin": {
+    "value": "0.956",
+    "meaning": "mean AUROC of the branch-output twin on the selection half",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsSelectionHalfTwinGap": {
+    "value": "$-$0.029",
+    "meaning": "paired AUROC gap, recommended minus twin, on the selection half",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsReportHalfN": {
+    "value": "32",
+    "meaning": "models on the report half",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsReportHalfOurs": {
+    "value": "0.944",
+    "meaning": "mean AUROC of the recommended placement on the report half",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsReportHalfTwin": {
+    "value": "0.916",
+    "meaning": "mean AUROC of the branch-output twin on the report half",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsReportHalfTwinGap": {
+    "value": "+0.028",
+    "meaning": "paired AUROC gap, recommended minus twin, on the report half",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsStrongAuroc": {
+    "value": "0.9",
+    "meaning": "the AUROC called strong in the results",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsStrongAttacks": {
+    "value": "BadNets and LF",
+    "meaning": "attacks whose every model reads at least the strong AUROC under the recommended placement",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsStrongAttackCount": {
+    "value": "2",
+    "meaning": "attacks in gains_strong_attacks",
     "generator": "scripts/paper/tab_gains.py",
     "inputs": [
       "results/coverage/coverage.json (71 clearing cells)",
@@ -3589,6 +4138,34 @@
       "checkpoints/<benign reference>/args.json"
     ]
   },
+  "ModelInputSize": {
+    "value": "224",
+    "meaning": "side of the square image both backbones read after the Resize front-end",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
+  "TrainingBatchSize": {
+    "value": "128",
+    "meaning": "the batch size cli.train_backdoor trains every panel model at",
+    "generator": "scripts/paper/app_protocol.py",
+    "inputs": [
+      "defences/decision.py",
+      "defences/operators.py",
+      "models/positions.py",
+      "data/splits.py",
+      "detectors/__init__.py",
+      "configs/psbd_basis.json",
+      "checkpoints/<benign reference>/args.json"
+    ]
+  },
   "VitHeads": {
     "value": "12",
     "meaning": "attention heads per block in ViT-B/16",
@@ -4252,358 +4829,6 @@
       "results/<folder>/sink_anatomy.json (69)"
     ]
   },
-  "SamPairs": {
-    "value": "120",
-    "meaning": "matched architecture, dataset, attack and poison-rate combinations with both an Adam and a SAM checkpoint, badnet_a2a excluded",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamAdamReferenceAurocTokenMask": {
-    "value": "0.968",
-    "meaning": "mean AUROC of the token-mask placement at the attention input on the Adam checkpoints in the matched grid",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamAdamReferenceAurocResidualDropout": {
-    "value": "0.899",
-    "meaning": "mean AUROC of the dropout placement after the residual add on the Adam checkpoints in the matched grid",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamMaxRhoTokenMaskDelta": {
-    "value": "+0.035",
-    "meaning": "highest paired AUROC delta of the token-mask placement, SAM minus Adam, over any rho, reached at rho 0.1, n=24",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamMinRhoTokenMaskDelta": {
-    "value": "+0.010",
-    "meaning": "lowest paired AUROC delta of the token-mask placement, SAM minus Adam, over any rho, reached at rho 0.15, n=24",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroZeroFiveTokenMaskDelta": {
-    "value": "+0.034",
-    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.05 minus Adam, over the 24 combinations both sides swept",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroZeroFiveTokenMaskDeltaCi": {
-    "value": "[$-$0.000, +0.082]",
-    "meaning": "95% bootstrap interval on sam_rho_0_05_token_mask_delta",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroZeroFiveResidualDropoutDelta": {
-    "value": "$-$0.041",
-    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.05 minus Adam, over the 24 combinations both sides swept",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroOneTokenMaskDelta": {
-    "value": "+0.035",
-    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.1 minus Adam, over the 24 combinations both sides swept",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroOneTokenMaskDeltaCi": {
-    "value": "[+0.002, +0.079]",
-    "meaning": "95% bootstrap interval on sam_rho_0_1_token_mask_delta",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroOneResidualDropoutDelta": {
-    "value": "+0.004",
-    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.1 minus Adam, over the 24 combinations both sides swept",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroOneFiveTokenMaskDelta": {
-    "value": "+0.010",
-    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.15 minus Adam, over the 24 combinations both sides swept",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroOneFiveTokenMaskDeltaCi": {
-    "value": "[$-$0.032, +0.058]",
-    "meaning": "95% bootstrap interval on sam_rho_0_15_token_mask_delta",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroOneFiveResidualDropoutDelta": {
-    "value": "$-$0.074",
-    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.15 minus Adam, over the 24 combinations both sides swept",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroTwoTokenMaskDelta": {
-    "value": "+0.023",
-    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.2 minus Adam, over the 24 combinations both sides swept",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroTwoTokenMaskDeltaCi": {
-    "value": "[$-$0.024, +0.076]",
-    "meaning": "95% bootstrap interval on sam_rho_0_2_token_mask_delta",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamRhoZeroTwoResidualDropoutDelta": {
-    "value": "$-$0.069",
-    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.2 minus Adam, over the 24 combinations both sides swept",
-    "generator": "scripts/paper/tab_sam.py",
-    "inputs": [
-      "results/_experiments/sam_reading/sam_reading.json"
-    ]
-  },
-  "SamLowRateAsrGate": {
-    "value": "0.850",
-    "meaning": "the attack-success rate below which either side of a pair is dropped from every SAM-versus-Adam comparison in this table",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamLowRateNExcludedAsrGate": {
-    "value": "1",
-    "meaning": "pairs dropped from the per-rate table because the Adam or the SAM checkpoint fell below the attack-success bar",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamLowRateCoverage": {
-    "value": "40/40",
-    "meaning": "matched (dataset, attack, architecture) combinations with both an Adam checkpoint and at least 1 SAM checkpoint, at 1% and 5% poisoning",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroOneRhoZeroZeroFiveTokenMaskDelta": {
-    "value": "$-$0.001",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 1% poisoning and rho 0.05, n=7",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroOneRhoZeroZeroFiveTokenMaskDeltaCi": {
-    "value": "[$-$0.035, +0.027]",
-    "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_05_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroOneRhoZeroOneTokenMaskDelta": {
-    "value": "+0.010",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 1% poisoning and rho 0.1, n=7",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroOneRhoZeroOneTokenMaskDeltaCi": {
-    "value": "[$-$0.018, +0.039]",
-    "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_1_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroOneRhoZeroOneFiveTokenMaskDelta": {
-    "value": "$-$0.036",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 1% poisoning and rho 0.15, n=7",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroOneRhoZeroOneFiveTokenMaskDeltaCi": {
-    "value": "[$-$0.125, +0.025]",
-    "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_15_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroOneRhoZeroTwoTokenMaskDelta": {
-    "value": "$-$0.052",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 1% poisoning and rho 0.2, n=7",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroOneRhoZeroTwoTokenMaskDeltaCi": {
-    "value": "[$-$0.132, +0.024]",
-    "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_2_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroFiveRhoZeroZeroFiveTokenMaskDelta": {
-    "value": "+0.029",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 5% poisoning and rho 0.05, n=8",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroFiveRhoZeroZeroFiveTokenMaskDeltaCi": {
-    "value": "[+0.002, +0.071]",
-    "meaning": "95% bootstrap interval on sam_rate_0_05_rho_0_05_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroFiveRhoZeroOneTokenMaskDelta": {
-    "value": "+0.019",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 5% poisoning and rho 0.1, n=8",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroFiveRhoZeroOneTokenMaskDeltaCi": {
-    "value": "[$-$0.024, +0.071]",
-    "meaning": "95% bootstrap interval on sam_rate_0_05_rho_0_1_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroFiveRhoZeroOneFiveTokenMaskDelta": {
-    "value": "$-$0.026",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 5% poisoning and rho 0.15, n=7",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroFiveRhoZeroOneFiveTokenMaskDeltaCi": {
-    "value": "[$-$0.073, +0.014]",
-    "meaning": "95% bootstrap interval on sam_rate_0_05_rho_0_15_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroFiveRhoZeroTwoTokenMaskDelta": {
-    "value": "+0.027",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 5% poisoning and rho 0.2, n=7",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroZeroFiveRhoZeroTwoTokenMaskDeltaCi": {
-    "value": "[$-$0.003, +0.073]",
-    "meaning": "95% bootstrap interval on sam_rate_0_05_rho_0_2_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroOneRhoZeroZeroFiveTokenMaskDelta": {
-    "value": "+0.069",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 10% poisoning and rho 0.05, n=8",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroOneRhoZeroZeroFiveTokenMaskDeltaCi": {
-    "value": "[$-$0.010, +0.199]",
-    "meaning": "95% bootstrap interval on sam_rate_0_1_rho_0_05_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroOneRhoZeroOneTokenMaskDelta": {
-    "value": "+0.070",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 10% poisoning and rho 0.1, n=9",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroOneRhoZeroOneTokenMaskDeltaCi": {
-    "value": "[+0.008, +0.173]",
-    "meaning": "95% bootstrap interval on sam_rate_0_1_rho_0_1_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroOneRhoZeroOneFiveTokenMaskDelta": {
-    "value": "+0.067",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 10% poisoning and rho 0.15, n=10",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroOneRhoZeroOneFiveTokenMaskDeltaCi": {
-    "value": "[+0.011, +0.151]",
-    "meaning": "95% bootstrap interval on sam_rate_0_1_rho_0_15_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroOneRhoZeroTwoTokenMaskDelta": {
-    "value": "+0.074",
-    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 10% poisoning and rho 0.2, n=10",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
-  "SamRateZeroOneRhoZeroTwoTokenMaskDeltaCi": {
-    "value": "[+0.007, +0.178]",
-    "meaning": "95% bootstrap interval on sam_rate_0_1_rho_0_2_token_mask_delta",
-    "generator": "scripts/paper/tab_sam_low_rate.py",
-    "inputs": [
-      "results/_experiments/sam_low_rate/sam_low_rate.json"
-    ]
-  },
   "SeedsPerCell": {
     "value": "3",
     "meaning": "training seeds per replicated cell",
@@ -4682,6 +4907,198 @@
       "results/coverage/coverage.json",
       "results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
       "checkpoints/<folder>_seed_N/args.json"
+    ]
+  },
+  "LadderAurocAtZeroSix": {
+    "value": "0.927",
+    "meaning": "mean auroc of the recommended placement at clean shift ratio 0.6",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderAurocAtZeroSixN": {
+    "value": "65",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.6",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderAurocAtZeroEight": {
+    "value": "0.936",
+    "meaning": "mean auroc of the recommended placement at clean shift ratio 0.8",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderAurocAtZeroEightN": {
+    "value": "65",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.8",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderAurocAtZeroNine": {
+    "value": "0.925",
+    "meaning": "mean auroc of the recommended placement at clean shift ratio 0.9",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderAurocAtZeroNineN": {
+    "value": "52",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.9",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderAurocAtZeroNineFive": {
+    "value": "0.939",
+    "meaning": "mean auroc of the recommended placement at clean shift ratio 0.95",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderAurocAtZeroNineFiveN": {
+    "value": "44",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.95",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprOneZeroAtZeroSix": {
+    "value": "0.76",
+    "meaning": "mean tpr10 of the recommended placement at clean shift ratio 0.6",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprOneZeroAtZeroSixN": {
+    "value": "65",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.6",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprOneZeroAtZeroEight": {
+    "value": "0.80",
+    "meaning": "mean tpr10 of the recommended placement at clean shift ratio 0.8",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprOneZeroAtZeroEightN": {
+    "value": "65",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.8",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprOneZeroAtZeroNine": {
+    "value": "0.81",
+    "meaning": "mean tpr10 of the recommended placement at clean shift ratio 0.9",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprOneZeroAtZeroNineN": {
+    "value": "52",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.9",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprOneZeroAtZeroNineFive": {
+    "value": "0.86",
+    "meaning": "mean tpr10 of the recommended placement at clean shift ratio 0.95",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprOneZeroAtZeroNineFiveN": {
+    "value": "44",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.95",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprTwoZeroAtZeroSix": {
+    "value": "0.84",
+    "meaning": "mean tpr20 of the recommended placement at clean shift ratio 0.6",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprTwoZeroAtZeroSixN": {
+    "value": "65",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.6",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprTwoZeroAtZeroEight": {
+    "value": "0.86",
+    "meaning": "mean tpr20 of the recommended placement at clean shift ratio 0.8",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprTwoZeroAtZeroEightN": {
+    "value": "65",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.8",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprTwoZeroAtZeroNine": {
+    "value": "0.87",
+    "meaning": "mean tpr20 of the recommended placement at clean shift ratio 0.9",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprTwoZeroAtZeroNineN": {
+    "value": "52",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.9",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprTwoZeroAtZeroNineFive": {
+    "value": "0.90",
+    "meaning": "mean tpr20 of the recommended placement at clean shift ratio 0.95",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "LadderTprTwoZeroAtZeroNineFiveN": {
+    "value": "44",
+    "meaning": "models whose rate ladder reaches clean shift ratio 0.95",
+    "generator": "scripts/paper/fig_shift_ladder.py",
+    "inputs": [
+      "results/<folder>/psbd_metrics.json"
     ]
   },
   "StaircaseResidualPostResidualN": {
@@ -7211,6 +7628,46 @@
       "results/_experiments/tac_layers/tac_layers.json"
     ]
   },
+  "TacLayersBenignCkaMin": {
+    "value": "0.99",
+    "meaning": "smallest final-layer CKA between clean and triggered activations on a benign reference",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
+  "TacLayersTactPeakMin": {
+    "value": "0.26",
+    "meaning": "smallest peak relative direction norm over the TaCT models",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
+  "TacLayersTactPeakMax": {
+    "value": "0.38",
+    "meaning": "largest peak relative direction norm over the TaCT models",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
+  "TacLayersTactCkaMin": {
+    "value": "0.98",
+    "meaning": "smallest final-layer CKA over the TaCT models",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
+  "TacLayersTactCkaMax": {
+    "value": "0.99",
+    "meaning": "largest final-layer CKA over the TaCT models",
+    "generator": "scripts/paper/mech_tac_layers.py",
+    "inputs": [
+      "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
   "TacLayersBenignPeakMax": {
     "value": "0.12",
     "meaning": "largest peak relative direction norm over the benign references",
@@ -7249,6 +7706,182 @@
     "generator": "scripts/paper/mech_tac_layers.py",
     "inputs": [
       "results/_experiments/tac_layers/tac_layers.json"
+    ]
+  },
+  "WeightDetectorBackdoored": {
+    "value": "15",
+    "meaning": "backdoored models in the weight-detector reproduction",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorBenign": {
+    "value": "3",
+    "meaning": "benign models in the weight-detector reproduction",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorBenignFlagMin": {
+    "value": "3",
+    "meaning": "smallest share of the grid, in percent, that flags a benign model",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorBenignFlagMax": {
+    "value": "15",
+    "meaning": "largest share of the grid, in percent, that flags a benign model",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorBadnetATwooModels": {
+    "value": "3",
+    "meaning": "badnet_a2o models in the weight-detector reproduction",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorBadnetATwooNamed": {
+    "value": "0",
+    "meaning": "badnet_a2o models whose true target the weight detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorBlendModels": {
+    "value": "1",
+    "meaning": "blend models in the weight-detector reproduction",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorBlendNamed": {
+    "value": "0",
+    "meaning": "blend models whose true target the weight detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorBppModels": {
+    "value": "5",
+    "meaning": "bpp models in the weight-detector reproduction",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorBppNamed": {
+    "value": "2",
+    "meaning": "bpp models whose true target the weight detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorBppBestZMin": {
+    "value": "10",
+    "meaning": "smallest best Z over the bpp models the detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorBppBestZMax": {
+    "value": "71",
+    "meaning": "largest best Z over the bpp models the detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorLfModels": {
+    "value": "1",
+    "meaning": "lf models in the weight-detector reproduction",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorLfNamed": {
+    "value": "1",
+    "meaning": "lf models whose true target the weight detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorLfBestZMin": {
+    "value": "10",
+    "meaning": "smallest best Z over the lf models the detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorLfBestZMax": {
+    "value": "10",
+    "meaning": "largest best Z over the lf models the detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorTactModels": {
+    "value": "1",
+    "meaning": "tact models in the weight-detector reproduction",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorTactNamed": {
+    "value": "0",
+    "meaning": "tact models whose true target the weight detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorWanetModels": {
+    "value": "4",
+    "meaning": "wanet models in the weight-detector reproduction",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorWanetNamed": {
+    "value": "4",
+    "meaning": "wanet models whose true target the weight detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorWanetBestZMin": {
+    "value": "35",
+    "meaning": "smallest best Z over the wanet models the detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
+    ]
+  },
+  "WeightDetectorWanetBestZMax": {
+    "value": "139",
+    "meaning": "largest best Z over the wanet models the detector names",
+    "generator": "scripts/paper/app_weight_detector.py",
+    "inputs": [
+      "results/_experiments/weight_detector/summary.json"
     ]
   }
 }

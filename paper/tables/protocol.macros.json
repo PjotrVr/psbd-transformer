@@ -9,8 +9,8 @@
     "configs/psbd_basis.json",
     "checkpoints/<benign reference>/args.json"
   ],
-  "written_at": "2026-09-23T18:11:56.859298+00:00",
-  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
+  "written_at": "2026-09-23T19:42:38.758010+00:00",
+  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
   "macros": {
     "AdaptiveShiftTarget": {
       "value": "0.8",
@@ -123,6 +123,14 @@
     "VitWidth": {
       "value": "768",
       "meaning": "residual width of ViT-B/16"
+    },
+    "ModelInputSize": {
+      "value": "224",
+      "meaning": "side of the square image both backbones read after the Resize front-end"
+    },
+    "TrainingBatchSize": {
+      "value": "128",
+      "meaning": "the batch size cli.train_backdoor trains every panel model at"
     },
     "VitHeads": {
       "value": "12",

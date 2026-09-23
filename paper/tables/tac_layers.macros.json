@@ -3,8 +3,8 @@
   "inputs": [
     "results/_experiments/tac_layers/tac_layers.json"
   ],
-  "written_at": "2026-09-23T18:21:08.573014+00:00",
-  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
+  "written_at": "2026-09-23T19:52:43.698968+00:00",
+  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
   "macros": {
     "TacLayersCheckpoints": {
       "value": "18",
@@ -13,6 +13,26 @@
     "TacLayersSamples": {
       "value": "500",
       "meaning": "paired images per checkpoint in the per-layer TAC pass"
+    },
+    "TacLayersBenignCkaMin": {
+      "value": "0.99",
+      "meaning": "smallest final-layer CKA between clean and triggered activations on a benign reference"
+    },
+    "TacLayersTactPeakMin": {
+      "value": "0.26",
+      "meaning": "smallest peak relative direction norm over the TaCT models"
+    },
+    "TacLayersTactPeakMax": {
+      "value": "0.38",
+      "meaning": "largest peak relative direction norm over the TaCT models"
+    },
+    "TacLayersTactCkaMin": {
+      "value": "0.98",
+      "meaning": "smallest final-layer CKA over the TaCT models"
+    },
+    "TacLayersTactCkaMax": {
+      "value": "0.99",
+      "meaning": "largest final-layer CKA over the TaCT models"
     },
     "TacLayersBenignPeakMax": {
       "value": "0.12",

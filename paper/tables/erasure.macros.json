@@ -3,9 +3,13 @@
   "inputs": [
     "results/_experiments/whole_network_erasure/<folder>.json (10 checkpoints)"
   ],
-  "written_at": "2026-09-23T18:24:44.482369+00:00",
-  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
+  "written_at": "2026-09-23T19:48:16.158967+00:00",
+  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
   "macros": {
+    "ErasureLfAsrAfterAllWritesMax": {
+      "value": "0.034",
+      "meaning": "highest LF attack success left after the whole-network edit"
+    },
     "ErasureCheckpoints": {
       "value": "10",
       "meaning": "backdoored ViT-B/16 checkpoints in the whole-network erasure record"

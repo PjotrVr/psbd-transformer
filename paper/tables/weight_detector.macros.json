@@ -1,0 +1,98 @@
+{
+  "generator": "scripts/paper/app_weight_detector.py",
+  "inputs": [
+    "results/_experiments/weight_detector/summary.json"
+  ],
+  "written_at": "2026-09-23T19:47:08.942167+00:00",
+  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
+  "macros": {
+    "WeightDetectorBackdoored": {
+      "value": "15",
+      "meaning": "backdoored models in the weight-detector reproduction"
+    },
+    "WeightDetectorBenign": {
+      "value": "3",
+      "meaning": "benign models in the weight-detector reproduction"
+    },
+    "WeightDetectorBenignFlagMin": {
+      "value": "3",
+      "meaning": "smallest share of the grid, in percent, that flags a benign model"
+    },
+    "WeightDetectorBenignFlagMax": {
+      "value": "15",
+      "meaning": "largest share of the grid, in percent, that flags a benign model"
+    },
+    "WeightDetectorBadnetATwooModels": {
+      "value": "3",
+      "meaning": "badnet_a2o models in the weight-detector reproduction"
+    },
+    "WeightDetectorBadnetATwooNamed": {
+      "value": "0",
+      "meaning": "badnet_a2o models whose true target the weight detector names"
+    },
+    "WeightDetectorBlendModels": {
+      "value": "1",
+      "meaning": "blend models in the weight-detector reproduction"
+    },
+    "WeightDetectorBlendNamed": {
+      "value": "0",
+      "meaning": "blend models whose true target the weight detector names"
+    },
+    "WeightDetectorBppModels": {
+      "value": "5",
+      "meaning": "bpp models in the weight-detector reproduction"
+    },
+    "WeightDetectorBppNamed": {
+      "value": "2",
+      "meaning": "bpp models whose true target the weight detector names"
+    },
+    "WeightDetectorBppBestZMin": {
+      "value": "10",
+      "meaning": "smallest best Z over the bpp models the detector names"
+    },
+    "WeightDetectorBppBestZMax": {
+      "value": "71",
+      "meaning": "largest best Z over the bpp models the detector names"
+    },
+    "WeightDetectorLfModels": {
+      "value": "1",
+      "meaning": "lf models in the weight-detector reproduction"
+    },
+    "WeightDetectorLfNamed": {
+      "value": "1",
+      "meaning": "lf models whose true target the weight detector names"
+    },
+    "WeightDetectorLfBestZMin": {
+      "value": "10",
+      "meaning": "smallest best Z over the lf models the detector names"
+    },
+    "WeightDetectorLfBestZMax": {
+      "value": "10",
+      "meaning": "largest best Z over the lf models the detector names"
+    },
+    "WeightDetectorTactModels": {
+      "value": "1",
+      "meaning": "tact models in the weight-detector reproduction"
+    },
+    "WeightDetectorTactNamed": {
+      "value": "0",
+      "meaning": "tact models whose true target the weight detector names"
+    },
+    "WeightDetectorWanetModels": {
+      "value": "4",
+      "meaning": "wanet models in the weight-detector reproduction"
+    },
+    "WeightDetectorWanetNamed": {
+      "value": "4",
+      "meaning": "wanet models whose true target the weight detector names"
+    },
+    "WeightDetectorWanetBestZMin": {
+      "value": "35",
+      "meaning": "smallest best Z over the wanet models the detector names"
+    },
+    "WeightDetectorWanetBestZMax": {
+      "value": "139",
+      "meaning": "largest best Z over the wanet models the detector names"
+    }
+  }
+}

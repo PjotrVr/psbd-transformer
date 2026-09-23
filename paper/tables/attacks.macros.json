@@ -1,0 +1,164 @@
+{
+  "generator": "scripts/paper/app_attacks.py",
+  "inputs": [
+    "attacks.default_config",
+    "results/coverage/coverage.json",
+    "checkpoints/<folder>/args.json"
+  ],
+  "written_at": "2026-09-23T19:44:32.306842+00:00",
+  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
+  "macros": {
+    "AttackLcPgdSteps": {
+      "value": "100",
+      "meaning": "PGD steps behind the Label-Consistent bases"
+    },
+    "AttackLcPgdStepFactor": {
+      "value": "2.5",
+      "meaning": "PGD step size as this multiple of epsilon over the step count"
+    },
+    "AttackBlendAlpha": {
+      "value": "0.2",
+      "meaning": "blend blend ratio"
+    },
+    "AttackSigAmplitude": {
+      "value": "0.157",
+      "meaning": "sig signal amplitude in 0-to-1 pixel units"
+    },
+    "AttackSigFrequency": {
+      "value": "6",
+      "meaning": "sig cycles across the width"
+    },
+    "AttackWanetControlGridSize": {
+      "value": "4",
+      "meaning": "wanet control grid side"
+    },
+    "AttackWanetStrength": {
+      "value": "0.5",
+      "meaning": "wanet warp strength"
+    },
+    "AttackLfStrength": {
+      "value": "0.1",
+      "meaning": "lf pattern strength"
+    },
+    "AttackLfCutoff": {
+      "value": "4",
+      "meaning": "lf low-pass radius"
+    },
+    "AttackBppBitDepth": {
+      "value": "3",
+      "meaning": "bpp bits per channel"
+    },
+    "AttackAdaptiveBlendAlpha": {
+      "value": "0.2",
+      "meaning": "adaptive_blend blend ratio"
+    },
+    "AttackAdaptiveBlendCells": {
+      "value": "4",
+      "meaning": "adaptive_blend grid side"
+    },
+    "AttackAdaptiveBlendTrainCellFraction": {
+      "value": "0.5",
+      "meaning": "adaptive_blend share of cells revealed in training"
+    },
+    "AttackTactPatchSize": {
+      "value": "3",
+      "meaning": "tact trigger side"
+    },
+    "AttackAdaptiveBlendAsrMin": {
+      "value": "0.505",
+      "meaning": "lowest attack success of adaptive_blend over its 12 main-dataset cells"
+    },
+    "AttackAdaptiveBlendAsrMax": {
+      "value": "0.838",
+      "meaning": "highest attack success of adaptive_blend over its 12 main-dataset cells"
+    },
+    "AttackBadnetATwooAsrMin": {
+      "value": "0.997",
+      "meaning": "lowest attack success of badnet_a2o over its 12 main-dataset cells"
+    },
+    "AttackBadnetATwooAsrMax": {
+      "value": "1.000",
+      "meaning": "highest attack success of badnet_a2o over its 12 main-dataset cells"
+    },
+    "AttackBlendAsrMin": {
+      "value": "0.989",
+      "meaning": "lowest attack success of blend over its 12 main-dataset cells"
+    },
+    "AttackBlendAsrMax": {
+      "value": "1.000",
+      "meaning": "highest attack success of blend over its 12 main-dataset cells"
+    },
+    "AttackBppAsrMin": {
+      "value": "0.868",
+      "meaning": "lowest attack success of bpp over its 12 main-dataset cells"
+    },
+    "AttackBppAsrMax": {
+      "value": "0.996",
+      "meaning": "highest attack success of bpp over its 12 main-dataset cells"
+    },
+    "AttackLfAsrMin": {
+      "value": "0.922",
+      "meaning": "lowest attack success of lf over its 12 main-dataset cells"
+    },
+    "AttackLfAsrMax": {
+      "value": "0.999",
+      "meaning": "highest attack success of lf over its 12 main-dataset cells"
+    },
+    "AttackSigAsrMin": {
+      "value": "0.076",
+      "meaning": "lowest attack success of sig over its 11 main-dataset cells"
+    },
+    "AttackSigAsrMax": {
+      "value": "0.901",
+      "meaning": "highest attack success of sig over its 11 main-dataset cells"
+    },
+    "AttackTactAsrMin": {
+      "value": "0.929",
+      "meaning": "lowest attack success of tact over its 11 main-dataset cells"
+    },
+    "AttackTactAsrMax": {
+      "value": "1.000",
+      "meaning": "highest attack success of tact over its 11 main-dataset cells"
+    },
+    "AttackWanetAsrMin": {
+      "value": "0.057",
+      "meaning": "lowest attack success of wanet over its 12 main-dataset cells"
+    },
+    "AttackWanetAsrMax": {
+      "value": "0.968",
+      "meaning": "highest attack success of wanet over its 12 main-dataset cells"
+    },
+    "AttackAdaptiveBlendCoverRatio": {
+      "value": "1",
+      "meaning": "adaptive_blend cover rate as a multiple of its poison rate, the same on every cell"
+    },
+    "AttackBadnetATwooCoverRate": {
+      "value": "0",
+      "meaning": "badnet_a2o cover rate, the same on every cell whatever the poison rate"
+    },
+    "AttackBlendCoverRate": {
+      "value": "0",
+      "meaning": "blend cover rate, the same on every cell whatever the poison rate"
+    },
+    "AttackBppCoverRatio": {
+      "value": "1",
+      "meaning": "bpp cover rate as a multiple of its poison rate, the same on every cell"
+    },
+    "AttackLfCoverRate": {
+      "value": "0",
+      "meaning": "lf cover rate, the same on every cell whatever the poison rate"
+    },
+    "AttackSigCoverRate": {
+      "value": "0",
+      "meaning": "sig cover rate, the same on every cell whatever the poison rate"
+    },
+    "AttackTactCoverRate": {
+      "value": "0.01",
+      "meaning": "tact cover rate, the same on every cell whatever the poison rate"
+    },
+    "AttackWanetCoverRatio": {
+      "value": "2",
+      "meaning": "wanet cover rate as a multiple of its poison rate, the same on every cell"
+    }
+  }
+}

@@ -3,8 +3,8 @@
   "inputs": [
     "results/<folder>/psbd/<placement>/rate_*_{clean,backdoor}.pt"
   ],
-  "written_at": "2026-09-23T18:19:06.534800+00:00",
-  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
+  "written_at": "2026-09-23T19:56:53.660681+00:00",
+  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
   "macros": {
     "AgreementWithinInputSideClean": {
       "value": "0.472",

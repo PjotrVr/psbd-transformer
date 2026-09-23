@@ -4,12 +4,16 @@
     "results/coverage/coverage.json",
     "results/<folder>/psbd_metrics.json (65 cells)"
   ],
-  "written_at": "2026-09-23T18:23:20.570217+00:00",
-  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
+  "written_at": "2026-09-23T19:53:07.920902+00:00",
+  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
   "macros": {
     "BandFiveEightMinusAllInputSide": {
       "value": "$-$0.055",
       "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_5_8_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 71 cells it covers"
+    },
+    "BandFiveEightMinusAllInputSideN": {
+      "value": "71",
+      "meaning": "cells behind band_5_8_minus_all_input_side"
     },
     "BandFiveEightMinusAllInputSideLow": {
       "value": "$-$0.089",
@@ -23,6 +27,10 @@
       "value": "$-$0.077",
       "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_9_12_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 71 cells it covers"
     },
+    "BandNineOneTwoMinusAllInputSideN": {
+      "value": "71",
+      "meaning": "cells behind band_9_12_minus_all_input_side"
+    },
     "BandNineOneTwoMinusAllInputSideLow": {
       "value": "$-$0.125",
       "meaning": "lower bound of the 95% bootstrap interval on band_9_12_minus_all_input_side"
@@ -34,6 +42,10 @@
     "BandOneFourMinusAllInputSide": {
       "value": "$-$0.103",
       "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_1_4_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 65 cells it covers"
+    },
+    "BandOneFourMinusAllInputSideN": {
+      "value": "65",
+      "meaning": "cells behind band_1_4_minus_all_input_side"
     },
     "BandOneFourMinusAllInputSideLow": {
       "value": "$-$0.139",
@@ -47,6 +59,10 @@
       "value": "$-$0.060",
       "meaning": "mean paired AUROC delta, `pre_residual_blocks_1_4` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers"
     },
+    "BandOneFourMinusAllResidualN": {
+      "value": "71",
+      "meaning": "cells behind band_1_4_minus_all_residual"
+    },
     "BandOneFourMinusAllResidualLow": {
       "value": "$-$0.079",
       "meaning": "lower bound of the 95% bootstrap interval on band_1_4_minus_all_residual"
@@ -59,6 +75,10 @@
       "value": "+0.043",
       "meaning": "mean paired AUROC delta, `pre_residual_blocks_5_8` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers"
     },
+    "BandFiveEightMinusAllResidualN": {
+      "value": "71",
+      "meaning": "cells behind band_5_8_minus_all_residual"
+    },
     "BandFiveEightMinusAllResidualLow": {
       "value": "+0.018",
       "meaning": "lower bound of the 95% bootstrap interval on band_5_8_minus_all_residual"
@@ -70,6 +90,10 @@
     "BandNineOneTwoMinusAllResidual": {
       "value": "+0.014",
       "meaning": "mean paired AUROC delta, `pre_residual_blocks_9_12` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers"
+    },
+    "BandNineOneTwoMinusAllResidualN": {
+      "value": "71",
+      "meaning": "cells behind band_9_12_minus_all_residual"
     },
     "BandNineOneTwoMinusAllResidualLow": {
       "value": "$-$0.030",

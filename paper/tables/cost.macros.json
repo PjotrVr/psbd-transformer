@@ -3,9 +3,13 @@
   "inputs": [
     "results/_experiments/psbd_cost/cost.json"
   ],
-  "written_at": "2026-09-23T18:22:58.125623+00:00",
-  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
+  "written_at": "2026-09-23T19:48:33.486418+00:00",
+  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
   "macros": {
+    "CostBatchSize": {
+      "value": "128",
+      "meaning": "batch size the cost timing ran at"
+    },
     "CostPlainSecondsVit": {
       "value": "0.0022",
       "meaning": "ViT-B/16 seconds per input, 1 plain unperturbed forward pass"
