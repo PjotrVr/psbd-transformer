@@ -26,7 +26,8 @@ one.
 | Q22 | Closed | The paper no longer says a benign reading checks a sign convention |
 | Q23 | Disclosed | The paper reports SentiNet's below-chance reading and says the stated mechanism explains chance, not the sign |
 | Q32 | Closed | `method.tex` carries the fractional PSU equation |
-| Q9 to Q14, Q16, Q17, Q18, Q25 to Q28, Q30, Q31, Q33 | Open | Untouched this pass |
+| Q17, Q27 | Disclosed, not resolved | The limitations state the false-positive rate PSBD-TM realizes on clean test images at the nominal 10% budget, `\RealizedFprOneZero` on average and `\RealizedFprOneZeroMin` to `\RealizedFprOneZeroMax` over models, and the share of flags that are triggered at a 1% prevalence, `\PrecisionOneZero`, all from `tab_headline.py`. No 1% budget result is claimed and PSU's own `threshold_diagnostics` is still not called |
+| Q9 to Q14, Q16, Q18, Q25, Q26, Q28, Q30, Q31, Q33 | Open | Untouched this pass |
 | Q36 | New, open | A CPU node runs float32 where every GPU cache is bfloat16, because `defenses.inference` enters autocast only on CUDA. 1 detector moved 7.4e-3 AUROC between the 2. `sw_parity` measures it on PSBD before the 10 CPU-swept Swin cells are pooled with the 80 GPU ones |
 | Q37 | New, disclosed | Against the calibrated IBD-PSC port on the same 69 models PSBD-TM leads by +0.013 AUROC and +0.023 TPR at 10% FPR and trails by 0.002 at 20%. The paper calls it a tie |
 | Q38 | New, disclosed | Token masking restricted to blocks 1 to 4 reads near the top of the ranking on the 12 models that reach the adaptive target and is the worst band on the 65 models read at matched disturbance. `app:bands` says to read a band's n beside its mean |
