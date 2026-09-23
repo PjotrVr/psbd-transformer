@@ -37,6 +37,9 @@ import models.positions as new_positions
 
 from models.backbones import load_checkpoint
 
+# Part of the fast tier: see pyproject's fast marker.
+pytestmark = pytest.mark.fast
+
 CHECKPOINT_ROOT = "checkpoints"
 
 RESULTS_ROOT = "results"

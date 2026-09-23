@@ -23,7 +23,10 @@ dev = ["ruff", "ipython", "jupyter", "ipykernel", "pytest>=9.1.1", "scikit-image
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-markers = ["slow: needs a GPU and real training, skipped by default (pytest -m slow to run)"]
+markers = [
+    "slow: needs a GPU and real training, skipped by default (pytest -m slow to run)",
+    "fast: the invariants whose breakage would silently corrupt a published number, under a minute (pytest -m fast)",
+]
 addopts = "-m 'not slow'"
 
 [tool.uv]

@@ -19,6 +19,9 @@ import os
 
 import pytest
 
+# Part of the fast tier: see pyproject's fast marker.
+pytestmark = pytest.mark.fast
+
 PACKAGES = (
     "attacks",
     "analysis",

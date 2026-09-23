@@ -19,6 +19,9 @@ import torch
 from defences.operators import build_operator
 
 # A batch large enough that a masking fraction is measurable rather than noise.
+# Part of the fast tier: see pyproject's fast marker.
+pytestmark = pytest.mark.fast
+
 BATCH = 64
 TOKENS = 16
 CHANNELS = 32

@@ -8,8 +8,8 @@ metadata:
 `literature/` holds the paper library. It is gitignored, so nothing there is under version
 control and PDFs must be re-fetched rather than recovered from git. Layout as of 2026-09-23:
 flat PDFs named `<topic>-<author>-<venue><year>.pdf`, a few LaTeX-source directories such as
-`psbd-li-arxiv2024-source/`, `sam-poisoned-detection-zhang-arxiv2024-source/` and
-`backdoor-directions-karayalcin-source/`, plus `literature/README.md`, an annotated catalog
+`psbd-li-arxiv2024/source/`, `sam-poisoned-detection-zhang-arxiv2024/source/` and
+`backdoor-directions-karayalcin/source/`, plus `literature/README.md`, an annotated catalog
 with a "For us" note per paper. Newer downloads use `literature/<slug>/<slug>.pdf`.
 
 **Why:** the annotated README is where the project records why a paper matters rather than

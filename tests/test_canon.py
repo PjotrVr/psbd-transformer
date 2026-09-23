@@ -9,6 +9,11 @@ import json
 
 from defences.decision import PUBLISHED_PLACEMENT, RECOMMENDED_PLACEMENT
 
+import pytest
+
+# Part of the fast tier: see pyproject's fast marker.
+pytestmark = pytest.mark.fast
+
 BASIS_PATH = "configs/psbd_basis.json"
 
 

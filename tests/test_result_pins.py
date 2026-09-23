@@ -21,6 +21,9 @@ from pathlib import Path
 
 import pytest
 
+# Part of the fast tier: see pyproject's fast marker.
+pytestmark = pytest.mark.fast
+
 RESULTS_DIR = Path("results")
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 # The placement the fixture carries, in the current <position>_<operator> naming.

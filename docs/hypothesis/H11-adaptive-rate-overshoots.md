@@ -7,7 +7,7 @@ fix is free.
 
 PSBD selects its dropout rate by an adaptive rule: take the smallest `p` at which the
 clean-validation shift ratio reaches a high value, "0.8 in our experiments"
-(`literature/psbd-li-arxiv2024-source/sec/4_method.tex:185`). That target was tuned on ResNet-18. On ViT-B/16
+(`literature/psbd-li-arxiv2024/source/sec/4_method.tex:185`). That target was tuned on ResNet-18. On ViT-B/16
 it lands past the optimum, so following the published rule leaves detection on the
 table.
 

@@ -1,6 +1,6 @@
 """Whether SAM training amplifies the trigger's footprint or widens PSBD's margin.
 
-The SAM paper (Zhang et al., arXiv 2411.11525, literature/sam-poisoned-detection-zhang-arxiv2024-source/,
+The SAM paper (Zhang et al., arXiv 2411.11525, literature/sam-poisoned-detection-zhang-arxiv2024/source/,
 Section 3) claims sharpness-aware minimisation amplifies backdoor neurons, which
 is why poisoned samples separate more cleanly downstream. On our ViT-B/16
 checkpoints PSBD-TM (token_mask at before_attention_norm) gains only +0.02 to

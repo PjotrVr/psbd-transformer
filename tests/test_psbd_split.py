@@ -23,6 +23,9 @@ from data.splits import (
 from data.registry import DATASET_REGISTRY
 from data.loading import denormalize, load_clean_datasets
 
+# Part of the fast tier: see pyproject's fast marker.
+pytestmark = pytest.mark.fast
+
 CIFAR100_TEST_SIZE = 10000
 CHECKPOINT = "checkpoints/vit_cifar100_wanet_0_1/attack_result.pt"
 

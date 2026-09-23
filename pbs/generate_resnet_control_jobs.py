@@ -49,7 +49,7 @@ POISON_RATE = 0.1
 TARGET_LABEL = 0
 ARCHITECTURE = "resnet18"
 
-# literature/psbd-li-arxiv2024-source/sec/7_appendix.tex's training table: ResNet-18 on CIFAR-10 and
+# literature/psbd-li-arxiv2024/source/sec/7_appendix.tex's training table: ResNet-18 on CIFAR-10 and
 # GTSRB, SGD, 100 epochs. training/loop.py's build_optimizer only offers Adam
 # (or SAM-wrapped Adam) and that file is out of this control's scope, so
 # these runs keep the project's own Adam recipe instead of the paper's SGD.
