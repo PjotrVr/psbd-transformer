@@ -149,7 +149,7 @@ def main() -> None:
         axis.set_xlabel("layer")
     for axis in axes[:, 0]:
         axis.set_ylabel("recovery of the clean answer")
-    axes.flat[0].legend(fontsize=7, loc="lower left")
+    axes.flat[0].legend(fontsize=7, loc="best")
     figure_path = os.path.join(
         args.paper_dir, "figures", "mech_activation_patching.pdf"
     )

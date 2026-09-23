@@ -471,7 +471,7 @@ def write_shift_target_figure(args, records: list[dict], benign_reports: dict) -
     )
     ax.set_xlabel("achieved shift ratio (clean split)")
     ax.set_ylabel("target-class share of shifted clean predictions")
-    ax.legend(fontsize=6.5, loc="upper left", ncol=1)
+    ax.legend(fontsize=6.5, loc="best", ncol=1)
     fig.tight_layout()
 
     path = os.path.join(args.paper_dir, "figures", "mech_shift_target.pdf")

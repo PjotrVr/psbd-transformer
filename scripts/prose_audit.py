@@ -446,7 +446,28 @@ def violations(line: int, kind: str, text: str) -> list[tuple[str, int, str]]:
     return hits
 
 
-SKIPPED_DIRECTORIES = {"__pycache__", ".git", ".venv", "third_party", "node_modules"}
+# Directories whose prose is not ours to hold to our style. literature/ is other
+# people's papers, archive/ and scratch/ and tmp/ are throwaway, and results/ and
+# checkpoints/ hold generated records rather than writing.
+SKIPPED_DIRECTORIES = {
+    "__pycache__",
+    ".git",
+    ".venv",
+    ".pytest_cache",
+    ".ruff_cache",
+    "third_party",
+    "node_modules",
+    "literature",
+    "archive",
+    "scratch",
+    "tmp",
+    "results",
+    "checkpoints",
+    "backdoor_bench_checkpoints",
+    "raw_data",
+    "logs",
+    "figures",
+}
 
 
 def audited_files(roots) -> list[str]:

@@ -64,7 +64,7 @@ def plot_hessian_density(
         axis.set_xlabel("Eigenvalue")
         axis.set_ylabel("Density (log scale)")
         axis.set_title(title)
-        axis.legend(loc="upper right", frameon=False)
+        axis.legend(loc="best", frameon=False)
         figure.tight_layout()
 
     save_figure(figure, pdf_path)

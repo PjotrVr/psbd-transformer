@@ -53,9 +53,9 @@ GRID = [round(0.20 + 0.02 * i, 2) for i in range(40)]  # 0.20, 0.22, ..., 0.98
 REPORT_TARGETS = (0.6, 0.8, 0.9, 0.95)
 
 # quantile is the false-positive budget by construction, so TPR at 1% and 10%
-# FPR reads the q0.01 and q0.10 blocks of detection_psu_ratio, the headline
+# FPR reads the q0.10 and q0.20 blocks of detection_psu_ratio, the 2 budgets
 # fractional-PSU statistic (canon: fractional PSU is the deployable score).
-TPR_BUDGET_KEYS = {"tpr01": "q0.01", "tpr10": "q0.10"}
+TPR_BUDGET_KEYS = {"tpr10": "q0.10", "tpr20": "q0.20"}
 # AUROC does not depend on the quantile, so any budget's block carries it.
 AUROC_KEY = "q0.01"
 
@@ -73,7 +73,7 @@ def cell_ladder(results_dir: str, folder: str) -> dict | None:
         return None
 
     shift_by_rate = {}
-    value_by_rate = {"auroc": {}, "tpr01": {}, "tpr10": {}}
+    value_by_rate = {"auroc": {}, "tpr10": {}, "tpr20": {}}
     for row in block.get("rates", []):
         rate = row["rate"]
         shift_by_rate[rate] = row["shift_ratio"]["validation"]
@@ -117,7 +117,7 @@ def aggregate_curve(
     curves: list[dict[str, list[float | None]]], grid: list[float]
 ) -> dict[str, dict[str, list[float | None]]]:
     """Mean, standard deviation and cell count at each grid point, per metric."""
-    metrics = ("auroc", "tpr01", "tpr10")
+    metrics = ("auroc", "tpr10", "tpr20")
     aggregated = {metric: {"mean": [], "std": [], "n_cells": []} for metric in metrics}
     for index in range(len(grid)):
         for metric in metrics:
@@ -132,7 +132,7 @@ def aggregate_targets(
     records: list[dict[str, dict[float, float | None]]], targets: tuple[float, ...]
 ) -> dict[str, dict[str, float | None]]:
     """Mean over cells at each report target, per metric, skipping cells without a bracket."""
-    metrics = ("auroc", "tpr01", "tpr10")
+    metrics = ("auroc", "tpr10", "tpr20")
     aggregated = {metric: {} for metric in metrics}
     for metric in metrics:
         for target in targets:
@@ -167,9 +167,9 @@ def draw_panel(ax, grid, all_agg, rate_aggs, metric, ylabel):
 def write_figure(args, all_agg, rate_aggs) -> str:
     fig, axes = plt.subplots(1, 3, figsize=(9.6, 3.0), sharex=True)
     draw_panel(axes[0], GRID, all_agg, rate_aggs, "auroc", "AUROC")
-    draw_panel(axes[1], GRID, all_agg, rate_aggs, "tpr01", "TPR at 1% FPR")
-    draw_panel(axes[2], GRID, all_agg, rate_aggs, "tpr10", "TPR at 10% FPR")
-    axes[0].legend(loc="lower right", fontsize=6)
+    draw_panel(axes[1], GRID, all_agg, rate_aggs, "tpr10", "TPR at 10% FPR")
+    draw_panel(axes[2], GRID, all_agg, rate_aggs, "tpr20", "TPR at 20% FPR")
+    axes[0].legend(loc="best", fontsize=6)
     fig.tight_layout()
 
     path = os.path.join(args.paper_dir, "figures", "fig_shift_ladder.pdf")
