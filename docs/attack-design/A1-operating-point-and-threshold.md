@@ -89,9 +89,9 @@ the training images do.
   calibration, not decisions.
 - **Detectable side effect:** expected calibration error on clean validation
   rises sharply, and the clean validation PSU histogram becomes visibly bimodal.
-  This is the attack's only signature and it is what the defence below reads.
+  This is the attack's only signature and it is what the defense below reads.
 
-## The cheapest defence that catches it
+## The cheapest defense that catches it
 
 Three lines of CPU code, in order of cost.
 
@@ -108,7 +108,7 @@ Three lines of CPU code, in order of cost.
    A left tail then has to move the median, which is 100 times more expensive for
    the attacker than moving the 25th percentile.
 
-The honest limit of defence 3 is that it decouples the threshold from the FPR
+The honest limit of defense 3 is that it decouples the threshold from the FPR
 budget, which is the property `psbd.decision` was built around ("the quantile IS
 the false positive budget"). The paper should report both and say why.
 

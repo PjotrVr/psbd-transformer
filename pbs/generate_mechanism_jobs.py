@@ -18,7 +18,7 @@ here work":
                              or about sequence length, by serving the same weights at other
                              resolutions with interpolated positional embeddings
     test_time_registers      whether giving the model spare tokens to sink into weakens the
-                             attack, which is both a mechanism test and a candidate defence
+                             attack, which is both a mechanism test and a candidate defense
     activation_patching      the causal version: overwrite one site with its value on the
                              same image without the trigger, and see how much clean answer
                              returns. Both directions, since sufficiency to restore and

@@ -26,7 +26,7 @@ mechanisms. They are 1 method with 4 choices of **where to perturb**:
 | family | detector | perturbs | implemented here as |
 |---|---|---|---|
 | input | SCALE-UP (Guo et al., ICLR 2023) | pixels | `scale_up` at `input_pixels` |
-| input | STRIP (Gao et al., 2019) | pixels, by superimposition | `defences/baselines.py` |
+| input | STRIP (Gao et al., 2019) | pixels, by superimposition | `defenses/baselines.py` |
 | activation | **PSBD** (Li et al., CVPR 2025) | activations, by dropout | `dropout` and the mask operators |
 | parameter | IBD-PSC (Hou et al., ICML 2024) | BatchNorm affine parameters | `gain_scale` at the LayerNorm outputs |
 

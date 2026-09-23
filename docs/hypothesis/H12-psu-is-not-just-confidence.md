@@ -68,7 +68,7 @@ AUROC, which is smaller than the noise on any single measurement, while the gain
 reach 0.075. This is as close to a free lunch as this study has produced, and it
 costs nothing: the same cached tensors divided by a number already on disk.
 
-Now computed as `defences.psbd_metrics.psu_ratio_from_cache` and reported for every
+Now computed as `defenses.psbd_metrics.psu_ratio_from_cache` and reported for every
 (placement, rate) as `detection_psu_ratio` alongside the paper's absolute form, so the
 headline numbers stay comparable to the published method while the improvement stays
 visible.

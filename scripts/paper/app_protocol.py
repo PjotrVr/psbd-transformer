@@ -25,7 +25,7 @@ from data.splits import (  # noqa: E402
     PSBD_HELDOUT_SIZE,
     PSBD_SPLIT_SEED,
 )
-from defences.decision import (  # noqa: E402
+from defenses.decision import (  # noqa: E402
     ADAPTIVE_SHIFT_TARGET,
     HEADLINE_QUANTILE,
     PLACEMENT_MATCH_TARGET,
@@ -35,7 +35,7 @@ from defences.decision import (  # noqa: E402
     SHIFT_MATCH_TARGETS,
 )
 from data.registry import DATASET_REGISTRY  # noqa: E402
-from defences.operators import OPERATORS  # noqa: E402
+from defenses.operators import OPERATORS  # noqa: E402
 from detectors import DETECTOR_NAMES  # noqa: E402
 from models.backbones import MODEL_INPUT_SIZE  # noqa: E402
 from models.positions import (  # noqa: E402
@@ -307,8 +307,8 @@ def main() -> None:
         os.path.join(args.paper_dir, "tables", "protocol.macros.json"),
         GENERATOR,
         [
-            "defences/decision.py",
-            "defences/operators.py",
+            "defenses/decision.py",
+            "defenses/operators.py",
             "models/positions.py",
             "data/splits.py",
             "detectors/__init__.py",

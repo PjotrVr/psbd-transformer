@@ -18,7 +18,7 @@ empirical question measured in experiments/.
 import pytest
 import torch
 
-from defences.operators import (
+from defenses.operators import (
     DETERMINISTIC_OPERATORS,
     OPERATORS,
     build_operator,

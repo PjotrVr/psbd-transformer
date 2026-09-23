@@ -17,7 +17,7 @@ The single highest-value check is 18. A stochastic operator whose k passes are
 bit-identical never fired, which makes PSU identically 0 and reads downstream as
 "this placement had no effect" rather than as a broken run. Identical passes are
 correct and expected only for the operators in
-defences.perturbations.DETERMINISTIC_PERTURBATIONS.
+defenses.perturbations.DETERMINISTIC_PERTURBATIONS.
 
 Nothing here opens a file for writing except the final report.
 
@@ -47,10 +47,10 @@ import torch
 from lightning import seed_everything
 
 from attacks import build_attack, default_config
-from defences.operators import DETERMINISTIC_OPERATORS, OPERATORS
-from defences.decision import complete_rates
+from defenses.operators import DETERMINISTIC_OPERATORS, OPERATORS
+from defenses.decision import complete_rates
 from data.registry import DATASET_REGISTRY
-from defences.cache import read_run_provenance
+from defenses.cache import read_run_provenance
 from experiments._paths import experiment_result_path
 
 SPLITS: tuple[str, ...] = ("validation", "clean", "backdoor")

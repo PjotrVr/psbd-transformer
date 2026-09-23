@@ -43,7 +43,7 @@ model inference."
 
 This repo's checkpoints match that: `models.build_vit` calls `vit_b_16` with
 torchvision's defaults, so `dropout` and `attention_dropout` are both 0.0, and
-`defences/dropout.py` deliberately leaves every existing dropout at its eval
+`defenses/dropout.py` deliberately leaves every existing dropout at its eval
 identity and injects fresh modules instead.
 
 So the entire study rests on an assumption nobody has tested: **that PSBD needs a
@@ -54,7 +54,7 @@ is unaffected, the neuron-bias story is not what is doing the work, which lines 
 with what [H23](../hypothesis/H23-gaussian-noise-control.md) is separately testing.
 
 It is also the practical question. Real deployed ViTs are trained with dropout or
-stochastic depth. A defence that only works on models trained without either is
+stochastic depth. A defense that only works on models trained without either is
 much weaker than one that does not care.
 
 ### E2a. Inference-time stacking (cheap, no retraining)
@@ -104,7 +104,7 @@ ViT and the method is measuring prediction margin.
 
 **Also worth recording.** Whether training dropout changes ASR or clean accuracy
 at all. If it suppresses the backdoor itself, that is a (weak, expensive)
-*defence* rather than a detection result, and the two must not be confused.
+*defense* rather than a detection result, and the two must not be confused.
 
 ---
 
@@ -115,7 +115,7 @@ The most important of the three, and the one a reviewer will ask for.
 ### Threat model
 
 The attacker controls the poisoned training set **and the training loss**. This is
-the standard adaptive-attack setting: a defence is only interesting if it survives
+the standard adaptive-attack setting: a defense is only interesting if it survives
 an adversary who knows it. Stated assumptions:
 
 - The attacker knows PSBD's statistic (PSU) and its decision direction.
@@ -171,7 +171,7 @@ for each batch (images, labels, is_poisoned):
     c         = logits.argmax(dim=1).detach()       # index only, no gradient
     p_base    = softmax(logits).gather(1, c)
 
-    plug probe at (position, rate)                  # defences.dropout.plug_dropout
+    plug probe at (position, rate)                  # defenses.dropout.plug_dropout
     p_drop    = mean over k passes of softmax(model(images)).gather(1, c)
     unplug probe                                    # try/finally, always
 
@@ -215,7 +215,7 @@ All three must hold together:
 | clean accuracy | within 2 points of the lambda = 0 control |
 | PSBD AUROC at the targeted probe | falls toward 0.5 |
 
-An attack that destroys ASR or clean accuracy has not evaded the defence, it has
+An attack that destroys ASR or clean accuracy has not evaded the defense, it has
 removed the backdoor, and reporting it as evasion would be wrong.
 
 ### The transfer test, which is the actual point
@@ -226,7 +226,7 @@ position in the study.
 - If evasion transfers everywhere, PSBD is broken by an adaptive attacker and the
   honest conclusion is that it should not be deployed alone against one.
 - If evasion is specific to the targeted probe and detection survives under other
-  operators, then **operator diversity is itself the defence**, and the
+  operators, then **operator diversity is itself the defense**, and the
   perturbation study has produced something more useful than a single better
   placement: a probe family an attacker must evade all of at once.
 

@@ -14,11 +14,11 @@ The candidate placement set is `measure.basis_ids_present_on_all_models`, every
 basis entry whose `adaptive_rate` is set on every 1 of those models, so every
 pair is read on the identical population and a pair's mean is never inflated by
 covering fewer, easier models. Every per-image fractional PSU
-(`defences.scores.psu_ratio_from_cache`, the canon headline statistic) is read
+(`defenses.scores.psu_ratio_from_cache`, the canon headline statistic) is read
 once per (model, placement) from the stage-1 cache and kept in memory
 (`experiments.probe_union.measure.load_probe_psu`, imported, not copied), so
 the C(k,2) pairs over k candidates cost 1 disk read per placement rather than 1
-per pair. Each pair is scored by `defences.decision.multi_probe_auroc` and
+per pair. Each pair is scored by `defenses.decision.multi_probe_auroc` and
 `multi_probe_detection` at the min reduction, the same union H41 built and
 `measure.py` already measures for 6 fixed sets. Pairs are ranked by mean TPR at
 the 10% clean-validation quantile, the operating point a defender would deploy.
@@ -30,7 +30,7 @@ remaining 4 raises the resulting triple's mean TPR at 10% the most.
 Method, part 2 (the combination rule). For 3 named probe sets, the best pair
 from part 1, PSBD-TM plus the attention branch output token mask and the
 3-probe adaptive-attacker pool of `measure.py` on the 37 models that hold all
-3, the same per-image ranks r_j(x) (`defences.scores.to_rank`, the share of
+3, the same per-image ranks r_j(x) (`defenses.scores.to_rank`, the share of
 clean validation inputs with a lower PSU under probe j) are combined 6 ways:
 min (the union), mean, max (the intersection, every probe must agree), the sum
 of z-scored PSU (z-scored on clean validation, per probe), the product of
@@ -81,9 +81,9 @@ import torch  # noqa: E402
 from scipy.stats import spearmanr  # noqa: E402
 from sklearn.metrics import roc_auc_score  # noqa: E402
 
-from defences.cache import read_split_manifest  # noqa: E402
-from defences.decision import multi_probe_auroc, multi_probe_detection  # noqa: E402
-from defences.scores import to_rank  # noqa: E402
+from defenses.cache import read_split_manifest  # noqa: E402
+from defenses.decision import multi_probe_auroc, multi_probe_detection  # noqa: E402
+from defenses.scores import to_rank  # noqa: E402
 from experiments._paths import experiment_result_path  # noqa: E402
 from experiments.probe_union.measure import (  # noqa: E402
     ATTN_BRANCH_TM,
@@ -186,7 +186,7 @@ def cached_probe_psu(
 
     Every pair and every rule reads the same underlying PSU vectors, so this is
     the single point every consumer below goes through and the single point
-    that ever touches `defences.cache`.
+    that ever touches `defenses.cache`.
     """
     key = (model["folder_name"], placement)
     if key not in psu_cache:
@@ -396,7 +396,7 @@ def rank_stack(
     """Each probe's split scores ranked against its own clean-validation reference.
 
     Shape (k, n), each row r_j(x) in [0, 1], the share of clean validation with
-    a lower PSU under probe j (`defences.scores.to_rank`).
+    a lower PSU under probe j (`defenses.scores.to_rank`).
     """
     ranks = torch.stack(
         [to_rank(split, val) for split, val in zip(split_per_probe, val_per_probe)]

@@ -137,7 +137,7 @@ up at 0.05 is a success.
   not survive JPEG, resize or blur. See the certified radius argument in
   [A4](A4-curvature-matching.md).
 
-## The cheapest defence that catches it
+## The cheapest defense that catches it
 
 **Report TPR at 0.01 and 0.05 FPR, and use a 2 sided rule only where the second
 side is justified.** H15 retired 2 sided reporting for a good reason, that it can
@@ -167,7 +167,7 @@ clean 20th percentile, on `badnet_a2o` at 0.01, on **both** cifar100 and cifar10
 | `ibd_psc` AUROC | **below 0.55** | below 0.55 | stays above 0.7 |
 | `scale_up` AUROC | **below 0.55** | below 0.55 | stays above 0.7 |
 | `strip` AUROC | **below 0.55** | below 0.55 | stays above 0.7 |
-| fused $(\phi, p_c)$ AUROC | **above 0.85** | above 0.85 | falls below 0.7, refuting the fusion defence |
+| fused $(\phi, p_c)$ AUROC | **above 0.85** | above 0.85 | falls below 0.7, refuting the fusion defense |
 
 The row that matters most is the second one. **A5 is the experiment that
 falsifies the whole second order framing if it comes out wrong**, because the

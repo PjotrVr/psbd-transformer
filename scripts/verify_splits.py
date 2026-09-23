@@ -1,6 +1,6 @@
 """Does each cell's cached PSBD split still match the split the current code builds?
 
-`defences.cache.load_or_build_baseline` reuses any cached baseline whose row count
+`defenses.cache.load_or_build_baseline` reuses any cached baseline whose row count
 matches what it is asked for and a row count always matches after a retrain, so a
 cache built under an older definition of the split (which rows are eligible, not how
 many are cached) loads cleanly and silently means something else. A source-specific
@@ -25,7 +25,7 @@ from data.splits import SPLITS
 import torch
 
 from data.splits import PSBD_SPLIT_SEED, build_psbd_loaders_from_checkpoint
-from defences.cache import baseline_path
+from defenses.cache import baseline_path
 
 
 def cached_row_counts(psbd_dir: str) -> dict:

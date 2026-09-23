@@ -6,7 +6,7 @@ grid over checkpoints and positions is flattened into separate PBS jobs by the
 generators in pbs/, so many single-GPU jobs run concurrently.
 
 This writes the raw per-pass probabilities, the per-pass argmax classes and the
-baseline to disk (defences.cache) and computes no metric. Threshold, TPR, FPR,
+baseline to disk (defenses.cache) and computes no metric. Threshold, TPR, FPR,
 AUROC and the shift ratio are cli.analyze's job, a cheap CPU step that reads those
 tensors back.
 
@@ -27,7 +27,7 @@ from data.splits import SPLITS
 
 import torch
 
-from defences.cache import (
+from defenses.cache import (
     run_provenance_path,
     dropout_pass_path,
     load_or_build_baseline,
@@ -35,9 +35,9 @@ from defences.cache import (
     write_split_manifest,
 )
 from data.registry import DATASET_REGISTRY
-from defences.inference import compute_dropout_pass_probs
+from defenses.inference import compute_dropout_pass_probs
 from models.backbones import detect_architecture, load_checkpoint
-from defences.operators import (
+from defenses.operators import (
     OPERATORS,
     build_operator,
     check_operator_position,
@@ -62,7 +62,7 @@ from utils.provenance import current_git_commit
 # The 9 dropout rates 0.1 to 0.9, the same grid the archived sweep used.
 DROPOUT_RATES: tuple[float, ...] = tuple(i / 10.0 for i in range(1, 10))
 
-# Reseeds the dropout mask sampling (see defences.inference), distinct from the
+# Reseeds the dropout mask sampling (see defenses.inference), distinct from the
 # data-split seed. Kept fixed so a rerun reproduces the same masks exactly.
 PSBD_MASK_SEED = 0
 # The PSBD paper's own value (sec/4_method.tex: "We perform forward inference k=3
@@ -402,7 +402,7 @@ def write_run_provenance(
         "max_samples": args.max_samples,
         "use_bfloat16": not args.no_bfloat16,
         # What the autocast context actually did, which is not the flag.
-        # defences.inference only enters bfloat16 autocast on CUDA, so a CPU node
+        # defenses.inference only enters bfloat16 autocast on CUDA, so a CPU node
         # runs float32 whatever the flag says, and recording the flag alone would
         # label an fp32 cache as bfloat16.
         "effective_dtype": "bfloat16"

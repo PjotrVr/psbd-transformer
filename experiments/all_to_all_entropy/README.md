@@ -51,7 +51,7 @@ the top-2 margin and finding PSBD's AUROC barely moves.
 
 ## What this does not give you
 
-A deployable defence. H15 forbids picking whichever of 2 one-sided detectors happens to
+A deployable defense. H15 forbids picking whichever of 2 one-sided detectors happens to
 win, because choosing needs the poison labels the detector exists to predict. A
 **label-free regime identifier** is required and 2 candidates are already refuted:
 

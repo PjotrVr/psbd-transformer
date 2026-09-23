@@ -21,7 +21,7 @@ paper, so the memo is the held-to standard rather than background reading. It cr
 **How to apply:** before asserting a methodology gap is new, check this file and
 `docs/open-questions.md`. The reusable facts it establishes: `paper/headline.tex` already
 carries `\HeadlineTprAtOnePercent` at 0.602 so a 1% FPR column needs no compute,
-`defences.decision.detection_report` returns a realized `fpr` that no paper table prints,
+`defenses.decision.detection_report` returns a realized `fpr` that no paper table prints,
 `threshold_diagnostics` is called only from `cli/baselines.py`, and `configs/psbd_basis.json`
-declares `auprc` and `achieved_fpr` as required metrics that nothing in `defences/` computes.
+declares `auprc` and `achieved_fpr` as required metrics that nothing in `defenses/` computes.
 See [[literature-folder-layout]] and [[nonadaptive-attack-request]].

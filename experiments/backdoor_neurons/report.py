@@ -5,7 +5,7 @@
   2. WHICH DIMENSIONS are the backdoor dimensions at the peak layer, and how few of
      them there are.
   3. DO THEY OVERLAP across attacks, by Jaccard of the top-k TAC sets. A shared set
-     would mean one defence could cover several triggers at once.
+     would mean one defense could cover several triggers at once.
   4. DOES SAM MOVE THEM, by Jaccard between the Adam checkpoint and the same attack
      trained with SAM at each rho, plus how far the peak layer travels.
 

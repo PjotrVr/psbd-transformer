@@ -34,7 +34,7 @@ class j, X_i the clean samples of class i, m the stored samples per class, h_l
 the representation at layer l, f the classifier, d the euclidean distance, N the
 number of considered layers, c the number of classes and alpha the reject rate
 that fixes tau. The threshold is replaced by the shared quantile rule of
-defences.decision, so alpha plays no part here.
+defenses.decision, so alpha plays no part here.
 
 Mechanism. A clean input sits among clean inputs of its predicted class at every
 depth, so the nearest bank row of that class is near the front of the sorted bank
@@ -84,7 +84,7 @@ from analysis.features import (
     detect_model_architecture,
     transformer_blocks,
 )
-from defences.inference import forward_probs
+from defenses.inference import forward_probs
 from models.backbones import network_core
 
 # The notebook's fetch_activation flattens every hooked activation with

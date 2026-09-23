@@ -13,7 +13,7 @@ training pool and produce a partition rather than a per-input decision.
 1 interface and 3 rules make the comparison mean something.
 
   Direction. Every detector returns per-sample scores where low means poisoned,
-    PSU's convention, so defences.decision.detection_report applies to all of
+    PSU's convention, so defenses.decision.detection_report applies to all of
     them unchanged. SCALE-UP, IBD-PSC and TeCo define statistics that are high
     for poisoned, and each is negated once at its own scoring boundary. Getting
     this wrong is silent: it yields a well-formed, exactly inverted result, which
@@ -42,8 +42,8 @@ training pool and produce a partition rather than a per-input decision.
 | ted | Mo et al., IEEE S&P 2024 | outlier rank trajectory over depth | the shared split, labelled | 1 |
 | sentinet | Chou et al., S&P Workshops 2020 | residual above the clean (avgConf, fooled) envelope | 100 samples plus the split | 202 |
 
-PSBD itself is not in this registry. It is scored through defences.inference and
-defences.scores at k forward passes per input.
+PSBD itself is not in this registry. It is scored through defenses.inference and
+defenses.scores at k forward passes per input.
 """
 
 from dataclasses import dataclass

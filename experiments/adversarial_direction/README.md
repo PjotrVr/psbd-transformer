@@ -44,7 +44,7 @@ direction is never validated on the data it came from.
 
 PGD runs in pixel space, denormalizing and renormalizing around the model's own
 input statistics the way `detectors.strip.normalization_buffers` already does
-for STRIP's overlay, and the gradient step uses `defences.inference.forward_logits`
+for STRIP's overlay, and the gradient step uses `defenses.inference.forward_logits`
 so the loss differentiates through the perturbation, not through any model
 weight. For every checkpoint we measure, on the rows after the estimation
 pairs:

@@ -17,7 +17,7 @@ is supposed to be reacting to. If the backdoor is a linear direction in the
 residual stream, it has an address: a block, and a set of dimensions. Find the
 address, and 3 things become checkable that were previously assertions.
 
-- Is a defence tuned to 1 attack's neurons reusable on another?
+- Is a defense tuned to 1 attack's neurons reusable on another?
 - Does SAM, which changes what the loss landscape rewards, change where the
   backdoor gets put?
 - Can a defender find the neurons without any triggered data at all?

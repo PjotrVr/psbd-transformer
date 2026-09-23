@@ -1,4 +1,4 @@
-# Multi-probe PSBD defence (H41)
+# Multi-probe PSBD defense (H41)
 
 Computes the min-rank combined score across all available perturbation
 operators for each evasive checkpoint. The min-rank rule flags a sample when
@@ -15,4 +15,4 @@ Runs on CPU using cached PSBD sweep data. No GPU needed.
     python experiments/multi_probe/analyze.py
     python experiments/multi_probe/analyze.py --architecture vit --dataset cifar100
 
-Hypothesis doc: `docs/hypothesis/H41-multi-probe-defence.md`
+Hypothesis doc: `docs/hypothesis/H41-multi-probe-defense.md`

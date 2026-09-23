@@ -13,7 +13,7 @@ checkpoints/                every trained model, 1 folder per run, with an args.
 cli/                        1 module per command, the only place a main() lives.
 configs/                    canonical constants pinned outside code, for example psbd_basis.json.
 data/                       dataset registry, loading, the PSBD split, the BackdoorBench PNG path.
-defences/                   PSBD itself: operators, inference, scores, decision rules, the stage-1 cache.
+defenses/                   PSBD itself: operators, inference, scores, decision rules, the stage-1 cache.
 detectors/                  the 11 competitor input detectors behind 1 registry, 1 module per method.
 docs/                       hypotheses, results, specs, audits, per-experiment writeups outside experiments/.
 evaluation/                 attack success rate, clean accuracy, loaders, summary.
@@ -74,7 +74,7 @@ is pure library code, so it is tested directly. `cli/` is tested by asserting
 its argument parsers and by running the cheap entrypoints end to end on
 cached data. `pbs/` generates text, so its output is asserted as text.
 `experiments/` reads cached tensors, so it runs on CPU on the login node.
-`tests/test_canon.py` holds the constants in `defences/decision.py` to
+`tests/test_canon.py` holds the constants in `defenses/decision.py` to
 `configs/psbd_basis.json`, so a placement or rate rule cannot drift between
 the code and the pinned config without a failing test.
 

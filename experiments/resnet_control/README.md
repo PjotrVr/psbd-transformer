@@ -148,7 +148,7 @@ dataset table).
 `post_residual:dropout`), both BadNets at 10% poisoning, target class 0,
 `--max-samples 20000`, 15 epochs, on the login A100. Both ran through
 2 above). No pipeline part assumed a 224-pixel input or a class token: neither
-`data/splits.py`, `defences/inference.py` nor `evaluation/` name either, and
+`data/splits.py`, `defenses/inference.py` nor `evaluation/` name either, and
 `cli.sweep`'s only architecture-specific step (`resolve_architecture`) already
 worked once `models/backbones.py`'s marker set was extended.
 

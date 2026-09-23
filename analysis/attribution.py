@@ -20,7 +20,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from lightning import seed_everything
 
-from defences.inference import forward_logits, frozen_parameters
+from defenses.inference import forward_logits, frozen_parameters
 from detectors.sentinet import grad_cam, resolve_cam_site, scale_per_image
 
 # shap.GradientExplainer's default sample count and the 2 classes the panel shows.

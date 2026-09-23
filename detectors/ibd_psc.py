@@ -86,7 +86,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from defences.inference import forward_probs
+from defenses.inference import forward_probs
 
 # Section 5.1 defaults, identical in the paper and in the released code.
 DEFAULT_SCALING_FACTOR = 1.5  # omega
@@ -202,7 +202,7 @@ def select_start_layer_count(
     back because k is the single data-dependent quantity in the method, and a k
     of 1 or of L means the amplification was mis-scaled for the architecture.
 
-    This is the layer-selection rule the operator port defences.operators.GainScale
+    This is the layer-selection rule the operator port defenses.operators.GainScale
     does not have. Algorithm 1 finds the depth at which benign accuracy starts
     collapsing and scores there, because that is where benign and poisoned
     confidence separate most.

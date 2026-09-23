@@ -5,7 +5,7 @@ At `before_attention_norm`, the capacity-removing operators `token_mask` and
 `before_mlp`, `gaussian` against the closest mask at that site,
 `before_mlp_norm_token_mask`. Every comparison is paired within cell at the
 matched 0.6 rate, the cross-placement comparison device, since a shared
-nominal rate is not a shared disturbance across operators (defences.decision).
+nominal rate is not a shared disturbance across operators (defenses.decision).
 C1 holds the operator fixed at `token_mask` and moves the site instead,
 `before_attention_norm` against `before_mlp_norm`.
 

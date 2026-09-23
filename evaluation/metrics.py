@@ -14,7 +14,7 @@ module's. Every directory is a parameter with a plain default, so any of these
 runs against a test fixture by passing a different argument.
 
 The detection helpers at the end (threshold, TPR and FPR, AUROC) are the
-standalone form of the rule defences.decision.detection_report applies inside a
+standalone form of the rule defenses.decision.detection_report applies inside a
 sweep, for a caller holding 2 score tensors and a quantile. The 2 quantile
 implementations are not interchangeable: this one uses torch.quantile, decision
 uses numpy's, and they differ in the last bits on some inputs.
@@ -33,7 +33,7 @@ from attacks import build_attack, default_config
 from attacks.poisoning import clean_label_target_set
 from data.registry import DATASET_REGISTRY
 from .loaders import build_clean_loader, build_poisoned_loader
-from defences.inference import forward_probs
+from defenses.inference import forward_probs
 from models.backbones import load_checkpoint
 from analysis.stealth import cached_stealth_metrics
 
@@ -409,11 +409,11 @@ def confusion_matrix(
 def defense_effectiveness_rate(
     acc_bd: float, acc_def: float, asr_bd: float, asr_def: float
 ) -> float:
-    """DER of a defence against the backdoored model it started from, in [0, 1].
+    """DER of a defense against the backdoored model it started from, in [0, 1].
 
     BackdoorBench's utils/metric.py ships 2 versions that disagree in sign.
     defense_effectiveness_rate (line 64) ADDS the clean-accuracy drop, so a
-    defence that destroys clean accuracy scores higher, while
+    defense that destroys clean accuracy scores higher, while
     defense_effectiveness_rate_simplied (line 94) subtracts it, which is the
     version visual_metric.py calls and the paper's definition. The simplified
     variant is implemented, quoted here exactly:
@@ -421,8 +421,8 @@ def defense_effectiveness_rate(
         return (max(0, asr_bd - asr_defense) - max(0, acc_bd - acc_defnese) + 1) / 2
 
     symbol table
-        asr_bd, asr_def    attack success rate before and after the defence
-        acc_bd, acc_def    clean accuracy before and after the defence
+        asr_bd, asr_def    attack success rate before and after the defense
+        acc_bd, acc_def    clean accuracy before and after the defense
     """
     rate = (max(0.0, asr_bd - asr_def) - max(0.0, acc_bd - acc_def) + 1.0) / 2.0
     return rate
@@ -431,7 +431,7 @@ def defense_effectiveness_rate(
 def robust_improvement_rate(
     acc_bd: float, acc_def: float, ra_bd: float, ra_def: float
 ) -> float:
-    """RIR of a defence against the backdoored model it started from, in [0, 1].
+    """RIR of a defense against the backdoored model it started from, in [0, 1].
 
     The same 2 versions exist for RIR. robust_improvement_rate (utils/metric.py
     line 80) adds the clean-accuracy drop, robust_improvement_rate_simplied
@@ -441,9 +441,9 @@ def robust_improvement_rate(
         return (max(0, -ra_bd + ra_defense) - max(0, acc_bd - acc_defnese) + 1) / 2
 
     symbol table
-        ra_bd, ra_def      robust accuracy before and after the defence, the
+        ra_bd, ra_def      robust accuracy before and after the defense, the
                            accuracy on triggered images against their true label
-        acc_bd, acc_def    clean accuracy before and after the defence
+        acc_bd, acc_def    clean accuracy before and after the defense
     """
     rate = (max(0.0, ra_def - ra_bd) - max(0.0, acc_bd - acc_def) + 1.0) / 2.0
     return rate

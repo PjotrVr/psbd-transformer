@@ -44,14 +44,14 @@ import torch
 from sklearn.metrics import roc_auc_score, roc_curve
 
 from data.splits import SPLITS, read_checkpoint_metadata
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import (
+from defenses.decision import (
     ADAPTIVE_SHIFT_TARGET,
     EASY_ATTACKS,
     HARD_ATTACKS,
@@ -69,7 +69,7 @@ from defences.decision import (
     shift_key,
     threshold_at_quantile,
 )
-from defences.scores import psu_from_cache, psu_ratio_from_cache, shift_ratio, to_rank
+from defenses.scores import psu_from_cache, psu_ratio_from_cache, shift_ratio, to_rank
 from detectors import (
     DATA_REQUIREMENT,
     DETECTOR_NAMES,
@@ -116,7 +116,7 @@ def read_json(path: str) -> dict | None:
 #   adaptive   the rate a defender could actually have chosen, using the paper's
 #              rule on clean validation data only. This is the honest headline.
 #   oracle     the best rate in hindsight. An upper bound, not a result: choosing
-#              it reads the poison labels the defence is supposed to predict. The
+#              it reads the poison labels the defense is supposed to predict. The
 #              gap to adaptive is the cost of not knowing the right rate.
 #   matched    every placement at the same measured disturbance (clean-validation
 #              shift ratio), which is the only way to compare placements without
@@ -137,7 +137,7 @@ eligibility-correct number and a second implementation could disagree with it.
   adaptive   the rate a defender could actually have chosen, using the paper's
              rule on clean validation data only. This is the honest headline.
   oracle     the best rate in hindsight. An upper bound, not a result: choosing
-             it reads the poison labels the defence is supposed to predict. The
+             it reads the poison labels the defense is supposed to predict. The
              gap to adaptive is the cost of not knowing the right rate.
   matched    every placement at the same measured disturbance (clean-validation
              shift ratio), which is the only way to compare placements without
@@ -363,7 +363,7 @@ other 2 show:
   adaptive  the rate the paper's own rule picks from clean validation data. What
             a defender actually gets.
   oracle    the best rate in hindsight. An upper bound, since picking it reads
-            the poison labels the defence exists to predict.
+            the poison labels the defense exists to predict.
   matched   the rate whose clean-validation shift ratio sits nearest a target.
             The only rule under which 2 placements are being asked the same
             question, since a shared nominal rate is a different intervention at
@@ -1322,7 +1322,7 @@ def run_tables(args: argparse.Namespace) -> int:
 VARIANTS_HELP = """Head-to-head: PSBD as published against the recommended ViT configuration.
 
 Every other result measures a single knob in isolation. This assembles the knobs
-into 2 complete, runnable defences and scores them the same way, which is the
+into 2 complete, runnable defenses and scores them the same way, which is the
 comparison a reader needs.
 
 Neither configuration sees a poison label. Both pick their rate by the paper's
@@ -1332,14 +1332,14 @@ elsewhere are upper bounds and do not appear here.
 
   psbd_paper      the method as published, ported to ViT
                     placement  post_residual dropout, every block, the ConvNet
-                               placement (defences.decision.PUBLISHED_PLACEMENT)
+                               placement (defenses.decision.PUBLISHED_PLACEMENT)
                     score      absolute PSU, P_c - mean_k(P_c_dropout)
                     rate       smallest p with clean-validation shift ratio >= 0.8
                     threshold  25th percentile of clean-validation score
 
   psbd_vit        the same method with the 2 changes this project recommends
                     placement  token_mask at before_attention_norm, every block
-                               (defences.decision.RECOMMENDED_PLACEMENT)
+                               (defenses.decision.RECOMMENDED_PLACEMENT)
                     score      fractional PSU, 1 - mean_k(P_c_dropout)/P_c
                     rate       the same 0.8 rule
                     threshold  unchanged, 25th percentile
@@ -1392,7 +1392,7 @@ def variants_select_rate(psbd_dir: str, placement: str, kind: str, shift_target:
 
 
 def variants_evaluate(psbd_dir: str, config: dict) -> dict | None:
-    """A complete defence run on a checkpoint, or None if it cannot run."""
+    """A complete defense run on a checkpoint, or None if it cannot run."""
     placement, kind = config["placement"], config["score"]
     if not complete_rates(psbd_dir, placement):
         return None
@@ -1590,7 +1590,7 @@ that. This reports the same detectors at 1% and 5% false positives.
 
   oracle_fpr   the threshold placed directly on the clean analysis pool to hit the
                target FPR exactly. Not deployable, since it needs the very clean/poison
-               split the defence is trying to find. Reported as the ceiling, so the
+               split the defense is trying to find. Reported as the ceiling, so the
                cost of thresholding on validation instead is visible.
 
 TPR is also reported at ASR-conditioned form where available: a triggered image the

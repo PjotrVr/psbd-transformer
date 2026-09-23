@@ -61,7 +61,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
 import cli.sweep as sweep_cli  # noqa: E402
-from defences.operators import check_operator_position  # noqa: E402
+from defenses.operators import check_operator_position  # noqa: E402
 from models.positions import DROPOUT_CONFIGS, POSITION_REGISTRY  # noqa: E402
 
 PROJECT_ROOT = REPO

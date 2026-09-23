@@ -5,7 +5,7 @@
 > for the record. Its numbers moved but its conclusions stand, the mean-rank ensemble AUROC figures (0.900, 0.897) here are from the 48-cell adaptive-attacker matrix, not the current 105-cell panel.
 
 How a defender should respond when the attacker knows PSBD and trains against
-it. Based on H25 (adaptive attacker), H41 (multi-probe defence), and the
+it. Based on H25 (adaptive attacker), H41 (multi-probe defense), and the
 forensic analysis in `experiments/adaptive_defender/analyze.py`.
 
 All figures below are the 2026-09-07 re-run with the corrected multi-probe
@@ -22,7 +22,7 @@ The evasion is probe-specific: the penalty optimises against one Jacobian, and
 a different operator produces a different Jacobian. Transfer operators the
 attacker never saw still detect at mean AUROC 0.887.
 
-## The defence: multi-probe PSBD
+## The defense: multi-probe PSBD
 
 Run k independent perturbation operators, each at its own sigma-matched rate.
 Combine scores with the min-rank rule, then threshold the combined min-rank at
@@ -142,7 +142,7 @@ clean-validation shift ratio reaches 0.6. Each operator at its own rate.
 **Step 3. Compute per-sample PSU at each operator's matched rate.**
 
 **Step 4. Rank each operator's PSU against its own clean-validation
-reference.** Use the `to_rank()` function from `defences/psbd_metrics.py`. The
+reference.** Use the `to_rank()` function from `defenses/psbd_metrics.py`. The
 reference must be clean validation and nothing else. Ranking against a pool
 that contains the split being scored leaks that split into its own score.
 

@@ -4,7 +4,7 @@ For each evasive checkpoint from H25, computes:
 1. Per-operator diagnostics (validation PSU stats, sigma curves)
 2. Single-operator AUROCs (uses labels, for post-hoc understanding)
 3. Multi-probe AUROC, plus TPR/FPR under both thresholding rules that
-   defences.psbd_metrics.multi_probe_detection returns:
+   defenses.psbd_metrics.multi_probe_detection returns:
      calibrated  the target_fpr quantile of the combined clean-validation
                  min-rank, which lands on target_fpr by construction because the
                  combined score is already a minimum over k probes
@@ -36,20 +36,20 @@ sys.path.insert(0, REPO_ROOT)
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import (
+from defenses.decision import (
     complete_rates,
     multi_probe_auroc,
     multi_probe_detection,
     pair_clean_to_backdoor,
 )
-from defences.scores import psu_ratio_from_cache, shift_ratio
+from defenses.scores import psu_ratio_from_cache, shift_ratio
 
 
 RESULTS_DIR = "results"
@@ -444,7 +444,7 @@ def print_summary(rows):
     print(f"{'=' * 80}")
     print("""
 The adaptive attacker can collapse one operator's AUROC from 0.95 to 0.32.
-The multi-probe defence recovers detection without needing to know which
+The multi-probe defense recovers detection without needing to know which
 operator was evaded.
 
 RECOMMENDED PROTOCOL:

@@ -113,7 +113,7 @@ than only in the comparison table.
 
 ## The cost the attacker cannot avoid, and it is a theorem
 
-This is the most valuable paragraph in this document for the defence.
+This is the most valuable paragraph in this document for the defense.
 
 Take the randomized smoothing bridge at face value. For a smoothed classifier at
 probe site $\ell$ under noise of scale $\sigma$, Cohen, Rosenfeld and Kolter give
@@ -147,7 +147,7 @@ Two caveats have to travel with it or a reviewer will supply them.
 2. **The cap holds at the probed site only.** With $L$ covering the registry the
    cap holds everywhere, which strengthens the argument for A4 specifically.
 
-## The defence this hands us, and it costs nothing at training time
+## The defense this hands us, and it costs nothing at training time
 
 **Test time input augmentation.** If a successful A4 attacker has capped its own
 trigger's robustness, then averaging the prediction over a small set of ordinary

@@ -72,7 +72,7 @@ from lightning import seed_everything
 from PIL import Image
 from torch.utils.data import DataLoader
 
-from defences.inference import forward_probs
+from defenses.inference import forward_probs
 
 from .strip import normalization_buffers
 

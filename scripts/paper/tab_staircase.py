@@ -35,7 +35,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from cli.compare import detectors_psbd_values as psbd_values  # noqa: E402
-from defences.decision import (  # noqa: E402
+from defenses.decision import (  # noqa: E402
     PUBLISHED_PLACEMENT,
     RECOMMENDED_PLACEMENT,
 )

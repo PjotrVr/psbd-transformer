@@ -50,7 +50,7 @@ from data.splits import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.decision import pair_clean_to_backdoor
+from defenses.decision import pair_clean_to_backdoor
 from models.backbones import load_checkpoint
 
 QUANTILES = (0.01, 0.05, 0.10, 0.25)

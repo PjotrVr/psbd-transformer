@@ -23,7 +23,7 @@ Three categories of issues surfaced:
 
 ## Fixes applied in this audit
 
-1. **TokenMask CLS scaling** (`defences/perturbations.py:119-126`). The CLS
+1. **TokenMask CLS scaling** (`defenses/perturbations.py:119-126`). The CLS
    token was forced to `keep=1` then multiplied by `1/(1-rate)`, giving it a
    deterministic gain instead of identity. Fixed by applying the scale factor
    before setting `keep[:, 0, :] = 1.0`. At `before_attention_norm` (our main
@@ -32,23 +32,23 @@ Three categories of issues surfaced:
    `mlp_neurons`, `after_attention_residual`, etc.) carry the contamination
    and should be re-swept after this fix.
 
-2. **inference.py finally block** (`defences/inference.py:139-161`).
+2. **inference.py finally block** (`defenses/inference.py:139-161`).
    `restore_model_dropout` was not in a `finally` block. If any batch raised,
    model dropout stayed live at the elevated rate for all subsequent splits,
    silently corrupting every cache written after the failure. Wrapped in
    `try/finally`.
 
-3. **defence_tables.py TPR column label** (`defence_tables.py:210-211`).
+3. **defense_tables.py TPR column label** (`defense_tables.py:210-211`).
    TPR@5%FPR is computed from the labeled ROC curve (oracle threshold, not the
    deployable clean-validation quantile). Column header now says
    "TPR@5%FPR (oracle)" to distinguish from the deployable threshold.
 
-4. **Sigma-matching rule alignment** (`defence_tables.py:82-96`). `cell_score`
+4. **Sigma-matching rule alignment** (`defense_tables.py:82-96`). `cell_score`
    used a different sigma-matching rule (first ascending rate >= target) than
    `select_rate_at_matched_shift` (closest rate to target). Replaced with a
    call to `select_rate_at_matched_shift` so both scripts agree.
 
-5. **Two-sided docstring** (`defences/psbd_metrics.py:223-233`). Docstring still
+5. **Two-sided docstring** (`defenses/psbd_metrics.py:223-233`). Docstring still
    argued for two-sided reporting as a valid diagnostic. Updated to state that
    H15 retired it and no live consumer reads it.
 
@@ -70,14 +70,14 @@ Fix: use the sigma-calibrated probe rate (the rate where clean validation sigma
 >= 0.6) instead of the hardcoded 0.5. The rate grid already has this data in
 the PSBD cache.
 
-### BLOCKER: Evasion uses absolute PSU, defence reports fractional
+### BLOCKER: Evasion uses absolute PSU, defense reports fractional
 
 `adaptive_evasion.py:98` penalizes absolute PSU (`base - dropped`). The
-reporting path defaults to fractional PSU (`defence_tables.py --score fractional`),
+reporting path defaults to fractional PSU (`defense_tables.py --score fractional`),
 which is the preferred score (92.8% of cells). An attack optimizing the wrong
 statistic is not a fair test.
 
-Fix: match the penalty's score form to whatever the defence reports.
+Fix: match the penalty's score form to whatever the defense reports.
 
 ### BLOCKER: Lambda=0 controls are corrupted (CIFAR-10 pilot)
 
@@ -93,7 +93,7 @@ For `lc`/`sig`, the eligible pool is the target class: 500 images on CIFAR-100,
 on CIFAR-100, 0.5% on Tiny). The three checkpoints trained with these "rates"
 differ only by random seed noise, but are reported as distinct rate points.
 
-This is live in `defence_tables.py` (PANEL includes `lc` against a 3-rate axis)
+This is live in `defense_tables.py` (PANEL includes `lc` against a 3-rate axis)
 and in 16 of the 120 evasion jobs.
 
 Fix: record `realized_poison_rate` and `n_poisoned` in checkpoint metadata.
@@ -102,7 +102,7 @@ Acknowledge the cap in any rate-axis claim for clean-label attacks.
 ### HIGH: Swin evasion PSU computed with stochastic depth live
 
 `adaptive_evasion.py` computes PSU under `model.train()`, which leaves Swin's
-stochastic depth active. The defence computes PSU under `model.eval()`. The
+stochastic depth active. The defense computes PSU under `model.eval()`. The
 attacker optimizes a noisy, differently-distributed proxy. A null result on
 Swin cannot be read as "PSBD survives an adaptive attacker."
 
@@ -129,14 +129,14 @@ The attacker raises PSU on a group the defender never scores (24 cells).
 
 ### HIGH: STRIP blended in normalized space
 
-`defences/baselines.py:111` adds normalized tensors directly instead of
+`defenses/baselines.py:111` adds normalized tensors directly instead of
 de-normalizing, blending, clipping, and re-normalizing. The blended input
 carries an extra per-channel offset. Since the paper claims PSBD outperforms
 STRIP, a handicapped STRIP baseline weakens the comparison.
 
 ### HIGH: GaussianNoise magnitude is data-dependent
 
-`defences/perturbations.py:170-174` computes noise scale from `x.detach().std()`
+`defenses/perturbations.py:170-174` computes noise scale from `x.detach().std()`
 per batch. Clean and backdoor splits have different activation statistics, so
 the perturbation strength applied to each is different. The measured separation
 partially reflects how hard each set was hit, not just backdoor sensitivity.

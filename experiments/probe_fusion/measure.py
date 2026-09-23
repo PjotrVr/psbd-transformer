@@ -32,21 +32,21 @@ from data.splits import SPLITS
 
 import torch
 
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import (
+from defenses.decision import (
     complete_rates,
     detection_report,
     multi_probe_detection,
     pair_clean_to_backdoor,
     select_rate_at_matched_shift,
 )
-from defences.scores import psu_ratio_from_cache, shift_ratio, to_rank
+from defenses.scores import psu_ratio_from_cache, shift_ratio, to_rank
 
 # The operating points a deployment is read at, per the reporting contract.
 TARGET_FPRS = (0.10, 0.20)

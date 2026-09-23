@@ -96,7 +96,7 @@ LIBRARY_PACKAGES = (
     "attacks",
     "analysis",
     "data",
-    "defences",
+    "defenses",
     "detectors",
     "evaluation",
     "models",
@@ -404,7 +404,7 @@ def test_summary_writes_a_versionable_csv(tmp_path) -> None:
 
     # A4 was an unrecognized suffix silently attributed to the paper's own
     # baseline. Nothing may parse as an operator the registry does not have.
-    # KNOWN_OPERATORS rather than defences.operators.PERTURBATIONS, because scale_up
+    # KNOWN_OPERATORS rather than defenses.operators.PERTURBATIONS, because scale_up
     # is a legitimate operator that the perturbation registry deliberately omits:
     # it needs the dataset's normalization constants and cannot be built from a
     # rate alone. The summary's own vocabulary is the right authority here.

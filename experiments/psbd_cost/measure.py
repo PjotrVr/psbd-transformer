@@ -33,7 +33,7 @@ import torch
 from lightning import seed_everything
 
 from data.splits import build_psbd_loaders_from_checkpoint
-from defences.operators import build_operator, check_operator_position
+from defenses.operators import build_operator, check_operator_position
 from experiments._paths import experiment_result_path
 from models.backbones import MODEL_INPUT_SIZE, load_checkpoint
 from models.positions import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
@@ -52,7 +52,7 @@ NUM_REPEATS = 3
 TIMING_SEED = 0
 
 # (operator, position). before_attention_norm is a single atomic position, the
-# site of RECOMMENDED_PLACEMENT (defences.decision). post_residual is a
+# site of RECOMMENDED_PLACEMENT (defenses.decision). post_residual is a
 # DROPOUT_CONFIGS key expanding to 2 positions, PUBLISHED_PLACEMENT, the PSBD
 # paper's own ConvNet site.
 PLACEMENTS = (

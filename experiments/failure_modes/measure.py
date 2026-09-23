@@ -55,15 +55,15 @@ import attacks.sig as sig_attack  # noqa: E402
 import attacks.wanet as wanet_attack  # noqa: E402
 from data.registry import DATASET_REGISTRY  # noqa: E402
 from data.splits import SPLITS, read_checkpoint_metadata  # noqa: E402
-from defences.cache import (  # noqa: E402
+from defenses.cache import (  # noqa: E402
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import attack_success_mask, pair_clean_to_backdoor  # noqa: E402
-from defences.scores import psu_from_cache, psu_ratio_from_cache  # noqa: E402
+from defenses.decision import attack_success_mask, pair_clean_to_backdoor  # noqa: E402
+from defenses.scores import psu_from_cache, psu_ratio_from_cache  # noqa: E402
 from experiments._paths import experiment_result_path  # noqa: E402
 from models.backbones import load_checkpoint, network_core  # noqa: E402
 from utils.numerics import safe_ratio  # noqa: E402
@@ -244,7 +244,7 @@ def per_image_summary(
     )  # (n_backdoor,)
 
     # Whether ANY of the k perturbed passes moved the prediction away from the
-    # no-perturbation label, the per-image version of defences.scores.shift_ratio
+    # no-perturbation label, the per-image version of defenses.scores.shift_ratio
     # (which only reports the (sample, pass)-averaged fraction).
     clean_shifted = (clean_pass_argmax.long() != clean_labels.view(1, -1).long()).any(
         dim=0

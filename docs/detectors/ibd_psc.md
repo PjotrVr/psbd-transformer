@@ -131,4 +131,4 @@ Algorithm 1's selected $k$ is itself worth reading alongside the AUROC. `docs/at
 
 ## Direction
 
-Low is poisoned. The paper's rule is "poisoned if $PSC(x) > T$", so the raw statistic is high for poisoned, the opposite of the registry's convention. `ibd_psc_scores` negates the raw `psc_scores` once at the return boundary. A second negation anywhere would produce a well-formed, exactly inverted detector, which is the failure the `auroc_two_sided` diagnostic field in `defences.decision.detection_report` exists to surface.
+Low is poisoned. The paper's rule is "poisoned if $PSC(x) > T$", so the raw statistic is high for poisoned, the opposite of the registry's convention. `ibd_psc_scores` negates the raw `psc_scores` once at the return boundary. A second negation anywhere would produce a well-formed, exactly inverted detector, which is the failure the `auroc_two_sided` diagnostic field in `defenses.decision.detection_report` exists to surface.

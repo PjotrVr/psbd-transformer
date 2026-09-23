@@ -18,7 +18,7 @@ per 500 images, and the TAC heatmap needs all 12 layers.
 import torch
 import torch.nn as nn
 
-from defences.inference import forward_logits
+from defenses.inference import forward_logits
 from models.backbones import network_core
 
 from .direction import trigger_activation_change

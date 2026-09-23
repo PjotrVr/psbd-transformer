@@ -8,7 +8,7 @@ so it adopts the inversion rather than ignoring it.
 
 A median-rank union needs a majority to be wrong instead. That fix was validated
 on synthetic probes with a known answer, which is enough to establish the
-mechanism and not enough to claim the defence works. This script runs the same
+mechanism and not enough to claim the defense works. This script runs the same
 comparison on the 120 evasive checkpoints that actually exist, using cached PSU
 only, no GPU and no model.
 
@@ -24,14 +24,14 @@ from data.splits import SPLITS
 
 import pandas as pd
 
-from defences.cache import load_baseline, load_dropout_pass_probs
-from defences.decision import (
+from defenses.cache import load_baseline, load_dropout_pass_probs
+from defenses.decision import (
     HEADLINE_QUANTILE,
     detection_report,
     multi_probe_detection,
     pair_clean_to_backdoor,
 )
-from defences.scores import psu_from_cache, shift_ratio
+from defenses.scores import psu_from_cache, shift_ratio
 from experiments._paths import experiment_result_path
 
 # The shift ratio every probe is read at, so probes are compared at a matched
@@ -115,7 +115,7 @@ def measure_checkpoint(folder, results_dir):
 
     # The clean split covers the whole analysis pool and the backdoor split only the
     # eligible subset, so comparing them as served contrasts different populations and
-    # measures which classes were dropped as much as it measures the defence. Every
+    # measures which classes were dropped as much as it measures the defense. Every
     # other consumer in the tree pairs by original index; this one did not.
     for probe in probes:
         probe["psu"]["clean"] = pair_clean_to_backdoor(probe["psu"]["clean"], manifest)

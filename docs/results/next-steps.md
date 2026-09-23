@@ -136,7 +136,7 @@ Jobs 1022219 to 1022338. Replaces 1022004-1022123, which had 5 configuration
 bugs found in the 2026-08-16 codebase audit (see codebase-audit-2026-08-16.md):
 
 1. Probe rate was hardcoded 0.5, destroying ViT predictions (penalty=0)
-2. Penalty used absolute PSU, defence reports fractional PSU
+2. Penalty used absolute PSU, defense reports fractional PSU
 3. Swin PSU computed with stochastic depth live (model.train)
 4. Evasion passes k=2, defender uses k=3
 5. Walltime too short (checkpoints lost on kill)

@@ -33,12 +33,12 @@ import os
 import pandas as pd
 import torch
 
-from defences.decision import HEADLINE_QUANTILE, detection_report
-from defences.inference import build_baseline_cache, compute_dropout_pass_probs
+from defenses.decision import HEADLINE_QUANTILE, detection_report
+from defenses.inference import build_baseline_cache, compute_dropout_pass_probs
 from models.backbones import detect_architecture, load_checkpoint
-from defences.operators import build_operator
+from defenses.operators import build_operator
 from models.positions import plug_dropout, unplug_dropout
-from defences.scores import psu_from_cache, shift_ratio
+from defenses.scores import psu_from_cache, shift_ratio
 from data.splits import build_psbd_loaders_from_checkpoint
 
 COMPARED_OPERATORS = ("gaussian", "rademacher")

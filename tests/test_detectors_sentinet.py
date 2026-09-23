@@ -18,7 +18,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models.vision_transformer import EncoderBlock
 
-from defences.decision import HEADLINE_QUANTILE, detection_report
+from defenses.decision import HEADLINE_QUANTILE, detection_report
 from detectors.sentinet import (
     BOUNDARY_BIN_WIDTH,
     BOUNDARY_POINTS_PER_BIN,

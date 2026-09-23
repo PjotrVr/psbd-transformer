@@ -19,7 +19,7 @@ import json
 import os
 import sys
 
-from defences.decision import (  # noqa: E402
+from defenses.decision import (  # noqa: E402
     ADAPTIVE_SHIFT_TARGET,
     HEADLINE_QUANTILE,
     RECOMMENDED_PLACEMENT,

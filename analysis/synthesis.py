@@ -46,7 +46,7 @@ from analysis.features import (
     captured_layers,
     detect_model_architecture,
 )
-from defences.inference import forward_logits, frozen_parameters
+from defenses.inference import forward_logits, frozen_parameters
 from models.backbones import network_core
 
 # lucid's colour decorrelation: the square root of the SVD of the ImageNet pixel

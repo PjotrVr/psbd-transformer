@@ -2,7 +2,7 @@
 
 It works by 2 mechanisms. Cover samples are triggered images that keep their true
 label. They flatten the latent separation between clean and poisoned that many
-defences look for, and cover_rate sets how many there are. The trigger is
+defenses look for, and cover_rate sets how many there are. The trigger is
 asymmetric: training plants a random subset of the pattern's cells and
 evaluation plants the whole pattern. Training on partial evidence forces the
 model to generalise over the pattern, so the full pattern lands far inside the

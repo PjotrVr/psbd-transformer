@@ -19,8 +19,8 @@ import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader, TensorDataset
 
 from data.splits import build_psbd_loaders_from_checkpoint
-from defences.inference import compute_dropout_pass_probs
-from defences.cache import (
+from defenses.inference import compute_dropout_pass_probs
+from defenses.cache import (
     _rate_tag,
     baseline_path,
     load_baseline,

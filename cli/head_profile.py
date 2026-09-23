@@ -36,9 +36,9 @@ import os
 import torch
 from torch.utils.data import DataLoader
 
-from defences.cache import load_or_build_baseline, write_split_manifest
-from defences.inference import forward_probs
-from defences.operators import fixed_head_mask
+from defenses.cache import load_or_build_baseline, write_split_manifest
+from defenses.inference import forward_probs
+from defenses.operators import fixed_head_mask
 from models.positions import plug_dropout, unplug_dropout
 from data.splits import PSBD_SPLIT_SEED
 from utils.provenance import current_git_commit

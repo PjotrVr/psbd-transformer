@@ -20,7 +20,7 @@ laid over it, so predictions scatter and entropy is high. A trigger survives the
 superimposition and keeps dragging the prediction to the target class, so entropy
 stays low. The paper flags an input whose H falls below a percentile of the clean
 entropy distribution, the same quantile-of-clean-validation rule
-defences.decision applies here.
+defenses.decision applies here.
 
 Data requirement: N clean images, drawn from the shared clean validation split.
 Forward-pass cost: N per input. The paper defaults to N = 100 and later reports
@@ -43,7 +43,7 @@ import torch.nn as nn
 from lightning import seed_everything
 from torch.utils.data import DataLoader
 
-from defences.inference import forward_probs
+from defenses.inference import forward_probs
 
 # Guards the log when a class gets probability 0 after softmax underflow.
 PROBABILITY_FLOOR = 1e-12

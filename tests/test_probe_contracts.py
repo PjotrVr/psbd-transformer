@@ -26,11 +26,11 @@ import torch
 
 import torch.nn as nn
 
-import defences.cache as new_cache
+import defenses.cache as new_cache
 
-import defences.decision as new_decision
+import defenses.decision as new_decision
 
-import defences.operators as new_operators
+import defenses.operators as new_operators
 
 import models.positions as new_positions
 

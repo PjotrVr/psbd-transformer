@@ -1,8 +1,8 @@
-# Can one adaptive attack break a whole family of defences?
+# Can one adaptive attack break a whole family of defenses?
 
-A red-team analysis, written against our own defence. The question is not whether
+A red-team analysis, written against our own defense. The question is not whether
 some attacker somewhere can evade PSBD. H25 already settled that. The question is
-whether there exists **one training-time objective** that defeats many defences at
+whether there exists **one training-time objective** that defeats many defenses at
 once, because that is the limitation a security venue will ask us to report about
 ourselves, and it is better reported by us than discovered by a reviewer.
 
@@ -43,7 +43,7 @@ expected.**
    points. Zero cost, decades old, and **we have already published that it breaks
    us** (H5) without noticing it breaks the field.
 
-## 1. What each defence actually computes
+## 1. What each defense actually computes
 
 Formulas transcribed from the papers. Where this repo has a port, the port is named.
 
@@ -51,7 +51,7 @@ Formulas transcribed from the papers. Where this repo has a port, the port is na
 
 Write `p(x; theta)` for the softmax vector, `C(x) = argmax p(x; theta)`.
 
-| defence | statistic | reads | evaluated on |
+| defense | statistic | reads | evaluated on |
 |---|---|---|---|
 | **PSBD** (Li et al., CVPR 2025) | `PSU(x) = P_c(x; theta) - (1/k) sum_i P_c(x; p, theta'_i)`, `c = argmax P(x; theta)` | 1 coordinate of the softmax | same `x`, **model perturbed** by activation dropout at a chosen site |
 | **STRIP** (Gao et al., ACSAC 2019) | `H = (1/N) sum_n [ - sum_i y_i log2 y_i ]` over `N` superimposed copies | the **full** softmax vector | `x + x_n`, **off-manifold composites** with `N` clean images |
@@ -61,7 +61,7 @@ Write `p(x; theta)` for the softmax vector, `C(x) = argmax p(x; theta)`.
 | **Frequency detection** (Zeng et al., ICCV 2021) | energy in high-frequency DCT bands, or a classifier on the DCT spectrum | **the model is not queried at all** | the input image alone |
 
 Repo ports: `psbd/detectors/{strip,scale_up,ibd_psc,teco,confidence}.py`, plus the
-older `defences/baselines.py` that every already-recorded STRIP number came from.
+older `defenses/baselines.py` that every already-recorded STRIP number came from.
 
 Two facts about this table matter more than the formulas.
 
@@ -85,7 +85,7 @@ related work as orthogonal, never in a table of things a single attack could bre
 
 ### 1.2 The training-set and latent detectors
 
-| defence | statistic | metric the mean shift is measured in | needs |
+| defense | statistic | metric the mean shift is measured in | needs |
 |---|---|---|---|
 | **Spectral Signatures** (Tran et al., NeurIPS 2018) | `tau_i = ((R(x_i) - R_bar) . v)^2`, `v` = top right singular vector of the class-centred representation matrix. Remove top `1.5*eps` | **identity** (raw covariance) | labels, `eps` |
 | **SPECTRE** (Hayase et al., ICML 2021) | `tau_i = (h_tilde_i^T Q_alpha h_tilde_i)/tr(Q_alpha)`, `Q_alpha = exp(alpha(Sigma_tilde - I)/(||Sigma_tilde||_op - 1))`, on robustly whitened `h_tilde = Sigma_hat^{-1/2}(h - mu_hat)` | **robust estimate of the clean covariance** | labels, `eps` |
@@ -126,7 +126,7 @@ Every one of the 5 has the shape
     S(x) = A_{T ~ D} [ psi( p( T_input(x) ; T_model(theta) ) ) ]
 ```
 
-| defence | `T_input` | `T_model` | `psi` | `A` |
+| defense | `T_input` | `T_model` | `psi` | `A` |
 |---|---|---|---|---|
 | PSBD | identity | activation noise at site `s` | `p_c`, `c = C(x)` | mean, then subtracted from `P_c(x)` |
 | STRIP | `x + x_n` | identity | Shannon entropy of the full vector | mean |
@@ -147,9 +147,9 @@ by matching a distribution:
 - **not at all** (STRIP). STRIP never evaluates the model on `x`. Equations 2 to 4
   run only on the `N` composites.
 
-### 2.2 Defence by defence
+### 2.2 Defense by defense
 
-| defence | is the statistic a function of `p(x)`? | does confidence matching defeat it? | why |
+| defense | is the statistic a function of `p(x)`? | does confidence matching defeat it? | why |
 |---|---|---|---|
 | PSBD | no. `P_c(x)` appears, but only as the base of a difference whose second term is free | **no, partial at most** | Matching `P_c(x)` leaves `E[P_c(x; dropout)]` unconstrained, and that term is where the whole signal lives. H12 measured this directly and refuted the "PSU is just confidence" hypothesis |
 | STRIP | **no, and it does not evaluate `p(x)` at all** | **no** | The statistic lives entirely on `x + x_n`. This is the case H-A flagged as interesting and the flag was correct: STRIP's statistic is the model's behaviour on image sums, which are far off the data manifold and are constrained by nothing an attacker regularizes on natural inputs |
@@ -159,7 +159,7 @@ by matching a distribution:
 | Frequency | no. Does not query the model | **no** | Different object entirely |
 
 Confidence matching does defeat exactly one thing in our comparison set, and it is
-the null model: `defences/baselines.py:confidence_scores`, max softmax probability.
+the null model: `defenses/baselines.py:confidence_scores`, max softmax probability.
 Worth stating, because an adversarial review of this project already found that the
 null model beats PSBD on the benign control, so an attacker who defeats the null
 model has removed a baseline we currently rely on.
@@ -324,7 +324,7 @@ This orders the family, and the ordering is confirmed by each paper's own adapti
 attack, which is the strongest possible evidence because it is evidence each author
 published against themselves:
 
-| defence | is its `D` a deployment channel? | its own adaptive attack | cost the attacker paid |
+| defense | is its `D` a deployment channel? | its own adaptive attack | cost the attacker paid |
 |---|---|---|---|
 | **TeCo** | **yes.** `D` is exactly the Hendrycks and Dietterich common-corruption set: JPEG, blur, noise, contrast, brightness | works: BadNets AUROC 0.911 to 0.576 | **CA 0.9153 to 0.5105 and ASR 0.9502 to 0.7386.** 40 points of clean accuracy and 21 points of ASR |
 | **IBD-PSC** | no, parameter space | fails, worst case AUROC 0.819 | design 2 collapses benign accuracy to 0.101 |
@@ -622,7 +622,7 @@ matching at layer 1, where the representation is nearly the input, and matching 
 distribution there means the trigger carries no information, which contradicts it
 being decodable. So the attacker must match at some depth, and every probe **above**
 that depth is defeated while every probe **below** it is untouched. That is the same
-defence-in-depth statement H41 makes, arrived at from information theory instead of
+defense-in-depth statement H41 makes, arrived at from information theory instead of
 from Jacobians, and it is a better argument than the Jacobian one because it does not
 depend on a Taylor expansion.
 
@@ -675,7 +675,7 @@ without it. Centring removes the first moment before the statistic is taken, and
 population is not the one cover samples act on. There is no mechanism by which part 1
 of Qi's attack would move our number, and it does not.
 
-That is not a defence of our measure. It says the attack was never aimed at it. The
+That is not a defense of our measure. It says the attack was never aimed at it. The
 right way to write this up is "our statistic is of a different moment and a different
 population than the attack was designed against", not "our statistic survived the
 state-of-the-art adaptive attack".
@@ -773,7 +773,7 @@ mechanism**, not of any attack or poison rate, since it does not vary meaningful
 across either. That means it is a tax on **each** penalty term the attacker adds, and
 a kitchen-sink attacker who adds a term per probe should expect it to compound. We
 have not measured whether it does, and it is the difference between "multi-probe is
-defence in depth" and "multi-probe is defeated at a price nobody would pay". It is
+defense in depth" and "multi-probe is defeated at a price nobody would pay". It is
 the most important unmeasured number in this document.
 
 ## 6. The single most dangerous attack
@@ -797,7 +797,7 @@ the one that should worry us most.
 3. **It already exists**, so we cannot present it as a hypothetical we chose not to
    run. It is arXiv:2202.11203, and the confidence-driven-sampling paper (TMLR 2024)
    reaches the same regime by poison selection.
-4. **Multi-probe defence in depth does not touch it.** H41's recovery from 0.322 to
+4. **Multi-probe defense in depth does not touch it.** H41's recovery from 0.322 to
    0.951 works because the H25 attacker constrained 1 Jacobian and left the others
    free. LSBA constrains no Jacobian. It lowers the margin, and every probe in the
    pool reads the margin. There is no unprobed direction to fall back on, because the
@@ -852,7 +852,7 @@ document proposes them rather than runs them, and they are ordered by
 | stage | what | panel | success criterion |
 |---|---|---|---|
 | **0** | class-conditional rank ratio `PR(triggered)/PR(clean predicted as t)`, **and** the plain ratio broken out per dataset, on **existing** checkpoints. Also compute it on **whitened** representations, per section 4.4 | full panel, all 4 datasets, since section 3.7 says the class count is the axis that matters | whether the measure survives its own obvious correction and whether one threshold is valid across 10, 43, 100 and 200 classes. 1 feature-extraction pass, **no training** |
-| **1** | **Run LSBA against our whole detector set.** Reimplement the relabelling rule (it needs only a clean surrogate), train the panel, then score with PSBD at the recommended operator, the 4-probe pool of H41, and our STRIP, SCALE-UP, TeCo and IBD-PSC ports | full panel, ViT and Swin, CIFAR-100 and Tiny | **The decisive experiment in this document.** If PSBD AUROC falls toward 0.5 and the multi-probe union does not recover it, H41's defence-in-depth claim is refuted and the paper must say so |
+| **1** | **Run LSBA against our whole detector set.** Reimplement the relabelling rule (it needs only a clean surrogate), train the panel, then score with PSBD at the recommended operator, the 4-probe pool of H41, and our STRIP, SCALE-UP, TeCo and IBD-PSC ports | full panel, ViT and Swin, CIFAR-100 and Tiny | **The decisive experiment in this document.** If PSBD AUROC falls toward 0.5 and the multi-probe union does not recover it, H41's defense-in-depth claim is refuted and the paper must say so |
 | **2** | Channel-robustness pricing of stage 1: ASR of the LSBA checkpoints under JPEG, resize and Gaussian noise, against the vanilla checkpoints | same | tests section 2.6's proposition. If LSBA's ASR collapses under a realistic channel, we have a real and quantified defensive answer. If it does not, the proposition is refuted and we have no answer |
 | 3 | Term (b) alone, `lambda_1 = 0` | full panel | rank ratio reaches 0.95 or above with CA within 2 points and ASR above 0.9. If this fails, H-C's impossibility claim is partially rescued, which is itself a real result |
 | 4 | Term (a) over the `k = 4` pool, `lambda_2 = 0` | full panel | multi-probe AUROC below 0.7. Log the CA tax **per added probe**, since whether it compounds is the whole question |
@@ -911,8 +911,8 @@ which shrinks MM-BD's bound directly. So the margin attack of section 6 is predi
 to defeat MM-BD as well, without any of the bilevel machinery MM-BD's authors needed
 for their own adaptive attack.
 
-That is one more defence added to the margin attack's blast radius, and it is a
-defence in a different threat model, which is the strongest possible form of the
+That is one more defense added to the margin attack's blast radius, and it is a
+defense in a different threat model, which is the strongest possible form of the
 finding. It is also unmeasured.
 
 ### 7.2 The second cross-family attack, and we have already measured it against ourselves
@@ -1002,7 +1002,7 @@ Beyond it:
 
 - **No paper adds an entropy term to a backdoor training loss to defeat STRIP.**
 - **No standalone attack paper targets SCALE-UP, TeCo, IBD-PSC or PSBD.** All 5
-  confirmed objectives against those defences are **defence-authored**, in the
+  confirmed objectives against those defenses are **defense-authored**, in the
   papers' own adaptive-attack sections, which are catalogued in section 5.
 - "Confidence matching backdoor" and "calibrated backdoor attack" do not exist as
   named methods.
@@ -1014,19 +1014,19 @@ poisoning", "feature diversity backdoor" and "entropy of singular values poisoni
 returned **no such method**. This is the clearest open gap found.
 
 That cuts both ways for us, and the honest reading is uncomfortable. It means our
-rank measure is genuinely novel on the attack side as well as the defence side. It
+rank measure is genuinely novel on the attack side as well as the defense side. It
 also means its apparent robustness to the adaptive-attack literature is entirely
 explained by nobody having tried, and section 3.3 shows what happens the moment
 somebody does.
 
-### 8.4 Multi-defence evasion that already works, by other means
+### 8.4 Multi-defense evasion that already works, by other means
 
 The strongest multi-family results in the literature come from **trigger and threat
 model design**, not distribution matching, and they should be in our related work
 because they are the actual state of the art in evasion:
 
 - **HCB**, Ma et al., ACM CCS 2024, arXiv:2310.00542. The trigger fires only when
-  co-occurring with an innocuous class-independent feature. **11 defences, none
+  co-occurring with an innocuous class-independent feature. **11 defenses, none
   robust**, including STRIP, SCAn, Beatrix and MM-BD. STRIP FAR 100%.
 - **BELT**, Qiu et al., IEEE S&P 2024, arXiv:2312.04902. Cover samples with fuzzy
   triggers plus a momentum centre loss. Defeats STRIP, NC, ABS, MNTD, MOTH, SentiNet
@@ -1040,7 +1040,7 @@ because they are the actual state of the art in evasion:
 
 WaveAttack is the uncomfortable one for the framing of this whole document. It
 defeats both families with **no matching objective at all**, which means the design
-space of "one attack, many defences" is not exhausted by the matching-objective
+space of "one attack, many defenses" is not exhausted by the matching-objective
 framing this analysis has used throughout.
 
 ### 8.5 The negative results, and what they do and do not license
@@ -1088,9 +1088,9 @@ to us.
   only with the random coins, and it is that branch that provably defeats Spectral
   Signatures and SPECTRE. **It says nothing about input-level detection of a poisoned
   sample at inference**, which is our problem, and their own section 7 proposes
-  **randomized smoothing** as an evaluation-time defence, which is the same object our
+  **randomized smoothing** as an evaluation-time defense, which is the same object our
   theory document builds its Cohen-style bridge on. Anyone citing this as "backdoors
-  are undetectable, so your defence is pointless" is over-reading it, and we should
+  are undetectable, so your defense is pointless" is over-reading it, and we should
   pre-empt that in the paper rather than in the rebuttal.
 
 ### 8.6 The one-line answer to "has this been done"
@@ -1112,7 +1112,7 @@ Two of our own results cannot both be load-bearing in their current form.
 - **H28 and `docs/theory-perturbation-consistency.md`:** PSBD, STRIP, SCALE-UP and
   IBD-PSC are 4 estimators of **one quantity**, differing only in `Sigma` and where
   they evaluate `H`. Position variance 1.43x operator variance, Kendall tau 0.700.
-- **H41:** probe diversity is defence in depth, because an attacker who constrains 1
+- **H41:** probe diversity is defense in depth, because an attacker who constrains 1
   probe leaves the others free.
 
 If the first is true, then an attacker who moves **the estimand** defeats every probe
@@ -1126,7 +1126,7 @@ which is currently written as though it covers adaptive attackers in general. It
 covers exactly one kind, and the paper has to say which. Stage 1 of section 6.2
 decides whether the other kind is a real threat or a theoretical one.
 
-This is not a small edit. Defence in depth is currently one of the 5 things the theory
+This is not a small edit. Defense in depth is currently one of the 5 things the theory
 document lists as genuinely new, at number 3.
 
 ### 9.2 Survives unchanged
@@ -1153,7 +1153,7 @@ document lists as genuinely new, at number 3.
 
 | claim | exposure |
 |---|---|
-| **Operator diversity is defence in depth (H25, H41)** | **The biggest exposure in the project**, for 2 independent reasons. First, section 9.1: our own H28 implies diversity cannot help against a margin attack. Second, H25's attacker regularized against **1** probe, and the obvious extension to all `k` is untested, so the current threat model is an attacker who attacks one probe. Stages 1 and 4 of section 6.2 close both or do not |
+| **Operator diversity is defense in depth (H25, H41)** | **The biggest exposure in the project**, for 2 independent reasons. First, section 9.1: our own H28 implies diversity cannot help against a margin attack. Second, H25's attacker regularized against **1** probe, and the obvious extension to all `k` is untested, so the current threat model is an attacker who attacks one probe. Stages 1 and 4 of section 6.2 close both or do not |
 | Median-rank reduction fixes the inverted-probe fragility | The theory document's own table shows median failing at 3 of 5 inverted (0.215), and a multi-probe attacker's optimal play is to invert a majority. Section 2.4 shows a margin attack inverts **every** probe at once, which is precisely the majority case the fix does not cover |
 | **`A5-low-confidence-backdoor.md`'s central proof** | **Wrong as stated**, and it is a sibling page in this same directory. It shows the attacker gains nothing by moving to the uniform point, which is true, and concludes the low-confidence backdoor cannot beat PSU, which does not follow. The attacker's optimum is the peak between the 2 zeros, and LSBA's rule lands on 97.0% of it. Section 2.4 has the closed form. **One of the 2 pages has to change before either is cited** |
 | PSBD and STRIP fuse into something better (H14) | STRIP's **own paper** publishes a free adaptive attack against it, CA 86.61% and ASR 99.95%, and section 8.1 adds 2 more attacks (WB, DEFEAT) that flatten STRIP's entropy as a side effect of aiming elsewhere. The fusion's STRIP half is the cheapest component in our pipeline to remove |

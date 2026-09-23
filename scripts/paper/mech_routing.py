@@ -23,7 +23,7 @@ sys.path.insert(0, os.getcwd())
 import scripts.paper._style  # noqa: E402,F401  the shared figure style
 import matplotlib.pyplot as plt  # noqa: E402
 
-from defences.decision import EASY_ATTACKS, HARD_ATTACKS  # noqa: E402
+from defenses.decision import EASY_ATTACKS, HARD_ATTACKS  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     OKABE_ITO,
     attack_label,

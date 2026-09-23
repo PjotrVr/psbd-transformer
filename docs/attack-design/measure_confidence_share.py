@@ -15,13 +15,13 @@ import torch
 from sklearn.metrics import roc_auc_score
 
 sys.path.insert(0, ".")
-from defences.cache import dropout_pass_path
-from defences.decision import (
+from defenses.cache import dropout_pass_path
+from defenses.decision import (
     complete_rates,
     pair_clean_to_backdoor,
     select_rate_at_matched_shift,
 )
-from defences.scores import psu_ratio_from_cache, shift_ratio
+from defenses.scores import psu_ratio_from_cache, shift_ratio
 
 RESULTS = "results"
 

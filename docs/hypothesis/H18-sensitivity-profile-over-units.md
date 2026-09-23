@@ -69,7 +69,7 @@ produced a better statistic than the one it was testing.** Backdoored profiles t
 *flatter* than clean ones, not more peaked. Separately, the simplest reduction of
 the profile, its **minimum**, beats PSBD's mean on the low-poison-rate case by
 +0.12 while keeping PSBD's direction unchanged. Per-unit masking machinery is
-implemented and tested (`defences/perturbations.py`). The per-unit measurement
+implemented and tested (`defenses/perturbations.py`). The per-unit measurement
 itself has not been run.
 
 ## Result of the cheap test (H18 step 1, run before any GPU time)
@@ -207,7 +207,7 @@ region for that attack, which is why the best placement is attack-dependent
 
 ## What is already built
 
-`defences/perturbations.py` provides the structured operators the profile needs,
+`defenses/perturbations.py` provides the structured operators the profile needs,
 all sharing nn.Dropout's interface so they plug at any registry position:
 
 | operator | unit removed | notes |
@@ -220,7 +220,7 @@ all sharing nn.Dropout's interface so they plug at any registry position:
 | `dropout` | the paper's element-wise Bernoulli | baseline |
 
 2 new registry positions expose the units:
-`attention_heads` and `mlp_neurons` (`defences/dropout.py`).
+`attention_heads` and `mlp_neurons` (`defenses/dropout.py`).
 
 `attention_heads` needed a forward wrapper, not a hook.
 `nn.MultiheadAttention` runs `F.multi_head_attention_forward`, which reads

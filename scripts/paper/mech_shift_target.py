@@ -29,7 +29,7 @@ import scripts.paper._style  # noqa: E402,F401  the shared figure style
 import matplotlib.pyplot as plt
 
 from cli.compare_detectors import psbd_rate
-from defences.decision import EASY_ATTACKS, HARD_ATTACKS, RECOMMENDED_PLACEMENT
+from defenses.decision import EASY_ATTACKS, HARD_ATTACKS, RECOMMENDED_PLACEMENT
 from scripts.paper._common import (
     attack_label,
     bootstrap_ci,
@@ -60,7 +60,7 @@ RULES = ("matched", "adaptive")
 DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny", "svhn", "eurosat")
 RULE_LABEL = {"matched": "matched 0.6", "adaptive": "adaptive 0.8"}
 # The macros headline on the matched-0.6 rule, the project's standard placement
-# comparison operator (defences.decision.PLACEMENT_MATCH_TARGET), so a target-share
+# comparison operator (defenses.decision.PLACEMENT_MATCH_TARGET), so a target-share
 # excess is read at the same disturbance level every other placement number uses.
 MACRO_RULE = "adaptive"
 
@@ -77,7 +77,7 @@ PALETTE = [
 
 
 def order_attacks(names: set[str]) -> list[str]:
-    """Attack names, hard attacks first, matching defences.decision's grouping."""
+    """Attack names, hard attacks first, matching defenses.decision's grouping."""
     ranked = list(HARD_ATTACKS) + list(EASY_ATTACKS)
     ordered = [name for name in ranked if name in names]
     ordered += sorted(name for name in names if name not in ranked)

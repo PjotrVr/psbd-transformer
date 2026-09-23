@@ -1,9 +1,9 @@
-"""Multi-probe PSBD defence against the adaptive attacker.
+"""Multi-probe PSBD defense against the adaptive attacker.
 
 For each evasive checkpoint from H25, loads per-operator PSBD sweep caches,
 computes the min-rank combined score across all available operators, and
 reports multi-probe AUROC plus TPR/FPR under both thresholding rules that
-defences.psbd_metrics.multi_probe_detection returns:
+defenses.psbd_metrics.multi_probe_detection returns:
 
   calibrated  threshold = the target_fpr quantile of the combined clean-validation
               min-rank. The combined score is already a minimum over k probes, so
@@ -34,20 +34,20 @@ sys.path.insert(0, REPO_ROOT)
 
 import numpy as np
 
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import (
+from defenses.decision import (
     complete_rates,
     multi_probe_auroc,
     multi_probe_detection,
     pair_clean_to_backdoor,
 )
-from defences.scores import psu_ratio_from_cache, shift_ratio
+from defenses.scores import psu_ratio_from_cache, shift_ratio
 
 
 RESULTS_DIR = "results"
@@ -251,7 +251,7 @@ def print_summary(rows):
         r for r in rows if r.get("evade_asr") is not None and r["evade_asr"] > 0.9
     ]
 
-    print("\n=== Multi-Probe PSBD Defence (H41) ===")
+    print("\n=== Multi-Probe PSBD Defense (H41) ===")
     print(f"Total evasive checkpoints analyzed: {len(rows)}")
     print(f"With ASR > 0.9: {len(high_asr)}")
 

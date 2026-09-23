@@ -9,7 +9,7 @@ NOT EXERCISED rather than judged, since no sign can be read off a tie.
 
 import torch
 
-from defences.decision import HEADLINE_QUANTILE, detection_report
+from defenses.decision import HEADLINE_QUANTILE, detection_report
 from detectors import DETECTOR_NAMES, DetectorContext
 
 # The synthetic backdoor is unmissable by construction, so a correctly wired

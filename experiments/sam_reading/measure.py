@@ -35,7 +35,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from cli.compare_detectors import psbd_values  # noqa: E402
-from defences.decision import PUBLISHED_PLACEMENT, RECOMMENDED_PLACEMENT  # noqa: E402
+from defenses.decision import PUBLISHED_PLACEMENT, RECOMMENDED_PLACEMENT  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     BOOTSTRAP_RESAMPLES,
     BOOTSTRAP_SEED,

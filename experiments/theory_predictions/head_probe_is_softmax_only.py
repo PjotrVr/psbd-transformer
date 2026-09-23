@@ -43,13 +43,13 @@ import pandas as pd
 import torch
 from scipy.stats import spearmanr
 
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
 )
-from defences.decision import complete_rates
+from defenses.decision import complete_rates
 from experiments._paths import experiment_results_dir
 
 HEAD_PLACEMENT = "final_norm_out_gain_scale"

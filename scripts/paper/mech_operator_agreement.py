@@ -11,7 +11,7 @@ of a pair.
 
 The slow step is disk I/O: up to 18 placements times 2 splits times 65 cells of
 stage-1 tensors. The baseline tensors are shared across placements within a cell
-(defences.cache), so they are read once per cell. --max-cells truncates the
+(defenses.cache), so they are read once per cell. --max-cells truncates the
 panel for a quick check before the full run.
 
     PYTHONPATH=. python scripts/paper/mech_operator_agreement.py \
@@ -33,14 +33,14 @@ import numpy as np
 from scipy.stats import spearmanr
 
 from cli.compare_detectors import psbd_rate
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
 )
-from defences.decision import RECOMMENDED_PLACEMENT
-from defences.scores import psu_ratio_from_cache
+from defenses.decision import RECOMMENDED_PLACEMENT
+from defenses.scores import psu_ratio_from_cache
 from scripts.paper._common import (
     build_parser,
     family_label,

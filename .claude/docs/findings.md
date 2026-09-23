@@ -63,7 +63,7 @@ Restricting `pre_residual` to a band of blocks still beats applying it to all 12
 third of the perturbation cost. **Blocks 5-8** is the deployable band default;
 blocks 9-12, which the oracle prefers, cannot be selected at all.
 
-**Four changes combine into a materially better defence** (H13): band placement,
+**Four changes combine into a materially better defense** (H13): band placement,
 fractional PSU, a retuned rate target, and a two-sided rule. Against published PSBD:
 **+0.110 mean AUROC on the derivation set (14/15 wins)** and **+0.151 on two held-out
 attacks (2/2)**, all with the rate chosen on clean validation data only. On `lc` the

@@ -6,8 +6,8 @@ at 10% poisoning (backdoor_bench_checkpoints/cifar10_wanet_0_1/), read through i
 test set rather than our own re-implemented trigger, so a bug specific to our WaNet
 code cannot explain the result either way.
 
-Mirrors cli.sweep's cache format exactly (defences.cache, models.positions,
-defences.operators) so cli.analyze's reader, defences.scores and defences.decision
+Mirrors cli.sweep's cache format exactly (defenses.cache, models.positions,
+defenses.operators) so cli.analyze's reader, defenses.scores and defenses.decision
 apply unchanged. The only thing this script does differently from cli.sweep is how
 the model and the 3 loaders are built, because a BackdoorBench folder carries no
 args.json and its poisoned test images are pre-rendered PNGs, not a trigger this
@@ -28,7 +28,7 @@ from torchvision import datasets as tv_datasets
 
 from data.backdoorbench import load_backdoor_splits, split_validation_and_eval
 from data.registry import DATASET_REGISTRY
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_dropout_pass_probs,
@@ -37,15 +37,15 @@ from defences.cache import (
     save_dropout_pass_probs,
     write_split_manifest,
 )
-from defences.decision import (
+from defenses.decision import (
     detection_report,
     pair_clean_to_backdoor,
     select_rate_adaptively,
     select_rate_at_matched_shift,
 )
-from defences.inference import build_baseline_cache, compute_dropout_pass_probs
-from defences.operators import build_operator
-from defences.scores import psu_from_cache, psu_ratio_from_cache, shift_ratio
+from defenses.inference import build_baseline_cache, compute_dropout_pass_probs
+from defenses.operators import build_operator
+from defenses.scores import psu_from_cache, psu_ratio_from_cache, shift_ratio
 from models.backbones import load_checkpoint
 from models.positions import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
 

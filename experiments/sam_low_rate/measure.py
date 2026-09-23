@@ -35,7 +35,7 @@ import sys
 
 sys.path.insert(0, os.getcwd())
 
-from defences.decision import HEADLINE_QUANTILE  # noqa: E402
+from defenses.decision import HEADLINE_QUANTILE  # noqa: E402
 from experiments.sam_reading.measure import (  # noqa: E402
     ATTACKS,
     PLACEMENTS,

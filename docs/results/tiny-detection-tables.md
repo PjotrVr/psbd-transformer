@@ -133,5 +133,5 @@ The story reverses from CIFAR-100: on CIFAR-100, gain_scale leads by 0.096 AUROC
 
 ## Source
 
-`python defence_tables.py --operator {op} --position {pos} --allow-partial`
+`python defense_tables.py --operator {op} --position {pos} --allow-partial`
 Benign: `vit_tiny_benign` checkpoint probed with badnet_a2o trigger.

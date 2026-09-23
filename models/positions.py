@@ -1,6 +1,6 @@
 """Probe positions: where a perturbation is injected inside a network.
 
-defences.operators owns what a probe does. This module owns where it attaches and
+defenses.operators owns what a probe does. This module owns where it attaches and
 knows nothing about the operator beyond its nn.Dropout-shaped interface. The same
 operator at 2 positions is 2 different experiments, which is the central variable
 of the study.
@@ -34,7 +34,7 @@ from torchvision.models.vision_transformer import EncoderBlock
 from torchvision.models.swin_transformer import SwinTransformerBlock
 
 from .backbones import network_core
-from defences.operators import masked_attention_forward
+from defenses.operators import masked_attention_forward
 
 
 @dataclass(frozen=True)

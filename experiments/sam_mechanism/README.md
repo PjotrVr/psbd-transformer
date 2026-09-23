@@ -40,7 +40,7 @@ Under `token_mask` at `before_attention_norm`, at the rate the 0.8 adaptive rule
 selected for that checkpoint (read from `results/<folder>/psbd_metrics.json`,
 falling back to 0.5 when absent): the mean `psu_ratio` on the clean and on the
 triggered images, and the AUROC separating them, run through
-`defences.operators`, `models.positions.plug_dropout` and `defences.scores`
+`defenses.operators`, `models.positions.plug_dropout` and `defenses.scores`
 exactly as `cli/sweep.py` and `cli/analyze.py` do.
 
     PYTHONPATH=. .venv/bin/python experiments/sam_mechanism/measure.py \

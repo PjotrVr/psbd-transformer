@@ -28,7 +28,7 @@ object, spread over many pixels, so the mask stays large. A triggered input's
 logits are dominated by the backdoor path, and the trigger's own pixels are all
 the model needs to reproduce them, so the mask collapses onto the trigger and its
 L1 norm is small. Eq. (4) flags a mask whose L1 norm falls below a threshold, the
-same quantile-of-clean-validation rule defences.decision applies here.
+same quantile-of-clean-validation rule defenses.decision applies here.
 
 Data requirement: none. The objective compares the model against itself, so no
 label and no clean image enters the score. Clean data is used for the threshold
@@ -62,7 +62,7 @@ import torch.nn.functional as F
 from lightning import seed_everything
 from torch.utils.data import DataLoader
 
-from defences.inference import forward_logits, frozen_parameters
+from defenses.inference import forward_logits, frozen_parameters
 
 from .strip import normalization_buffers
 

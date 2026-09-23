@@ -4,7 +4,7 @@ Confidence is the maximum softmax probability the model assigns to any class, ne
 
 ## Why the null model
 
-A backdoored model is typically more confident on a triggered input than on a clean one, since the trigger drives the logits toward the target class through a shortcut the ordinary class boundary does not offer. That gap is real, and it is also the first thing every published detector implicitly assumes is not enough on its own. Section 2.2 of `docs/attack-design/cross-defence.md` measured it directly against this project's own PSBD score: the null model beats PSBD on the benign control, so a detector that reports an AUROC below confidence's has not shown that its extra machinery buys anything, and an attacker who defeats the null model has already removed a baseline the comparison table depends on.
+A backdoored model is typically more confident on a triggered input than on a clean one, since the trigger drives the logits toward the target class through a shortcut the ordinary class boundary does not offer. That gap is real, and it is also the first thing every published detector implicitly assumes is not enough on its own. Section 2.2 of `docs/attack-design/cross-defense.md` measured it directly against this project's own PSBD score: the null model beats PSBD on the benign control, so a detector that reports an AUROC below confidence's has not shown that its extra machinery buys anything, and an attacker who defeats the null model has already removed a baseline the comparison table depends on.
 
 Keeping it in the registry is a discipline rather than an oversight. Every table `cli.compare_detectors` produces carries the `confidence` column beside the others, so a reader can see at a glance whether STRIP, SCALE-UP, IBD-PSC, TeCo, CD-L or Beatrix earned their extra forward passes on a given cell or merely reproduced what a max and a comparison already gave for 1 forward pass.
 
@@ -64,4 +64,4 @@ The mechanism-level failure is a backdoor placed deliberately near the decision 
 
 ## Direction
 
-Low is poisoned. The raw statistic, the largest softmax probability, is usually high for a triggered input, so `confidence_scores` negates it once at the return boundary. A second negation anywhere downstream would produce a well-formed, exactly inverted detector, which is the failure `experiments/preflight/check_signs.py` and the `auroc_two_sided` diagnostic in `defences.decision.detection_report` both exist to catch.
+Low is poisoned. The raw statistic, the largest softmax probability, is usually high for a triggered input, so `confidence_scores` negates it once at the return boundary. A second negation anywhere downstream would produce a well-formed, exactly inverted detector, which is the failure `experiments/preflight/check_signs.py` and the `auroc_two_sided` diagnostic in `defenses.decision.detection_report` both exist to catch.

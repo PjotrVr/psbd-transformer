@@ -54,7 +54,7 @@ only measure which operator perturbs hardest.
 | `multi_probe/` | can a min-rank rule over several operators recover detection after evasion? | H41 | `docs/hypothesis/H41-*.md` |
 | `operator_ranking/` | is the low-poison-rate failure a bad operating point rather than a limit? | H17 | `docs/results/operator-position-ranking.md`, `docs/results/detection-operating-points.md` |
 | `psu_vs_confidence/` | is PSU just measuring baseline confidence? | H12 | `docs/hypothesis/H12-*.md` |
-| `removal_defences/` | can the backdoor be removed from a trained checkpoint without retraining? | H34, H39 | `docs/hypothesis/H34-*.md`, `docs/hypothesis/H39-*.md` |
+| `removal_defenses/` | can the backdoor be removed from a trained checkpoint without retraining? | H34, H39 | `docs/hypothesis/H34-*.md`, `docs/hypothesis/H39-*.md` |
 | `sam_backdoor_effect/` | does SAM amplify the backdoor on ViT as it does on ResNet18? | H6 | `docs/hypothesis/H6-*.md` |
 | `shift_in_latent_space/` | do clean samples under dropout move toward the target class in latent space? | H7 | `docs/hypothesis/H7-*.md` |
 | `stealth/` | how visible is each attack's trigger, so the panel can be compared fairly? | panel setup | `docs/results/stealth-metrics.md` |

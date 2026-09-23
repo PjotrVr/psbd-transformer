@@ -17,7 +17,7 @@ from analysis.features import (
     captured_layers,
     extract_layer_features,
 )
-from defences.inference import forward_logits, forward_probs, frozen_parameters
+from defenses.inference import forward_logits, forward_probs, frozen_parameters
 from experiments.preflight.synthetic import build_backdoored_model, build_splits
 
 DEVICE = torch.device("cpu")

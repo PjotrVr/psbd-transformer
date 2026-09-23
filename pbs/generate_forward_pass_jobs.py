@@ -5,7 +5,7 @@ placement on disk so far was swept at the paper's own k=3. This generator adds
 k in {1, 5, 10, 20} for the 2 placements the panel headline compares:
 RECOMMENDED_PLACEMENT (before_attention_norm, token_mask) and
 PUBLISHED_PLACEMENT (post_residual, dropout), both read from
-defences.decision so the placement identity cannot drift from the canon. The
+defenses.decision so the placement identity cannot drift from the canon. The
 checkpoints are the ViT cells in results/coverage/coverage.json that clear the
 ASR bar, restricted to cifar100 and tiny at poison rate 0.01 and 0.05, since
 those 2 datasets are the project's primary evidence base. Ordering favors the
@@ -43,7 +43,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
 import cli.sweep as sweep_cli  # noqa: E402
-from defences.decision import PUBLISHED_PLACEMENT, RECOMMENDED_PLACEMENT  # noqa: E402
+from defenses.decision import PUBLISHED_PLACEMENT, RECOMMENDED_PLACEMENT  # noqa: E402
 
 PROJECT_ROOT = REPO
 

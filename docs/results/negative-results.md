@@ -76,7 +76,7 @@ Documenting what did NOT work, so the reasoning is preserved and the same dead e
 
 ## Source
 
-p* analysis: `defences/psbd_metrics.py:critical_rate()` and `scratch/critical_rate_analysis.py`.
+p* analysis: `defenses/psbd_metrics.py:critical_rate()` and `scratch/critical_rate_analysis.py`.
 Ranking transfer: `scratch/cross_dataset_transfer.py`.
 H28 predictions: `scratch/h28_predictions.py`.
-All detection numbers: `defence_tables.py` at sigma >= 0.6, fractional PSU, one-sided.
+All detection numbers: `defense_tables.py` at sigma >= 0.6, fractional PSU, one-sided.

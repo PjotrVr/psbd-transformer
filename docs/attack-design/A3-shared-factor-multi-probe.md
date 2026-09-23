@@ -1,7 +1,7 @@
 # A3. Shared factor evasion: one objective that moves every probe at once
 
 **Rank 3.** This is the attack against H41, and H41 is the paper's flagship
-security contribution. It targets the assumption the multi probe defence rests
+security contribution. It targets the assumption the multi probe defense rests
 on, which is that $k$ probes impose $k$ constraints the attacker must satisfy
 separately.
 
@@ -28,7 +28,7 @@ simultaneously.
 That is the majority attack the median rank rule was introduced to survive.
 `multi_probe_score` with `reduction="median"` fails once the attacker controls
 $\lceil k/2 \rceil$ probes, and its own table records 2 inverted of 5 at 0.751
-and 3 of 5 at 0.215. The defence's threat model assumes the attacker has to buy
+and 3 of 5 at 0.215. The defense's threat model assumes the attacker has to buy
 each probe separately. If a single term buys a shared component of all of them,
 the majority is not $k/2$ training objectives, it is 1.
 
@@ -68,7 +68,7 @@ median alone takes TPR at $q = 0.25$ from 0.999 to 0.080 on
 
 **The hinge is kept, and it is kept because it inverts.** The docstring in
 `psbd/evasion.py` argues the hinge avoids "overshooting into a separation the
-defence could read from the other side". The measurement says the opposite
+defense could read from the other side". The measurement says the opposite
 happened: the probed position goes to AUROC 0.023, which is not neutralisation,
 it is a near perfect inversion. The mechanism is that the hinge is evaluated on a
 noisy $k = 3$ estimate, so at true parity the estimated gap is positive about
@@ -166,14 +166,14 @@ $\lambda_{\text{shared}} = 1.0$. Sweep with H41's full 4 probe pool. Then:
 |---|---:|---:|---|
 | number of the 4 pool members with AUROC below 0.5 | 1 | **2 or more** | still 1 or 0, which would mean the shared factor does not carry across probes |
 | multi probe AUROC, `reduction="min"` | 0.927 mean | **below 0.70** | above 0.85 |
-| multi probe AUROC, `reduction="median"` | not yet measured on evasive | **0.75 to 0.90** | below 0.60, which would refute the median rank defence outright |
+| multi probe AUROC, `reduction="median"` | not yet measured on evasive | **0.75 to 0.90** | below 0.60, which would refute the median rank defense outright |
 | `confidence` null AUROC | 0.687 | below 0.55 | above 0.65, meaning the term did not take |
 | clean accuracy tax | 4.8 points | **below 3 points** | above 5 points, which would make it no cheaper than H25 |
 | wallclock relative to plain training | 4x | **below 1.3x** | above 2x |
 
 The decisive cell is the third row. **If the median rank union holds above 0.75
 against an attacker who buys a shared component of every probe for the price of
-1 forward pass, H41 is a real defence and the paper can say so with a named
+1 forward pass, H41 is a real defense and the paper can say so with a named
 adversary.** If it falls below 0.60, H41 has to be downgraded from "defeats the
 adaptive attacker" to "defeats a probe specific adaptive attacker", and the
 difference between those 2 sentences is the difference between acceptance and
@@ -211,6 +211,6 @@ alike.
 the 126 existing `*_evade_l1` checkpoints with `reduction="median"`. H41 reports
 the median rank numbers on **synthetic** probes with a known answer, not on the
 real evasive checkpoints. Publishing a synthetic table as the evidence for the
-defence that answers the adaptive attacker is the second easiest criticism to
+defense that answers the adaptive attacker is the second easiest criticism to
 make of the current draft, and closing it costs 1 CPU run of
 `experiments/multi_probe/analyze.py`.

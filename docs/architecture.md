@@ -58,7 +58,7 @@ refuses to save a run whose final validation accuracy collapsed against its
 own best epoch. `sam.py` holds `SAM`, the 2-pass sharpness-aware optimizer
 that wraps the same Adam every run uses.
 
-### defences
+### defenses
 
 Owns PSBD itself, split by what each stage of the pipeline needs.
 `operators.py` defines what gets injected at a probed position: `TokenMask`,
@@ -126,7 +126,7 @@ last also used outside this package as the shared detection metric.
 
 Owns numerics only, with no subject of its own. `numerics.py` holds
 `safe_ratio` and `safe_ratio_positive`, the floor-guarded division every rate
-computation in `defences/` and `evaluation/` goes through, and `is_defined`.
+computation in `defenses/` and `evaluation/` goes through, and `is_defined`.
 `provenance.py` holds `current_git_commit` and `utc_timestamp`, the 2 values
 every checkpoint's `args.json` and every PSBD run's provenance record carries.
 

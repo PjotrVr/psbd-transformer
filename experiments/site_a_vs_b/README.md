@@ -16,28 +16,28 @@ poisoned images for different physical reasons.
 Per-image fractional PSU is read from the stage-1 caches at each site's own
 `adaptive_rate` (`results/<folder>/psbd_metrics.json`), generalising `panel_data` in
 `scripts/paper/fig_psu_histograms.py` to any placement id
-(`experiments/site_a_vs_b/measure.py:read_placement_psu`, importing `defences.cache`,
-`defences.decision` and `defences.scores` rather than recomputing the statistic). Models
+(`experiments/site_a_vs_b/measure.py:read_placement_psu`, importing `defenses.cache`,
+`defenses.decision` and `defenses.scores` rather than recomputing the statistic). Models
 are the clearing cells whose `psbd_metrics.json` reaches an adaptive rate at both sites
 (generalising `experiments/probe_union/measure.py:select_models`), 66 of them for the
 `token_mask` operator, close to but not identical with the 65-cell headline panel because
 that panel's own coverage criterion never touches site B.
 
 Per model: AUROC of site A, of site B, of their min-rank union
-(`defences.decision.multi_probe_auroc`), the best of the 2 single sites, the Spearman
+(`defenses.decision.multi_probe_auroc`), the best of the 2 single sites, the Spearman
 correlation of the 2 per-image PSU vectors on the triggered images and on the clean images
 paired to them, the share of triggered images caught by exactly 1 site at the 25%
 threshold, and each site's achieved rate and clean-validation shift ratio. Grouped by
 attack and by trigger locality (local is badnet_a2o, badnet_a2a and tact, global is blend,
 sig, wanet, lf and bpp). The 2 sites are then read again at a shared clean-validation shift ratio
 (0.6, 0.7, 0.8, 0.9), interpolating each site's own rate ladder
-(`defences.decision.interpolate_at_target_shift`), to separate a gap caused by the
+(`defenses.decision.interpolate_at_target_shift`), to separate a gap caused by the
 adaptive rule landing on different rates from a gap in the site itself.
 
 The mechanism is measured directly on 4 models (CIFAR-10 WaNet 10%, CIFAR-10 SIG 10%,
 CIFAR-100 BadNets 1%, Tiny ImageNet WaNet 5%), 200 paired clean and triggered images, at
 each site's own selected rate, using the project's real perturbation machinery
-(`models.positions.plug_dropout` restricted to 1 block, `defences.operators
+(`models.positions.plug_dropout` restricted to 1 block, `defenses.operators
 .build_operator("token_mask")`) rather than a re-implementation of the operator:
 the relative-norm change of the block's output and of its class token, on clean and on
 triggered images, and the share of that change lying along the backdoor direction at that

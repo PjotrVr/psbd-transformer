@@ -23,16 +23,16 @@ import json
 import os
 import statistics
 from data.splits import SPLITS
-from defences.decision import EASY_ATTACKS, HARD_ATTACKS
+from defenses.decision import EASY_ATTACKS, HARD_ATTACKS
 
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import (
+from defenses.decision import (
     PLACEMENT_MATCH_TARGET as SHIFT_TARGET,
     complete_rates,
     detection_report,
@@ -40,7 +40,7 @@ from defences.decision import (
     pair_clean_to_backdoor,
     select_rate_at_matched_shift,
 )
-from defences.scores import psu_ratio_from_cache, shift_ratio
+from defenses.scores import psu_ratio_from_cache, shift_ratio
 
 RATE_ORDER = (0.1, 0.05, 0.01)
 DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny")

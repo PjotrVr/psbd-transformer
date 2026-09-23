@@ -9,14 +9,14 @@ Every test here is written to fail under at least one specific wrong
 implementation, and the wrong implementation it targets is named in its
 docstring. A test that passes for the identity function is not a test.
 
-These target defences.operators, the tree that survives the rewrite. The older
-tests/test_perturbations.py covers the same operators through defences.*.
+These target defenses.operators, the tree that survives the rewrite. The older
+tests/test_perturbations.py covers the same operators through defenses.*.
 """
 
 import pytest
 import torch
 
-from defences.operators import build_operator
+from defenses.operators import build_operator
 
 # A batch large enough that a masking fraction is measurable rather than noise.
 # Part of the fast tier: see pyproject's fast marker.
@@ -246,7 +246,7 @@ def test_the_shape_is_always_preserved(activation):
 class TestMultiProbeInversionFragility:
     """A probe an adaptive attacker has inverted poisons the min-rank union.
 
-    The union exists as defence in depth: evading one probe should not evade the
+    The union exists as defense in depth: evading one probe should not evade the
     detector. But the union takes the most extreme evidence across probes, so a
     probe whose ranking has been reversed contributes confident wrong evidence
     rather than merely useless evidence, and the union inherits it.
@@ -266,7 +266,7 @@ class TestMultiProbeInversionFragility:
         return validation, clean, backdoor
 
     def test_a_union_of_healthy_probes_stays_healthy(self):
-        from defences.decision import multi_probe_detection
+        from defenses.decision import multi_probe_detection
 
         first = self._probe(0, 0.0, -2.0)
         second = self._probe(1, 0.0, -2.0)
@@ -278,7 +278,7 @@ class TestMultiProbeInversionFragility:
 
     def test_one_inverted_probe_drags_the_union_to_chance(self):
         """The finding: an inverted probe is worse than a useless one."""
-        from defences.decision import detection_report, multi_probe_detection
+        from defenses.decision import detection_report, multi_probe_detection
 
         healthy = self._probe(0, 0.0, -2.0)
         inverted = self._probe(1, -2.0, 0.0)
@@ -303,7 +303,7 @@ class TestMultiProbeInversionFragility:
 
     def test_a_useless_probe_costs_far_less_than_an_inverted_one(self):
         """Distinguishes 'carries no signal' from 'carries reversed signal'."""
-        from defences.decision import multi_probe_detection
+        from defenses.decision import multi_probe_detection
 
         healthy = self._probe(0, 0.0, -2.0)
         useless = self._probe(1, 0.0, 0.0)
@@ -344,7 +344,7 @@ class TestMedianRankUnion:
         return validation, clean, backdoor
 
     def _union(self, probes, reduction):
-        from defences.decision import multi_probe_detection
+        from defenses.decision import multi_probe_detection
 
         return multi_probe_detection(
             [p[0] for p in probes],
@@ -381,7 +381,7 @@ class TestMedianRankUnion:
         )
 
     def test_an_unknown_reduction_is_refused(self):
-        from defences.scores import multi_probe_score
+        from defenses.scores import multi_probe_score
 
         probe = self._probe(0, 0.0, -2.0)
         with pytest.raises(ValueError, match="Unknown probe reduction"):
@@ -389,7 +389,7 @@ class TestMedianRankUnion:
 
     def test_auroc_is_reported_inside_every_rule_block(self):
         """A caller reading a rule block must not find None where the number is."""
-        from defences.decision import multi_probe_detection
+        from defenses.decision import multi_probe_detection
 
         probes = [self._probe(seed, 0.0, -2.0) for seed in range(3)]
         report = multi_probe_detection(

@@ -36,7 +36,7 @@ DEFAULT_ROOTS = (
     "analysis",
     "cli",
     "data",
-    "defences",
+    "defenses",
     "detectors",
     "evaluation",
     "models",
@@ -127,6 +127,10 @@ BRITISH_WORDS = (
     "enrol",
     "skilful",
 )
+# Published titles keep their own spelling, since a title is a proper noun and
+# changing it breaks the citation. Each is matched lowercase and removed before
+# the spelling check reads the line.
+PUBLISHED_TITLES = ("a defence against trojan attacks on deep neural networks",)
 # An -ise stem only counts with a real inflection behind it. Without the suffix
 # group the optimis stem matches "optimistic", which is correct American English.
 BRITISH_SPELLING = re.compile(
@@ -439,7 +443,10 @@ def violations(line: int, kind: str, text: str) -> list[tuple[str, int, str]]:
         if tell in lowered:
             hits.append(("ai tell", line, text))
             break
-    if BRITISH_SPELLING.search(lowered):
+    untitled = lowered
+    for title in PUBLISHED_TITLES:
+        untitled = untitled.replace(title, " ")
+    if BRITISH_SPELLING.search(untitled):
         hits.append(("british spelling", line, text))
     for word in EXCESS_VOCABULARY:
         if re.search(rf"\b{word}\b", lowered):

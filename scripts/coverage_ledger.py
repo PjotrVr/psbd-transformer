@@ -22,9 +22,9 @@ import json
 import os
 from datetime import datetime, timezone
 
-from defences.decision import complete_rates
+from defenses.decision import complete_rates
 
-from defences.cache import read_run_provenance
+from defenses.cache import read_run_provenance
 
 DECLARATION_PATH = "configs/psbd_basis.json"
 
@@ -172,7 +172,7 @@ def newest_baseline_mtime(psbd_dir: str) -> float | None:
 def stale_baseline(checkpoints_dir: str, folder: str, psbd_dir: str) -> bool:
     """Whether a cached baseline predates the checkpoint it claims to describe.
 
-    `defences.cache.load_or_build_baseline` reuses any baseline whose row count matches,
+    `defenses.cache.load_or_build_baseline` reuses any baseline whose row count matches,
     and a row count always matches after a retrain, so a baseline left behind by a
     previous model turns PSU into old-model confidence minus new-model perturbed passes.
     Comparing these 2 timestamps is the only way to catch it, which is why this is a

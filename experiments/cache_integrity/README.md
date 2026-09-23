@@ -66,18 +66,18 @@ Check 18 is the one that earns its keep. PSU is an expectation over the k
 passes, so k bit-identical rows make it identically 0, and stage 2 reports that
 as a placement with no effect rather than as a probe that never fired. Identical
 passes are correct only for the operators in
-`defences.perturbations.DETERMINISTIC_PERTURBATIONS`, which the check exempts.
+`defenses.perturbations.DETERMINISTIC_PERTURBATIONS`, which the check exempts.
 
 Check 04 must hold because the backdoor split is built as the attack-eligible
 subset of the analysis pool (`AttackSuccessSet` over the analysis subset in
-`defences.checkpoint_eval.build_psbd_loaders_from_checkpoint`), so a backdoor
+`defenses.checkpoint_eval.build_psbd_loaders_from_checkpoint`), so a backdoor
 index outside the pool would mean the 2 splits were never paired.
 
 Check 17 is a report as much as a check: `k_value_counts` in the summary is the k
 actually stored, which is not always the k the folder name advertises.
 
 Rate coverage (check 17's companion) reuses
-`defences.psbd_metrics.complete_rates` for the definition of complete, so what
+`defenses.psbd_metrics.complete_rates` for the definition of complete, so what
 this audit calls complete is exactly what `psbd_analyze.py` will agree to load.
 Anything short of all 3 splits is listed per config under `partial_rates`.
 

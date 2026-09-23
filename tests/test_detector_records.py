@@ -11,7 +11,7 @@ import os
 import pytest
 import torch
 
-from defences.decision import detection_report, threshold_diagnostics
+from defenses.decision import detection_report, threshold_diagnostics
 from detectors.records import (
     STATUS_FAILED,
     STATUS_SCORED,

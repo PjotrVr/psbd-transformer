@@ -150,5 +150,5 @@ gain_scale @ mlp_norm_out is the clear winner on CIFAR-100, especially at 1% whe
 
 ## Source
 
-`python defence_tables.py --operator {op} --position {pos} --allow-partial`
+`python defense_tables.py --operator {op} --position {pos} --allow-partial`
 Benign: `vit_cifar100_benign` checkpoint probed with badnet_a2o trigger.

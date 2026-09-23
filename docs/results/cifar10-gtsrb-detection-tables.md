@@ -126,5 +126,5 @@ GTSRB produces near-perfect detection on most attacks: 0.995-1.000 AUROC on BadN
 
 ## Source
 
-`python defence_tables.py --operator {op} --position {pos} --allow-partial`
+`python defense_tables.py --operator {op} --position {pos} --allow-partial`
 Benign: `vit_cifar10_benign` and `vit_gtsrb_benign` checkpoints.

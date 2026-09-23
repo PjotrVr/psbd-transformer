@@ -48,13 +48,13 @@ from data.splits import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     load_baseline,
     manifest_path,
     read_split_manifest,
 )
-from defences.decision import (
+from defenses.decision import (
     HEADLINE_QUANTILE,
     PSBD_QUANTILES,
     attack_success_mask,
@@ -203,7 +203,7 @@ def captured_mask_from_cache(psbd_dir: str, n_backdoor: int) -> torch.Tensor | N
     """Which backdoor rows the trigger actually flipped, read from PSBD's baseline.
 
     The cached no-perturbation argmax and the attack-success label give the
-    captured mask defences.decision.attack_success_mask defines, the same mask
+    captured mask defenses.decision.attack_success_mask defines, the same mask
     cli.analyze uses for PSBD's captured-only view. None when the cache is absent
     or was written on a different split, since then its rows do not line up.
     """

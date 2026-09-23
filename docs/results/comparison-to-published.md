@@ -90,4 +90,4 @@ The key finding: the published methods use fixed positions (post-residual for PS
 
 ## Source
 
-Published numbers are approximate, read from the respective papers' tables and figures. Our numbers from `defence_tables.py` at sigma >= 0.6, fractional PSU, one-sided. Papers are in `literature/` directory for reference.
+Published numbers are approximate, read from the respective papers' tables and figures. Our numbers from `defense_tables.py` at sigma >= 0.6, fractional PSU, one-sided. Papers are in `literature/` directory for reference.

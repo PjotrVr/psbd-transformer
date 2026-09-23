@@ -12,7 +12,7 @@ Prediction Shift Uncertainty per the PSBD paper, Equation 2:
 
 A low PSU means the confidence in the no-dropout prediction barely moves under
 the perturbation, which flags the sample as likely poisoned. The subtraction lives
-in defences.scores, on the CPU side. This module produces the 2 forward-pass
+in defenses.scores, on the CPU side. This module produces the 2 forward-pass
 ingredients it needs and writes nothing itself.
 
 Nothing here touches the model's own dropout modules. The perturbation comes from

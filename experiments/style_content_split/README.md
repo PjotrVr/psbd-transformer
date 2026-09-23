@@ -4,7 +4,7 @@
 
 A trigger is a texture and the class evidence is structure, so a style-content
 decomposition should put the poison entirely on one side, and normalising the style is a
-purification defence. Instrument: Fourier phase carries structure and amplitude carries
+purification defense. Instrument: Fourier phase carries structure and amplitude carries
 texture, so the split is exact, invertible and needs no learned decoder.
 
     mix(x, d, lam) = IFFT( [(1-lam)|FFT(x)| + lam|FFT(d)|] * exp(i * angle(FFT(x))) )
@@ -61,13 +61,13 @@ order), and an all-pass phase filter.
 | **DUBA**, AAAI 2024 | uses the exact FFT amplitude/phase recombination as a poisoning stage, explicitly to defeat magnitude-based frequency detectors. ASR 99.98, drives a frequency detector to 49.96%, i.e. chance |
 | **DFST**, AAAI 2021 | "the trigger is a style", via CycleGAN. GTSRB 0.999 ASR, undetected by NC, ABS and ULP |
 | **Zeng et al.**, ICCV 2021 | owns spectral localisation as a detector, and the smooth low-frequency trigger that evades it |
-| **Color Backdoor**, CVPR 2023 | direct proof that global style-like triggers are the ones that BEST survive this defence family: 93.92% mean ASR retained |
+| **Color Backdoor**, CVPR 2023 | direct proof that global style-like triggers are the ones that BEST survive this defense family: 93.92% mean ASR retained |
 | **Lite-BD** | already published most of the predicted taxonomy for a radial band-stop: only SIG and LF die, 2 of 10 |
 | **FTrojan**, ECCV 2022 | already priced frequency smoothing at 4.33 to 33.91 points of clean accuracy |
-| **REFINE**, ICLR 2025 | fills the transformation-defence slot and names the weakness: such defences "must modify all features indiscriminately" |
+| **REFINE**, ICLR 2025 | fills the transformation-defense slot and names the weakness: such defenses "must modify all features indiscriminately" |
 
 So "the backdoor is a style feature" is a 2021-2022 attack design premise, not an open
-hypothesis. Style normalisation as a defence is unpublished by name and dead in substance.
+hypothesis. Style normalisation as a defense is unpublished by name and dead in substance.
 
 ## What survives
 

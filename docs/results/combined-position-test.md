@@ -93,7 +93,7 @@ Do not combine positions. Use `before_attention_norm` alone with `token_mask`. T
 
 ## Source
 
-`python defence_tables.py --operator token_mask --position before_attention_norm --allow-partial`
-`python defence_tables.py --operator token_mask --position both_sublayer_inputs --allow-partial`
-`python defence_tables.py --operator dropout --position before_attention_norm --allow-partial`
-`python defence_tables.py --operator dropout --position both_sublayer_inputs --allow-partial`
+`python defense_tables.py --operator token_mask --position before_attention_norm --allow-partial`
+`python defense_tables.py --operator token_mask --position both_sublayer_inputs --allow-partial`
+`python defense_tables.py --operator dropout --position before_attention_norm --allow-partial`
+`python defense_tables.py --operator dropout --position both_sublayer_inputs --allow-partial`

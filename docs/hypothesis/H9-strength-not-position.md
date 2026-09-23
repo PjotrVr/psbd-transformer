@@ -59,7 +59,7 @@ from depth, not inherited.
 ## The methodological rule this establishes
 
 **No comparison across placements is valid at a shared dropout rate.** Match on a
-measured disturbance instead. `defences.psbd_metrics.select_rate_at_matched_shift`
+measured disturbance instead. `defenses.psbd_metrics.select_rate_at_matched_shift`
 uses the clean-validation shift ratio, which stays defender-legal (clean data only)
 and is reported per placement in every `psbd_metrics.json`.
 

@@ -37,7 +37,7 @@ repository on opposite sides of the failure point.
 
 PSBD is 3 objects: a per-input statistic, a rate selection rule and a threshold.
 Both statistics come from `literature/PSBD/sec/4_method.tex` and are implemented
-in `defences/scores.py`.
+in `defenses/scores.py`.
 
 $$
 \begin{aligned}
@@ -64,20 +64,20 @@ $$
 
 The headline statistic in this project is the fractional form,
 `detection_psu_ratio`, written $\phi_\rho$ here and defined at
-`defences/scores.py:57`.
+`defenses/scores.py:57`.
 
 $$
 \phi_\rho(\mathbf{x}) \;=\; 1 - \frac{1}{k}\sum_{i=1}^{k}\frac{P_c(\mathbf{x};p,\boldsymbol\theta_i')}{P_c(\mathbf{x};\boldsymbol\theta)}
 \;=\; \frac{\phi_{PSU}(\mathbf{x})}{P_c(\mathbf{x};\boldsymbol\theta)}
 $$
 
-The decision layer sits in `defences/decision.py`. The deployable rate rule is
+The decision layer sits in `defenses/decision.py`. The deployable rate rule is
 `select_rate_adaptively` at `ADAPTIVE_SHIFT_TARGET` 0.8
-(`defences/decision.py:37` and `defences/decision.py:204`), the comparison rule
+(`defenses/decision.py:37` and `defenses/decision.py:204`), the comparison rule
 is `select_rate_at_matched_shift` at `PLACEMENT_MATCH_TARGET` 0.6
-(`defences/decision.py:73` and `defences/decision.py:229`) and the threshold is a
-quantile of clean validation score at `defences/decision.py:89`, headline
-quantile 0.25 (`defences/decision.py:33`).
+(`defenses/decision.py:73` and `defenses/decision.py:229`) and the threshold is a
+quantile of clean validation score at `defenses/decision.py:89`, headline
+quantile 0.25 (`defenses/decision.py:33`).
 
 ```
 PSBD as it actually runs, over the 2 stages of cli.sweep and cli.analyze
@@ -89,13 +89,13 @@ PSBD as it actually runs, over the 2 stages of cli.sweep and cli.analyze
 
     1  for each split in {validation, clean, backdoor}
     2      baseline[split] = unperturbed softmax and its argmax
-    3                        (defences/inference.py:92)
+    3                        (defenses/inference.py:92)
     4  for each rate p in P
     5      plug the operator at every named position in every block
     6          (models/positions.py:244)
     7      for each split
     8          per_pass[split, p] = k perturbed passes, tracked-class prob and argmax
-    9                               (defences/inference.py:130)
+    9                               (defenses/inference.py:130)
     10     unplug by handle
     11 sigma[p] = shift_ratio(baseline[validation], per_pass[validation, p])
     12 p_star   = min { p in P : sigma[p] >= 0.8 }
@@ -111,7 +111,7 @@ behavior of the model he poisoned. The threshold is a quantile of clean
 validation, so the false positive rate is fixed by the quantile and the attacker
 who wants TPR to fall does not need the ranking to fail. The scored pool is
 compared against a paired clean pool by sample index
-(`defences/decision.py:358`), so the attacker cannot gain by changing which
+(`defenses/decision.py:358`), so the attacker cannot gain by changing which
 images are eligible.
 
 ## The separation condition
@@ -205,8 +205,8 @@ of it. This route needs no small-perturbation assumption and it is the one
 `docs/theory-perturbation-consistency.md:593` argues is the defensible bridge.
 
 **The expansion reading.** For a mean-preserving operator, and every operator in
-`defences/operators.py` is mean-preserving except `GainScale` and `ScaleUp`
-(`defences/operators.py:33` for the inverted scaling and
+`defenses/operators.py` is mean-preserving except `GainScale` and `ScaleUp`
+(`defenses/operators.py:33` for the inverted scaling and
 `docs/theory-perturbation-consistency.md:39` for the 2 exceptions),
 $\phi_{PSU} \approx -\tfrac{1}{2}\operatorname{tr}\!\left(H_h \Sigma_\ell\right)$,
 and the softmax chain rule splits it into a part that factors through the softmax
@@ -242,7 +242,7 @@ Take the linear reading of the decision at the probe site, which is the reading
 in which both architectures are the same object. Write the gap between the
 predicted class and its runner up as a sum of per-unit contributions, and let the
 operator keep each unit independently with probability $1-p$ and divide the
-survivors by $1-p$, which is what `_keep_scale` at `defences/operators.py:33`
+survivors by $1-p$, which is what `_keep_scale` at `defenses/operators.py:33`
 does for every masking operator.
 
 $$
@@ -304,7 +304,7 @@ $n_{\mathrm{eff}}$ from 0.5 to 100, the share of the statistic's variance carrie
 by the margin axis is 0.099 for the absolute form and 0.077 for the fractional
 form, against 0.793 and 0.840 for the concentration axis. The fractional form is
 the more concentration-pure of the 2, which is an independent argument for the
-choice `defences/scores.py:57` already defends on other grounds.
+choice `defenses/scores.py:57` already defends on other grounds.
 
 ## The same 2 factors, measured on the caches
 
@@ -689,7 +689,7 @@ placements, `before_attention_norm` with `token_mask` and `post_residual` with
 `dropout`, over the 9-rate grid at $k = 3$. The ResNet arm resolves
 `post_residual` through `RESNET_POSITIONS` and is swept with `gaussian` as well,
 since `token_mask` is refused on a feature map by
-`FORBIDDEN_OPERATOR_POSITIONS` (`defences/operators.py:612`).
+`FORBIDDEN_OPERATOR_POSITIONS` (`defenses/operators.py:612`).
 
 **The decision rule.** The claim is confirmed when at least 1 value of $s$ meets
 all 5 thresholds above on at least 1 primary dataset and at least 2 of the 3
@@ -807,7 +807,7 @@ attack.
 **The defense it implies, and it should be adopted regardless.** Read the
 quantile after dropping the validation images whose predicted class is the modal
 perturbation target, which `shift_target_histogram`
-(`defences/scores.py:129`) already identifies from the cached argmax tensors at
+(`defenses/scores.py:129`) already identifies from the cached argmax tensors at
 no cost. This needs no labels, no extra passes and no knowledge of the attack.
 
 **Cost.** 6 training jobs, 12 sweeps and a CPU pass. The observational half is

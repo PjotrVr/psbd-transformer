@@ -29,7 +29,7 @@ import sys
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
-from defences.decision import complete_rates  # noqa: E402
+from defenses.decision import complete_rates  # noqa: E402
 
 
 PROJECT_ROOT = "/lustre/home/pstika/projects/PSBD-ViT"

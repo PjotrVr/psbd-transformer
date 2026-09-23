@@ -265,7 +265,7 @@ deployment gets. Report AUPRC and TPR at 1/5/10% FPR beside every AUROC.
 | 1 | 4 leading placements over 36 weak cells, 138 sweeps | lc, sig, and a test of whether adaptive_blend and wanet are selectable | **running** |
 | 2 | decision leverage over every `adaptive_blend` cell | adaptive_blend to >= 0.90 | next |
 | 3 | prediction depth as the WaNet arm | wanet operating point | measured, needs the full panel |
-| 4 | a label-free placement selector | turns 1 into a deployable defence | open |
+| 4 | a label-free placement selector | turns 1 into a deployable defense | open |
 
 Item 4 is the real obstacle. A per-cell best placement is an oracle a defender cannot pick,
 and `docs/results-report.md` already records that placement ranking transfers across

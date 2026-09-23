@@ -1,6 +1,6 @@
 """Does the H41 probe union help on ordinary, non-adaptive backdoored ViT-B/16 models?
 
-H41 (`docs/hypothesis/H41-multi-probe-defence.md`) built the min-rank probe
+H41 (`docs/hypothesis/H41-multi-probe-defense.md`) built the min-rank probe
 union to defeat an attacker trained against a single probed operator. Nobody
 trains against a probe on the 65 clearing cells the paper's headline reads, so
 this script asks the separate question: does the union still help, hurt or do
@@ -12,7 +12,7 @@ The union rule (H41's mechanism section) is unchanged. For probe j, rank_j(x)
 is the percentile of x's fractional PSU within probe j's own clean-validation
 distribution. The combined score is min_j rank_j(x). The calibrated threshold
 is the target-FPR quantile of that combined score on clean validation.
-`defences.decision.multi_probe_auroc` and `multi_probe_detection` compute both.
+`defenses.decision.multi_probe_auroc` and `multi_probe_detection` compute both.
 Nothing here reimplements them.
 
 6 probe sets, each read on whichever of the 65 models hold every one of its
@@ -29,9 +29,9 @@ placements at a rate the 0.8 adaptive rule reached
 
 Every per-sample PSU comes from the stage-1 cache under
 results/<folder>/psbd/<placement>/, read exactly as cli.analyze and
-scripts/paper/fig_psu_histograms.py read it: `defences.cache` for the raw
-tensors, `defences.scores.psu_ratio_from_cache` for the fractional PSU (the
-canon headline statistic), `defences.decision.pair_clean_to_backdoor` to
+scripts/paper/fig_psu_histograms.py read it: `defenses.cache` for the raw
+tensors, `defenses.scores.psu_ratio_from_cache` for the fractional PSU (the
+canon headline statistic), `defenses.decision.pair_clean_to_backdoor` to
 restrict the clean split to the backdoor split's eligible images.
 
     PYTHONPATH=. .venv/bin/python experiments/probe_union/measure.py
@@ -46,21 +46,21 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 sys.path.insert(0, REPO_ROOT)
 
 from data.splits import SPLITS  # noqa: E402
-from defences.cache import (  # noqa: E402
+from defenses.cache import (  # noqa: E402
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import (  # noqa: E402
+from defenses.decision import (  # noqa: E402
     PUBLISHED_PLACEMENT,
     RECOMMENDED_PLACEMENT,
     multi_probe_auroc,
     multi_probe_detection,
     pair_clean_to_backdoor,
 )
-from defences.scores import psu_ratio_from_cache  # noqa: E402
+from defenses.scores import psu_ratio_from_cache  # noqa: E402
 from experiments._paths import experiment_result_path  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     bootstrap_ci,

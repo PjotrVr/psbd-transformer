@@ -75,7 +75,7 @@ from data.splits import (  # noqa: E402
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.inference import forward_logits, frozen_parameters  # noqa: E402
+from defenses.inference import forward_logits, frozen_parameters  # noqa: E402
 from detectors.strip import normalization_buffers  # noqa: E402
 from experiments._paths import experiment_result_path  # noqa: E402
 from experiments.whole_network_erasure.measure import (  # noqa: E402

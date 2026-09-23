@@ -37,7 +37,7 @@ import torch
 import torch.nn as nn
 from lightning import seed_everything
 
-from defences.inference import forward_logits
+from defenses.inference import forward_logits
 
 Direction = list[torch.Tensor]
 LossFunction = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]

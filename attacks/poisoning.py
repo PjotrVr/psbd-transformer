@@ -267,7 +267,7 @@ def choose_indices_with_cover(
 
     Cover samples receive the trigger but keep their true label. They teach the
     model that the trigger alone does not imply the target, which is how adaptive
-    attacks flatten the latent separation many defences rely on. source_classes,
+    attacks flatten the latent separation many defenses rely on. source_classes,
     when given, restricts poisoning to those classes (TaCT). Covers are then drawn
     from the other non-target classes.
 

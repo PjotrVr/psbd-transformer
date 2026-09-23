@@ -95,7 +95,7 @@ deployment. The remedy is strict data isolation with a separate validation set,
 which they call sufficient here even though general snooping is hard.
 
 This project satisfies the mechanical part and fails the protocol part.
-`defences.decision.threshold_at_quantile` reads the threshold from
+`defenses.decision.threshold_at_quantile` reads the threshold from
 `validation_psu` only, `data.splits.build_psbd_loaders_from_checkpoint` splits
 2000 held-out images by a fixed permutation before anything else and the
 analysis pool is the complement, so no threshold sees the analysis pool. The
@@ -131,10 +131,10 @@ to name the deployment and pick measures a practitioner could act on.
 
 This project is exposed. The reported measures are AUROC, TPR at a 10%
 false-positive budget and TPR at a 20% budget (`paper/sections/method.tex`), all
-3 of which are insensitive to prevalence, and `defences.decision.detection_report`
+3 of which are insensitive to prevalence, and `defenses.decision.detection_report`
 returns no precision field at all. `configs/psbd_basis.json` lists `auprc` and
 `achieved_fpr` among its own `required_metrics` and neither is computed anywhere
-in `defences/` or reported anywhere in `paper/`.
+in `defenses/` or reported anywhere in `paper/`.
 
 **P8, base rate fallacy, 10% present.** A large class imbalance is ignored when
 the numbers are interpreted. Arp et al. separate this from P7: P7 is the wrong
@@ -148,7 +148,7 @@ bounded AUC, and a discussion of false positives against the base rate of the
 negative class so a reader can see the induced workload.
 
 This project is exposed in the strongest possible form, because the evaluation
-population is balanced by construction. `defences.decision.pair_clean_to_backdoor`
+population is balanced by construction. `defenses.decision.pair_clean_to_backdoor`
 pairs 1 clean input to 1 triggered input so that the 2 populations differ only by
 the trigger, which is the right experimental control and also fixes the
 prevalence at 0.5. The arithmetic below works out what that costs.
@@ -582,7 +582,7 @@ canonical entry in `docs/open-questions.md`, which this table does not restate.
 | TPR at a low budget of 1% or below reported (Carlini 2022, BaDExpert, STRIP) | **no**, the paper reports 10% and 20% only | Q17. `\HeadlineTprAtOnePercent` already reads 0.602 and `fig_shift_ladder.py` already uses the `q0.01` block. Promote it into the headline table |
 | Evaluation prevalence stated, and stated as not a deployment number (Arp P8, TESSERACT spatial) | **no** | Add 1 sentence naming the 1 to 1 pairing as a conditional |
 | Base rate conversion given so a reader can reach a deployment precision (Arp P8, Axelsson) | **no** | Add the prevalence table of this document to the setup or the limitations section |
-| Precision or AUPRC computed at all | **no**, `configs/psbd_basis.json` lists `auprc` in `required_metrics` and nothing in `defences/` computes it | Add `auprc` and `achieved_fpr` to `detection_report`, or drop them from the declared protocol |
+| Precision or AUPRC computed at all | **no**, `configs/psbd_basis.json` lists `auprc` in `required_metrics` and nothing in `defenses/` computes it | Add `auprc` and `achieved_fpr` to `detection_report`, or drop them from the declared protocol |
 | Bounded AUC or log-scale ROC for the low-FPR region (Arp P8, Carlini 2022) | **no** | Bound the AUC at the largest budget reported, or plot 1 log-scale ROC. The cached per-pass probabilities support both |
 | Deployment mode named, given a 20% rejection rate | **no** | Say whether the 20% point is offline triage or a human-in-the-loop filter |
 | Published method reimplemented and run on every cell (Arp P6) | yes, `post_residual` is swept per cell as its own baseline | none |

@@ -108,7 +108,7 @@ By attack, TPR at 1% FPR:
 | SIG | 1 | 0.062 | **0.280** |
 
 **It LOSES on adaptive_blend and on SIG**, which are the 2 hardest cases in the panel and
-the ones a defence most needs to win. On the full panel adaptive_blend flips from a tie to
+the ones a defense most needs to win. On the full panel adaptive_blend flips from a tie to
 a loss. The wins are WaNet, Bpp and LF, and they are large. So the honest reading is that
 this buys a large low-FPR gain on the mid-difficulty attacks and nothing on the hardest.
 

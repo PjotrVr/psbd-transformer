@@ -1,8 +1,8 @@
 {
   "generator": "scripts/paper/app_protocol.py",
   "inputs": [
-    "defences/decision.py",
-    "defences/operators.py",
+    "defenses/decision.py",
+    "defenses/operators.py",
     "models/positions.py",
     "data/splits.py",
     "detectors/__init__.py",

@@ -6,7 +6,7 @@ of ~770,000 in OpenCLIP ViT-B/16, with outliers emerging right after the layer-6
 backdoor's trigger tokens are driven by the SAME neurons, the attack is hijacking machinery
 the network already had. If by a DISJOINT set, it installed a parallel mechanism.
 
-The two answers imply different defences, which is why this is worth the measurement: a hijack
+The two answers imply different defenses, which is why this is worth the measurement: a hijack
 is mitigable by the register interventions already published, a parallel mechanism is not.
 
 Method, following their Algorithm 1 but with a rank-based definition of "outlier position"

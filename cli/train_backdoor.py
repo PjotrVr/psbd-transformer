@@ -505,9 +505,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="the target_sigma calibrate_probe_rate matches, both for the "
         "initial calibration and every recalibration. Default 0.6 matches the "
         "defender's cross-placement matched rule "
-        "(defences.decision.select_rate_at_matched_shift); pass 0.8 to match "
+        "(defenses.decision.select_rate_at_matched_shift); pass 0.8 to match "
         "the deployable adaptive rule instead "
-        "(defences.decision.select_rate_adaptively, ADAPTIVE_SHIFT_TARGET).",
+        "(defenses.decision.select_rate_adaptively, ADAPTIVE_SHIFT_TARGET).",
     )
     parser.add_argument("--evade-passes", type=int, default=3)
     parser.add_argument(

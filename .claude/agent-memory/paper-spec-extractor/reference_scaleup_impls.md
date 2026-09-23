@@ -18,6 +18,6 @@ Known divergences to check before trusting any port:
 
 Also: `init_spc_norm` in both framework ports compares scaled predictions to GROUND-TRUTH labels, while the test path compares to the model's own original prediction. Inconsistent by construction.
 
-**Why:** This project ports attacks/defences from BackdoorBench and Backdoor-Toolbox and matches their semantics, so a SCALE-UP baseline would silently inherit whichever convention the source used, and the resulting AUROC is not comparable across conventions.
+**Why:** This project ports attacks/defenses from BackdoorBench and Backdoor-Toolbox and matches their semantics, so a SCALE-UP baseline would silently inherit whichever convention the source used, and the resulting AUROC is not comparable across conventions.
 
-**How to apply:** If SCALE-UP is added as a baseline defence here, pin the scaling set and the normalisation scope explicitly in config rather than inheriting a framework default, and record which convention the reported number uses.
+**How to apply:** If SCALE-UP is added as a baseline defense here, pin the scaling set and the normalisation scope explicitly in config rather than inheriting a framework default, and record which convention the reported number uses.

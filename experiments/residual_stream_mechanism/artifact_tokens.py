@@ -44,7 +44,7 @@ from data.splits import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.decision import pair_clean_to_backdoor
+from defenses.decision import pair_clean_to_backdoor
 from experiments.residual_stream_mechanism.architecture import (
     as_tokens,
     block_grid,

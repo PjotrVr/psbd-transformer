@@ -120,7 +120,7 @@ attacks/        10 attack implementations, shared trigger patterns, poisoning el
 data/           dataset registry, loading, the PSBD split, the BackdoorBench PNG path
 models/         ViT-B/16 and Swin-S, the probe position registry
 training/       the training loop, checkpoint provenance, SAM
-defences/       PSBD: operators, inference, scores, decision rules, the stage-1 cache
+defenses/       PSBD: operators, inference, scores, decision rules, the stage-1 cache
 detectors/      competitor input detectors, 1 registry, 1 module per method
 analysis/       latent-space analysis: TAC, CKA, PCA, UMAP, Lipschitz
 visualization/  the figures over analysis/'s statistics, 1 module per figure family

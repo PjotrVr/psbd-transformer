@@ -3,7 +3,7 @@
 H43 measures 2 detectors that are almost perfectly complementary: PSU covers all-to-one
 (0.891) and fails on all-to-all (0.411), and predictive entropy does the reverse (0.408
 and 0.761). H15 forbids taking whichever wins, because choosing needs the poison labels
-the detector exists to predict. So the result is not a defence until the choice can be
+the detector exists to predict. So the result is not a defense until the choice can be
 made without labels.
 
 2 candidate routers are already refuted. Both used a MAGNITUDE:
@@ -41,14 +41,14 @@ import numpy as np
 import torch
 from sklearn.metrics import roc_auc_score
 
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
 )
-from defences.decision import pair_clean_to_backdoor
-from defences.scores import psu_ratio_from_cache
+from defenses.decision import pair_clean_to_backdoor
+from defenses.scores import psu_ratio_from_cache
 
 PLACEMENT = "before_attention_norm_token_mask"
 TARGET_SIGMA = "sigma0.6"

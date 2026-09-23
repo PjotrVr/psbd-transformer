@@ -52,7 +52,7 @@ from analysis.samples import (
     view_samples,
 )
 from analysis.stealth import compute_stealth_metrics
-from defences.inference import forward_probs
+from defenses.inference import forward_probs
 from detectors.sentinet import MASK_THRESHOLD, saliency_mask
 
 from evaluation.metrics import confusion_matrix

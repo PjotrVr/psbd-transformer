@@ -144,7 +144,7 @@ AUROC, and residualising gives most of it back.
    backdoor. Both group distributions must be logged every epoch, exactly as
    H25's `evasive_update` logs both group means and for the same reason.
 
-## The cheapest defence that catches it
+## The cheapest defense that catches it
 
 **Residualise PSU on the softmax vector.** Fit
 $\hat\phi(p) = \beta^\top [1, p_c, \mathcal{H}(p), \|p\|_2^2, p_c^2, \mathcal{H}(p)^2, \|p\|_2^4]$
@@ -159,7 +159,7 @@ only help. Measured on 6 attacks at `before_attention_norm` with token_mask,
 residualising costs nothing on average (0.886 against 0.862 plain) and gains
 **+0.121** exactly where confidence parity already holds, on `adaptive_blend`.
 
-**Second defence, free: publish $R^2$ per position as a probe selection rule.**
+**Second defense, free: publish $R^2$ per position as a probe selection rule.**
 The explained share is measurable with no poisoned data, on clean validation
 alone, so it is a defender legal probe design criterion. The rule is: never
 deploy a probe whose $R^2$ on $p$ exceeds about 0.3, because that fraction of the

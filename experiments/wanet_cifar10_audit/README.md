@@ -19,7 +19,7 @@ doing well on WaNet consistent with what is on disk.
 2. Recomputed AUROC directly from the stage-1 cache under
    `results/vit_cifar10_wanet_0_1/psbd/before_attention_norm_token_mask/`, checked
    the split manifest, the baseline clean accuracy and ASR, and the per-pass
-   tensors, with `defences.scores` and `defences.decision`.
+   tensors, with `defenses.scores` and `defenses.decision`.
 3. Read the same tables for the WaNet models on GTSRB and Tiny ImageNet at 10%,
    for `vit_cifar10_wanet_0_05`, and for the project's own 3 Monte Carlo mask
    seeds already cached for this cell (`_seed1`, `_seed2`).
@@ -56,8 +56,8 @@ recollection of `pre_residual` doing well on WaNet is confirmed: it reads 0.925 
 its adaptive rate, essentially tied with `post_residual`'s 0.927, both far above
 `before_attention_norm` token masking on this checkpoint.
 
-Recomputing rate 0.5's cache directly with `defences.scores.psu_ratio_from_cache`
-and `defences.decision.detection_report` gives 0.4587, matching the stored value
+Recomputing rate 0.5's cache directly with `defenses.scores.psu_ratio_from_cache`
+and `defenses.decision.detection_report` gives 0.4587, matching the stored value
 to 4 decimal places. The split manifest pairs clean and backdoor rows correctly,
 the baseline clean accuracy (0.9457) and ASR (0.8894) recomputed from
 `baseline_clean.pt` and `baseline_backdoor.pt` match `args.json`, and the 3 Monte

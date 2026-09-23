@@ -20,7 +20,7 @@ attention input and swapping token masking for channel masking costs 0.044, and
 for Gaussian noise 0.123. Neither axis explains the other, which is why the basis
 is a grid rather than a list.
 
-`defences/operators.py` holds the operators, `models/positions.py` holds the
+`defenses/operators.py` holds the operators, `models/positions.py` holds the
 positions in `POSITION_REGISTRY`, and `OPERATOR_POSITIONS` records the 2 pairs
 that are only meaningful at specific positions.
 

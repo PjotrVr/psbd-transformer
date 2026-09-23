@@ -1,6 +1,6 @@
 """Emit training jobs for the 3-probe union attacker.
 
-H41 (`docs/hypothesis/H41-multi-probe-defence.md`) defeated the single-probe
+H41 (`docs/hypothesis/H41-multi-probe-defense.md`) defeated the single-probe
 adaptive attacker from H25 with a min-rank union of 3 probes: token masking at
 `before_attention_norm`, dropout at `before_attention_norm` and gain scaling at
 `mlp_norm_out`. Every existing evasive checkpoint on disk (the `_evade_l1`
@@ -8,7 +8,7 @@ folders) was trained against only the first of those 3, so the union's
 apparent win could just be an attacker that never saw the other 2 members. This
 generator closes that gap: it retrains against the exact union
 (`attacks.evasion`'s multi-probe hinge, `cli.train_backdoor --evade-probes`),
-so a reviewer asking "did you train against the defence you're claiming
+so a reviewer asking "did you train against the defense you're claiming
 defeats the attacker" gets a yes.
 
 Retrains the same 14 CIFAR-100 cells the single-probe attacker used (badnet_a2o,
@@ -67,7 +67,7 @@ CELLS = (
 )
 
 # H41's 3-probe pool, minus PSBD-RD and gaussian (`docs/hypothesis/
-# H41-multi-probe-defence.md`'s probe table, rows 1-3): the union this
+# H41-multi-probe-defense.md`'s probe table, rows 1-3): the union this
 # generator trains against. --evade-weight matches the single-probe
 # attacker's own weight (the "_l1" folders' name), so the only variable
 # between that attacker and this one is how many probes it was trained

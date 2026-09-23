@@ -21,7 +21,7 @@ defensible.
 import argparse
 import json
 import statistics
-from defences.decision import HARD_ATTACKS as HARD
+from defenses.decision import HARD_ATTACKS as HARD
 
 TOLERANCE = 0.15
 

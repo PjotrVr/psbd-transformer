@@ -1,6 +1,6 @@
 """Retrain the attacks that do not implant, into NEW folders.
 
-An attack under the ASR bar tells a defence nothing: a detector cannot be credited or
+An attack under the ASR bar tells a defense nothing: a detector cannot be credited or
 blamed for a backdoor that was never planted. 40 of 108 panel cells sit under 0.85, and the
 audit found concrete causes rather than a general weakness. SIG ran at amplitude 0.1 where
 Barni et al. use 40/255, so the sinusoid was too faint to learn. Adaptive-Blend planted the

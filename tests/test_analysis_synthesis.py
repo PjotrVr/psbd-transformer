@@ -22,7 +22,7 @@ from analysis.synthesis import (
     unit_activation,
 )
 from analysis.features import captured_layers
-from defences.inference import forward_logits
+from defenses.inference import forward_logits
 from experiments.preflight.synthetic import build_backdoored_model, build_splits
 
 DEVICE = torch.device("cpu")

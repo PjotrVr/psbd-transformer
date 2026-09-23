@@ -27,7 +27,7 @@ PACKAGES = (
     "analysis",
     "cli",
     "data",
-    "defences",
+    "defenses",
     "detectors",
     "evaluation",
     "models",

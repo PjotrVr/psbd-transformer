@@ -102,4 +102,4 @@ Key patterns:
 
 ## Source
 
-All AUROC/TPR values from `defence_tables.py --operator {op} --position {pos} --allow-partial`, fractional PSU, sigma >= 0.6, one-sided.
+All AUROC/TPR values from `defense_tables.py --operator {op} --position {pos} --allow-partial`, fractional PSU, sigma >= 0.6, one-sided.

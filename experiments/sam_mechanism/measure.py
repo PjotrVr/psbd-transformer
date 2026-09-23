@@ -26,7 +26,7 @@ clean and on triggered inputs. Under token_mask at before_attention_norm at the
 rate the 0.8 adaptive rule selected for that checkpoint (results/<folder>/
 psbd_metrics.json, falling back to 0.5 when the record is absent): the mean
 psu_ratio on clean and on triggered inputs and the AUROC separating them, run
-through defences.operators, models.positions.plug_dropout and defences.scores
+through defenses.operators, models.positions.plug_dropout and defenses.scores
 exactly as cli/sweep.py and cli/analyze.py do.
 
 paired_rows and residual_stream are imported from experiments.whole_network_
@@ -55,13 +55,13 @@ from data.splits import (  # noqa: E402
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.inference import (  # noqa: E402
+from defenses.inference import (  # noqa: E402
     build_baseline_cache,
     compute_dropout_pass_probs,
     forward_logits,
 )
-from defences.operators import build_operator, check_operator_position  # noqa: E402
-from defences.scores import psu_ratio_from_cache  # noqa: E402
+from defenses.operators import build_operator, check_operator_position  # noqa: E402
+from defenses.scores import psu_ratio_from_cache  # noqa: E402
 from experiments._paths import experiment_result_path  # noqa: E402
 from models.backbones import load_checkpoint  # noqa: E402
 from models.positions import plug_dropout, unplug_dropout  # noqa: E402
@@ -278,7 +278,7 @@ def psu_ratio_pass(
 def separation_auroc(clean_ratio: torch.Tensor, triggered_ratio: torch.Tensor) -> float:
     """AUROC separating clean from triggered psu_ratio, low score the poisoned side.
 
-    Mirrors defences.decision.detection_report's own convention: both score sets
+    Mirrors defenses.decision.detection_report's own convention: both score sets
     are negated because low psu_ratio is the positive (poisoned) evidence and
     roc_auc_score expects higher to mean more positive.
     """

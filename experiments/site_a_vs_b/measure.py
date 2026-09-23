@@ -10,14 +10,14 @@ poisoned images.
 
 Method, in 4 parts.
 
-(1) Per model, per-image fractional PSU (`defences.scores.psu_ratio_from_cache`) is read
+(1) Per model, per-image fractional PSU (`defenses.scores.psu_ratio_from_cache`) is read
     from the stage-1 caches at each site's own `adaptive_rate`
     (`results/<folder>/psbd_metrics.json`, `select_rate_adaptively` at
     `ADAPTIVE_SHIFT_TARGET`), generalising `panel_data` in
     `scripts/paper/fig_psu_histograms.py` to any placement id (`read_placement_psu` below
-    imports the same helpers from `defences.cache`, `defences.decision` and
-    `defences.scores`, it does not recompute the statistic). Per model: AUROC of site A,
-    of site B, of their min-rank union (`defences.decision.multi_probe_auroc`, the rule
+    imports the same helpers from `defenses.cache`, `defenses.decision` and
+    `defenses.scores`, it does not recompute the statistic). Per model: AUROC of site A,
+    of site B, of their min-rank union (`defenses.decision.multi_probe_auroc`, the rule
     `experiments/probe_union/measure.py` uses), the best of the 2 single sites, the
     Spearman correlation of the 2 per-image PSU vectors on the triggered images and on the
     clean images paired to them, the share of triggered images caught by exactly 1 site at
@@ -27,7 +27,7 @@ Method, in 4 parts.
 
 (2) The same 2 sites read at matched achieved clean shift ratio (0.6, 0.7, 0.8, 0.9),
     interpolating each site's own rate ladder onto that shift with
-    `defences.decision.interpolate_at_target_shift`, the way
+    `defenses.decision.interpolate_at_target_shift`, the way
     `scripts/paper/fig_shift_ladder.py` reads the recommended placement's ladder, so a
     per-model gap caused by the adaptive rule landing on different rates is separated from
     a gap in the site itself.
@@ -42,7 +42,7 @@ Method, in 4 parts.
     block and keeps the token's residual content. `experiments.whole_network_erasure
     .measure.directions` (imported, not copied) gives the backdoor direction at each
     block's output. Measured with the project's own perturbation machinery
-    (`models.positions.plug_dropout` restricted to 1 block with `defences.operators
+    (`models.positions.plug_dropout` restricted to 1 block with `defenses.operators
     .build_operator("token_mask")`), never a re-implementation of the operator: the
     relative-norm change of the block's output and of its class token, on clean and on
     triggered inputs, and the share of that change lying along the backdoor direction.
@@ -74,14 +74,14 @@ import torch  # noqa: E402
 from scipy.stats import spearmanr  # noqa: E402
 
 from data.splits import SPLITS  # noqa: E402
-from defences.cache import (  # noqa: E402
+from defenses.cache import (  # noqa: E402
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import (  # noqa: E402
+from defenses.decision import (  # noqa: E402
     HEADLINE_QUANTILE,
     RECOMMENDED_PLACEMENT,
     detection_report,
@@ -90,8 +90,8 @@ from defences.decision import (  # noqa: E402
     pair_clean_to_backdoor,
     threshold_at_quantile,
 )
-from defences.operators import build_operator  # noqa: E402
-from defences.scores import psu_ratio_from_cache  # noqa: E402
+from defenses.operators import build_operator  # noqa: E402
+from defenses.scores import psu_ratio_from_cache  # noqa: E402
 from experiments._paths import experiment_result_path  # noqa: E402
 from experiments.whole_network_erasure.measure import (  # noqa: E402
     directions,
@@ -509,7 +509,7 @@ def block_output_change(
 
     Restricted to a single block with block_range so the perturbation matches exactly what
     the real detection sweep injects at that site, and no operator logic is reimplemented
-    here: models.positions.plug_dropout and defences.operators.build_operator do the
+    here: models.positions.plug_dropout and defenses.operators.build_operator do the
     masking, this only captures the result. The global RNG is seeded before the call so
     the mask realisation is reproducible across a rerun of this function.
     """

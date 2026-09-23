@@ -23,7 +23,7 @@ and triggered images per model (`experiments.whole_network_erasure.measure.paire
    rate the 0.8 adaptive rule selects.
 2. Per image, at each of site A and `post_residual`'s own adaptively selected rate:
    fractional PSU of clean and triggered inputs, and the share of attack-success
-   captured triggered images (`defences.decision.attack_success_mask`) whose
+   captured triggered images (`defenses.decision.attack_success_mask`) whose
    per-pass argmax ever leaves the no-perturbation label under the mask, against the
    same share for the paired clean images. A gap within 0.05 reads as
    `nothing_separates`, a positive gap (triggered shifts more) as `wrong_direction`,

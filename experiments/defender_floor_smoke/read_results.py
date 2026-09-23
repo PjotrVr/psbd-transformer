@@ -4,7 +4,7 @@ Run after pbs/defender_floor_smoke/smoke.pbs has finished:
     python -m experiments.defender_floor_smoke.read_results
 
 Reads AUROC and TPR from detection_psu_ratio at the rate row named by
-adaptive_rate (never the "adaptive" block, per defences.decision's canon)
+adaptive_rate (never the "adaptive" block, per defenses.decision's canon)
 for both headline placements and ASR / clean accuracy from the checkpoint's
 own args.json. Prints a markdown table to stdout, meant to be pasted into
 experiments/defender_floor_smoke/README.md by hand next to the verdict.

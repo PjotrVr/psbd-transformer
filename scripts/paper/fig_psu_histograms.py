@@ -7,8 +7,8 @@ flattering regime. Every panel reads the cache cli.sweep wrote under
 results/<folder>/psbd/ at the rate cli.analyze's select_rate_adaptively chose
 for this placement (psbd_metrics.json's adaptive_rate, target
 ADAPTIVE_SHIFT_TARGET 0.8), and the fractional PSU per sample comes from
-defences.scores.psu_ratio_from_cache, the threshold and AUROC from
-defences.decision.threshold_at_quantile and detection_report at
+defenses.scores.psu_ratio_from_cache, the threshold and AUROC from
+defenses.decision.threshold_at_quantile and detection_report at
 HEADLINE_QUANTILE. Nothing here recomputes either statistic.
 
     PYTHONPATH=. .venv/bin/python scripts/paper/fig_psu_histograms.py \\
@@ -25,21 +25,21 @@ import scripts.paper._style as style  # noqa: E402  the shared figure style
 import matplotlib.pyplot as plt  # noqa: E402
 
 from data.splits import SPLITS  # noqa: E402
-from defences.cache import (  # noqa: E402
+from defenses.cache import (  # noqa: E402
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import (  # noqa: E402
+from defenses.decision import (  # noqa: E402
     HEADLINE_QUANTILE,
     RECOMMENDED_PLACEMENT,
     detection_report,
     pair_clean_to_backdoor,
     threshold_at_quantile,
 )
-from defences.scores import psu_ratio_from_cache  # noqa: E402
+from defenses.scores import psu_ratio_from_cache  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     attack_label,
     build_parser,

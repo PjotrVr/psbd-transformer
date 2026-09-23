@@ -27,19 +27,19 @@ import matplotlib.pyplot as plt  # noqa: E402
 import matplotlib.ticker as mticker  # noqa: E402
 
 from cli.compare_detectors import psbd_rate  # noqa: E402
-from defences.cache import (  # noqa: E402
+from defenses.cache import (  # noqa: E402
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import (
+from defenses.decision import (
     RECOMMENDED_PLACEMENT,
     pair_clean_to_backdoor,
     detection_report,
 )  # noqa: E402
-from defences.scores import psu_ratio_from_cache  # noqa: E402
+from defenses.scores import psu_ratio_from_cache  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     build_parser,
     clearing_cells,
@@ -68,7 +68,7 @@ BASE_K_VALUES = (1, 2, 3)
 K20_K_VALUES = (5, 10, 20)
 ALL_K_VALUES = BASE_K_VALUES + K20_K_VALUES
 
-# quantile is the false-positive budget by construction (defences.decision), so
+# quantile is the false-positive budget by construction (defenses.decision), so
 # "TPR at 10% FPR" is detection_report at quantile 0.10.
 FPR_BUDGETS = (0.10, 0.20)
 

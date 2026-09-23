@@ -2,7 +2,7 @@
 
 The hypothesis: a trigger is a texture, and the class evidence is structure. If that is
 right, a style-content decomposition puts the poison entirely on one side of the split, and
-normalising the style is a purification defence.
+normalising the style is a purification defense.
 
 The instrument is exact and needs no trained network. Fourier PHASE carries structure and
 AMPLITUDE carries texture (Oppenheim and Lim, 1981), so for a suspect image x and a clean
@@ -18,7 +18,7 @@ A BINARY swap was tried first and is uninterpretable: replacing the phase outrig
 clean accuracy from 0.972 to 0.060 on gtsrb badnet, so the image is destroyed and its ASR
 drop says nothing. Interpolating is what the amplitude-mix augmentation literature (FACT,
 APR) does for the same reason, and it turns a single number into the tradeoff curve a
-defence is actually judged on.
+defense is actually judged on.
 
 Prediction, per attack, which is the point: this is a taxonomy, not one number.
 
@@ -167,7 +167,7 @@ def analyse(folder: str, args) -> dict:
     report["curve"] = curve
     # The deployable point: the largest ASR reduction available while clean accuracy stays
     # within CLEAN_BUDGET of the untransformed model. A purification that buys its ASR drop
-    # with accuracy is not a defence, and this is where most of them fail.
+    # with accuracy is not a defense, and this is where most of them fail.
     baseline = curve[0]
     affordable = [
         row

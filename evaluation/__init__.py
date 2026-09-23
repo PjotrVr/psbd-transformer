@@ -5,7 +5,7 @@ loaders it reads. summary loads the aggregated detection table, refusing rows th
 are not safe to use.
 
 This is the attack-side question (did the backdoor implant), distinct from
-defences/, which asks whether a detector can find it.
+defenses/, which asks whether a detector can find it.
 
 Import the submodule you need. This package re-exports nothing.
 """

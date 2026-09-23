@@ -27,7 +27,7 @@ from typing import Iterator
 import torch
 import torch.nn as nn
 
-from defences.inference import forward_probs
+from defenses.inference import forward_probs
 from models.backbones import network_core
 from models.positions import BLOCK_TYPES
 

@@ -12,7 +12,7 @@ import argparse
 import json
 import random
 import statistics
-from defences.decision import HARD_ATTACKS
+from defenses.decision import HARD_ATTACKS
 
 RATES = (0.01, 0.05, 0.1)
 DATASETS = ("cifar10", "cifar100", "gtsrb", "tiny")

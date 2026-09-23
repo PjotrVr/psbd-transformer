@@ -37,5 +37,5 @@ cannot poison, and that version does work.
 
 Hypothesis docs: `docs/hypothesis/H17-low-poison-rate-is-a-placement-artifact.md`,
 `docs/hypothesis/H18-sensitivity-profile-over-units.md`,
-`docs/hypothesis/H41-multi-probe-defence.md`.
+`docs/hypothesis/H41-multi-probe-defense.md`.
 Published discussion: `docs/results/adaptive-defender-protocol.md`.

@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 import torch
 
-from defences.decision import HEADLINE_QUANTILE, detection_report
+from defenses.decision import HEADLINE_QUANTILE, detection_report
 from detectors import ted
 from experiments.preflight.synthetic import (
     NUM_CLASSES,

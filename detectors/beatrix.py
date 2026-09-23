@@ -80,7 +80,7 @@ from analysis.features import (
     captured_layers,
     detect_model_architecture,
 )
-from defences.inference import forward_logits
+from defenses.inference import forward_logits
 from models.backbones import network_core
 
 # p in 1..P of Eq. (9). Section V-A fixes P = 4 after the order ablation, and on

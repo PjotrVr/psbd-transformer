@@ -39,7 +39,7 @@ parameter and attack-success record. CPU only, under 15 seconds.
 Runs the method itself on 1 checkpoint, `vit_cifar100_badnet_a2o_0_01`:
 attaches PSBD-TM and PSBD-RD in turn, sweeps a rate ladder for each, and
 reads off the adaptive, matched and oracle rate rules from
-`defences.decision`. Draws the PSU histograms `scripts/paper/fig_psu_histograms.py`
+`defenses.decision`. Draws the PSU histograms `scripts/paper/fig_psu_histograms.py`
 builds from the cache on disk, computed here directly instead, with the
 clean-validation threshold marked, and checks the false-positive rate at
 every quantile against the quantile itself. Closes with the shift-target

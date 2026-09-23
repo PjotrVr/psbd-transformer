@@ -14,7 +14,7 @@ bracket clean-validation shift ratio across roughly [0.05, 0.95]; the first stag
 doubles as the calibration that confirms they do.
 
 Cross-operator comparison then happens at matched clean-validation shift ratio,
-never at matched rate, using defences.psbd_metrics.select_rate_at_matched_shift.
+never at matched rate, using defenses.psbd_metrics.select_rate_at_matched_shift.
 
 Example
     python pbs/generate_perturbation_jobs.py --stage pilot --dry-run

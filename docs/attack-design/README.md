@@ -1,7 +1,7 @@
 # Red team: the strongest attacks we can build against our own detector
 
 Written so that the adaptive attack section of the paper is ours rather than a
-reviewer's. Every attack below is designed against **this** project's defence as
+reviewer's. Every attack below is designed against **this** project's defense as
 it currently stands: a per-input, test time detector that reads prediction shift
 under an activation space perturbation, thresholds it at a quantile of clean
 validation PSU, and (H41) combines k probes by min rank or median rank.
@@ -151,7 +151,7 @@ on disk, and it belongs in the paper.
 
 Three things follow and all 3 belong in the paper.
 
-1. **The position result is the adaptive attack defence.** The paper currently
+1. **The position result is the adaptive attack defense.** The paper currently
    sells "where you inject dominates what you inject" as a methodological
    finding. It is also the reason the strongest, cheapest, most obvious adaptive
    attack fails. A probe's vulnerability to confidence matching is exactly its
@@ -210,12 +210,12 @@ limitations.
    adaptive attacker is optimising the wrong functional, and fixing it makes it
    strictly stronger at no cost.
 
-## Defences that fall out of this document
+## Defenses that fall out of this document
 
 Ordered by cost, all defender legal, all implementable against the caches
 already on disk.
 
-| defence | cost | what it answers |
+| defense | cost | what it answers |
 |---|---|---|
 | Report TPR at 0.01 and 0.05 FPR beside every AUROC | free, CPU, existing caches | A1, A5, and free escape 3 |
 | Residualise PSU on $(p_c, \text{entropy}, \|p\|_2^2)$ fitted on clean validation | one least squares fit per probe | A2, A3 |
@@ -224,15 +224,15 @@ already on disk.
 | Calibrate the threshold on a robust statistic (median and MAD) rather than a raw quantile, and flag a bimodal clean validation PSU distribution | free, CPU | A1 |
 | Test time input augmentation as a second line | inference only | A4, via the certified radius coupling argument in that file |
 
-## How this document relates to `cross-defence.md`
+## How this document relates to `cross-defense.md`
 
-`docs/attack-design/cross-defence.md` was written against the same defence and
+`docs/attack-design/cross-defense.md` was written against the same defense and
 asks a different question: whether 1 objective breaks a whole **family** of
-published defences. The 2 documents agree everywhere they overlap, and the 1 place
+published defenses. The 2 documents agree everywhere they overlap, and the 1 place
 they look like they disagree is worth stating precisely, because a reviewer will
 read both.
 
-`cross-defence.md` refutes "the family reduces to a function of $p$" and shows
+`cross-defense.md` refutes "the family reduces to a function of $p$" and shows
 that not 1 of STRIP, SCALE-UP, IBD-PSC, TeCo and PSBD is a function of $p(x)$, so
 confidence matching defeats only the null model. That is correct and this document
 does not contradict it. What this document adds is that **PSBD is not 1 detector,
@@ -248,7 +248,7 @@ the one to publish, is:
 > measured, so the choice of probe position **is** the choice of how much
 > of the detector an attacker gets for free.
 
-`cross-defence.md` section 6 identifies its own most dangerous composite attack.
+`cross-defense.md` section 6 identifies its own most dangerous composite attack.
 It should be read alongside [A1](A1-operating-point-and-threshold.md) and
 [A3](A3-shared-factor-multi-probe.md), which attack the threshold and the shared
 factor rather than the representation.

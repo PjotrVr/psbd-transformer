@@ -13,7 +13,7 @@ import pytest
 
 import torch
 
-from defences.decision import (
+from defenses.decision import (
     bracket_target_shift,
     detection_report,
     interpolate_at_target_shift,
@@ -22,7 +22,7 @@ from defences.decision import (
     select_rate_by_oracle,
     threshold_at_quantile,
 )
-from defences.scores import (
+from defenses.scores import (
     psu_from_cache,
     psu_ratio_from_cache,
     shift_ratio,

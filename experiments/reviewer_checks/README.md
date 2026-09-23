@@ -27,9 +27,9 @@ can only spare 100, 200, 500 or 1000 clean images?
 **Method.** 5 fixed-seed draws per subset size, sampled once and reused across
 every model and placement. For each draw, the per-rate shift ratio is
 recomputed from the cached per-pass argmax restricted to the subset
-(`defences.scores.shift_ratio`), `defences.decision.select_rate_adaptively`
+(`defenses.scores.shift_ratio`), `defenses.decision.select_rate_adaptively`
 picks a rate from that smaller sample, and the threshold and detection report
-(`defences.decision.detection_report`) are read at the subset's own PSU
+(`defenses.decision.detection_report`) are read at the subset's own PSU
 distribution at that rate. The clean and backdoor analysis pool never shrinks,
 only the defender's own held-out set does. Both PSBD-TM and PSBD-RD are
 checked, over all 69 panel models.
@@ -83,7 +83,7 @@ read on?
 **Method.** Candidates are the 13 basis placements present on all 69 panel
 models (`experiments.probe_union.measure.basis_ids_present_on_all_models`).
 Every pair among them is scored by the min-rank union
-(`defences.decision.multi_probe_auroc`/`multi_probe_detection`) on the 33
+(`defenses.decision.multi_probe_auroc`/`multi_probe_detection`) on the 33
 selection models (CIFAR-10, GTSRB) only, ranked by mean TPR at the 10%
 clean-validation quantile
 (`experiments.probe_union.pair_search.search_pairs`). The winning pair is
@@ -104,7 +104,7 @@ itself, the published placement, and it does not generalise. Its bootstrap
 interval for the held-out AUROC gain, [-0.025, +0.003], straddles 0 and its
 mean sits negative, so adding PSBD-RD to PSBD-TM costs AUROC on CIFAR-100 and
 Tiny ImageNet rather than helping. This matches the union result CLAUDE.md
-and `docs/hypothesis/H41-multi-probe-defence.md` already report: min-rank
+and `docs/hypothesis/H41-multi-probe-defense.md` already report: min-rank
 unions help against an attacker trained against a single known probe, but on
 ordinary panel models they add nothing, and here that finding survives
 leave-one-dataset-family-out selection rather than only holding when measured
@@ -173,7 +173,7 @@ PSBD-TM's already-selected rate, into
 `results/_experiments/reviewer_checks/mask_seeds/`, then `cli.analyze` over
 that tree. AUROC and TPR at the 10% quantile are read at seeds 0 (the
 canonical cache), 1 and 2 for each model, via
-`defences.decision.detection_report`.
+`defenses.decision.detection_report`.
 
 | Model | Rate | AUROC seed 0 | AUROC seed 1 | AUROC seed 2 | AUROC std | TPR@10% seed 0 | TPR@10% seed 1 | TPR@10% seed 2 | TPR std |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|

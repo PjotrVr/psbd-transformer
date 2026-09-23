@@ -3,12 +3,12 @@
 Every clearing cell's psbd_metrics.json carries a whole rate ladder for the
 recommended placement, each rung with its own achieved clean-validation shift
 ratio and its own AUROC and TPR at the false-positive budgets. Interpolating
-every cell's ladder onto 1 shared grid of shift ratios (defences.decision
+every cell's ladder onto 1 shared grid of shift ratios (defenses.decision
 .interpolate_at_target_shift, linear between the 2 rungs bracketing the target,
 None outside a cell's own bracket) makes cells with different rate grids
 comparable at the same disturbance level, which is exactly the comparison
 PLACEMENT_MATCH_TARGET and ADAPTIVE_SHIFT_TARGET are built for
-(defences.decision).
+(defenses.decision).
 
     PYTHONPATH=. python scripts/paper/fig_shift_ladder.py \\
         --results-dir /lustre/home/pstika/projects/PSBD-ViT/results --paper-dir paper
@@ -23,7 +23,7 @@ import numpy as np
 import scripts.paper._style  # noqa: E402,F401  the shared figure style
 import matplotlib.pyplot as plt  # noqa: E402
 
-from defences.decision import (  # noqa: E402
+from defenses.decision import (  # noqa: E402
     ADAPTIVE_SHIFT_TARGET,
     RECOMMENDED_PLACEMENT,
     interpolate_at_target_shift,
@@ -48,7 +48,7 @@ GENERATOR = "scripts/paper/fig_shift_ladder.py"
 PRIMARY_DATASETS = ("cifar10", "cifar100", "gtsrb", "tiny")
 
 # The task's hard-attack subset for this figure, narrower than
-# defences.decision.HARD_ATTACKS (which also carries lc and adaptive_blend).
+# defenses.decision.HARD_ATTACKS (which also carries lc and adaptive_blend).
 HARD_ATTACKS = ("bpp", "wanet", "tact", "sig")
 
 GRID = [round(0.20 + 0.02 * i, 2) for i in range(40)]  # 0.20, 0.22, ..., 0.98

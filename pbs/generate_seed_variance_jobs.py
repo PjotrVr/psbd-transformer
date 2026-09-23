@@ -1,4 +1,4 @@
-"""Re-sweep the 2 candidate configurations under additional defence seeds.
+"""Re-sweep the 2 candidate configurations under additional defense seeds.
 
 The PSBD probe is stochastic: dropout masks are drawn from a seeded generator, and every
 number this project has reported comes from 1 draw, PSBD_MASK_SEED = 0. A single draw

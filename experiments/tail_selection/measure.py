@@ -31,15 +31,15 @@ import os
 import numpy as np
 import torch
 
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import complete_rates, pair_clean_to_backdoor
-from defences.scores import psu_ratio_from_cache, shift_ratio
+from defenses.decision import complete_rates, pair_clean_to_backdoor
+from defenses.scores import psu_ratio_from_cache, shift_ratio
 
 TAIL_QUANTILE = 0.05
 

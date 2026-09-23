@@ -63,7 +63,7 @@ from data.splits import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from defences.decision import pair_clean_to_backdoor
+from defenses.decision import pair_clean_to_backdoor
 from models.backbones import load_checkpoint
 
 # Fractions of the predicted row's weights to disable, hardest last.

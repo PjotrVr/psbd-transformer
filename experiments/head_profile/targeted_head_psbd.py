@@ -20,8 +20,8 @@ from sklearn.metrics import roc_auc_score
 import numpy as np
 
 from attacks import build_attack, default_config
-from defences.inference import forward_probs
-from defences.operators import masked_attention_forward
+from defenses.inference import forward_probs
+from defenses.operators import masked_attention_forward
 from models.backbones import load_checkpoint, network_core
 from data.registry import DATASET_REGISTRY
 from data.loading import extract_labels, limit_dataset, load_clean_datasets
@@ -199,7 +199,7 @@ def evaluate_targeted_heads(model, dataset_name, attack_name, target_label, head
 
     # AttackSuccessSet drops the ineligible rows, so the 2 loaders serve different
     # populations and comparing them as served measures which classes were dropped as
-    # well as the defence. indices are positions into the same base, so they pair the
+    # well as the defense. indices are positions into the same base, so they pair the
     # clean rows back onto their own counterparts.
     clean_psu = clean_psu[np.asarray(backdoor_loader.dataset.indices, dtype=int)]
 

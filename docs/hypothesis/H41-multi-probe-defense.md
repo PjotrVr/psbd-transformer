@@ -91,7 +91,7 @@ so both stay defender-legal:
 | bonferroni | the literal value target_FPR / k on the rank scale | at or below the target, by the union bound |
 
 The calibrated rule is the default in
-`defences.psbd_metrics.multi_probe_detection`. Its threshold is measured on the
+`defenses.psbd_metrics.multi_probe_detection`. Its threshold is measured on the
 combined statistic, which already contains the minimum over k probes, so it
 absorbs whatever correlation the probes happen to have without needing a
 correction factor. The bonferroni rule flags a sample when any single probe
@@ -256,5 +256,5 @@ the current figures. The right time to do that is after the queued
 scale, since only then does the k=4 pool exist again and with corrected data.
 
 Analysis script: `experiments/multi_probe/analyze.py`
-Functions: `defences/psbd_metrics.multi_probe_auroc`,
-`defences/psbd_metrics.multi_probe_detection`
+Functions: `defenses/psbd_metrics.multi_probe_auroc`,
+`defenses/psbd_metrics.multi_probe_detection`

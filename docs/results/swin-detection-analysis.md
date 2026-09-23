@@ -205,5 +205,5 @@ separate.
 
 ## Source
 
-`defence_tables.py --architecture swin` with `--operator token_mask/dropout/gain_scale`.
+`defense_tables.py --architecture swin` with `--operator token_mask/dropout/gain_scale`.
 Raw caches in `results/swin_cifar100_*/psbd/`.

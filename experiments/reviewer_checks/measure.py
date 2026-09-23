@@ -2,9 +2,9 @@
 
 Every number below comes from the same stage-1 caches (`results/<folder>/psbd/`)
 and the same scoring functions every other table in the repo reads, imported
-rather than reimplemented: `defences.cache` for the raw tensors,
-`defences.scores.psu_ratio_from_cache` for the fractional PSU (the canon
-headline statistic), `defences.decision` for the rate rule, the threshold and
+rather than reimplemented: `defenses.cache` for the raw tensors,
+`defenses.scores.psu_ratio_from_cache` for the fractional PSU (the canon
+headline statistic), `defenses.decision` for the rate rule, the threshold and
 the detection report, `scripts.paper.tab_headline.measure_cell` and
 `common_coverage` for the panel's model selection and
 `experiments.probe_union.measure`/`pair_search` for the min-rank union.
@@ -14,12 +14,12 @@ canonical pipeline sizes the clean validation set at 2000 images
 (`data.splits.PSBD_HELDOUT_SIZE`) and reads both the adaptive rate rule and the
 detection threshold off it. This redraws random subsets of 100, 200, 500 and
 1000 of those 2000 images, 5 draws per size at a fixed seed, then reruns both
-steps on the subset: the per-rate shift ratio (`defences.scores.shift_ratio`,
+steps on the subset: the per-rate shift ratio (`defenses.scores.shift_ratio`,
 recomputed from the cached per-pass argmax rather than read off the stored
 2000-image figure, since the rate rule the check is testing IS the function of
-subset size), `defences.decision.select_rate_adaptively` at the smaller
+subset size), `defenses.decision.select_rate_adaptively` at the smaller
 validation set, and the threshold and detection report
-(`defences.decision.detection_report`) at the rate that rule picks. The clean
+(`defenses.decision.detection_report`) at the rate that rule picks. The clean
 and backdoor analysis pool is untouched at every subset size, exactly as the
 check asks: only the defender's own clean set shrinks.
 
@@ -32,7 +32,7 @@ placements are every basis entry present on all 65 models
 (`experiments.probe_union.measure.basis_ids_present_on_all_models`). Every
 pair is scored by the min-rank union
 (`experiments.probe_union.pair_search.search_pairs`, itself built on
-`defences.decision.multi_probe_auroc`/`multi_probe_detection`) on the
+`defenses.decision.multi_probe_auroc`/`multi_probe_detection`) on the
 selection models only, ranked by mean TPR at the 10% clean-validation
 quantile. The winning pair is then read, for the first time, on the held-out
 models, beside PSBD-TM alone on the same held-out models, so the reported gain
@@ -65,14 +65,14 @@ import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
 from data.splits import PSBD_HELDOUT_SIZE  # noqa: E402
-from defences.cache import (  # noqa: E402
+from defenses.cache import (  # noqa: E402
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import (  # noqa: E402
+from defenses.decision import (  # noqa: E402
     ADAPTIVE_SHIFT_TARGET,
     PUBLISHED_PLACEMENT,
     RECOMMENDED_PLACEMENT,
@@ -81,7 +81,7 @@ from defences.decision import (  # noqa: E402
     pair_clean_to_backdoor,
     select_rate_adaptively,
 )
-from defences.scores import psu_ratio_from_cache, shift_ratio  # noqa: E402
+from defenses.scores import psu_ratio_from_cache, shift_ratio  # noqa: E402
 from experiments._paths import experiment_result_path, experiment_results_dir  # noqa: E402
 from experiments.probe_union.measure import (  # noqa: E402
     ATTN_BRANCH_TM,

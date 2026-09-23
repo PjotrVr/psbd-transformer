@@ -11,7 +11,7 @@ import math
 import pytest
 import torch
 
-from defences.operators import TokenBlockMask, TokenMask, TokenSubstitute
+from defenses.operators import TokenBlockMask, TokenMask, TokenSubstitute
 
 pytestmark = pytest.mark.fast
 

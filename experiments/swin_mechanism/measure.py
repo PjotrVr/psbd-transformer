@@ -9,7 +9,7 @@ the global triggers (WaNet +0.17, LC +0.14, SIG +0.54), while local triggers
     (a) no class token: Swin's readout is a mean over every token of the last
         stage, so masking a token removes its share of the readout directly,
         while ViT's head reads only the class token, which TokenMask always
-        protects (defences.operators.TokenMask, models.positions SWIN_POSITIONS)
+        protects (defenses.operators.TokenMask, models.positions SWIN_POSITIONS)
     (b) windowed attention keeps a trigger's evidence inside its own window for
         the early stages (torchvision's ShiftedWindowAttention, window_size 7),
         so a masked token only enters the attention pattern of its own window
@@ -63,20 +63,20 @@ from analysis.features import (  # noqa: E402
     transformer_blocks,
 )
 from data.splits import build_psbd_loaders_from_checkpoint, read_checkpoint_metadata  # noqa: E402
-from defences.cache import (  # noqa: E402
+from defenses.cache import (  # noqa: E402
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
     read_split_manifest,
 )
-from defences.decision import (  # noqa: E402
+from defenses.decision import (  # noqa: E402
     HEADLINE_QUANTILE,
     complete_rates,
     pair_clean_to_backdoor,
     select_rate_adaptively,
 )
-from defences.scores import psu_ratio_from_cache, shift_ratio  # noqa: E402
+from defenses.scores import psu_ratio_from_cache, shift_ratio  # noqa: E402
 from experiments._paths import experiment_result_path  # noqa: E402
 from models.backbones import load_checkpoint, network_core  # noqa: E402
 
@@ -577,8 +577,8 @@ def auroc_ladder(psbd_dir: str, placement: str) -> dict | None:
 def detection_report_auroc(
     val_psu: torch.Tensor, clean_psu: torch.Tensor, backdoor_psu: torch.Tensor
 ) -> float:
-    """AUROC only, at fractional PSU, the canon headline statistic (defences.decision.detection_report)."""
-    from defences.decision import detection_report
+    """AUROC only, at fractional PSU, the canon headline statistic (defenses.decision.detection_report)."""
+    from defenses.decision import detection_report
 
     report = detection_report(val_psu, clean_psu, backdoor_psu, HEADLINE_QUANTILE)
     auroc = report["auroc"]

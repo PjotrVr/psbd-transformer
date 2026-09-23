@@ -27,7 +27,7 @@ one.
 | Q23 | Disclosed | The paper reports SentiNet's below-chance reading and says the stated mechanism explains chance, not the sign |
 | Q32 | Closed | `method.tex` carries the fractional PSU equation |
 | Q9 to Q14, Q16, Q17, Q18, Q25 to Q28, Q30, Q31, Q33 | Open | Untouched this pass |
-| Q36 | New, open | A CPU node runs float32 where every GPU cache is bfloat16, because `defences.inference` enters autocast only on CUDA. 1 detector moved 7.4e-3 AUROC between the 2. `sw_parity` measures it on PSBD before the 10 CPU-swept Swin cells are pooled with the 80 GPU ones |
+| Q36 | New, open | A CPU node runs float32 where every GPU cache is bfloat16, because `defenses.inference` enters autocast only on CUDA. 1 detector moved 7.4e-3 AUROC between the 2. `sw_parity` measures it on PSBD before the 10 CPU-swept Swin cells are pooled with the 80 GPU ones |
 | Q37 | New, disclosed | Against the calibrated IBD-PSC port on the same 69 models PSBD-TM leads by +0.013 AUROC and +0.023 TPR at 10% FPR and trails by 0.002 at 20%. The paper calls it a tie |
 | Q38 | New, disclosed | Token masking restricted to blocks 1 to 4 reads near the top of the ranking on the 12 models that reach the adaptive target and is the worst band on the 65 models read at matched disturbance. `app:bands` says to read a band's n beside its mean |
 | Q39 | New, closed | The paper said PSBD-TM stays at or above 0.9 on BadNets, Blend, LF and BPP. Only BadNets and LF do, and `tab_gains.py` now computes the list |
@@ -123,8 +123,8 @@ properly matched on disturbance. What follows is what did not pass.
 
 | # | Item |
 |---|---|
-| Q32 | The headline statistic has no equation. `background.tex` writes the absolute PSU and `method.tex` describes the fractional form in prose, so the symbol denotes the absolute drop where it is defined and the fractional quantity everywhere it is used. The implementation in `defences/scores.py` is correct and the fractional form is this project's own contribution rather than the source paper's, which makes writing it down more important rather than less |
-| Q33 | A dead guard states a failure that cannot occur. `defences/scores.py` clamps the tracked probability at 1e-6, but the tracked class is the argmax so its probability is at least 1 over the label size, which is 0.005 on the largest panel dataset |
+| Q32 | The headline statistic has no equation. `background.tex` writes the absolute PSU and `method.tex` describes the fractional form in prose, so the symbol denotes the absolute drop where it is defined and the fractional quantity everywhere it is used. The implementation in `defenses/scores.py` is correct and the fractional form is this project's own contribution rather than the source paper's, which makes writing it down more important rather than less |
+| Q33 | A dead guard states a failure that cannot occur. `defenses/scores.py` clamps the tracked probability at 1e-6, but the tracked class is the argmax so its probability is at least 1 over the label size, which is 0.005 on the largest panel dataset |
 
 ## Settled on 2026-09-23, so nobody re-derives them
 

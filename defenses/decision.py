@@ -1,6 +1,6 @@
 """PSBD's decision layer: turning per-sample scores into a detection verdict.
 
-defences.scores says what number a sample gets. This module says what that number
+defenses.scores says what number a sample gets. This module says what that number
 means: where the threshold sits, which rate to run at, which samples are even
 comparable and what TPR, FPR and AUROC come out. It reads scores and never the
 other way round.
@@ -431,7 +431,7 @@ def load_critical_rate_from_disk(
     complete rates exist.
     """
     # Imported here rather than at module level so the decision layer stays
-    # importable without pulling in defences.cache's forward-pass dependencies, which
+    # importable without pulling in defenses.cache's forward-pass dependencies, which
     # drag the whole model stack into a CPU-only analysis process.
     from .cache import (
         baseline_path,

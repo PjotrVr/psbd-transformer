@@ -18,7 +18,7 @@ from data.splits import SPLITS
 
 import torch
 
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
@@ -26,7 +26,7 @@ from defences.cache import (
     read_split_manifest,
 )
 from data.registry import DATASET_REGISTRY
-from defences.decision import (
+from defenses.decision import (
     shift_key,
     HEADLINE_QUANTILE,
     PSBD_QUANTILES,
@@ -39,7 +39,7 @@ from defences.decision import (
     select_rate_at_matched_shift,
     select_rate_by_oracle,
 )
-from defences.scores import (
+from defenses.scores import (
     psu_from_cache,
     psu_ratio_from_cache,
     shift_ratio,

@@ -27,14 +27,14 @@ import statistics
 import numpy as np
 from sklearn.metrics import average_precision_score, roc_auc_score
 
-from defences.cache import (
+from defenses.cache import (
     baseline_path,
     dropout_pass_path,
     load_baseline,
     load_dropout_pass_probs,
 )
-from defences.decision import pair_clean_to_backdoor
-from defences.scores import psu_ratio_from_cache
+from defenses.decision import pair_clean_to_backdoor
+from defenses.scores import psu_ratio_from_cache
 
 PLACEMENT = "before_attention_norm_token_mask"
 TARGET_SIGMA = "sigma0.6"

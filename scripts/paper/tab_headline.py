@@ -18,7 +18,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from cli.compare_detectors import psbd_values  # noqa: E402
-from defences.decision import (  # noqa: E402
+from defenses.decision import (  # noqa: E402
     EASY_ATTACKS,
     HARD_ATTACKS,
     PRIMARY_DATASETS,

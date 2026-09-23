@@ -26,7 +26,7 @@ It does not. `gaussian` at `before_attention` is at the top of the table.
 
 If noise matched removal because the perturbation earns nothing at all, the
 conclusion would be different and much worse for PSBD. It does not: the
-confidence-only null in `defences/baselines.py`, scored on the same checkpoints,
+confidence-only null in `defenses/baselines.py`, scored on the same checkpoints,
 averages **0.520** AUROC over 21 backdoored CIFAR-10 checkpoints with TPR at 1%
 FPR of **0.000** on all but 3.
 
@@ -126,7 +126,7 @@ immediately follows the former.
 ## Note on the confidence null
 
 If `gaussian` matches removal, the follow-up is immediate and cheap: check it
-against the confidence-only null in `defences/baselines.py`. A perturbation-free
+against the confidence-only null in `defenses/baselines.py`. A perturbation-free
 statistic that matches a perturbation-based one would mean the perturbation earns
 nothing, which is the trap
 [H12](H12-psu-is-not-just-confidence.md) had to rule out for PSU itself.

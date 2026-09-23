@@ -4,16 +4,16 @@
 
 `pbs/generate_union_attacker_jobs.py` retrains the single-probe attacker's
 CIFAR-100 panel against H41's 3-probe union
-(`docs/hypothesis/H41-multi-probe-defence.md`: token masking and dropout at
+(`docs/hypothesis/H41-multi-probe-defense.md`: token masking and dropout at
 `before_attention_norm`, gain scaling at `mlp_norm_out`) using the new
 `--evade-probes` multi-probe hinge (`attacks/evasion.py`,
 `cli/train_backdoor.py`). Before committing 14 full 15-epoch jobs to the
 queue, this smoke test checks, on the login GPU, that the whole pipeline
 (`cli.train_backdoor --evade-probes`, `cli.sweep`, `cli.analyze`,
-`defences.decision.multi_probe_auroc`) runs end to end on 1 cheap checkpoint
+`defenses.decision.multi_probe_auroc`) runs end to end on 1 cheap checkpoint
 and produces numbers `multi_probe_auroc` can consume.
 
-It is not a measurement of whether the union defence survives the union
+It is not a measurement of whether the union defense survives the union
 attacker. The deviations below (1 training epoch instead of 4, 8000 of
 CIFAR-100's 50000 training images, a reduced sweep sample count) make every
 number here too noisy and too far from the panel's own training recipe to
@@ -79,8 +79,8 @@ python -m cli.analyze --checkpoint-folder vit_cifar100_badnet_a2o_0_05_evade_uni
 ```
 
 The min-rank union AUROCs were computed directly from the 2 checkpoints'
-stage-1 caches with `defences.decision.multi_probe_auroc`, reading fractional
-PSU (`defences.scores.psu_ratio_from_cache`) at each placement's
+stage-1 caches with `defenses.decision.multi_probe_auroc`, reading fractional
+PSU (`defenses.scores.psu_ratio_from_cache`) at each placement's
 `adaptive_rate` from `psbd_metrics.json`, the same reader
 `experiments/probe_union/measure.py` uses.
 
@@ -119,9 +119,9 @@ here (`post_residual` 0.013, itself inverted, and the attention-branch token
 mask at 0.287), which is the min-rank mechanism combining anti-correlated
 per-sample errors rather than each probe's own marginal AUROC.
 
-**Does not show:** whether the union defence detects a properly-trained
+**Does not show:** whether the union defense detects a properly-trained
 (15-epoch, full-data) 3-probe union attacker. A 1-epoch, 8000-image, 0.62
-clean-accuracy model does not resemble the panel this defence is evaluated
+clean-accuracy model does not resemble the panel this defense is evaluated
 against, and the sweep's own 1500-sample cap adds sampling noise beyond that.
 That question is what the 14 full jobs `pbs/generate_union_attacker_jobs.py`
 emits are for. It also does not establish a safe memory margin at batch 16

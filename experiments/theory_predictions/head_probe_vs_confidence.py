@@ -37,8 +37,8 @@ import torch
 from scipy.stats import pearsonr
 from sklearn.metrics import roc_auc_score
 
-from defences.cache import baseline_path, load_baseline, read_split_manifest
-from defences.decision import pair_clean_to_backdoor
+from defenses.cache import baseline_path, load_baseline, read_split_manifest
+from defenses.decision import pair_clean_to_backdoor
 from experiments._paths import experiment_results_dir
 
 # Forward order through the network. Block scope positions repeat in every block,

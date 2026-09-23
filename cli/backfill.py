@@ -34,7 +34,7 @@ import os
 import torchvision.transforms.v2 as transforms_v2
 
 from attacks import build_attack, default_config
-from defences.cache import baseline_path, load_baseline
+from defenses.cache import baseline_path, load_baseline
 from data.registry import DATASET_REGISTRY
 from data.loading import extract_labels, load_clean_datasets
 from attacks.poisoning import choose_indices_with_cover, choose_poison_indices

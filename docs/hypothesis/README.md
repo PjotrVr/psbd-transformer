@@ -25,7 +25,7 @@ once:**
 | attacks | `badnet_a2o`, `wanet`, `lc`, `blend`, `adaptive_blend`, every one that implants |
 
 A number that covers 2 of the 3 axes is not a partial result, it is a lead,
-and it is labeled PROVISIONAL. `defence_tables.py` enforces this in code: it
+and it is labeled PROVISIONAL. `defense_tables.py` enforces this in code: it
 refuses to emit a row whose coverage is incomplete and prints what is missing
 instead, so an under-covered claim cannot reach a table by accident.
 
@@ -126,7 +126,7 @@ written.
 | [H38](H38-crystallization-depth-vs-placement.md) | Crystallization depth predicts optimal perturbation placement | **SUPPORTED** (crystallization confirmed: blend at layer 8.2, badnet at layer 10.4), **INCONCLUSIVE** (placement correlation untested, no block-band PSBD data) |
 | [H39](H39-skip-scaling-defense.md) | Skip connection scaling at layers 10 to 11 removes backdoors | **PARTIALLY SUPPORTED**: works on wanet and lc (alpha=0.3 to 0.5), blend has a sharp threshold (alpha=0.1). BadNet survives even alpha=0.0 at 5% (ASR=0.995). No universal alpha |
 | [H40](H40-attention-entropy-detection.md) | Per-sample attention entropy in backdoor heads detects backdoor samples | **REFUTED**: AUROC 0.48 to 0.54 for most attacks (random). Blend shows strong inverted signal (higher entropy, AUROC 0.000 under one-sided convention) |
-| [H41](H41-multi-probe-defence.md) | Multi-probe PSBD defeats the adaptive attacker | **SUPPORTED**: min-rank union of k probes recovers AUROC 0.951 from single-probed 0.322. 48/56 above 0.90 |
+| [H41](H41-multi-probe-defense.md) | Multi-probe PSBD defeats the adaptive attacker | **SUPPORTED**: min-rank union of k probes recovers AUROC 0.951 from single-probed 0.322. 48/56 above 0.90 |
 | [H42](H42-evasion-identification.md) | The evaded operator can be identified without poison labels | **REFUTED**: 8.9% accuracy by val PSU std, below 25% chance. Inherent operator differences dominate. Identification not needed: multi-probe works without it |
 | [H43](H43-entropy-covers-all-to-all.md) | The case PSBD cannot cover is covered by its own discarded tensor | **SUPPORTED**: entropy 0.761 against PSBD's 0.411 on all-to-all, benign at chance, from 1 cached forward pass. A label-free sign rule (mean PSU of the suspect pool minus clean validation) selects between them for **+0.045**, CI [+0.017, +0.079], 98% of oracle-max, hurting 0 of 64 cells. Rests on 9 all-to-all cells and is 0.000 at 1% poisoning |
 | [H44](H44-content-dependence-law.md) | PSBD's failure is a continuous law in content dependence, not a special case | **SUPPORTED as a measurement, FRAMING ANTICIPATED** by A2X (AAAI 2026), which sweeps target count over {1,2,5,8,10} and reports defenses failing. What survives, and is NOT in A2X, is the DETECTION VALLEY: PSU and entropy fail at opposite ends of the axis, so the attacker's optimum is interior (m=8 on CIFAR-100 and Tiny), reaching best-of-2 detection 0.553 to 0.584 for ~20-25 ASR points. All-to-all is the EASIEST end for entropy (0.849). Plus the decoupling and the rate-surface control: on GTSRB at 10%, 8 target classes instead of 1 takes AUROC 0.999 to 0.491 and TPR@1%FPR 0.981 to 0.007 for 1.3 points of ASR, with clean accuracy improving. No rate rescues it: best over the whole 10-rate surface is 0.532. Free on GTSRB and CIFAR-10, ~0.20 ASR on CIFAR-100 |

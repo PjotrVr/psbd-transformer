@@ -96,7 +96,7 @@ from analysis.features import (
     detect_model_architecture,
     transformer_blocks,
 )
-from defences.inference import forward_logits, forward_probs, frozen_parameters
+from defenses.inference import forward_logits, forward_probs, frozen_parameters
 from models.backbones import network_core
 
 from .strip import collect_overlay_batch, normalization_buffers

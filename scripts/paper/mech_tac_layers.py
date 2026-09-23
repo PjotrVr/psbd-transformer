@@ -21,7 +21,7 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from defences.decision import EASY_ATTACKS, HARD_ATTACKS  # noqa: E402
+from defenses.decision import EASY_ATTACKS, HARD_ATTACKS  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     OKABE_ITO,
     build_parser,

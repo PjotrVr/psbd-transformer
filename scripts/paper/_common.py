@@ -18,7 +18,7 @@ import os
 import random
 import statistics
 
-from defences.decision import HEADLINE_QUANTILE
+from defenses.decision import HEADLINE_QUANTILE
 from utils.provenance import current_git_commit, utc_timestamp
 
 PAPER_DIR = "paper"

@@ -31,7 +31,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
 from cli.sweep import build_parser as sweep_parser  # noqa: E402
-from defences.decision import PUBLISHED_PLACEMENT, RECOMMENDED_PLACEMENT  # noqa: E402
+from defenses.decision import PUBLISHED_PLACEMENT, RECOMMENDED_PLACEMENT  # noqa: E402
 
 # The placements the Swin argument needs: the recommendation, the placement the
 # PSBD paper published, and the twin a pure AUROC selection would have chosen.

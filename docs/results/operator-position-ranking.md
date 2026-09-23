@@ -77,7 +77,7 @@ Zero inversions across all 48 cells. Worst AUROC floor = 0.632. Consistent acros
 | CIFAR-10 | * | * | -- | * |
 | GTSRB | * | * | -- | -- |
 
-(*) These numbers come from the 27-position grid analysis, not individual defence_tables runs. Mean 1% AUROC = 0.928. One inversion.
+(*) These numbers come from the 27-position grid analysis, not individual defense_tables runs. Mean 1% AUROC = 0.928. One inversion.
 
 ### token_mask @ before_attention_residual (rank 3 at 1%)
 
@@ -116,4 +116,4 @@ If the deployment context is CIFAR-100 only (the hardest dataset), gain_scale @ 
 
 ## Source
 
-All numbers from `defence_tables.py` at sigma >= 0.6 with `--score fractional`, one-sided. Ranking table from the 27-position full-grid analysis at 48/48 coverage. Cross-dataset correlation from `scratch/cross_dataset_transfer.py`.
+All numbers from `defense_tables.py` at sigma >= 0.6 with `--score fractional`, one-sided. Ranking table from the 27-position full-grid analysis at 48/48 coverage. Cross-dataset correlation from `scratch/cross_dataset_transfer.py`.

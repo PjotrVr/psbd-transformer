@@ -26,8 +26,8 @@ import numpy as np
 import torch
 from sklearn.metrics import roc_auc_score
 
-from defences.cache import baseline_path, load_baseline, read_split_manifest
-from defences.decision import pair_clean_to_backdoor
+from defenses.cache import baseline_path, load_baseline, read_split_manifest
+from defenses.decision import pair_clean_to_backdoor
 
 # "low" means a low value indicates poisoned, which is PSBD's direction.
 DIRECTIONS = {

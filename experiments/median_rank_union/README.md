@@ -64,7 +64,7 @@ claimed as an AUROC improvement, and it is not one here.
 option with this result attached. It is not the default and it should not be
 recommended. The synthetic tests in `tests/test_operator_semantics.py` are correct
 about the mechanism they construct and are labelled as constructions, not as
-evidence the defence works.
+evidence the defense works.
 
 ## Reproduce
 

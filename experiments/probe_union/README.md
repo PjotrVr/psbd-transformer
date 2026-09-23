@@ -2,7 +2,7 @@
 
 ## Question
 
-H41 (`docs/hypothesis/H41-multi-probe-defence.md`) built a min-rank union of
+H41 (`docs/hypothesis/H41-multi-probe-defense.md`) built a min-rank union of
 independent probes to defeat an attacker trained against 1 probed operator.
 Nobody trains against a probe on the 65 clearing cells the paper's headline
 reads (`paper/tables/headline.tex`). Does the same union rule help, hurt, or do
@@ -16,7 +16,7 @@ The union rule is unchanged from H41: for probe j, rank_j(x) is the percentile
 of x's fractional PSU (`psu_ratio`, the canon headline statistic) within probe
 j's own clean-validation distribution, the combined score is min_j rank_j(x),
 and the calibrated threshold is the target-FPR quantile of that combined score
-on clean validation. `defences.decision.multi_probe_auroc` and
+on clean validation. `defenses.decision.multi_probe_auroc` and
 `multi_probe_detection` compute both, unmodified.
 
 Models are the 65 clearing cells that carry both headline placements, selected

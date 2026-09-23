@@ -60,7 +60,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from defences.inference import forward_probs
+from defenses.inference import forward_probs
 
 from .strip import normalization_buffers
 

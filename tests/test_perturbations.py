@@ -7,7 +7,7 @@ import torch.nn as nn
 
 import models.backbones
 from models.positions import STRUCTURED_POSITION_NAMES, plug_dropout, unplug_dropout
-from defences.operators import (
+from defenses.operators import (
     OPERATORS,
     DropPath,
     GaussianNoise,
@@ -177,7 +177,7 @@ class TestOperatorPositionValidation:
         colour channel and channel_mask masks image columns. Both run, and both
         perturb an axis other than the one their name claims.
         """
-        from defences.operators import check_operator_position
+        from defenses.operators import check_operator_position
 
         for operator in ("token_mask", "channel_mask", "head_mask", "droppath"):
             with pytest.raises(ValueError, match="input_pixels"):
@@ -185,7 +185,7 @@ class TestOperatorPositionValidation:
 
     def test_the_wrong_axis_reading_is_real_and_not_hypothetical(self):
         """Demonstrates the misread the guard exists to prevent."""
-        from defences.operators import build_operator
+        from defenses.operators import build_operator
 
         torch.manual_seed(0)
         image = torch.ones(2, 3, 8, 8)  # (batch, channels, height, width)
@@ -203,20 +203,20 @@ class TestOperatorPositionValidation:
         is a no-op. PSU would be identically 0 and AUROC exactly 0.5, which reads
         as "this position does not matter" rather than "this probe never fired".
         """
-        from defences.operators import check_operator_position
+        from defenses.operators import check_operator_position
 
         with pytest.raises(ValueError, match="inert|only token 0|final_norm_out"):
             check_operator_position("token_mask", "final_norm_out")
 
     def test_head_mask_is_refused_away_from_the_head_axis(self):
-        from defences.operators import check_operator_position
+        from defenses.operators import check_operator_position
 
         with pytest.raises(ValueError, match="only meaningful"):
             check_operator_position("head_mask", "before_mlp")
 
     def test_valid_pairs_are_allowed(self):
         """The guard must not reject the configurations the project actually runs."""
-        from defences.operators import check_operator_position
+        from defenses.operators import check_operator_position
 
         for operator, position in (
             ("token_mask", "before_attention_norm"),

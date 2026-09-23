@@ -1,6 +1,6 @@
 """Per-sample PSBD scores: what number a sample gets, from cached tensors.
 
-defences.decision turns these numbers into a verdict. Nothing here knows about
+defenses.decision turns these numbers into a verdict. Nothing here knows about
 thresholds, quantiles, TPR or FPR. Nothing here imports decision either.
 Everything is CPU arithmetic over the tensors stage 1 wrote, so a scoring rule can
 be reconsidered in seconds without a GPU.

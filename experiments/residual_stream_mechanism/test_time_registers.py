@@ -6,7 +6,7 @@ spends up to 93% of its attention on 4 of 196 patches. Jiang, Dravid, Efros and 
 TEST time by giving the network a spare token to put them in, with no retraining. If the
 backdoor is exploiting the absence of such a token, spare capacity should weaken it.
 
-That makes this simultaneously a mechanism test and a candidate defence, which is why it is
+That makes this simultaneously a mechanism test and a candidate defense, which is why it is
 worth running even though the prior is against it: this ViT has no native register population
 (patch norms are unimodal, 0.000% above twice the median), and the trigger's neurons are
 disjoint from the ones driving natural high-norm tokens, so there may be no competition to
@@ -18,7 +18,7 @@ then on. Nothing is trained and no weight changes.
 
 Reported against the unmodified model:
 
-    asr, clean_accuracy   the defence's actual cost and benefit
+    asr, clean_accuracy   the defense's actual cost and benefit
     trigger_attention     CLS attention mass on the trigger's tokens, per layer, which is the
                           mechanism claim: if spare capacity absorbs the sink, this falls
 

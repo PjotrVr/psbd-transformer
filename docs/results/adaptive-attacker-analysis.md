@@ -1,6 +1,6 @@
 # Adaptive Attacker Analysis (H25)
 
-An attacker who trains against PSBD can evade the specific operator it trained against, but the evasion does not transfer to operators it has never seen. This is the core finding: operator diversity provides defence in depth.
+An attacker who trains against PSBD can evade the specific operator it trained against, but the evasion does not transfer to operators it has never seen. This is the core finding: operator diversity provides defense in depth.
 
 All numbers: fractional PSU, sigma-matched (sigma >= 0.6), one-sided (low PSU = poisoned). No max(AUROC, 1-AUROC).
 

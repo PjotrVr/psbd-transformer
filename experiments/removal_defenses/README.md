@@ -17,8 +17,8 @@ that has to leave both alone.
 
 ## Running it
 
-    python experiments/removal_defences/direction_erasure.py
-    python experiments/removal_defences/skip_scaling.py
+    python experiments/removal_defenses/direction_erasure.py
+    python experiments/removal_defenses/skip_scaling.py
 
 Both evaluate attack success and clean accuracy on real eval sets and want a GPU.
 Output goes to `results/direction_erasure.json` and `results/skip_scaling.json`.
@@ -38,7 +38,7 @@ transition, holding attack success 1.000 at alpha 0.3 and dropping to 0.007 at a
 0.1. `wanet` and `lc` die between alpha 0.5 and 0.3. `badnet` survives alpha 0.0
 entirely, still at 0.995 attack success at 5% poisoning, because the branch
 computations alone rebuild the direction with the skip path fully cut. No single
-alpha works across attacks, so this is not a deployable defence.
+alpha works across attacks, so this is not a deployable defense.
 
 Together they locate where the direction lives: not in the layer 10 and 11 weights,
 and not only on the skip path.

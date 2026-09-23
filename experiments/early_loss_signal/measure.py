@@ -14,7 +14,7 @@ poisoning, CIFAR-100, 8000 samples, 5 epochs, no evasion) and asks 2 questions. 
 either loss-derived score separate poisoned from clean training samples above
 chance? And, per attack, is that separation aligned with the SAME attack's PSBD-TM
 AUROC on the fully trained panel checkpoint's cache, or is the training-set signal
-independent of what the test-time defence already sees?
+independent of what the test-time defense already sees?
 
 The 2 per-sample scores are the epoch at which a sample's loss first falls below
 that epoch's median loss (ASD's own isolation criterion, "learned fast") and the
@@ -41,7 +41,7 @@ import os
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-from defences.decision import RECOMMENDED_PLACEMENT
+from defenses.decision import RECOMMENDED_PLACEMENT
 from scripts.paper._common import load_psbd_metrics, rate_row
 
 CHECKPOINT_DIR = "checkpoints"

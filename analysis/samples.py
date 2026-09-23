@@ -11,7 +11,7 @@ detector saw.
 
 The clean loader serves the whole analysis pool and the backdoor loader only its
 eligible rows (all-to-one drops the target class), so the 2 are paired through
-the manifest rather than by position, the way defences.decision pairs scores.
+the manifest rather than by position, the way defenses.decision pairs scores.
 Every view carries a poison mask beside its labels. The image panels read that
 mask, never a row's position, because upstream titles its panels by position
 ("clean, clean, poison, poison") and mislabels them when fewer than 2 poisoned
@@ -27,7 +27,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from defences.decision import pair_clean_to_backdoor
+from defenses.decision import pair_clean_to_backdoor
 from detectors.strip import normalization_buffers
 
 # The label upstream gives poisoned rows when it subsets at equal ratio, so they

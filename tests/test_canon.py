@@ -1,6 +1,6 @@
 """The 2 placements every table names, held together with the basis declaration.
 
-defences.decision names the recommended and the published placement as
+defenses.decision names the recommended and the published placement as
 constants, configs/psbd_basis.json declares the same 2 by note. Either could be
 edited alone, so this test is what makes them 1 fact.
 """
@@ -8,7 +8,7 @@ edited alone, so this test is what makes them 1 fact.
 import json
 import os
 
-from defences.decision import (
+from defenses.decision import (
     ADAPTIVE_SHIFT_TARGET,
     HEADLINE_QUANTILE,
     PLACEMENT_MATCH_TARGET,
@@ -139,7 +139,7 @@ def test_every_metric_the_protocol_requires_is_one_the_report_writes():
     """
     import torch
 
-    from defences.decision import detection_report
+    from defenses.decision import detection_report
 
     with open(BASIS_PATH) as handle:
         declaration = json.load(handle)

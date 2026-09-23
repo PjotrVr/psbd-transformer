@@ -6,7 +6,7 @@ mechanism the paper argues for. The paper's account is that a backdoor in a ViT 
 routed through attention from the trigger's own tokens to the class token.
 
 Every proposal here is a probe, so none of it changes the statistic, the rate rule
-or the threshold. They slot into `defences/operators.py` and
+or the threshold. They slot into `defenses/operators.py` and
 `models/positions.py` as new entries and are swept by `cli.sweep` unchanged.
 
 ## The gap
@@ -14,7 +14,7 @@ or the threshold. They slot into `defences/operators.py` and
 `models.positions.POSITION_REGISTRY` holds 15 positions on ViT and every one of
 them is a tensor boundary: the input to a sublayer, the output of a sublayer, the
 residual stream, the per-head outputs, the MLP hidden units or the pixels.
-`defences.operators.OPERATORS` holds 9 operators and every one of them acts on a
+`defenses.operators.OPERATORS` holds 9 operators and every one of them acts on a
 tensor of activations.
 
 Nothing in the basis perturbs the attention map. The route the mechanism names is

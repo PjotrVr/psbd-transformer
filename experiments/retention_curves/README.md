@@ -56,7 +56,7 @@ is reading a quantity that moves the wrong way.
 
 ## Consequences
 
-1. A defence built on perturbation consistency is exploiting an asymmetry that exists in
+1. A defense built on perturbation consistency is exploiting an asymmetry that exists in
    one modality. That is not a flaw in itself, but it bounds what the family can do and it
    predicts the failure on Adaptive-Blend rather than discovering it.
 2. Input-space purification is not simply a weaker version of activation perturbation. The

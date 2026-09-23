@@ -1,9 +1,9 @@
 """An adaptive attacker that trains against PSBD.
 
-A defence is only interesting if it survives an adversary who knows it. PSBD flags
+A defense is only interesting if it survives an adversary who knows it. PSBD flags
 samples whose prediction shift under dropout is LOW, so an attacker who controls
 training can add a penalty that pushes the poisoned samples' shift up onto the
-clean distribution, keeping the backdoor while removing the statistic the defence
+clean distribution, keeping the backdoor while removing the statistic the defense
 reads.
 
     original form
@@ -20,7 +20,7 @@ prediction shift uncertainty of sample x under the probe.
 
 The hinge is deliberate. A symmetric abs(mean_C - mean_P) would also punish
 poisoned PSU for rising above clean, which costs capacity for no evasion benefit
-and risks overshooting into a separation the defence could read from the other
+and risks overshooting into a separation the defense could read from the other
 side.
 
 PSU here is the fractional form, matching the defender's preferred score:
@@ -77,7 +77,7 @@ defender's threshold can no longer separate the 2 groups by that statistic.
 
 1. phi_PSU is the ABSOLUTE PSU, a plain probability difference, not the
    fractional ratio (`psu_for_batch`) the rest of this module and
-   `defences.scores` use as the headline statistic. This module implements both
+   `defenses.scores` use as the headline statistic. This module implements both
    forms side by side, `psu_for_batch` for the psu_gap_hinge objective and
    `absolute_psu_for_batch` for `psu_mean`, so each objective matches the form
    its own source specifies.
@@ -88,8 +88,8 @@ defender's threshold can no longer separate the 2 groups by that statistic.
 
 A third path, multi-probe evasion, extends the psu_gap_hinge objective (`--evade-probes`,
 `cli.train_backdoor`) from 1 probe to several, so the attacker trains against the
-defence's own min-rank union (`defences.decision.multi_probe_auroc`,
-`docs/hypothesis/H41-multi-probe-defence.md`) rather than a single placement it
+defense's own min-rank union (`defenses.decision.multi_probe_auroc`,
+`docs/hypothesis/H41-multi-probe-defense.md`) rather than a single placement it
 could deploy a second probe against.
 
     original form
@@ -148,7 +148,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
-from defences.operators import build_operator
+from defenses.operators import build_operator
 from models.positions import DROPOUT_CONFIGS, plug_dropout, unplug_dropout
 
 # Guards the division when the model gives its own predicted class almost no
@@ -281,7 +281,7 @@ def psu_for_batch(
 
     Returns (psu, logits), both carrying grad history: psu is (batch,) and logits
     is (batch, num_classes). This is the defender's headline statistic
-    (`defences.scores.psu_ratio_from_cache`), used by the psu_gap_hinge objective.
+    (`defenses.scores.psu_ratio_from_cache`), used by the psu_gap_hinge objective.
     """
     base, dropped, logits = _probe_confidences(model, images, probe, passes, logits)
     base_clamped = base.clamp_min(BASE_PROBABILITY_FLOOR)
@@ -330,9 +330,9 @@ def calibrate_probe_rate(
 
     Shift ratio is the fraction of samples whose argmax changes under the
     perturbation. This matches the defender's sigma-matching rule
-    (defences.decision.select_rate_at_matched_shift) at the historical default
+    (defenses.decision.select_rate_at_matched_shift) at the historical default
     target_sigma=0.6, and the defender's adaptive 0.8 rule
-    (defences.decision.select_rate_adaptively) when the caller recalibrates
+    (defenses.decision.select_rate_adaptively) when the caller recalibrates
     against that target instead, so the attacker optimizes at whichever
     perturbation strength the defender would choose.
 
@@ -485,7 +485,7 @@ def paper_adaptive_penalty(psu_absolute: torch.Tensor) -> torch.Tensor:
 
 # The psu_floor objective's own hinge target, read from probe["margin"] when
 # --evade-margin overrides it. 0.8 matches ADAPTIVE_SHIFT_TARGET
-# (defences.decision), the shift level clean samples already sit near at the
+# (defenses.decision), the shift level clean samples already sit near at the
 # rate the deployable adaptive rule selects.
 DEFAULT_FLOOR_MARGIN = 0.8
 

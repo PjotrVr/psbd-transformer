@@ -40,7 +40,7 @@ corner patch survives superimposition, and a low-amplitude blended or adaptive t
 does not. PSBD asks whether the prediction is robust to internal perturbation, which
 is where a diffuse trigger's redundant encoding shows up and a single patch's does not.
 
-**Neither method alone is a defence.** On the mean, STRIP leads at 1% FPR (0.489
+**Neither method alone is a defense.** On the mean, STRIP leads at 1% FPR (0.489
 against 0.406) and PSBD leads at 5% (0.596 against 0.562). Both means are dragged down
 by the attacks the other one handles. A paper reporting only PSBD on ViT would be
 reporting the weaker method on the most standard attack in the literature.

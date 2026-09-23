@@ -135,7 +135,7 @@ all analysis rows, so carrying them also diluted every panel they appeared in,
 which is the same unequal-coverage failure mode recorded in the ledger's own
 "failure mode" section.
 
-What changed in the code: `scripts/detection_summary.py`, `defence_tables.py` and
+What changed in the code: `scripts/detection_summary.py`, `defense_tables.py` and
 `pbs/generate_gaussian_rerun_jobs.py` exclude SAM by default behind an explicit
 `--include-sam` flag. The checkpoints and their caches remain on disk. Nothing is
 deleted, nothing is claimed.
