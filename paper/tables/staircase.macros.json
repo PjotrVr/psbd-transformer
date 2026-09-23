@@ -4,8 +4,8 @@
     "results/coverage/coverage.json",
     "results/<folder>/psbd_metrics.json (65 models)"
   ],
-  "written_at": "2026-09-23T11:33:53.736962+00:00",
-  "git_commit": "2fb3169f973b846e39a6f585b342a893fa1af109-dirty",
+  "written_at": "2026-09-23T11:48:23.396971+00:00",
+  "git_commit": "3b0c06c5be94a964bfa1b8e4277d6c6e09788fab-dirty",
   "macros": {
     "StaircaseResidualPostResidualN": {
       "value": "69",
@@ -369,47 +369,47 @@
     },
     "StaircaseOperatorsBeforeAttentionNormTokenMaskN": {
       "value": "69",
-      "meaning": "models covered at the adaptive 0.8 rule, token mask, attention input, staircase operators table"
+      "meaning": "models covered at the adaptive 0.8 rule, token mask, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormTokenMaskAuroc": {
       "value": "0.927",
-      "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, attention input, over the 69 models it covers, staircase operators table"
+      "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, attention input, before the norm, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormTokenMaskTprAtOneZeroPercent": {
       "value": "0.766",
-      "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, staircase operators table"
+      "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormTokenMaskTprAtTwoZeroPercent": {
       "value": "0.835",
-      "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, staircase operators table"
+      "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormTokenMaskBelowChance": {
       "value": "2",
-      "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, attention input, staircase operators table"
+      "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormChannelMaskN": {
       "value": "69",
-      "meaning": "models covered at the adaptive 0.8 rule, channel mask, attention input, staircase operators table"
+      "meaning": "models covered at the adaptive 0.8 rule, channel mask, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormChannelMaskAuroc": {
       "value": "0.881",
-      "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, channel mask, attention input, over the 69 models it covers, staircase operators table"
+      "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, channel mask, attention input, before the norm, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormChannelMaskTprAtOneZeroPercent": {
       "value": "0.682",
-      "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, channel mask, attention input, staircase operators table"
+      "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, channel mask, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormChannelMaskTprAtTwoZeroPercent": {
       "value": "0.765",
-      "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, channel mask, attention input, staircase operators table"
+      "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, channel mask, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormChannelMaskBelowChance": {
       "value": "2",
-      "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, channel mask, attention input, staircase operators table"
+      "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, channel mask, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormChannelMaskGain": {
       "value": "-0.046",
-      "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, attention input against this table's first row, over the 69 models it covers, staircase operators table"
+      "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, attention input, before the norm against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormChannelMaskGainLow": {
       "value": "-0.084",
@@ -421,27 +421,27 @@
     },
     "StaircaseOperatorsBeforeAttentionNormGaussianN": {
       "value": "69",
-      "meaning": "models covered at the adaptive 0.8 rule, gaussian, attention input, staircase operators table"
+      "meaning": "models covered at the adaptive 0.8 rule, gaussian, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormGaussianAuroc": {
       "value": "0.799",
-      "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, attention input, over the 69 models it covers, staircase operators table"
+      "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, attention input, before the norm, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormGaussianTprAtOneZeroPercent": {
       "value": "0.540",
-      "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, attention input, staircase operators table"
+      "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormGaussianTprAtTwoZeroPercent": {
       "value": "0.655",
-      "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, attention input, staircase operators table"
+      "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormGaussianBelowChance": {
       "value": "9",
-      "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, attention input, staircase operators table"
+      "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormGaussianGain": {
       "value": "-0.128",
-      "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, attention input against this table's first row, over the 69 models it covers, staircase operators table"
+      "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, attention input, before the norm against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormGaussianGainLow": {
       "value": "-0.188",
@@ -549,27 +549,27 @@
     },
     "StaircaseOperatorsBeforeMlpNormTokenMaskN": {
       "value": "69",
-      "meaning": "models covered at the adaptive 0.8 rule, token mask, MLP input, staircase operators table"
+      "meaning": "models covered at the adaptive 0.8 rule, token mask, MLP input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpNormTokenMaskAuroc": {
       "value": "0.821",
-      "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, MLP input, over the 69 models it covers, staircase operators table"
+      "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, MLP input, before the norm, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpNormTokenMaskTprAtOneZeroPercent": {
       "value": "0.502",
-      "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, MLP input, staircase operators table"
+      "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, MLP input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpNormTokenMaskTprAtTwoZeroPercent": {
       "value": "0.682",
-      "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, MLP input, staircase operators table"
+      "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, MLP input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpNormTokenMaskBelowChance": {
       "value": "3",
-      "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, MLP input, staircase operators table"
+      "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, MLP input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpNormTokenMaskGain": {
       "value": "-0.106",
-      "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, MLP input against this table's first row, over the 69 models it covers, staircase operators table"
+      "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, MLP input, before the norm against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpNormTokenMaskGainLow": {
       "value": "-0.151",
@@ -579,29 +579,61 @@
       "value": "-0.064",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_token_mask_gain"
     },
+    "StaircaseOperatorsBeforeMlpNormGaussianN": {
+      "value": "36",
+      "meaning": "models covered at the adaptive 0.8 rule, gaussian, MLP input, before the norm, staircase operators table"
+    },
+    "StaircaseOperatorsBeforeMlpNormGaussianAuroc": {
+      "value": "0.700",
+      "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, before the norm, over the 36 models it covers, staircase operators table"
+    },
+    "StaircaseOperatorsBeforeMlpNormGaussianTprAtOneZeroPercent": {
+      "value": "0.387",
+      "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input, before the norm, staircase operators table"
+    },
+    "StaircaseOperatorsBeforeMlpNormGaussianTprAtTwoZeroPercent": {
+      "value": "0.559",
+      "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input, before the norm, staircase operators table"
+    },
+    "StaircaseOperatorsBeforeMlpNormGaussianBelowChance": {
+      "value": "8",
+      "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, before the norm, staircase operators table"
+    },
+    "StaircaseOperatorsBeforeMlpNormGaussianGain": {
+      "value": "-0.268",
+      "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, before the norm against this table's first row, over the 36 models it covers, staircase operators table"
+    },
+    "StaircaseOperatorsBeforeMlpNormGaussianGainLow": {
+      "value": "-0.381",
+      "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_gaussian_gain"
+    },
+    "StaircaseOperatorsBeforeMlpNormGaussianGainHigh": {
+      "value": "-0.163",
+      "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_gaussian_gain"
+    },
     "StaircaseOperatorsBeforeMlpGaussianN": {
       "value": "69",
-      "meaning": "models covered at the adaptive 0.8 rule, gaussian, MLP input after norm, staircase operators table"
+      "meaning": "models covered at the adaptive 0.8 rule, gaussian, MLP input, after the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpGaussianAuroc": {
       "value": "0.872",
-      "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, MLP input after norm, over the 69 models it covers, staircase operators table"
+      "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, after the norm, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpGaussianTprAtOneZeroPercent": {
       "value": "0.703",
-      "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input after norm, staircase operators table"
+      "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input, after the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpGaussianTprAtTwoZeroPercent": {
       "value": "0.783",
-      "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input after norm, staircase operators table"
+      "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input, after the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpGaussianBelowChance": {
       "value": "8",
-      "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, MLP input after norm, staircase operators table"
+      "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, after the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpGaussianGain": {
       "value": "-0.056",
-      "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input after norm against this table's first row, over the 69 models it covers, staircase operators table"
+      "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, after the norm against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpGaussianGainLow": {
       "value": "-0.100",

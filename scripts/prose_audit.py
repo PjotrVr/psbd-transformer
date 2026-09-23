@@ -61,7 +61,7 @@ NUMBER_IDIOMS = re.compile(
     r"(?:the|a|an|that|this|next|another)\s+(?:[\w-]+\s+){0,2}one\b|"
     r"one\s*[.,;:)\]]|"
     r"one\s+(?:would|will|is|was|were|wins?|means?|has|have|had|does|do|did|"
-    r"can|could|should|may|might|sits?|reads?|gives?|shows?|in|of|to|for|and|"
+    r"can|cannot|could|should|may|might|sits?|reads?|gives?|shows?|in|of|to|for|and|"
     r"or|but|that|which)\b)",
     re.IGNORECASE,
 )

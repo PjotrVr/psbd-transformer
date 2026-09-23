@@ -79,17 +79,24 @@ DROPOUT_SITE_ROWS = (
     ("dropout, embedding output", "after_embedding"),
 )
 OPERATOR_ROWS = (
-    ("token mask, attention input", "before_attention_norm_token_mask"),
-    ("channel mask, attention input", "before_attention_norm_channel_mask"),
-    ("gaussian, attention input", "before_attention_norm_gaussian"),
+    (
+        "token mask, attention input, before the norm",
+        "before_attention_norm_token_mask",
+    ),
+    (
+        "channel mask, attention input, before the norm",
+        "before_attention_norm_channel_mask",
+    ),
+    ("gaussian, attention input, before the norm", "before_attention_norm_gaussian"),
     ("dropout, attention input", "before_attention_norm"),
     (
         "token mask, attention output before the add",
         "before_attention_residual_token_mask",
     ),
     ("token mask, both sublayer inputs", "both_sublayer_inputs_token_mask"),
-    ("token mask, MLP input", "before_mlp_norm_token_mask"),
-    ("gaussian, MLP input after norm", "before_mlp_gaussian"),
+    ("token mask, MLP input, before the norm", "before_mlp_norm_token_mask"),
+    ("gaussian, MLP input, before the norm", "before_mlp_norm_gaussian"),
+    ("gaussian, MLP input, after the norm", "before_mlp_gaussian"),
     ("token mask, after the attention add", "after_attention_residual_token_mask"),
     ("channel mask, MLP neurons", "mlp_neurons_channel_mask"),
     ("gain scale, MLP norm output", "mlp_norm_out_gain_scale"),
