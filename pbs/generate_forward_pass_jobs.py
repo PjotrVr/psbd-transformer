@@ -38,7 +38,6 @@ import json
 import os
 import re
 import sys
-from unittest import mock
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
@@ -150,6 +149,33 @@ def attack_sort_key(attack: str) -> int:
     return rank
 
 
+def select_all_primary(coverage: dict) -> list[dict]:
+    """Every clearing cell the forward-pass figure reads, hard attacks first.
+
+    fig_forward_passes plots the k = 20 curve over every primary clearing cell
+    that carries a complete k = 20 cache, so this is the population that turns
+    its pilot into the panel. The dataset list is imported from the figure
+    rather than repeated, so the 2 cannot drift apart.
+    """
+    from scripts.paper.fig_forward_passes import PRIMARY_DATASETS
+
+    matching = [
+        cell
+        for cell in coverage["cells"]
+        if cell["dataset"] in PRIMARY_DATASETS and cell["asr_class"] == "clears"
+    ]
+    ordered = sorted(
+        matching,
+        key=lambda cell: (
+            attack_sort_key(cell["attack"]),
+            cell["dataset"],
+            cell["poison_rate"],
+            cell["folder_name"],
+        ),
+    )
+    return ordered
+
+
 def select_checkpoints(coverage: dict) -> list[dict]:
     """The ViT cells the ladder covers, hard attacks first.
 
@@ -222,35 +248,9 @@ def plan_invocations(
 
 
 def sweep_parser() -> argparse.ArgumentParser:
-    """cli.sweep's own ArgumentParser, captured without running its side effects.
-
-    cli.sweep exposes only parse_args, which builds the parser and immediately
-    consumes sys.argv. Patching ArgumentParser.parse_args to record self before
-    delegating to the original recovers the parser instance without cli/sweep.py
-    ever being touched, so the flags checked here are the exact ones cli.sweep
-    enforces at run time rather than a hand-copied guess.
-    """
-    captured: dict[str, argparse.ArgumentParser] = {}
-    original_parse_args = argparse.ArgumentParser.parse_args
-
-    def capture(self, *args, **kwargs):
-        captured["parser"] = self
-        return original_parse_args(self, *args, **kwargs)
-
-    argparse.ArgumentParser.parse_args = capture
-    minimal_argv = [
-        "cli.sweep",
-        "--checkpoint-folder",
-        "probe",
-        "--position",
-        "post_residual",
-    ]
-    try:
-        with mock.patch.object(sys, "argv", minimal_argv):
-            sweep_cli.parse_args()
-    finally:
-        argparse.ArgumentParser.parse_args = original_parse_args
-    return captured["parser"]
+    """cli.sweep's own parser, so the flags checked here are the ones it enforces."""
+    parser = sweep_cli.build_parser()
+    return parser
 
 
 def render_sweep_command(inv: Invocation) -> str:
@@ -359,12 +359,16 @@ def print_plan(
     placements: list[Placement],
     planned: list[Invocation],
     already_cached: list[tuple[str, str, int]],
+    k_ladder: tuple[int, ...] = K_LADDER,
 ) -> None:
+    datasets = sorted({cell["dataset"] for cell in checkpoints})
+    rates = sorted({cell["poison_rate"] for cell in checkpoints})
     print(
-        f"[ok] {len(checkpoints)} checkpoints (cifar100 and tiny, 1% and 5%, asr_class clears)"
+        f"[ok] {len(checkpoints)} clearing checkpoints over {', '.join(datasets)} "
+        f"at poison rates {', '.join(f'{rate:g}' for rate in rates)}"
     )
     print(f"     placements        {', '.join(p.id for p in placements)}")
-    print(f"     k ladder          {', '.join(str(k) for k in K_LADDER)}")
+    print(f"     k ladder          {', '.join(str(k) for k in k_ladder)}")
     print(
         f"     invocations       {len(planned)} planned, "
         f"{len(already_cached)} already cached and skipped"
@@ -394,6 +398,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--max-jobs", type=int, default=None, help="write only the first N packed jobs"
     )
+    parser.add_argument(
+        "--all-primary",
+        action="store_true",
+        help="every primary clearing cell the k figure reads, not the pilot slice",
+    )
+    parser.add_argument(
+        "--passes",
+        type=int,
+        nargs="+",
+        default=list(K_LADDER),
+        help="pass counts to sweep. k 1, 5 and 10 are sliced from a k = 20 cache "
+        "by the figure, so 20 alone is enough for it",
+    )
+    parser.add_argument(
+        "--placement",
+        choices=("both", "recommended"),
+        default="both",
+        help="the figure reads only the recommended placement",
+    )
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
 
@@ -402,16 +425,19 @@ def main() -> None:
     args = parse_args()
     coverage = load_json(args.coverage)
     basis = load_json(args.declaration)["basis"]
-    placements = [
-        load_placement(basis, RECOMMENDED_PLACEMENT),
-        load_placement(basis, PUBLISHED_PLACEMENT),
-    ]
+    placements = [load_placement(basis, RECOMMENDED_PLACEMENT)]
+    if args.placement == "both":
+        placements.append(load_placement(basis, PUBLISHED_PLACEMENT))
 
-    checkpoints = select_checkpoints(coverage)
-    planned, already_cached = plan_invocations(
-        checkpoints, placements, K_LADDER, args.results_dir
+    checkpoints = (
+        select_all_primary(coverage)
+        if args.all_primary
+        else select_checkpoints(coverage)
     )
-    print_plan(checkpoints, placements, planned, already_cached)
+    planned, already_cached = plan_invocations(
+        checkpoints, placements, tuple(args.passes), args.results_dir
+    )
+    print_plan(checkpoints, placements, planned, already_cached, tuple(args.passes))
 
     bundles = pack_invocations(planned, args.minutes_per_job)
 
