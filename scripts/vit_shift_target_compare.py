@@ -3,7 +3,7 @@
 2 different quantities have been used interchangeably in this repo and they are not the
 same thing:
 
-  ADAPTIVE_SHIFT_TARGET = 0.8   the PSBD paper's own rule. Yang et al. select the dropout
+  ADAPTIVE_SHIFT_TARGET = 0.8   the PSBD paper's own rule. Li et al. select the dropout
                                 rate "where the sigma of clean validation data approach to a
                                 high value (0.8 in our experiments)". This is the OPERATING
                                 POINT a deployed PSBD runs at.

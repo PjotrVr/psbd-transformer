@@ -33,6 +33,7 @@ from defences.cache import (
     read_split_manifest,
 )
 from defences.decision import (
+    PLACEMENT_MATCH_TARGET as SHIFT_TARGET,
     complete_rates,
     detection_report,
     multi_probe_detection,
@@ -47,7 +48,6 @@ DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny")
 EASY_ORDER = EASY_ATTACKS
 HARD_ORDER = HARD_ATTACKS
 ATTACK_ORDER = EASY_ORDER + HARD_ORDER
-SHIFT_TARGET = 0.6
 TARGET_FPRS = (0.10, 0.20)
 
 
