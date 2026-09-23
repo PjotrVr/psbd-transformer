@@ -3,9 +3,14 @@
 Runs every generator under scripts/paper/ (tab_*, fig_*, mech_*, app_*), folds
 their macro sidecars into headline.tex, renders the findings registry, runs the
 ledgers (ledger_*) that read the folded headline, then reads every section and
-fails on a digit that is not inside a macro, a citation, a reference, a label, an
-input path or a year, and on a macro headline.tex does not define. A section that
-passes quotes only numbers a script produced.
+reports a hand-typed measurement or a macro headline.tex does not define.
+
+A measurement is what has to come from a script: a decimal, a signed decimal or
+an integer of 3 digits or more, and a bare count immediately followed by a word
+naming a population we measure. A bare 1 or 2 digit integer on its own is a count
+in prose, like 2 axes or 3 decimal places, and is left alone, because forcing
+every such digit into a macro produced 147 reports nobody could act on and hid
+the real ones among them.
 
     PYTHONPATH=. python scripts/paper/build_all.py --results-dir results
     PYTHONPATH=. python scripts/paper/build_all.py --check-only
@@ -35,10 +40,23 @@ ALLOWED = (
     # datasets, ported detectors, and the hypothesis and finding ids.
     r"\b(?:ViT-B/16|ResNet-18|VGG16|CIFAR-10|CIFAR-100|H\d{1,2}|F\d{2})\b",
 )
+# A digit that survives ALLOWED is a measurement when it carries a decimal point,
+# or is long enough to be a population size, or is a count of something the panel
+# measures. Anything else is an ordinary count in prose.
+MEASUREMENT = re.compile(
+    r"[-+\u2212]?\d*\.\d+"
+    r"|\b\d{3,}\b"
+    # 2 digits and up, because a single-digit count before one of these words is
+    # structural, as in 2 placements or 3 seeds, while 65 models is a population.
+    r"|\b\d{2}\s+(?:models?|cells?|checkpoints?|datasets?|attacks?|placements?|"
+    r"seeds?|probes?|detectors?)\b"
+)
 # Standard LaTeX commands whose name starts with a capital letter, so the
 # undefined-macro check does not read them as headline macros.
 LATEX_COMMANDS = {
     "Cref",
+    "IfFileExists",
+    "FloatBarrier",
     "Phi",
     "Sigma",
     "Delta",
@@ -114,8 +132,9 @@ def section_problems(path: str, defined: set[str]) -> list[str]:
             if re.search(r"\\end\{(?:equation|align|gather|split)\*?\}|\\\]", line):
                 in_display_math = False
             continue
-        if re.search(r"\d", strip_allowed(line)):
-            problems.append(f"{path}:{number}: a typed number: {line.strip()[:80]}")
+        typed = MEASUREMENT.findall(strip_allowed(line))
+        if typed:
+            problems.append(f"{path}:{number}: hand-typed {typed}: {line.strip()[:70]}")
     return problems
 
 

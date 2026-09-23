@@ -2,7 +2,10 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,mathtools}
-\usepackage{booktabs,graphicx,xcolor,array,multirow,adjustbox}
+\usepackage{booktabs,graphicx,array,multirow,adjustbox}
+% The table option loads colortbl, which is what \rowcolor needs for the shaded
+% per-dataset mean rows in the generated result tables.
+\usepackage[table]{xcolor}
 \usepackage[margin=0.8in,columnsep=0.28in]{geometry}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{tikz}

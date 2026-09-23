@@ -5,8 +5,8 @@
     "configs/psbd_basis.json",
     "results/<folder>/psbd_metrics.json (65 cells)"
   ],
-  "written_at": "2026-09-23T11:28:28.036366+00:00",
-  "git_commit": "d73256eebad186e04a1df1a387fc7c90e8742ffb-dirty",
+  "written_at": "2026-09-23T14:40:34.694006+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
   "macros": {
     "FamilyGapMatched": {
       "value": "+0.016",

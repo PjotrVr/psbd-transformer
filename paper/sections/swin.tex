@@ -1,30 +1,22 @@
 \section{Transfer to Swin-S}
 \label{sec:swin}
 
-Swin-S restricts attention to shifted windows and merges patches between stages, so tokens mix locally within a stage and only reach every other token through merging. If the account of \cref{sec:mechanism} is right, a token mask before the attention LayerNorm should still remove routed evidence, since every route still passes through windowed attention, and the site should still beat the residual stream. \Cref{tab:swin} reads the same placements on 53 to 60 backdoored Swin-S models over CIFAR-10, CIFAR-100 and GTSRB. No attack implants on Tiny ImageNet on Swin at any rate we tried.
+Swin-S restricts attention to shifted windows of 7 by 7 tokens and merges patches between its 4 stages, so tokens mix locally within a stage and reach every other token only through merging. That is a strong test of the account in \cref{sec:mechanism}. If detection works because a token mask removes evidence before attention can route it, then windowing should not matter, because every route still passes through a windowed attention. If instead the attention input is merely a convenient place to inject noise, windowing should degrade it.
 
-\begin{table*}[t]
-\centering\small
-\caption{Swin-S. Mean AUROC of the main placements and paired gains, with 95\% bootstrap intervals.}
-\label{tab:swin}
-\begin{tabular}{lrrl}
-\toprule
-Placement & Models & AUROC & 95\% interval \\
-\midrule
-token mask, attention input (PSBD-TM) & 53 & \textbf{0.968} & \\
-token mask, both sublayer inputs & 53 & 0.944 & \\
-dropout, after residual add (PSBD-RD) & 60 & 0.871 & \\
-dropout, before residual add & 59 & 0.843 & \\
-dropout, attention input & 59 & 0.862 & \\
-\midrule
-\multicolumn{4}{l}{\emph{paired gains}} \\
-PSBD-TM minus PSBD-RD & 53 & +0.091 & [+0.044, +0.142] \\
-PSBD-TM minus dropout before the add & 51 & +0.128 & [+0.064, +0.197] \\
-dropout at attention input minus PSBD-RD & 56 & $-$0.022 & [$-$0.084, +0.039] \\
-\bottomrule
-\end{tabular}
-\end{table*}
+\input{tables/swin_main}
 
-The ranking transfers. PSBD-TM reaches 0.968 against 0.871 for PSBD-RD, a paired gain of +0.091 close to the ViT gain of +0.103. The last block of the table is the control that separates the site from the perturbation on Swin as \cref{tab:staircase-operators} did on ViT. Moving dropout from the residual stream to the attention input gains nothing on Swin, with $-$0.022 and an interval containing 0, while moving to token masking at that same input gains +0.091. On Swin the perturbation that removes whole tokens is what the attention input rewards, and windowing does not change that.
+We read the same placements on \SwinCells{} backdoored Swin-S models over \SwinDatasets{} datasets, \SwinCellsCifarOneZero{} on CIFAR-10, \SwinCellsCifarOneZeroZero{} on CIFAR-100, \SwinCellsGtsrb{} on GTSRB and \SwinCellsTiny{} on Tiny ImageNet. \SwinPlacementsReported{} placements carry at least 5 of these models, so the Swin reading is a panel rather than a spot check. \Cref{tab:swin-main} gives the placements that carry the argument and \cref{tab:swin-placements} every placement we cached.
 
-2 differences remain. PSBD-TM detects WaNet worse on Swin than on ViT, at 0.26 to 0.29 against 0.51 to 0.55 on CIFAR-100, which is consistent with a warping trigger that windowed attention spreads across windows before any single window can be masked away. And the Swin models have not been swept over the full basis, so the Swin ranking rests on 5 placements rather than 18. That sweep is in progress.
+\paragraph{The ranking transfers.}
+Token masking at the attention input reads a mean AUROC of \SwinRecommendedAurocAdaptive{} over \SwinRecommendedN{} models, against \SwinPublishedAurocAdaptive{} for dropout after both residual adds. The paired gain is \SwinGainRecommendedMinusPublished{} with a 95\% interval of [\SwinGainRecommendedMinusPublishedLow{}, \SwinGainRecommendedMinusPublishedHigh{}] over the \SwinGainRecommendedMinusPublishedN{} models carrying both, close to the \HeadlineGainAdaptiveAuroc{} we measure on ViT. At a 10\% false-positive budget it flags \SwinRecommendedTprOneZero{} of triggered inputs against \SwinPublishedTprOneZero{}, and at 20\% \SwinRecommendedTprTwoZero{} against \SwinPublishedTprTwoZero{}.
+
+\paragraph{The operator carries it, not the site.}
+Swin admits the same control that separates the 2 axes on ViT in \cref{tab:staircase-operators}. Moving dropout from the residual stream to the attention input, holding the operator fixed, gains \SwinGainDropoutInputMinusPublished{} with an interval of [\SwinGainDropoutInputMinusPublishedLow{}, \SwinGainDropoutInputMinusPublishedHigh{}], which contains 0. Changing the operator at that same site to a token mask gains \SwinGainRecommendedMinusSameSiteDropout{} [\SwinGainRecommendedMinusSameSiteDropoutLow{}, \SwinGainRecommendedMinusSameSiteDropoutHigh{}]. The site alone buys nothing on Swin either. What the attention input rewards is a perturbation that removes whole tokens, and windowing does not change that.
+
+\paragraph{The choice is licensed on the selection half.}
+On ViT the recommended placement and its twin, token masking on the attention branch output before the add, take the top 2 places of the basis with a mean AUROC identical to 3 decimal places (\cref{tab:basis-ranking}), which is too little for a declared protocol to choose between them (\cref{app:protocol}). On Swin they are not close. The twin reads \SwinSelectionHalfTwinAuroc{} against \SwinSelectionHalfRecommendedAuroc{} on the \SwinSelectionHalfRecommendedN{} selection-half models, a gap of \SwinSelectionHalfTwinGap{}. The gap holds at \SwinReportHalfTwinGap{} on the \SwinReportHalfRecommendedN{} report-half models. Over the whole Swin panel the recommendation leads its twin by \SwinGainRecommendedMinusTwin{} [\SwinGainRecommendedMinusTwinLow{}, \SwinGainRecommendedMinusTwinHigh{}]. A protocol run on Swin selection data picks the placement we recommend.
+
+\paragraph{Where it fails.}
+The mean hides the failures, and the failures are the part a defender needs. \SwinRecommendedBelowChance{} of \SwinRecommendedN{} Swin models reads below chance, \SwinRecommendedFloorCell{} at \SwinRecommendedFloor{}. The \SwinHardestAttacks{} attacks hold the 4 lowest readings, which is the same family that is hardest on ViT: both place the trigger so that no single token carries it alone, Adaptive-Blend by spreading a low-opacity pattern over the image and TaCT by restricting the trigger to source classes the defender does not know. A further \SwinShiftTargetUnreached{} models are not reported at the adaptive rule at all, because their clean-validation shift ratio never reached the \AdaptiveShiftTarget{} target inside the swept rate ladder. We report them as out of scope rather than reading them at a rate the rule did not select.
+
+\Cref{tab:swin-attacks} gives every Swin model separately.

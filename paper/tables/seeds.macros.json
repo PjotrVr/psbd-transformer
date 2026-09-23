@@ -5,8 +5,8 @@
     "results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
     "checkpoints/<folder>_seed_N/args.json"
   ],
-  "written_at": "2026-09-23T11:32:58.758231+00:00",
-  "git_commit": "2fb3169f973b846e39a6f585b342a893fa1af109-dirty",
+  "written_at": "2026-09-23T14:45:14.115043+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
   "macros": {
     "SeedsPerCell": {
       "value": "3",

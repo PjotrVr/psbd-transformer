@@ -7,8 +7,8 @@
     "results/<folder>/artifact_tokens.json (69)",
     "results/<folder>/sink_anatomy.json (69)"
   ],
-  "written_at": "2026-09-23T11:23:16.709654+00:00",
-  "git_commit": "80807fe77ce0443a0dceb98c3964cee51264e1c6-dirty",
+  "written_at": "2026-09-23T14:35:30.629138+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
   "macros": {
     "RoutingCells": {
       "value": "30",

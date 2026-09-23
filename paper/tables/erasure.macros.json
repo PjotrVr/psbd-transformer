@@ -3,8 +3,8 @@
   "inputs": [
     "results/_experiments/whole_network_erasure/<folder>.json (10 checkpoints)"
   ],
-  "written_at": "2026-09-23T11:27:28.332151+00:00",
-  "git_commit": "d73256eebad186e04a1df1a387fc7c90e8742ffb-dirty",
+  "written_at": "2026-09-23T14:39:43.278033+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
   "macros": {
     "ErasureCheckpoints": {
       "value": "10",

@@ -8,7 +8,7 @@
 ]
 \node[font=\scriptsize] (in) at (0,0) {residual stream, 197 tokens $\times$ 768};
 \node[norm, below=2.5mm of in] (ln1) {LayerNorm};
-\node[op, below=2.5mm of ln1] (attn) {multi-head attention};
+\node[op, below=2.5mm of ln1] (attn) {Multi-Head Attention};
 \node[plus, below=2.5mm of attn] (add1) {$+$};
 \node[norm, below=2.5mm of add1] (ln2) {LayerNorm};
 \node[op, below=2.5mm of ln2] (mlp) {MLP, per token};
@@ -16,13 +16,13 @@
 \node[font=\scriptsize, below=2.5mm of add2] (out) {to the next block};
 \draw[flow] (in) -- (ln1); \draw[flow] (ln1) -- (attn); \draw[flow] (attn) -- (add1);
 \draw[flow] (add1) -- (ln2); \draw[flow] (ln2) -- (mlp); \draw[flow] (mlp) -- (add2); \draw[flow] (add2) -- (out);
-\draw[flow] ($(in.south)+(0,-1.2mm)$) -| ++(-17mm,0) |- (add1.west);
-\draw[flow] ($(add1.south)+(0,-1.2mm)$) -| ++(-17mm,0) |- (add2.west);
+\draw[flow] ($(in.south)+(0,-1.2mm)$) -| ++(-14mm,0) |- (add1.west);
+\draw[flow] ($(add1.south)+(0,-1.2mm)$) -| ++(-14mm,0) |- (add2.west);
 \node[site] (A) at ($(ln1.east)+(3mm,2.2mm)$) {A};
 \node[site] (B) at ($(attn.east)+(3mm,-2.2mm)$) {B};
 \node[site] (C) at ($(add1.east)+(4mm,0)$) {C};
 \node[site] (D) at ($(ln2.east)+(3mm,2.2mm)$) {D};
-\node[font=\scriptsize, anchor=north west, text width=30mm, align=left] at ($(in.east)+(14mm,2mm)$) {%
+\node[font=\scriptsize, anchor=north west, text width=27mm, align=left] at ($(in.east)+(9mm,2mm)$) {%
   \textbf{A} attention input, before its LayerNorm: token mask, channel mask, noise\\[1.5pt]
   \textbf{B} attention branch output, before the residual add: dropout\\[1.5pt]
   \textbf{C} residual stream after the add: dropout, the site the PSBD paper uses\\[1.5pt]

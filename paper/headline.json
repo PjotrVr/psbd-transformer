@@ -698,35 +698,35 @@
     ]
   },
   "ConfidenceNullCheckpoints": {
-    "value": "30",
+    "value": "28",
     "meaning": "ViT backdoored checkpoints in the confidence-null record",
     "generator": "scripts/paper/mech_confidence_null.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
+      "results/_experiments/psu_vs_confidence/psu_vs_confidence.json"
     ]
   },
   "ConfidenceNullPsuAuroc": {
-    "value": "0.864",
+    "value": "0.887",
     "meaning": "mean PSU AUROC in the confidence-null record",
     "generator": "scripts/paper/mech_confidence_null.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
+      "results/_experiments/psu_vs_confidence/psu_vs_confidence.json"
     ]
   },
   "ConfidenceNullAuroc": {
-    "value": "0.627",
+    "value": "0.658",
     "meaning": "mean max-softmax confidence AUROC in the confidence-null record",
     "generator": "scripts/paper/mech_confidence_null.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
+      "results/_experiments/psu_vs_confidence/psu_vs_confidence.json"
     ]
   },
   "ConfidenceNullPsuWins": {
-    "value": "22",
+    "value": "20",
     "meaning": "checkpoints where PSU beats the confidence null",
     "generator": "scripts/paper/mech_confidence_null.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
+      "results/_experiments/psu_vs_confidence/psu_vs_confidence.json"
     ]
   },
   "ConfidenceNullBenignPsu": {
@@ -734,7 +734,7 @@
     "meaning": "mean PSU AUROC on the benign references in the confidence-null record",
     "generator": "scripts/paper/mech_confidence_null.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
+      "results/_experiments/psu_vs_confidence/psu_vs_confidence.json"
     ]
   },
   "CostPlainSecondsVit": {
@@ -1080,14 +1080,394 @@
       "docs/runs/2026-09-10-detector-smoke.md"
     ]
   },
+  "DetectorsComparedModels": {
+    "value": "71",
+    "meaning": "backdoored models in the detector comparison",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsComparedCount": {
+    "value": "11",
+    "meaning": "competitor detectors in the comparison",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocDefensesRanked": {
+    "value": "13",
+    "meaning": "defenses the auroc ranking covers, ours and the competitors together",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocRankOurs": {
+    "value": "1",
+    "meaning": "rank of the recommended placement among every defense by mean auroc",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocRankPublished": {
+    "value": "5",
+    "meaning": "rank of the published placement among every defense by mean auroc",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocBeatingPublished": {
+    "value": "4",
+    "meaning": "defenses with a higher mean auroc than the published placement",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocOurs": {
+    "value": "0.927",
+    "meaning": "mean auroc of the recommended placement over the compared models",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocPublished": {
+    "value": "0.818",
+    "meaning": "mean auroc of the published placement over the same models",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocBestCompetitor": {
+    "value": "0.912",
+    "meaning": "mean auroc of the strongest competitor detector, IBD-PSC$^\\ast$",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocBestCompetitorName": {
+    "value": "IBD-PSC$^\\ast$",
+    "meaning": "the strongest competitor detector by mean auroc",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocMargin": {
+    "value": "+0.016",
+    "meaning": "mean auroc of the recommended placement minus the strongest competitor",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocSentinet": {
+    "value": "0.429",
+    "meaning": "mean auroc of the SentiNet port, whose Grad-CAM mask misses the trigger",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocIbdPsc": {
+    "value": "0.733",
+    "meaning": "mean auroc of IBD-PSC at the paper's fixed amplification factor",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsAurocBelowChanceColumns": {
+    "value": "1",
+    "meaning": "competitor detectors whose mean auroc sits below chance",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroDefensesRanked": {
+    "value": "13",
+    "meaning": "defenses the tpr10 ranking covers, ours and the competitors together",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroRankOurs": {
+    "value": "1",
+    "meaning": "rank of the recommended placement among every defense by mean tpr10",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroRankPublished": {
+    "value": "4",
+    "meaning": "rank of the published placement among every defense by mean tpr10",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroBeatingPublished": {
+    "value": "3",
+    "meaning": "defenses with a higher mean tpr10 than the published placement",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroOurs": {
+    "value": "0.766",
+    "meaning": "mean tpr10 of the recommended placement over the compared models",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroPublished": {
+    "value": "0.621",
+    "meaning": "mean tpr10 of the published placement over the same models",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroBestCompetitor": {
+    "value": "0.737",
+    "meaning": "mean tpr10 of the strongest competitor detector, IBD-PSC$^\\ast$",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroBestCompetitorName": {
+    "value": "IBD-PSC$^\\ast$",
+    "meaning": "the strongest competitor detector by mean tpr10",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroMargin": {
+    "value": "+0.029",
+    "meaning": "mean tpr10 of the recommended placement minus the strongest competitor",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroSentinet": {
+    "value": "0.098",
+    "meaning": "mean tpr10 of the SentiNet port, whose Grad-CAM mask misses the trigger",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroIbdPsc": {
+    "value": "0.374",
+    "meaning": "mean tpr10 of IBD-PSC at the paper's fixed amplification factor",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprOneZeroBelowChanceColumns": {
+    "value": "7",
+    "meaning": "competitor detectors whose mean tpr10 sits below chance",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroDefensesRanked": {
+    "value": "13",
+    "meaning": "defenses the tpr20 ranking covers, ours and the competitors together",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroRankOurs": {
+    "value": "1",
+    "meaning": "rank of the recommended placement among every defense by mean tpr20",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroRankPublished": {
+    "value": "5",
+    "meaning": "rank of the published placement among every defense by mean tpr20",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroBeatingPublished": {
+    "value": "4",
+    "meaning": "defenses with a higher mean tpr20 than the published placement",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroOurs": {
+    "value": "0.835",
+    "meaning": "mean tpr20 of the recommended placement over the compared models",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroPublished": {
+    "value": "0.693",
+    "meaning": "mean tpr20 of the published placement over the same models",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroBestCompetitor": {
+    "value": "0.832",
+    "meaning": "mean tpr20 of the strongest competitor detector, IBD-PSC$^\\ast$",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroBestCompetitorName": {
+    "value": "IBD-PSC$^\\ast$",
+    "meaning": "the strongest competitor detector by mean tpr20",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroMargin": {
+    "value": "+0.003",
+    "meaning": "mean tpr20 of the recommended placement minus the strongest competitor",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroSentinet": {
+    "value": "0.189",
+    "meaning": "mean tpr20 of the SentiNet port, whose Grad-CAM mask misses the trigger",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroIbdPsc": {
+    "value": "0.496",
+    "meaning": "mean tpr20 of IBD-PSC at the paper's fixed amplification factor",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "DetectorsTprTwoZeroBelowChanceColumns": {
+    "value": "3",
+    "meaning": "competitor detectors whose mean tpr20 sits below chance",
+    "generator": "scripts/paper/tab_detectors.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/detectors/*_metrics.json",
+      "results/*/psbd_metrics.json"
+    ]
+  },
   "DirectionCheckpoints": {
-    "value": "6",
+    "value": "5",
     "meaning": "CIFAR-10 checkpoints with a backdoor_neurons record, benign included",
     "generator": "scripts/paper/mech_direction.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
     ]
   },
   "DirectionBenignPeakRelNorm": {
@@ -1095,19 +1475,19 @@
     "meaning": "peak relative backdoor-direction norm on the benign reference under the same trigger",
     "generator": "scripts/paper/mech_direction.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
     ]
   },
   "DirectionBackdooredMinFinalRelNorm": {
-    "value": "0.49",
+    "value": "1.03",
     "meaning": "smallest last-layer relative direction norm over the backdoored CIFAR-10 checkpoints",
     "generator": "scripts/paper/mech_direction.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
     ]
   },
   "AblationCheckpoints": {
@@ -1115,9 +1495,9 @@
     "meaning": "checkpoints in the causal ablation outside the SAM set",
     "generator": "scripts/paper/mech_direction.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
     ]
   },
   "AblationDirectionMaxAsr": {
@@ -1125,9 +1505,9 @@
     "meaning": "highest attack success left after removing the rank-1 direction, all-to-one attacks",
     "generator": "scripts/paper/mech_direction.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
     ]
   },
   "AblationTopCoordinatesMinAsr": {
@@ -1135,9 +1515,9 @@
     "meaning": "lowest attack success left after zeroing the top-20 coordinates, all-to-one attacks",
     "generator": "scripts/paper/mech_direction.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
     ]
   },
   "AblationRandomDirectionMinAsr": {
@@ -1145,39 +1525,39 @@
     "meaning": "lowest attack success left after removing a random direction, all-to-one attacks",
     "generator": "scripts/paper/mech_direction.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
     ]
   },
-  "CrystallisationBadnetLayer": {
+  "CrystallizationBadnetLayer": {
     "value": "10.4",
-    "meaning": "mean crystallisation layer of badnet_a2o on CIFAR-100 and Tiny",
+    "meaning": "mean crystallization layer of badnet_a2o on CIFAR-100 and Tiny",
     "generator": "scripts/paper/mech_direction.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
     ]
   },
-  "CrystallisationBlendLayer": {
+  "CrystallizationBlendLayer": {
     "value": "8.2",
-    "meaning": "mean crystallisation layer of blend on CIFAR-100 and Tiny",
+    "meaning": "mean crystallization layer of blend on CIFAR-100 and Tiny",
     "generator": "scripts/paper/mech_direction.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
     ]
   },
-  "CrystallisationCheckpoints": {
+  "CrystallizationCheckpoints": {
     "value": "16",
-    "meaning": "checkpoints in the crystallisation record",
+    "meaning": "checkpoints in the crystallization record",
     "generator": "scripts/paper/mech_direction.py",
     "inputs": [
-      "/lustre/home/pstika/projects/PSBD-ViT/results/vit_cifar10_*/backdoor_neurons.json (6)",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/backdoor_neuron_ablation.json",
-      "/lustre/home/pstika/projects/PSBD-ViT/results/direction_persistence.json"
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
     ]
   },
   "ErasureCheckpoints": {
@@ -1402,6 +1782,262 @@
       "results/coverage/coverage.json",
       "configs/psbd_basis.json",
       "results/<folder>/psbd_metrics.json (65 cells)"
+    ]
+  },
+  "PassAllCells": {
+    "value": "65",
+    "meaning": "primary clearing cells with k up to 3",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotCells": {
+    "value": "21",
+    "meaning": "cells whose sweep reached k = 20",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassAllAurocKOne": {
+    "value": "0.919",
+    "meaning": "mean auroc of the recommended placement at k = 1, all population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassAllTprOneZeroKOne": {
+    "value": "0.786",
+    "meaning": "mean tpr10 of the recommended placement at k = 1, all population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassAllTprTwoZeroKOne": {
+    "value": "0.834",
+    "meaning": "mean tpr20 of the recommended placement at k = 1, all population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassAllAurocKTwo": {
+    "value": "0.930",
+    "meaning": "mean auroc of the recommended placement at k = 2, all population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassAllTprOneZeroKTwo": {
+    "value": "0.797",
+    "meaning": "mean tpr10 of the recommended placement at k = 2, all population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassAllTprTwoZeroKTwo": {
+    "value": "0.850",
+    "meaning": "mean tpr20 of the recommended placement at k = 2, all population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassAllAurocKThree": {
+    "value": "0.935",
+    "meaning": "mean auroc of the recommended placement at k = 3, all population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassAllTprOneZeroKThree": {
+    "value": "0.800",
+    "meaning": "mean tpr10 of the recommended placement at k = 3, all population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassAllTprTwoZeroKThree": {
+    "value": "0.859",
+    "meaning": "mean tpr20 of the recommended placement at k = 3, all population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassAllAurocGainFull": {
+    "value": "+0.016",
+    "meaning": "AUROC gain from k = 1 to k = 3, all population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotAurocKOne": {
+    "value": "0.921",
+    "meaning": "mean auroc of the recommended placement at k = 1, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprOneZeroKOne": {
+    "value": "0.825",
+    "meaning": "mean tpr10 of the recommended placement at k = 1, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprTwoZeroKOne": {
+    "value": "0.868",
+    "meaning": "mean tpr20 of the recommended placement at k = 1, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotAurocKTwo": {
+    "value": "0.930",
+    "meaning": "mean auroc of the recommended placement at k = 2, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprOneZeroKTwo": {
+    "value": "0.842",
+    "meaning": "mean tpr10 of the recommended placement at k = 2, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprTwoZeroKTwo": {
+    "value": "0.881",
+    "meaning": "mean tpr20 of the recommended placement at k = 2, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotAurocKThree": {
+    "value": "0.935",
+    "meaning": "mean auroc of the recommended placement at k = 3, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprOneZeroKThree": {
+    "value": "0.849",
+    "meaning": "mean tpr10 of the recommended placement at k = 3, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprTwoZeroKThree": {
+    "value": "0.892",
+    "meaning": "mean tpr20 of the recommended placement at k = 3, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotAurocKFive": {
+    "value": "0.941",
+    "meaning": "mean auroc of the recommended placement at k = 5, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprOneZeroKFive": {
+    "value": "0.861",
+    "meaning": "mean tpr10 of the recommended placement at k = 5, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprTwoZeroKFive": {
+    "value": "0.904",
+    "meaning": "mean tpr20 of the recommended placement at k = 5, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotAurocKOneZero": {
+    "value": "0.944",
+    "meaning": "mean auroc of the recommended placement at k = 10, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprOneZeroKOneZero": {
+    "value": "0.872",
+    "meaning": "mean tpr10 of the recommended placement at k = 10, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprTwoZeroKOneZero": {
+    "value": "0.907",
+    "meaning": "mean tpr20 of the recommended placement at k = 10, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotAurocKTwoZero": {
+    "value": "0.946",
+    "meaning": "mean auroc of the recommended placement at k = 20, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprOneZeroKTwoZero": {
+    "value": "0.871",
+    "meaning": "mean tpr10 of the recommended placement at k = 20, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotTprTwoZeroKTwoZero": {
+    "value": "0.913",
+    "meaning": "mean tpr20 of the recommended placement at k = 20, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotAurocGainFull": {
+    "value": "+0.025",
+    "meaning": "AUROC gain from k = 1 to k = 20, pilot population",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
+    ]
+  },
+  "PassPilotAurocGainBeyondThree": {
+    "value": "+0.011",
+    "meaning": "AUROC gain from k = 3 to k = 20 on the cells that reached 20 passes",
+    "generator": "scripts/paper/fig_forward_passes.py",
+    "inputs": [
+      "results/<folder>/psbd/"
     ]
   },
   "HeadlineAurocAdaptive": {
@@ -2558,7 +3194,7 @@
     ]
   },
   "OperatorCount": {
-    "value": "9",
+    "value": "11",
     "meaning": "perturbation operators in the registry, scale_up included",
     "generator": "scripts/paper/app_protocol.py",
     "inputs": [
@@ -4366,7 +5002,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormTokenMaskN": {
     "value": "69",
-    "meaning": "models covered at the adaptive 0.8 rule, token mask, attention input, staircase operators table",
+    "meaning": "models covered at the adaptive 0.8 rule, token mask, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4375,7 +5011,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormTokenMaskAuroc": {
     "value": "0.927",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, attention input, over the 69 models it covers, staircase operators table",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, attention input, before the norm, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4384,7 +5020,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormTokenMaskTprAtOneZeroPercent": {
     "value": "0.766",
-    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, staircase operators table",
+    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4393,7 +5029,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormTokenMaskTprAtTwoZeroPercent": {
     "value": "0.835",
-    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, staircase operators table",
+    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4402,7 +5038,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormTokenMaskBelowChance": {
     "value": "2",
-    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, attention input, staircase operators table",
+    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4411,7 +5047,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskN": {
     "value": "69",
-    "meaning": "models covered at the adaptive 0.8 rule, channel mask, attention input, staircase operators table",
+    "meaning": "models covered at the adaptive 0.8 rule, channel mask, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4420,7 +5056,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskAuroc": {
     "value": "0.881",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, channel mask, attention input, over the 69 models it covers, staircase operators table",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, channel mask, attention input, before the norm, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4429,7 +5065,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskTprAtOneZeroPercent": {
     "value": "0.682",
-    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, channel mask, attention input, staircase operators table",
+    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, channel mask, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4438,7 +5074,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskTprAtTwoZeroPercent": {
     "value": "0.765",
-    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, channel mask, attention input, staircase operators table",
+    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, channel mask, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4447,7 +5083,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskBelowChance": {
     "value": "2",
-    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, channel mask, attention input, staircase operators table",
+    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, channel mask, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4456,7 +5092,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskGain": {
     "value": "-0.046",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, attention input against this table's first row, over the 69 models it covers, staircase operators table",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, attention input, before the norm against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4483,7 +5119,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianN": {
     "value": "69",
-    "meaning": "models covered at the adaptive 0.8 rule, gaussian, attention input, staircase operators table",
+    "meaning": "models covered at the adaptive 0.8 rule, gaussian, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4492,7 +5128,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianAuroc": {
     "value": "0.799",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, attention input, over the 69 models it covers, staircase operators table",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, attention input, before the norm, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4501,7 +5137,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianTprAtOneZeroPercent": {
     "value": "0.540",
-    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, attention input, staircase operators table",
+    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4510,7 +5146,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianTprAtTwoZeroPercent": {
     "value": "0.655",
-    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, attention input, staircase operators table",
+    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4519,7 +5155,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianBelowChance": {
     "value": "9",
-    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, attention input, staircase operators table",
+    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, attention input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4528,7 +5164,7 @@
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianGain": {
     "value": "-0.128",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, attention input against this table's first row, over the 69 models it covers, staircase operators table",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, attention input, before the norm against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4771,7 +5407,7 @@
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskN": {
     "value": "69",
-    "meaning": "models covered at the adaptive 0.8 rule, token mask, MLP input, staircase operators table",
+    "meaning": "models covered at the adaptive 0.8 rule, token mask, MLP input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4780,7 +5416,7 @@
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskAuroc": {
     "value": "0.821",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, MLP input, over the 69 models it covers, staircase operators table",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, MLP input, before the norm, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4789,7 +5425,7 @@
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskTprAtOneZeroPercent": {
     "value": "0.502",
-    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, MLP input, staircase operators table",
+    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, MLP input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4798,7 +5434,7 @@
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskTprAtTwoZeroPercent": {
     "value": "0.682",
-    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, MLP input, staircase operators table",
+    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, MLP input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4807,7 +5443,7 @@
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskBelowChance": {
     "value": "3",
-    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, MLP input, staircase operators table",
+    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, MLP input, before the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4816,7 +5452,7 @@
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskGain": {
     "value": "-0.106",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, MLP input against this table's first row, over the 69 models it covers, staircase operators table",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, MLP input, before the norm against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4841,9 +5477,81 @@
       "results/<folder>/psbd_metrics.json (65 models)"
     ]
   },
+  "StaircaseOperatorsBeforeMlpNormGaussianN": {
+    "value": "36",
+    "meaning": "models covered at the adaptive 0.8 rule, gaussian, MLP input, before the norm, staircase operators table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseOperatorsBeforeMlpNormGaussianAuroc": {
+    "value": "0.700",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, before the norm, over the 36 models it covers, staircase operators table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseOperatorsBeforeMlpNormGaussianTprAtOneZeroPercent": {
+    "value": "0.387",
+    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input, before the norm, staircase operators table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseOperatorsBeforeMlpNormGaussianTprAtTwoZeroPercent": {
+    "value": "0.559",
+    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input, before the norm, staircase operators table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseOperatorsBeforeMlpNormGaussianBelowChance": {
+    "value": "8",
+    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, before the norm, staircase operators table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseOperatorsBeforeMlpNormGaussianGain": {
+    "value": "-0.268",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, before the norm against this table's first row, over the 36 models it covers, staircase operators table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseOperatorsBeforeMlpNormGaussianGainLow": {
+    "value": "-0.381",
+    "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_gaussian_gain",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseOperatorsBeforeMlpNormGaussianGainHigh": {
+    "value": "-0.163",
+    "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_gaussian_gain",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
   "StaircaseOperatorsBeforeMlpGaussianN": {
     "value": "69",
-    "meaning": "models covered at the adaptive 0.8 rule, gaussian, MLP input after norm, staircase operators table",
+    "meaning": "models covered at the adaptive 0.8 rule, gaussian, MLP input, after the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4852,7 +5560,7 @@
   },
   "StaircaseOperatorsBeforeMlpGaussianAuroc": {
     "value": "0.872",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, MLP input after norm, over the 69 models it covers, staircase operators table",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, after the norm, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4861,7 +5569,7 @@
   },
   "StaircaseOperatorsBeforeMlpGaussianTprAtOneZeroPercent": {
     "value": "0.703",
-    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input after norm, staircase operators table",
+    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input, after the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4870,7 +5578,7 @@
   },
   "StaircaseOperatorsBeforeMlpGaussianTprAtTwoZeroPercent": {
     "value": "0.783",
-    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input after norm, staircase operators table",
+    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input, after the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4879,7 +5587,7 @@
   },
   "StaircaseOperatorsBeforeMlpGaussianBelowChance": {
     "value": "8",
-    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, MLP input after norm, staircase operators table",
+    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, after the norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4888,7 +5596,7 @@
   },
   "StaircaseOperatorsBeforeMlpGaussianGain": {
     "value": "-0.056",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input after norm against this table's first row, over the 69 models it covers, staircase operators table",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, after the norm against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -5535,11 +6243,11 @@
     ]
   },
   "SwinCells": {
-    "value": "83",
+    "value": "90",
     "meaning": "Swin cells whose attack cleared the bar and carry PSBD metrics",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5548,16 +6256,61 @@
     "meaning": "datasets with at least 1 implanted Swin cell",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinPlacementsReported": {
+    "value": "30",
+    "meaning": "Swin placements with at least 5 implanted cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinCellsCifarOneZero": {
+    "value": "26",
+    "meaning": "implanted Swin cells on CIFAR-10",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinCellsCifarOneZeroZero": {
+    "value": "24",
+    "meaning": "implanted Swin cells on CIFAR-100",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinCellsGtsrb": {
+    "value": "22",
+    "meaning": "implanted Swin cells on GTSRB",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinCellsTiny": {
+    "value": "18",
+    "meaning": "implanted Swin cells on Tiny ImageNet",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainRecommendedMinusPublished": {
     "value": "+0.115",
-    "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after residual add, adaptive rule, over 80 cells",
+    "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after both residual adds, adaptive rule, over 80 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5566,7 +6319,7 @@
     "meaning": "cells behind swin_gain_recommended_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5575,7 +6328,7 @@
     "meaning": "lower bootstrap bound of swin_gain_recommended_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5584,16 +6337,16 @@
     "meaning": "upper bootstrap bound of swin_gain_recommended_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainDropoutInputMinusPublished": {
     "value": "+0.020",
-    "meaning": "Swin paired AUROC gain, dropout, attention input minus dropout, after residual add, adaptive rule, over 80 cells",
+    "meaning": "Swin paired AUROC gain, dropout, attention input minus dropout, after both residual adds, adaptive rule, over 80 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5602,7 +6355,7 @@
     "meaning": "cells behind swin_gain_dropout_input_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5611,7 +6364,7 @@
     "meaning": "lower bootstrap bound of swin_gain_dropout_input_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5620,16 +6373,16 @@
     "meaning": "upper bootstrap bound of swin_gain_dropout_input_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainRecommendedMinusPreResidual": {
     "value": "+0.124",
-    "meaning": "Swin paired AUROC gain, token mask, attention input minus pre_residual, adaptive rule, over 80 cells",
+    "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, before both residual adds, adaptive rule, over 80 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5638,7 +6391,7 @@
     "meaning": "cells behind swin_gain_recommended_minus_pre_residual",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5647,7 +6400,7 @@
     "meaning": "lower bootstrap bound of swin_gain_recommended_minus_pre_residual",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5656,7 +6409,214 @@
     "meaning": "upper bootstrap bound of swin_gain_recommended_minus_pre_residual",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusTwin": {
+    "value": "+0.136",
+    "meaning": "Swin paired AUROC gain, token mask, attention input minus token mask, attention output before the add, adaptive rule, over 80 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusTwinN": {
+    "value": "80",
+    "meaning": "cells behind swin_gain_recommended_minus_twin",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusTwinLow": {
+    "value": "+0.086",
+    "meaning": "lower bootstrap bound of swin_gain_recommended_minus_twin",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusTwinHigh": {
+    "value": "+0.187",
+    "meaning": "upper bootstrap bound of swin_gain_recommended_minus_twin",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusSameSiteDropout": {
+    "value": "+0.095",
+    "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, attention input, adaptive rule, over 80 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusSameSiteDropoutN": {
+    "value": "80",
+    "meaning": "cells behind swin_gain_recommended_minus_same_site_dropout",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusSameSiteDropoutLow": {
+    "value": "+0.057",
+    "meaning": "lower bootstrap bound of swin_gain_recommended_minus_same_site_dropout",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinGainRecommendedMinusSameSiteDropoutHigh": {
+    "value": "+0.137",
+    "meaning": "upper bootstrap bound of swin_gain_recommended_minus_same_site_dropout",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinSelectionHalfRecommendedAuroc": {
+    "value": "0.956",
+    "meaning": "Swin mean AUROC of the recommended placement on the selection half, 44 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinSelectionHalfRecommendedN": {
+    "value": "44",
+    "meaning": "Swin cells behind swin_selection_half_recommended_auroc",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinSelectionHalfTwinAuroc": {
+    "value": "0.791",
+    "meaning": "Swin mean AUROC of the twin placement on the selection half, 44 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinSelectionHalfTwinN": {
+    "value": "44",
+    "meaning": "Swin cells behind swin_selection_half_twin_auroc",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinSelectionHalfTwinGap": {
+    "value": "+0.166",
+    "meaning": "Swin paired AUROC gap, recommended minus twin, selection half, 44 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinReportHalfRecommendedAuroc": {
+    "value": "0.946",
+    "meaning": "Swin mean AUROC of the recommended placement on the report half, 42 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinReportHalfRecommendedN": {
+    "value": "42",
+    "meaning": "Swin cells behind swin_report_half_recommended_auroc",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinReportHalfTwinAuroc": {
+    "value": "0.886",
+    "meaning": "Swin mean AUROC of the twin placement on the report half, 36 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinReportHalfTwinN": {
+    "value": "36",
+    "meaning": "Swin cells behind swin_report_half_twin_auroc",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinReportHalfTwinGap": {
+    "value": "+0.099",
+    "meaning": "Swin paired AUROC gap, recommended minus twin, report half, 36 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinRecommendedFloor": {
+    "value": "0.496",
+    "meaning": "lowest single-model AUROC of the recommended placement on Swin",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinRecommendedFloorCell": {
+    "value": "Adaptive-Blend at 5\\% on CIFAR-10",
+    "meaning": "the Swin cell holding swin_recommended_floor",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinRecommendedBelowChance": {
+    "value": "1",
+    "meaning": "Swin cells where the recommended placement reads below chance",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinShiftTargetUnreached": {
+    "value": "4",
+    "meaning": "Swin cells whose swept rate ladder never reached the adaptive shift target",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinHardestAttacks": {
+    "value": "Adaptive-Blend, TaCT",
+    "meaning": "the attacks holding the 4 lowest Swin readings of the recommended placement",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5665,25 +6625,70 @@
     "meaning": "Swin training-seed replicate checkpoints on disk",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinRecommendedAurocAdaptive": {
-    "value": "0.969",
-    "meaning": "Swin mean AUROC of the recommended placement at the adaptive rule over 80 cells",
+    "value": "0.951",
+    "meaning": "Swin mean AUROC of the recommended placement at the adaptive rule over 86 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinRecommendedN": {
-    "value": "80",
+    "value": "86",
     "meaning": "Swin cells carrying the recommended placement",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (83 implanted cells)",
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinRecommendedTprOneZero": {
+    "value": "0.90",
+    "meaning": "Swin mean TPR of token mask, attention input at the q0.10 budget over 86 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinRecommendedTprTwoZero": {
+    "value": "0.93",
+    "meaning": "Swin mean TPR of token mask, attention input at the q0.20 budget over 86 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinPublishedTprOneZero": {
+    "value": "0.65",
+    "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.10 budget over 80 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinPublishedTprTwoZero": {
+    "value": "0.74",
+    "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.20 budget over 80 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinPublishedAurocAdaptive": {
+    "value": "0.855",
+    "meaning": "Swin mean AUROC of the published placement at the adaptive rule over 80 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },

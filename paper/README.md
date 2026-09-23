@@ -98,7 +98,7 @@ first line says so.
 | `06-placement` | the founding claim and the family split refuted, the site and operator effects, position over operator with its condition, per-sample agreement |
 | `07-depth-bands` | banding helps residual dropout and hurts the input-side mask, the early band pending |
 | `08-prediction-shift` | the shift-to-target phenomenon per attack and dataset, removal against disturbance, the confidence null |
-| `09-latent` | the rank-1 direction and its ablation, crystallisation and the per-layer TAC pass, activation patching, routing and sinks, prediction depth |
+| `09-latent` | the rank-1 direction and its ablation, crystallization and the per-layer TAC pass, activation patching, routing and sinks, prediction depth |
 | `10-competitors` | the detector registry and the smoke run, panel pending |
 | `11-swin` | what exists on Swin-S |
 | `12-clean-label` | the rate cap, SIG on GTSRB, the diverged runs, Label-Consistent, multi-target SIG, SVHN and EuroSAT |

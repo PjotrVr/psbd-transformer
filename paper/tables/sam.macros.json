@@ -3,8 +3,8 @@
   "inputs": [
     "results/_experiments/sam_reading/sam_reading.json"
   ],
-  "written_at": "2026-09-23T11:32:04.799343+00:00",
-  "git_commit": "2fb3169f973b846e39a6f585b342a893fa1af109-dirty",
+  "written_at": "2026-09-23T14:44:09.420843+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
   "macros": {
     "SamPairs": {
       "value": "120",

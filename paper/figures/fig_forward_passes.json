@@ -5,8 +5,8 @@
     "results/<folder>/psbd/before_attention_norm_token_mask/rate_*_{validation,clean,backdoor}.pt",
     "results/<folder>/psbd/before_attention_norm_token_mask_k20/rate_*_{validation,clean,backdoor}.pt (8 candidate pilot cells)"
   ],
-  "written_at": "2026-09-23T12:32:02.993577+00:00",
-  "git_commit": "d9998f3b21881a72f1de94f7d835d164e451cc33-dirty",
+  "written_at": "2026-09-23T14:30:47.564941+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
   "plotted": {
     "recommended_placement": "before_attention_norm_token_mask",
     "rate_rule": "adaptive",
@@ -763,7 +763,9 @@
         }
       }
     },
-    "pilot_cells_excluded": {},
+    "pilot_cells_excluded": {
+      "vit_cifar100_tact_0_1": "no adaptive-rule rate, or its rate is not cached at every k"
+    },
     "pilot_group_aggregate": {
       "1": {
         "auroc": {

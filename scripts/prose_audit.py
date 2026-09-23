@@ -55,9 +55,12 @@ NUMBER_IDIOMS = re.compile(
     r"same one|first one|last one|wrong one|right one|new one|old one|one-|two-|"
     r"three-|one\'s|someone|anyone|everyone|none|all-to-one|to-one\b|one-sided|"
     r"one another|"
-    # "one" as a pronoun standing in for a noun already named, as in "the
-    # BadNets one" or "a token-level one". A count always names its unit, so
-    # "one" followed by punctuation or by a verb or preposition is a pronoun.
+    # A word in quotes is a quotation, which is what a rule's own documentation
+    # is made of rather than a count.
+    r"[\"']one[\"']|"
+    # The pronoun use, standing in for a noun already named, as in a phrase like
+    # the-BadNets-X or a-token-level-X. A count always names its unit, so the
+    # word followed by punctuation or by a verb or a preposition is a pronoun.
     r"(?:the|a|an|that|this|next|another)\s+(?:[\w-]+\s+){0,2}one\b|"
     r"one\s*[.,;:)\]]|"
     r"one\s+(?:would|will|is|was|were|wins?|means?|has|have|had|does|do|did|"
@@ -422,7 +425,10 @@ def violations(line: int, kind: str, text: str) -> list[tuple[str, int, str]]:
     if SERIAL_COMMA.search(without_code):
         hits.append(("oxford comma", line, text))
     for match in re.finditer(NUMBER_WORDS, plain, re.IGNORECASE):
-        window = plain[max(0, match.start() - 12) : match.end() + 10]
+        # 28 characters of lookbehind rather than 12. The pronoun idiom allows a
+        # determiner plus up to 2 intervening words, so a shorter window cut the
+        # determiner off and left that pattern unreachable.
+        window = plain[max(0, match.start() - 28) : match.end() + 10]
         if not NUMBER_IDIOMS.search(window):
             hits.append(("number word", line, text))
             break

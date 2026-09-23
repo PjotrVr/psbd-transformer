@@ -3,8 +3,8 @@
   "inputs": [
     "results/_experiments/tac_layers/tac_layers.json"
   ],
-  "written_at": "2026-09-23T11:24:21.015803+00:00",
-  "git_commit": "80807fe77ce0443a0dceb98c3964cee51264e1c6-dirty",
+  "written_at": "2026-09-23T14:36:25.175453+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
   "plotted": {
     "vit_gtsrb_benign": {
       "layers": [

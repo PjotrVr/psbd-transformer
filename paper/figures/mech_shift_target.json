@@ -3,8 +3,8 @@
   "inputs": [
     "results/<folder>/psbd_metrics.json"
   ],
-  "written_at": "2026-09-23T11:23:59.938593+00:00",
-  "git_commit": "80807fe77ce0443a0dceb98c3964cee51264e1c6-dirty",
+  "written_at": "2026-09-23T14:36:07.751374+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
   "plotted": {
     "attack_curves": {
       "badnet_a2o": [
@@ -375,63 +375,63 @@
     "benign_band": [
       {
         "rate": 0.05,
-        "shift_ratio": 0.05124444328248501,
+        "shift_ratio": 0.03721939353272319,
         "share_low": 0.0009416195856873823,
         "share_high": 0.11410788381742738
       },
       {
         "rate": 0.1,
-        "shift_ratio": 0.08846182050183415,
+        "shift_ratio": 0.06428571185097098,
         "share_low": 0.0011086474501108647,
         "share_high": 0.09477124183006536
       },
       {
         "rate": 0.2,
-        "shift_ratio": 0.17640062514692545,
+        "shift_ratio": 0.1279744983961185,
         "share_low": 0.0002874389192296637,
         "share_high": 0.09690816797415783
       },
       {
         "rate": 0.3,
-        "shift_ratio": 0.34181783720850945,
+        "shift_ratio": 0.24620937866469225,
         "share_low": 0.0,
         "share_high": 0.0816411974042286
       },
       {
         "rate": 0.4,
-        "shift_ratio": 0.6001067236065865,
+        "shift_ratio": 0.4324483995636304,
         "share_low": 0.0,
-        "share_high": 0.0707774798927614
+        "share_high": 0.10954063604240283
       },
       {
         "rate": 0.5,
-        "shift_ratio": 0.800368145108223,
+        "shift_ratio": 0.5938332478205363,
         "share_low": 0.0,
-        "share_high": 0.0549645390070922
+        "share_high": 0.15805168986083498
       },
       {
         "rate": 0.6,
-        "shift_ratio": 0.8969335108995438,
+        "shift_ratio": 0.7140326648950577,
         "share_low": 0.0,
-        "share_high": 0.026672643729687324
+        "share_high": 0.2718360071301248
       },
       {
         "rate": 0.7,
-        "shift_ratio": 0.9307470321655273,
+        "shift_ratio": 0.8287346363067627,
         "share_low": 0.0,
-        "share_high": 0.003982843137254902
+        "share_high": 0.47046186895810954
       },
       {
         "rate": 0.8,
-        "shift_ratio": 0.943723738193512,
+        "shift_ratio": 0.8842417299747467,
         "share_low": 0.0,
-        "share_high": 4.892846658185733e-05
+        "share_high": 0.6416123453505388
       },
       {
         "rate": 0.9,
-        "shift_ratio": 0.9518174678087234,
+        "shift_ratio": 0.9021940231323242,
         "share_low": 0.0,
-        "share_high": 0.0
+        "share_high": 0.8024721576306449
       }
     ],
     "uniform_expectation_mean": 0.03667441860465116

@@ -4,8 +4,8 @@
     "results/coverage/coverage.json",
     "results/<folder>/psbd_metrics.json (65 models)"
   ],
-  "written_at": "2026-09-23T11:48:23.396971+00:00",
-  "git_commit": "3b0c06c5be94a964bfa1b8e4277d6c6e09788fab-dirty",
+  "written_at": "2026-09-23T14:46:15.493017+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
   "macros": {
     "StaircaseResidualPostResidualN": {
       "value": "69",

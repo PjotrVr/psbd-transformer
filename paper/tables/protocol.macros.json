@@ -9,8 +9,8 @@
     "configs/psbd_basis.json",
     "checkpoints/<benign reference>/args.json"
   ],
-  "written_at": "2026-09-23T11:15:19.785678+00:00",
-  "git_commit": "1a0f3cf2754543268bfb78a46b3ba2d037f8ed7a-dirty",
+  "written_at": "2026-09-23T14:27:54.418040+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
   "macros": {
     "AdaptiveShiftTarget": {
       "value": "0.8",
@@ -153,7 +153,7 @@
       "meaning": "positions that exist to host ported detectors"
     },
     "OperatorCount": {
-      "value": "9",
+      "value": "11",
       "meaning": "perturbation operators in the registry, scale_up included"
     },
     "PanelDatasetsDeclared": {
