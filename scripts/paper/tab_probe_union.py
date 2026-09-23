@@ -26,7 +26,7 @@ from scripts.paper._common import (  # noqa: E402
     fmt,
     load_json,
     write_macros,
-    write_table,
+    write_wide_table,
 )
 
 GENERATOR = "scripts/paper/tab_probe_union.py"
@@ -35,16 +35,20 @@ RECORD_PATH = os.path.join("results", "_experiments", "probe_union", "probe_unio
 # Row order and the reader-facing name of each probe set's placements. The
 # reference row carries no gain column entry, since it is what every other row
 # is measured against.
+# Probe short names, expanded in the table caption. The full descriptions ran a
+# row to 69 characters, which pushed the 6-column float 198pt past the text block.
+PROBE_LEGEND = (
+    "TM is token masking at the attention input, RD dropout after both residual "
+    "adds, TM-out token masking on the attention branch output, DI dropout at the "
+    "attention input and GS gain scaling of the MLP LayerNorm output"
+)
 ROW_LABELS = (
-    ("psbd_tm", "PSBD-TM alone"),
-    ("psbd_tm_rd", "PSBD-TM + PSBD-RD"),
-    ("psbd_tm_attn_branch", "PSBD-TM + attention branch output token mask"),
-    ("adaptive_3probe", "PSBD-TM + attention input dropout + MLP norm-out gain scale"),
-    (
-        "adaptive_4probe",
-        "PSBD-TM + attention input dropout + MLP norm-out gain scale + PSBD-RD",
-    ),
-    ("all_65_basis", "every basis placement present on all 65 models"),
+    ("psbd_tm", "TM alone"),
+    ("psbd_tm_rd", "TM + RD"),
+    ("psbd_tm_attn_branch", "TM + TM-out"),
+    ("adaptive_3probe", "TM + DI + GS"),
+    ("adaptive_4probe", "TM + DI + GS + RD"),
+    ("all_65_basis", "every basis placement on all 65 models"),
 )
 
 
@@ -77,20 +81,6 @@ def table_row(name: str, label: str, record: dict) -> list[str]:
     return row
 
 
-def widen_table(path: str) -> None:
-    """Rewrite the generated table as a full-width float, since its 6 columns overflow 1 column."""
-    with open(path) as handle:
-        text = handle.read()
-    text = text.replace("\\begin{table}[htbp]", "\\begin{table*}[htbp]").replace(
-        "\\end{table}", "\\end{table*}"
-    )
-    text = text.replace("\\begin{adjustbox}{max width=\\linewidth}\n", "").replace(
-        "\\end{adjustbox}\n", ""
-    )
-    with open(path, "w") as handle:
-        handle.write(text)
-
-
 def main() -> None:
     args = build_parser(__doc__).parse_args()
     record = load_record(args.results_dir)
@@ -98,12 +88,14 @@ def main() -> None:
     inputs = [RECORD_PATH]
 
     rows = [table_row(name, label, record) for name, label in ROW_LABELS]
-    write_table(
+    write_wide_table(
         path=os.path.join(args.paper_dir, "tables", "probe_union.tex"),
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "The min-rank union of probes on the 65 backdoored ViT-B/16 models, with the paired AUROC gain over PSBD-TM alone."
+            "The min-rank union of probes on the 65 backdoored ViT-B/16 models, with "
+            "the paired AUROC gain over token masking at the attention input alone. "
+            f"{PROBE_LEGEND}."
         ),
         label="tab:probe-union",
         header=[
@@ -112,12 +104,11 @@ def main() -> None:
             "AUROC",
             "TPR@FPR 10%",
             "TPR@FPR 20%",
-            "Gain over PSBD-TM [95% CI]",
+            "Gain over TM [95% CI]",
         ],
         rows=rows,
         align="lrrrrl",
     )
-    widen_table(os.path.join(args.paper_dir, "tables", "probe_union.tex"))
 
     tm = record["probe_sets"]["psbd_tm"]["summary"]
     tm_rd = record["probe_sets"]["psbd_tm_rd"]

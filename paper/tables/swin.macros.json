@@ -1,23 +1,43 @@
 {
   "generator": "scripts/paper/tab_swin.py",
   "inputs": [
-    "results/swin_*/psbd_metrics.json (83 implanted cells)",
+    "results/swin_*/psbd_metrics.json (90 implanted cells)",
     "checkpoints/swin_*/args.json"
   ],
-  "written_at": "2026-09-23T11:34:27.037176+00:00",
-  "git_commit": "2fb3169f973b846e39a6f585b342a893fa1af109-dirty",
+  "written_at": "2026-09-23T14:47:20.726886+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
   "macros": {
     "SwinCells": {
-      "value": "83",
+      "value": "90",
       "meaning": "Swin cells whose attack cleared the bar and carry PSBD metrics"
     },
     "SwinDatasets": {
       "value": "4",
       "meaning": "datasets with at least 1 implanted Swin cell"
     },
+    "SwinPlacementsReported": {
+      "value": "30",
+      "meaning": "Swin placements with at least 5 implanted cells"
+    },
+    "SwinCellsCifarOneZero": {
+      "value": "26",
+      "meaning": "implanted Swin cells on CIFAR-10"
+    },
+    "SwinCellsCifarOneZeroZero": {
+      "value": "24",
+      "meaning": "implanted Swin cells on CIFAR-100"
+    },
+    "SwinCellsGtsrb": {
+      "value": "22",
+      "meaning": "implanted Swin cells on GTSRB"
+    },
+    "SwinCellsTiny": {
+      "value": "18",
+      "meaning": "implanted Swin cells on Tiny ImageNet"
+    },
     "SwinGainRecommendedMinusPublished": {
       "value": "+0.115",
-      "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after residual add, adaptive rule, over 80 cells"
+      "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after both residual adds, adaptive rule, over 80 cells"
     },
     "SwinGainRecommendedMinusPublishedN": {
       "value": "80",
@@ -33,7 +53,7 @@
     },
     "SwinGainDropoutInputMinusPublished": {
       "value": "+0.020",
-      "meaning": "Swin paired AUROC gain, dropout, attention input minus dropout, after residual add, adaptive rule, over 80 cells"
+      "meaning": "Swin paired AUROC gain, dropout, attention input minus dropout, after both residual adds, adaptive rule, over 80 cells"
     },
     "SwinGainDropoutInputMinusPublishedN": {
       "value": "80",
@@ -49,7 +69,7 @@
     },
     "SwinGainRecommendedMinusPreResidual": {
       "value": "+0.124",
-      "meaning": "Swin paired AUROC gain, token mask, attention input minus pre_residual, adaptive rule, over 80 cells"
+      "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, before both residual adds, adaptive rule, over 80 cells"
     },
     "SwinGainRecommendedMinusPreResidualN": {
       "value": "80",
@@ -63,17 +83,129 @@
       "value": "+0.174",
       "meaning": "upper bootstrap bound of swin_gain_recommended_minus_pre_residual"
     },
+    "SwinGainRecommendedMinusTwin": {
+      "value": "+0.136",
+      "meaning": "Swin paired AUROC gain, token mask, attention input minus token mask, attention output before the add, adaptive rule, over 80 cells"
+    },
+    "SwinGainRecommendedMinusTwinN": {
+      "value": "80",
+      "meaning": "cells behind swin_gain_recommended_minus_twin"
+    },
+    "SwinGainRecommendedMinusTwinLow": {
+      "value": "+0.086",
+      "meaning": "lower bootstrap bound of swin_gain_recommended_minus_twin"
+    },
+    "SwinGainRecommendedMinusTwinHigh": {
+      "value": "+0.187",
+      "meaning": "upper bootstrap bound of swin_gain_recommended_minus_twin"
+    },
+    "SwinGainRecommendedMinusSameSiteDropout": {
+      "value": "+0.095",
+      "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, attention input, adaptive rule, over 80 cells"
+    },
+    "SwinGainRecommendedMinusSameSiteDropoutN": {
+      "value": "80",
+      "meaning": "cells behind swin_gain_recommended_minus_same_site_dropout"
+    },
+    "SwinGainRecommendedMinusSameSiteDropoutLow": {
+      "value": "+0.057",
+      "meaning": "lower bootstrap bound of swin_gain_recommended_minus_same_site_dropout"
+    },
+    "SwinGainRecommendedMinusSameSiteDropoutHigh": {
+      "value": "+0.137",
+      "meaning": "upper bootstrap bound of swin_gain_recommended_minus_same_site_dropout"
+    },
+    "SwinSelectionHalfRecommendedAuroc": {
+      "value": "0.956",
+      "meaning": "Swin mean AUROC of the recommended placement on the selection half, 44 cells"
+    },
+    "SwinSelectionHalfRecommendedN": {
+      "value": "44",
+      "meaning": "Swin cells behind swin_selection_half_recommended_auroc"
+    },
+    "SwinSelectionHalfTwinAuroc": {
+      "value": "0.791",
+      "meaning": "Swin mean AUROC of the twin placement on the selection half, 44 cells"
+    },
+    "SwinSelectionHalfTwinN": {
+      "value": "44",
+      "meaning": "Swin cells behind swin_selection_half_twin_auroc"
+    },
+    "SwinSelectionHalfTwinGap": {
+      "value": "+0.166",
+      "meaning": "Swin paired AUROC gap, recommended minus twin, selection half, 44 cells"
+    },
+    "SwinReportHalfRecommendedAuroc": {
+      "value": "0.946",
+      "meaning": "Swin mean AUROC of the recommended placement on the report half, 42 cells"
+    },
+    "SwinReportHalfRecommendedN": {
+      "value": "42",
+      "meaning": "Swin cells behind swin_report_half_recommended_auroc"
+    },
+    "SwinReportHalfTwinAuroc": {
+      "value": "0.886",
+      "meaning": "Swin mean AUROC of the twin placement on the report half, 36 cells"
+    },
+    "SwinReportHalfTwinN": {
+      "value": "36",
+      "meaning": "Swin cells behind swin_report_half_twin_auroc"
+    },
+    "SwinReportHalfTwinGap": {
+      "value": "+0.099",
+      "meaning": "Swin paired AUROC gap, recommended minus twin, report half, 36 cells"
+    },
+    "SwinRecommendedFloor": {
+      "value": "0.496",
+      "meaning": "lowest single-model AUROC of the recommended placement on Swin"
+    },
+    "SwinRecommendedFloorCell": {
+      "value": "Adaptive-Blend at 5\\% on CIFAR-10",
+      "meaning": "the Swin cell holding swin_recommended_floor"
+    },
+    "SwinRecommendedBelowChance": {
+      "value": "1",
+      "meaning": "Swin cells where the recommended placement reads below chance"
+    },
+    "SwinShiftTargetUnreached": {
+      "value": "4",
+      "meaning": "Swin cells whose swept rate ladder never reached the adaptive shift target"
+    },
+    "SwinHardestAttacks": {
+      "value": "Adaptive-Blend, TaCT",
+      "meaning": "the attacks holding the 4 lowest Swin readings of the recommended placement"
+    },
     "SwinSeedReplicates": {
       "value": "44",
       "meaning": "Swin training-seed replicate checkpoints on disk"
     },
     "SwinRecommendedAurocAdaptive": {
-      "value": "0.969",
-      "meaning": "Swin mean AUROC of the recommended placement at the adaptive rule over 80 cells"
+      "value": "0.951",
+      "meaning": "Swin mean AUROC of the recommended placement at the adaptive rule over 86 cells"
     },
     "SwinRecommendedN": {
-      "value": "80",
+      "value": "86",
       "meaning": "Swin cells carrying the recommended placement"
+    },
+    "SwinRecommendedTprOneZero": {
+      "value": "0.90",
+      "meaning": "Swin mean TPR of token mask, attention input at the q0.10 budget over 86 cells"
+    },
+    "SwinRecommendedTprTwoZero": {
+      "value": "0.93",
+      "meaning": "Swin mean TPR of token mask, attention input at the q0.20 budget over 86 cells"
+    },
+    "SwinPublishedTprOneZero": {
+      "value": "0.65",
+      "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.10 budget over 80 cells"
+    },
+    "SwinPublishedTprTwoZero": {
+      "value": "0.74",
+      "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.20 budget over 80 cells"
+    },
+    "SwinPublishedAurocAdaptive": {
+      "value": "0.855",
+      "meaning": "Swin mean AUROC of the published placement at the adaptive rule over 80 cells"
     }
   }
 }

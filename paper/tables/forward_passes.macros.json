@@ -1,0 +1,138 @@
+{
+  "generator": "scripts/paper/fig_forward_passes.py",
+  "inputs": [
+    "results/<folder>/psbd/"
+  ],
+  "written_at": "2026-09-23T14:30:40.693267+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
+  "macros": {
+    "PassAllCells": {
+      "value": "65",
+      "meaning": "primary clearing cells with k up to 3"
+    },
+    "PassPilotCells": {
+      "value": "21",
+      "meaning": "cells whose sweep reached k = 20"
+    },
+    "PassAllAurocKOne": {
+      "value": "0.919",
+      "meaning": "mean auroc of the recommended placement at k = 1, all population"
+    },
+    "PassAllTprOneZeroKOne": {
+      "value": "0.786",
+      "meaning": "mean tpr10 of the recommended placement at k = 1, all population"
+    },
+    "PassAllTprTwoZeroKOne": {
+      "value": "0.834",
+      "meaning": "mean tpr20 of the recommended placement at k = 1, all population"
+    },
+    "PassAllAurocKTwo": {
+      "value": "0.930",
+      "meaning": "mean auroc of the recommended placement at k = 2, all population"
+    },
+    "PassAllTprOneZeroKTwo": {
+      "value": "0.797",
+      "meaning": "mean tpr10 of the recommended placement at k = 2, all population"
+    },
+    "PassAllTprTwoZeroKTwo": {
+      "value": "0.850",
+      "meaning": "mean tpr20 of the recommended placement at k = 2, all population"
+    },
+    "PassAllAurocKThree": {
+      "value": "0.935",
+      "meaning": "mean auroc of the recommended placement at k = 3, all population"
+    },
+    "PassAllTprOneZeroKThree": {
+      "value": "0.800",
+      "meaning": "mean tpr10 of the recommended placement at k = 3, all population"
+    },
+    "PassAllTprTwoZeroKThree": {
+      "value": "0.859",
+      "meaning": "mean tpr20 of the recommended placement at k = 3, all population"
+    },
+    "PassAllAurocGainFull": {
+      "value": "+0.016",
+      "meaning": "AUROC gain from k = 1 to k = 3, all population"
+    },
+    "PassPilotAurocKOne": {
+      "value": "0.921",
+      "meaning": "mean auroc of the recommended placement at k = 1, pilot population"
+    },
+    "PassPilotTprOneZeroKOne": {
+      "value": "0.825",
+      "meaning": "mean tpr10 of the recommended placement at k = 1, pilot population"
+    },
+    "PassPilotTprTwoZeroKOne": {
+      "value": "0.868",
+      "meaning": "mean tpr20 of the recommended placement at k = 1, pilot population"
+    },
+    "PassPilotAurocKTwo": {
+      "value": "0.930",
+      "meaning": "mean auroc of the recommended placement at k = 2, pilot population"
+    },
+    "PassPilotTprOneZeroKTwo": {
+      "value": "0.842",
+      "meaning": "mean tpr10 of the recommended placement at k = 2, pilot population"
+    },
+    "PassPilotTprTwoZeroKTwo": {
+      "value": "0.881",
+      "meaning": "mean tpr20 of the recommended placement at k = 2, pilot population"
+    },
+    "PassPilotAurocKThree": {
+      "value": "0.935",
+      "meaning": "mean auroc of the recommended placement at k = 3, pilot population"
+    },
+    "PassPilotTprOneZeroKThree": {
+      "value": "0.849",
+      "meaning": "mean tpr10 of the recommended placement at k = 3, pilot population"
+    },
+    "PassPilotTprTwoZeroKThree": {
+      "value": "0.892",
+      "meaning": "mean tpr20 of the recommended placement at k = 3, pilot population"
+    },
+    "PassPilotAurocKFive": {
+      "value": "0.941",
+      "meaning": "mean auroc of the recommended placement at k = 5, pilot population"
+    },
+    "PassPilotTprOneZeroKFive": {
+      "value": "0.861",
+      "meaning": "mean tpr10 of the recommended placement at k = 5, pilot population"
+    },
+    "PassPilotTprTwoZeroKFive": {
+      "value": "0.904",
+      "meaning": "mean tpr20 of the recommended placement at k = 5, pilot population"
+    },
+    "PassPilotAurocKOneZero": {
+      "value": "0.944",
+      "meaning": "mean auroc of the recommended placement at k = 10, pilot population"
+    },
+    "PassPilotTprOneZeroKOneZero": {
+      "value": "0.872",
+      "meaning": "mean tpr10 of the recommended placement at k = 10, pilot population"
+    },
+    "PassPilotTprTwoZeroKOneZero": {
+      "value": "0.907",
+      "meaning": "mean tpr20 of the recommended placement at k = 10, pilot population"
+    },
+    "PassPilotAurocKTwoZero": {
+      "value": "0.946",
+      "meaning": "mean auroc of the recommended placement at k = 20, pilot population"
+    },
+    "PassPilotTprOneZeroKTwoZero": {
+      "value": "0.871",
+      "meaning": "mean tpr10 of the recommended placement at k = 20, pilot population"
+    },
+    "PassPilotTprTwoZeroKTwoZero": {
+      "value": "0.913",
+      "meaning": "mean tpr20 of the recommended placement at k = 20, pilot population"
+    },
+    "PassPilotAurocGainFull": {
+      "value": "+0.025",
+      "meaning": "AUROC gain from k = 1 to k = 20, pilot population"
+    },
+    "PassPilotAurocGainBeyondThree": {
+      "value": "+0.011",
+      "meaning": "AUROC gain from k = 3 to k = 20 on the cells that reached 20 passes"
+    }
+  }
+}

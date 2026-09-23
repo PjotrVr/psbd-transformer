@@ -1,0 +1,164 @@
+{
+  "generator": "scripts/paper/tab_detectors.py",
+  "inputs": [
+    "results/coverage/coverage.json (71 clearing cells)",
+    "results/*/detectors/*_metrics.json",
+    "results/*/psbd_metrics.json"
+  ],
+  "written_at": "2026-09-23T14:39:27.237597+00:00",
+  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
+  "macros": {
+    "DetectorsComparedModels": {
+      "value": "71",
+      "meaning": "backdoored models in the detector comparison"
+    },
+    "DetectorsComparedCount": {
+      "value": "11",
+      "meaning": "competitor detectors in the comparison"
+    },
+    "DetectorsAurocDefensesRanked": {
+      "value": "13",
+      "meaning": "defenses the auroc ranking covers, ours and the competitors together"
+    },
+    "DetectorsAurocRankOurs": {
+      "value": "1",
+      "meaning": "rank of the recommended placement among every defense by mean auroc"
+    },
+    "DetectorsAurocRankPublished": {
+      "value": "5",
+      "meaning": "rank of the published placement among every defense by mean auroc"
+    },
+    "DetectorsAurocBeatingPublished": {
+      "value": "4",
+      "meaning": "defenses with a higher mean auroc than the published placement"
+    },
+    "DetectorsAurocOurs": {
+      "value": "0.927",
+      "meaning": "mean auroc of the recommended placement over the compared models"
+    },
+    "DetectorsAurocPublished": {
+      "value": "0.818",
+      "meaning": "mean auroc of the published placement over the same models"
+    },
+    "DetectorsAurocBestCompetitor": {
+      "value": "0.912",
+      "meaning": "mean auroc of the strongest competitor detector, IBD-PSC$^\\ast$"
+    },
+    "DetectorsAurocBestCompetitorName": {
+      "value": "IBD-PSC$^\\ast$",
+      "meaning": "the strongest competitor detector by mean auroc"
+    },
+    "DetectorsAurocMargin": {
+      "value": "+0.016",
+      "meaning": "mean auroc of the recommended placement minus the strongest competitor"
+    },
+    "DetectorsAurocSentinet": {
+      "value": "0.429",
+      "meaning": "mean auroc of the SentiNet port, whose Grad-CAM mask misses the trigger"
+    },
+    "DetectorsAurocIbdPsc": {
+      "value": "0.733",
+      "meaning": "mean auroc of IBD-PSC at the paper's fixed amplification factor"
+    },
+    "DetectorsAurocBelowChanceColumns": {
+      "value": "1",
+      "meaning": "competitor detectors whose mean auroc sits below chance"
+    },
+    "DetectorsTprOneZeroDefensesRanked": {
+      "value": "13",
+      "meaning": "defenses the tpr10 ranking covers, ours and the competitors together"
+    },
+    "DetectorsTprOneZeroRankOurs": {
+      "value": "1",
+      "meaning": "rank of the recommended placement among every defense by mean tpr10"
+    },
+    "DetectorsTprOneZeroRankPublished": {
+      "value": "4",
+      "meaning": "rank of the published placement among every defense by mean tpr10"
+    },
+    "DetectorsTprOneZeroBeatingPublished": {
+      "value": "3",
+      "meaning": "defenses with a higher mean tpr10 than the published placement"
+    },
+    "DetectorsTprOneZeroOurs": {
+      "value": "0.766",
+      "meaning": "mean tpr10 of the recommended placement over the compared models"
+    },
+    "DetectorsTprOneZeroPublished": {
+      "value": "0.621",
+      "meaning": "mean tpr10 of the published placement over the same models"
+    },
+    "DetectorsTprOneZeroBestCompetitor": {
+      "value": "0.737",
+      "meaning": "mean tpr10 of the strongest competitor detector, IBD-PSC$^\\ast$"
+    },
+    "DetectorsTprOneZeroBestCompetitorName": {
+      "value": "IBD-PSC$^\\ast$",
+      "meaning": "the strongest competitor detector by mean tpr10"
+    },
+    "DetectorsTprOneZeroMargin": {
+      "value": "+0.029",
+      "meaning": "mean tpr10 of the recommended placement minus the strongest competitor"
+    },
+    "DetectorsTprOneZeroSentinet": {
+      "value": "0.098",
+      "meaning": "mean tpr10 of the SentiNet port, whose Grad-CAM mask misses the trigger"
+    },
+    "DetectorsTprOneZeroIbdPsc": {
+      "value": "0.374",
+      "meaning": "mean tpr10 of IBD-PSC at the paper's fixed amplification factor"
+    },
+    "DetectorsTprOneZeroBelowChanceColumns": {
+      "value": "7",
+      "meaning": "competitor detectors whose mean tpr10 sits below chance"
+    },
+    "DetectorsTprTwoZeroDefensesRanked": {
+      "value": "13",
+      "meaning": "defenses the tpr20 ranking covers, ours and the competitors together"
+    },
+    "DetectorsTprTwoZeroRankOurs": {
+      "value": "1",
+      "meaning": "rank of the recommended placement among every defense by mean tpr20"
+    },
+    "DetectorsTprTwoZeroRankPublished": {
+      "value": "5",
+      "meaning": "rank of the published placement among every defense by mean tpr20"
+    },
+    "DetectorsTprTwoZeroBeatingPublished": {
+      "value": "4",
+      "meaning": "defenses with a higher mean tpr20 than the published placement"
+    },
+    "DetectorsTprTwoZeroOurs": {
+      "value": "0.835",
+      "meaning": "mean tpr20 of the recommended placement over the compared models"
+    },
+    "DetectorsTprTwoZeroPublished": {
+      "value": "0.693",
+      "meaning": "mean tpr20 of the published placement over the same models"
+    },
+    "DetectorsTprTwoZeroBestCompetitor": {
+      "value": "0.832",
+      "meaning": "mean tpr20 of the strongest competitor detector, IBD-PSC$^\\ast$"
+    },
+    "DetectorsTprTwoZeroBestCompetitorName": {
+      "value": "IBD-PSC$^\\ast$",
+      "meaning": "the strongest competitor detector by mean tpr20"
+    },
+    "DetectorsTprTwoZeroMargin": {
+      "value": "+0.003",
+      "meaning": "mean tpr20 of the recommended placement minus the strongest competitor"
+    },
+    "DetectorsTprTwoZeroSentinet": {
+      "value": "0.189",
+      "meaning": "mean tpr20 of the SentiNet port, whose Grad-CAM mask misses the trigger"
+    },
+    "DetectorsTprTwoZeroIbdPsc": {
+      "value": "0.496",
+      "meaning": "mean tpr20 of IBD-PSC at the paper's fixed amplification factor"
+    },
+    "DetectorsTprTwoZeroBelowChanceColumns": {
+      "value": "3",
+      "meaning": "competitor detectors whose mean tpr20 sits below chance"
+    }
+  }
+}
