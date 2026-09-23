@@ -41,7 +41,7 @@ The union is not only for the adaptive case. \Cref{tab:probe-union} reads the sa
 \subsection{Forward passes and their cost}
 \label{sec:robustness:passes}
 
-PSBD uses $k = 3$ passes. On all models the mean AUROC of PSBD-TM rises from 0.919 at $k = 1$ to 0.930 at $k = 2$ and 0.935 at $k = 3$. On 6 models at 1\% poisoning we also swept $k$ up to 20, and there AUROC goes from 0.963 at 1 pass to 0.972 at 3 and 0.974 at 20, with TPR at a 10\% false-positive budget from 0.940 to 0.967 to 0.969. The second and third pass are worth having, and the gain from the third to the twentieth is under 0.003. \Cref{app:passes} plots the full curves and the sweeps over more models and more values of $k$ that are running.
+PSBD uses $k = 3$ passes. On all models the mean AUROC of PSBD-TM rises from 0.919 at $k = 1$ to 0.930 at $k = 2$ and 0.935 at $k = 3$. On 8 models at 1\% poisoning we also swept $k$ up to 20, and there AUROC goes from 0.963 at 1 pass to 0.972 at 3 and 0.974 at 20, with TPR at a 10\% false-positive budget from 0.940 to 0.967 to 0.969. The second and third pass are worth having on both populations. The gain from the third pass to the twentieth is under 0.003, measured on the 8 pilot models, and the full panel has not been swept past 3 passes, where its AUROC is still rising. We therefore carry the paper's $k = 3$ from the original work rather than claim it is converged on the panel. \Cref{app:passes} plots both curves as the gain over a single pass, which is the only comparison 2 populations at different absolute levels license.
 
 \IfFileExists{tables/cost.tex}{\input{tables/cost}}{}
 

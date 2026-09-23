@@ -13,7 +13,7 @@ The rest of the paper asks why. Following the backdoor through the network with 
 
 The contributions are as follows.
 \begin{enumerate}
-  \item An adaptation of PSBD to ViTs, PSBD-TM, selected over a declared basis of placements under 1 decision rule, with a mean AUROC of 0.935 on ViT-B/16 and 0.968 on Swin-S and its largest advantage at 10\% poisoning (\cref{sec:results,sec:swin}).
+  \item An adaptation of PSBD to ViTs, PSBD-TM, selected over a declared basis of placements under 1 decision rule, with a mean AUROC of 0.935 on ViT-B/16 and 0.968 on Swin-S and its largest advantage at 1\% poisoning (\cref{sec:results,sec:swin}).
   \item A separation of the site from the perturbation, showing that both matter and that neither reduces to a family of sites. The same perturbation moves by 0.11 between the attention input and the MLP input, the same site moves by 0.14 between masking and noise, and the effect of the perturbation reverses sign between the 2 sites (\cref{sec:results:operator}).
   \item A mechanistic account, tested on the same models, in which the backdoor is 1 direction routed through attention from the trigger's tokens to the class token in the last third of the network. It explains the winning placement, the choice of whole-token masking over dropout, the reversal through LayerNorm absorption, and the attacks on which the original paper's prediction shift phenomenon does and does not appear (\cref{sec:mechanism}).
   \item The qualified results a deployer needs. A union over probes defends against an adaptive attacker who trains against a single probe, extra forward passes buy little beyond 3, and the all-to-all attack remains the open case (\cref{sec:robustness,sec:limitations}).
