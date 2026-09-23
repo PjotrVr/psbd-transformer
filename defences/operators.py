@@ -177,7 +177,7 @@ class TokenMask(nn.Module):
 
 
 class TokenSubstitute(nn.Module):
-    """Replace whole tokens with the same token of another sample in the batch.
+    """Replace whole tokens with another token of the same sample.
 
     TokenMask zeroes a token, and a zero token is off the data manifold: no
     training image ever produced one, so part of the prediction shift it causes is
@@ -185,9 +185,18 @@ class TokenSubstitute(nn.Module):
     loss of that token's content. Substitution removes the content and leaves the
     input in distribution, which isolates the effect being measured.
 
-    The replacement is the token at the same position from another sample, taken
-    by rolling the batch axis, so every substituted token is a real activation
-    this layer has seen and the positional structure is preserved.
+    The replacement is another token of the SAME sample, taken by rolling the
+    token axis, so every substituted token is a real activation this layer
+    produced for this image.
+
+    Borrowing from another sample in the batch would be the more obvious
+    construction and it is wrong here. PSU is a per-sample score, and a score
+    that depends on which other images share the batch is not a property of the
+    input. This project has already retired 1 arm for that fault, the
+    batch-coupled Gaussian whose tensors sit in archive/gaussian_batchstd and
+    which cli/compare.py still classifies as batch_coupled_superseded. Rolling
+    within the sample keeps the substitution on the manifold and keeps the score
+    a function of the input alone.
 
     No inverted scaling is applied, unlike every masking operator here. Scaling
     exists to hold the expectation equal to the input when part of it is zeroed.
@@ -215,11 +224,9 @@ class TokenSubstitute(nn.Module):
 
         protect_cls = self.protect_cls and x.dim() == 3
         tokens_view, original_shape = _to_token_layout(x)  # (batch, tokens, channels)
-        batch = tokens_view.shape[0]
-        if batch < 2:
-            # With 1 sample there is no other sample to borrow from, so the
-            # substitution is undefined and the pass is left unperturbed rather
-            # than silently degenerating into a no-op mask.
+        if tokens_view.shape[1] - int(protect_cls) < 2:
+            # Fewer than 2 patch tokens leaves nothing to substitute from, so the
+            # pass is left unperturbed rather than degenerating into a no-op mask.
             return x
 
         swapped = self._substitute(tokens_view, protect_cls)
@@ -227,17 +234,33 @@ class TokenSubstitute(nn.Module):
         return out
 
     def _substitute(self, x: torch.Tensor, protect_cls: bool) -> torch.Tensor:
-        """x with chosen tokens taken from another sample, (batch, tokens, channels)."""
+        """x with chosen tokens taken from elsewhere in the same sample.
+
+        (batch, tokens, channels) in and out.
+        """
         batch, tokens, _ = x.shape  # (batch, tokens, channels)
-        donor = torch.roll(x, shifts=1, dims=0)  # (batch, tokens, channels)
+        offset = 1 if protect_cls else 0
+        patches = x[:, offset:, :]  # (batch, patches, channels)
+
+        # A roll by a random non-zero amount, per sample, so a token is replaced
+        # by a different token of the same image rather than by itself.
+        shifts = torch.randint(
+            1, patches.shape[1], (batch,), device=x.device
+        )  # (batch,)
+        index = (
+            torch.arange(patches.shape[1], device=x.device).view(1, -1)
+            - shifts.view(-1, 1)
+        ) % patches.shape[1]  # (batch, patches)
+        donor = torch.gather(
+            patches, 1, index.unsqueeze(-1).expand_as(patches)
+        )  # (batch, patches, channels)
 
         replace = torch.empty(
-            batch, tokens, 1, device=x.device, dtype=x.dtype
-        ).bernoulli_(self.rate)  # (batch, tokens, 1)
-        if protect_cls:
-            replace[:, 0, :] = 0.0
+            batch, patches.shape[1], 1, device=x.device, dtype=x.dtype
+        ).bernoulli_(self.rate)  # (batch, patches, 1)
 
-        substituted = x * (1.0 - replace) + donor * replace
+        substituted = x.clone()
+        substituted[:, offset:, :] = patches * (1.0 - replace) + donor * replace
         return substituted
 
 

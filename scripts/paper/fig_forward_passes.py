@@ -57,19 +57,10 @@ GENERATOR = "scripts/paper/fig_forward_passes.py"
 # exploratory additions to coverage.json and sit outside the validated panel.
 PRIMARY_DATASETS = ("cifar10", "cifar100", "gtsrb", "tiny")
 
-# The 8 checkpoints H24's paid half ran k = 20 on. Not every one necessarily
-# carries a cache on this results tree, so K20_CANDIDATE_CELLS is checked against
-# disk rather than assumed, and the sidecar records which actually contributed.
-K20_CANDIDATE_CELLS = (
-    "vit_cifar100_badnet_a2o_0_01",
-    "vit_cifar100_blend_0_01",
-    "vit_cifar100_bpp_0_01",
-    "vit_cifar100_lf_0_01",
-    "vit_tiny_badnet_a2o_0_01",
-    "vit_tiny_blend_0_01",
-    "vit_tiny_bpp_0_01",
-    "vit_tiny_lf_0_01",
-)
+# Which cells carry a k = 20 cache is read off disk rather than listed here. The
+# list used to be the 8 checkpoints H24's paid half ran, and it stayed at 8 while
+# the sweep grew, so the figure reported a pilot of 8 when 21 caches existed. A
+# hardcoded population silently stops tracking the sweep that fills it.
 
 BASE_K_VALUES = (1, 2, 3)
 K20_K_VALUES = (5, 10, 20)
@@ -286,15 +277,16 @@ def main() -> None:
             all_cells_per_cell[folder] = record
     all_cells_agg = aggregate(all_cells_per_cell, BASE_K_VALUES)
 
+    # Every primary clearing cell that has a k = 20 cache contributes, so the
+    # curve grows as the sweep does without this file being edited.
+    candidates = [
+        folder
+        for folder in primary_folders
+        if os.path.isdir(k20_cache_dir(os.path.join(args.results_dir, folder, "psbd")))
+    ]
     pilot_per_cell = {}
     pilot_excluded = {}
-    for folder in K20_CANDIDATE_CELLS:
-        psbd_dir = os.path.join(args.results_dir, folder, "psbd")
-        if not os.path.isdir(k20_cache_dir(psbd_dir)):
-            pilot_excluded[folder] = (
-                "no before_attention_norm_token_mask_k20 cache on disk"
-            )
-            continue
+    for folder in candidates:
         record = collect_cell(args.results_dir, folder, ALL_K_VALUES)
         if record is None:
             pilot_excluded[folder] = (
@@ -306,8 +298,8 @@ def main() -> None:
 
     print(
         f"{len(all_cells_per_cell)} of {len(primary_folders)} primary clearing cells "
-        f"carry k<=3 readings. {len(pilot_per_cell)} of {len(K20_CANDIDATE_CELLS)} "
-        "candidate pilot cells carry a k=20 cache"
+        f"carry k<=3 readings. {len(pilot_per_cell)} of {len(candidates)} cells with "
+        "a k=20 cache contribute the long curve"
     )
     if pilot_excluded:
         print(f"pilot cells excluded: {pilot_excluded}")

@@ -30,25 +30,58 @@ def token_batch() -> torch.Tensor:
     return x  # (batch, tokens, channels)
 
 
-def test_substitution_never_introduces_a_value_the_batch_did_not_contain():
+def positional_batch() -> torch.Tensor:
+    """A batch whose every token is a constant equal to its token index.
+
+    Making tokens distinguishable within a sample is what lets a test tell a
+    substituted token from a zeroed one, now that the donor is the same sample.
+    """
+    values = torch.arange(TOKENS, dtype=torch.float32)  # (tokens,)
+    x = values.view(1, TOKENS, 1).expand(BATCH, TOKENS, CHANNELS).clone()
+    return x  # (batch, tokens, channels)
+
+
+def test_substitution_never_introduces_a_value_the_sample_did_not_contain():
     """The point of the operator: no token is off the manifold.
 
-    Every output value has to be a value some sample already carried. A zeroed
-    token would show up as a 0, which no sample carries.
+    Every output value has to be a value this sample already carried at some
+    position. A zeroed token would show up as a value of 0 at a position whose
+    own index is not 0.
     """
-    x = token_batch()
+    x = positional_batch()
     operator = TokenSubstitute(rate=0.5).train()
     torch.manual_seed(0)
 
     out = operator(x)  # (batch, tokens, channels)
 
-    allowed = set(range(1, BATCH + 1))
+    allowed = set(range(TOKENS))
     assert set(out.unique().tolist()) <= allowed
-    assert 0.0 not in out.unique().tolist()
+
+
+def test_substitution_reads_no_other_sample_in_the_batch():
+    """A per-sample score must not be a function of another sample's values.
+
+    This is the fault that retired the batch-coupled Gaussian arm, whose noise
+    was scaled by a statistic of the whole batch. Changing every other sample
+    while holding the random draw fixed must leave sample 0's output untouched.
+    Note this is about VALUES, not about the shared random stream: every
+    stochastic operator here draws from the global generator, so a different
+    batch size consumes it differently, and that is not batch coupling.
+    """
+    x = positional_batch()
+    other = x.clone()
+    other[1:] = other[1:] * 7.0 + 3.0
+
+    torch.manual_seed(0)
+    baseline = TokenSubstitute(rate=0.5).train()(x)  # (batch, tokens, channels)
+    torch.manual_seed(0)
+    perturbed_neighbours = TokenSubstitute(rate=0.5).train()(other)
+
+    assert torch.equal(baseline[0], perturbed_neighbours[0])
 
 
 def test_substitution_leaves_the_class_token_alone():
-    x = token_batch()
+    x = positional_batch()
     operator = TokenSubstitute(rate=1.0).train()
     torch.manual_seed(0)
 
@@ -57,30 +90,30 @@ def test_substitution_leaves_the_class_token_alone():
     assert torch.equal(out[:, 0, :], x[:, 0, :])
 
 
-def test_substitution_at_rate_1_replaces_every_patch_token():
-    """At rate 1 every patch token comes from the donor, which is the roll by 1."""
-    x = token_batch()
+def test_substitution_at_rate_1_moves_every_patch_token():
+    """At rate 1 no patch token keeps its own value, since the roll is non-zero."""
+    x = positional_batch()
     operator = TokenSubstitute(rate=1.0).train()
     torch.manual_seed(0)
 
     out = operator(x)  # (batch, tokens, channels)
 
-    donor = torch.roll(x, shifts=1, dims=0)  # (batch, tokens, channels)
-    assert torch.equal(out[:, 1:, :], donor[:, 1:, :])
+    assert not torch.equal(out[:, 1:, :], x[:, 1:, :])
+    assert torch.equal(out[:, 0, :], x[:, 0, :])
 
 
 def test_substitution_is_a_no_op_in_eval_mode_and_at_rate_0():
-    x = token_batch()
+    x = positional_batch()
     assert torch.equal(TokenSubstitute(rate=0.5).eval()(x), x)
     assert torch.equal(TokenSubstitute(rate=0.0).train()(x), x)
 
 
-def test_substitution_leaves_a_single_sample_batch_unperturbed():
-    """With 1 sample there is no donor, so the pass must not be silently masked."""
-    x = token_batch()[:1]  # (1, tokens, channels)
+def test_substitution_leaves_a_sample_with_too_few_patches_unperturbed():
+    """Fewer than 2 patch tokens leaves nothing to substitute from."""
+    x = torch.ones(2, 2, CHANNELS)  # 1 class token plus 1 patch
     operator = TokenSubstitute(rate=0.5).train()
 
-    out = operator(x)  # (1, tokens, channels)
+    out = operator(x)  # (2, 2, channels)
 
     assert torch.equal(out, x)
 

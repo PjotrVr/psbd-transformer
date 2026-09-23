@@ -1,2 +1,5 @@
 - [Non-adaptive attack request](project_nonadaptive_attack_request.md) — mentor wants a non-adaptive attack that breaks PSBD; adaptive-loss attacks are out of scope
 - [literature/ folder layout](reference_literature_folder.md) — gitignored PDF library, annotated README, no pdftotext on the cluster
+- [Citation audit](reference_citation_audit.md) — references.bib conventions, the 8 uncited entries, and which lookup services work through the proxy
+- [Methodology standards memo](reference_methodology_standards.md) — docs/security-ml-research-standards.md: Arp pitfalls, base rate math, 44-row validity checklist
+- [PDF text extraction](reference_pdf_extraction.md) — WebFetch on a PDF saves the binary; extract it with pypdfium2 rather than re-fetching

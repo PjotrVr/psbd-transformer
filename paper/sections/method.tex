@@ -19,16 +19,16 @@ The detection statistic is the prediction shift uncertainty (PSU) of
 \cref{sec:background} in its fractional form, which is the absolute drop divided
 by the unperturbed probability of the same class,
 \begin{equation}
-  \psu^{\mathrm{frac}}(x)
-    = 1 - \frac{1}{k}\sum_{i=1}^{k}
-      \frac{P(\hat y \mid x;\theta'_i)}{P(\hat y \mid x;\theta)}
-    = \frac{\psu(x)}{P(\hat y \mid x;\theta)},
-  \qquad
-  \hat y = \arg\max_{y} P(y \mid x;\theta),
+  \begin{split}
+    \psu^{\mathrm{frac}}(x)
+      &= 1 - \frac{1}{k}\sum_{i=1}^{k}
+        \frac{P(\hat y \mid x;\theta'_i)}{P(\hat y \mid x;\theta)} \\
+      &= \frac{\psu(x)}{P(\hat y \mid x;\theta)},
+  \end{split}
   \label{eq:psu-fractional}
 \end{equation}
-where $\hat y$ is the class the unperturbed model predicts and is held fixed
-across all $k$ passes, so the same coordinate is tracked throughout. The
+where $\hat y = \arg\max_{y} P(y \mid x;\theta)$ is the class the unperturbed
+model predicts, held fixed across all $k$ passes, so the same coordinate is tracked throughout. The
 division is always defined because $\hat y$ is the argmax, so
 $P(\hat y \mid x;\theta)$ is at least $1/|\mathcal{C}|$ for a label set
 $\mathcal{C}$. The 2 forms are equal because $P(\hat y \mid x;\theta)$ does

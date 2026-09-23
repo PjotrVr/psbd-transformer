@@ -7,12 +7,15 @@ The attacker controls a share of the training data and plants a trigger with a t
 \subsection{The prediction shift phenomenon in backdoored networks}
 PSBD \cite{li2025psbd} runs the model $k$ times on an input $x$ with dropout at rate $p$ active and compares each dropout prediction with the prediction without dropout. The paper defines the prediction shift indicator and the shift ratio of a set $\mathcal{D}$ as
 \begin{equation}
-  \ps(x) = \mathbb{I}\big[\mathcal{Y}(x;\theta) \neq \mathcal{Y}(x;\theta')\big], \qquad
-  \sigma(\mathcal{D}) = \frac{1}{k|\mathcal{D}|}\sum_{x\in\mathcal{D}} \ps(x),
+  \begin{split}
+    \ps(x) &= \mathbb{I}\big[\mathcal{Y}(x;\theta) \neq \mathcal{Y}(x;\theta')\big], \\
+    \sigma(\mathcal{D}) &= \frac{1}{k|\mathcal{D}|}\sum_{x\in\mathcal{D}} \ps(x),
+  \end{split}
 \end{equation}
 where $\theta$ are the weights, $\theta'$ the weights with dropout active and $\mathcal{Y}$ the predicted class. The detection statistic, the prediction shift uncertainty, is the drop in the probability of the no-dropout class averaged over the $k$ passes,
 \begin{equation}
-  \psu(x) = \frac{1}{k}\sum_{i=1}^{k} \big[ P(\hat y \mid x;\theta) - P(\hat y \mid x;\theta'_i) \big],
+  \psu(x) = \frac{1}{k}\sum_{i=1}^{k}
+    \big[ P(\hat y \mid x;\theta) - P(\hat y \mid x;\theta'_i) \big],
 \end{equation}
 with $\hat y$ the class predicted without dropout. A poisoned input keeps its probability under dropout and has a low $\psu$.
 
