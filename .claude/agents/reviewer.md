@@ -2,7 +2,7 @@
 name: reviewer
 description: Adversarial read-only review of a diff or a tree. Ranks findings by severity: information leaks and correctness first, then tensor shapes and layout pins, then regressions and parity, then performance. Modifies nothing.
 tools: Read, Grep, Glob, Bash
-model: claude-sonnet-5
+model: sonnet
 effort: high
 permissionMode: plan
 memory: project

@@ -2,7 +2,7 @@
 name: paper-spec-extractor
 description: Reads a paper and its reference implementation and extracts the exact equations, hyperparameters, and evaluation protocol into a spec the ml-architect can build against. Use before reproducing or extending a published method, and when a reproduction does not match reported numbers.
 tools: Read, Grep, Glob, WebFetch, WebSearch
-model: claude-opus-5
+model: opus
 effort: high
 permissionMode: plan
 maxTurns: 50

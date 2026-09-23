@@ -2,7 +2,7 @@
 name: run-monitor
 description: Read-only monitor for in-flight and finished cluster sweeps. Parses job state and training logs, identifies which runs died and why, and flags runs that are alive but producing garbage. Use while a sweep is running or immediately after it finishes, before results-auditor.
 tools: Read, Grep, Glob, Bash
-model: claude-sonnet-5
+model: sonnet
 effort: medium
 permissionMode: plan
 maxTurns: 40

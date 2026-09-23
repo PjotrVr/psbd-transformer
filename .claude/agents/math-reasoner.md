@@ -2,7 +2,7 @@
 name: math-reasoner
 description: Derives and verifies objectives, estimators and calibration arguments; checks a formula against the code; maps out proof steps. Read-only.
 tools: Read, Grep, Glob, Bash
-model: claude-opus-5
+model: opus
 effort: high
 permissionMode: plan
 color: pink

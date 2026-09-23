@@ -2,7 +2,7 @@
 name: ml-test-automator
 description: Writes and runs cheap tests that catch mechanical failures in PyTorch research code before expensive GPU jobs. Covers shape integrity, bitwise determinism, single-batch overfitting, memory headroom, and a fractional-data smoke run. Use after ml-builder finishes an implementation and before research-reviewer audits it.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: claude-sonnet-5
+model: sonnet
 effort: medium
 permissionMode: acceptEdits
 maxTurns: 60

@@ -2,7 +2,7 @@
 name: strong-coder
 description: Non-trivial implementation with tests: engine crates, the trainer, the wasm session, the lab. Use for anything that needs design judgement, a tricky invariant, or a change across layers.
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: claude-opus-5
+model: opus
 effort: medium
 permissionMode: acceptEdits
 memory: project

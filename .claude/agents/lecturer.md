@@ -2,7 +2,7 @@
 name: lecturer
 description: Writes university-style lecture notes about this project under lectures/ only: plain-words summary, engineering with measured numbers, and the mathematics, following the math and writing style guides.
 tools: Read, Grep, Glob, Bash, Write
-model: claude-opus-5
+model: opus
 effort: high
 permissionMode: acceptEdits
 memory: project

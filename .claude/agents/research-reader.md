@@ -2,7 +2,7 @@
 name: research-reader
 description: Literature synthesis with citations: fetches and reads papers (security and interpretability of vision transformers, backdoors, probing, evaluation), compares methods, and writes a memo for the orchestrator.
 tools: Read, Write, Grep, Glob, Bash, WebSearch, WebFetch
-model: claude-opus-5
+model: opus
 effort: medium
 permissionMode: acceptEdits
 memory: project

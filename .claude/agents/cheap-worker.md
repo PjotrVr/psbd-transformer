@@ -2,7 +2,7 @@
 name: cheap-worker
 description: Mechanical edits with no design judgement: renames, config and docs rows, small localized fixes, formatting, moving files. Use when the change is fully specified.
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: claude-sonnet-5
+model: sonnet
 effort: low
 permissionMode: acceptEdits
 color: yellow

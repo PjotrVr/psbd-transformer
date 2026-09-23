@@ -2,7 +2,7 @@
 name: research-reviewer
 description: Read-only auditor for ML security research pipelines. Catches data leakage, evaluation-protocol errors, poisoning and backdoor accounting bugs, reproducibility gaps, and paper-to-code mismatches before an expensive GPU run. Use after tests pass and before launching any full training job or sweep.
 tools: Read, Grep, Glob, Write, Edit
-model: claude-opus-5
+model: opus
 effort: xhigh
 maxTurns: 60
 memory: project

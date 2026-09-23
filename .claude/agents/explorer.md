@@ -2,7 +2,7 @@
 name: explorer
 description: Read-only code path tracer. Use to find where something lives, how components connect, or why a test fails; returns evidence as file:line, never guesses.
 tools: Read, Grep, Glob, Bash
-model: claude-sonnet-5
+model: sonnet
 effort: low
 permissionMode: plan
 color: blue

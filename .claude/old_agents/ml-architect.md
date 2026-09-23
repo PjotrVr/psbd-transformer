@@ -2,7 +2,7 @@
 name: ml-architect
 description: Designs experiment pipelines for ML security research before any code is written. Produces a PLAN.md with an explicit file manifest, config schema, and evaluation contract. Use when starting a new experiment, adding an attack or defense, or restructuring an existing pipeline. Does not write implementation code.
 tools: Read, Grep, Glob
-model: claude-opus-5
+model: opus
 effort: high
 permissionMode: plan
 maxTurns: 40

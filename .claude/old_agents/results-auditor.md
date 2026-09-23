@@ -2,7 +2,7 @@
 name: results-auditor
 description: Read-only auditor that verifies claimed experimental numbers against raw logs and checkpoints after a run completes. Checks that reported values are reproducible from artifacts, that seeds and variance are handled honestly, and that comparisons against baselines are like-for-like. Use before putting a number in a table, a slide, or a paper.
 tools: Read, Grep, Glob, Bash
-model: claude-opus-5
+model: opus
 effort: high
 permissionMode: plan
 maxTurns: 50

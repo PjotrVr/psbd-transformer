@@ -2,7 +2,7 @@
 name: results-writer
 description: Turns audited experimental results into LaTeX tables, figures, and plotting scripts for papers and slides. Reads only from artifacts that results-auditor has verified. Use after the audit passes and before writing the paper section.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: claude-sonnet-5
+model: sonnet
 effort: medium
 permissionMode: acceptEdits
 maxTurns: 50

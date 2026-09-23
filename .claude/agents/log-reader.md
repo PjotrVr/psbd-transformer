@@ -2,7 +2,7 @@
 name: log-reader
 description: Extracts numbers from logs, history.jsonl, metadata.json and result files without interpreting them. Use to pull win rates, steps, env/s, losses, exit codes and failure lines; the orchestrator interprets.
 tools: Read, Grep, Glob, Bash
-model: claude-sonnet-5
+model: sonnet
 effort: low
 permissionMode: plan
 color: green

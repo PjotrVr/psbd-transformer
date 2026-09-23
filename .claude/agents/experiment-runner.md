@@ -2,7 +2,7 @@
 name: experiment-runner
 description: Runs measurements: battles, smoke gates, arenas, evaluations. Records the exact command, the wall time and every metric. Never submits PBS jobs unless the prompt says so explicitly.
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: claude-sonnet-5
+model: sonnet
 effort: medium
 permissionMode: acceptEdits
 color: cyan

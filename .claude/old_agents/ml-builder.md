@@ -2,7 +2,7 @@
 name: ml-builder
 description: Implements PyTorch research code from an approved PLAN.md. Writes flat, functionally decomposed code with strict determinism and no invented design decisions. Use after ml-architect has produced a plan and the plan has been approved.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: claude-sonnet-5
+model: sonnet
 effort: medium
 permissionMode: acceptEdits
 isolation: worktree
