@@ -3,11 +3,35 @@
   "inputs": [
     "results/coverage/coverage.json",
     "configs/psbd_basis.json",
-    "results/<folder>/psbd_metrics.json (65 cells)"
+    "results/<folder>/psbd_metrics.json (71 cells)"
   ],
-  "written_at": "2026-09-23T17:00:04.324179+00:00",
-  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
+  "written_at": "2026-09-23T18:25:44.457330+00:00",
+  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
   "macros": {
+    "FamilyGapDropoutMatched": {
+      "value": "$-$0.066",
+      "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, dropout at every position, at the matched rule, over the 65 cells it covers"
+    },
+    "FamilyGapDropoutMatchedLow": {
+      "value": "$-$0.085",
+      "meaning": "lower bound of the 95% bootstrap interval on family_gap_dropout_matched"
+    },
+    "FamilyGapDropoutMatchedHigh": {
+      "value": "$-$0.046",
+      "meaning": "upper bound of the 95% bootstrap interval on family_gap_dropout_matched"
+    },
+    "FamilyGapDropoutAdaptive": {
+      "value": "$-$0.011",
+      "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, dropout at every position, at the adaptive rule, over the 65 cells it covers"
+    },
+    "FamilyGapDropoutAdaptiveLow": {
+      "value": "$-$0.030",
+      "meaning": "lower bound of the 95% bootstrap interval on family_gap_dropout_adaptive"
+    },
+    "FamilyGapDropoutAdaptiveHigh": {
+      "value": "+0.009",
+      "meaning": "upper bound of the 95% bootstrap interval on family_gap_dropout_adaptive"
+    },
     "FamilyGapMatched": {
       "value": "+0.016",
       "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the matched 0.6 rate, over the 71 cells it covers"

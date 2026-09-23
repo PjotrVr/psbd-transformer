@@ -38,6 +38,18 @@ What the perturbation is worth depends on which side of a LayerNorm it lands on 
 
 Why should whole tokens beat coordinates? Dropout zeroes individual coordinates of the perturbed tensor, and a coordinate is 1 of the 768 numbers describing a token. It is renormalized by the next LayerNorm and averaged by the next attention, so dropping a share of coordinates leaves every token present with a slightly noisier description. A token is the unit that attention routes, so masking it removes that token from every attention pattern of the block. \Cref{sec:mechanism} shows that a backdoor is carried by the trigger's own tokens for most of the network and that its direction is not aligned with any coordinate axis, so a coordinate-level perturbation cannot remove the shortcut while a token-level one can. Channel masking, which removes whole coordinates, trails token masking by \StaircaseOperatorsBeforeAttentionNormChannelMaskGain{} at the same site, and on Swin dropout at the same site reads \SwinSameSiteDropoutAuroc{} against \SwinRecommendedAurocAdaptive{} for token masking (\cref{sec:swin}).
 
+\subsection{Is it the family, or the operator?}
+\label{sec:results:family}
+
+The basis groups sites into an input-side family and a residual-adjacent family, and the ranking makes the input-side family look like the winner. It is not a property of the families. Pairing within model and holding the operator fixed, the gap between them depends on which operator is held.
+
+With token masking held fixed the gap is \FamilyGapAdaptive{} [\FamilyGapAdaptiveLow{}, \FamilyGapAdaptiveHigh{}] at the deployable rule and \FamilyGapMatched{} [\FamilyGapMatchedLow{}, \FamilyGapMatchedHigh{}] at matched disturbance, where it cannot be separated from 0. With dropout held fixed instead the gap reverses. At matched disturbance it is \FamilyGapDropoutMatched{} [\FamilyGapDropoutMatchedLow{}, \FamilyGapDropoutMatchedHigh{}], which excludes 0 on the other side. At the deployable rule it is \FamilyGapDropoutAdaptive{} [\FamilyGapDropoutAdaptiveLow{}, \FamilyGapDropoutAdaptiveHigh{}]. With dropout the residual-adjacent family is the better one.
+
+A split whose sign depends on the operator is not a fact about sites. It is the operator effect of \cref{sec:mechanism:layernorm} read through a grouping that does not hold the operator fixed, which is also what the basis file's own family tags do: under those tags, which mix operators inside each family, the gap is \FamilyGapConfoundedMatched{} [\FamilyGapConfoundedMatchedLow{}, \FamilyGapConfoundedMatchedHigh{}].
+
+\input{tables/family_split}
+\input{tables/family_split_dropout}
+
 \subsection{Every block, not a band}
 \label{sec:results:depth}
 
@@ -45,7 +57,7 @@ PSBD-TM perturbs all 12 blocks. \Cref{tab:staircase-bands} restricts it to a thi
 
 \input{tables/staircase_bands}
 
-Restricting the mask to blocks 5 to 8 costs \StaircaseBandsBeforeAttentionNormBlocksFiveEightTokenMaskGain{} and to blocks 9 to 12 costs \StaircaseBandsBeforeAttentionNormBlocksNineOneTwoTokenMaskGain{}, so the token mask works best when it acts everywhere. This is the opposite of what residual dropout showed in \cref{tab:staircase-residual}, where the middle band was the best. \Cref{sec:mechanism} gives the reason. A token mask before attention removes the trigger's tokens at whatever depth they are routed to the class token, so every added block is another chance to remove them, while a perturbation on the stream hits the decision itself and is best kept away from the early blocks.
+Restricting the mask to blocks 5 to 8 costs \StaircaseBandsBeforeAttentionNormBlocksFiveEightTokenMaskGain{} and to blocks 9 to 12 costs \StaircaseBandsBeforeAttentionNormBlocksNineOneTwoTokenMaskGain{}, so the token mask works best when it acts everywhere. At matched disturbance, where every band is read on the same models (\cref{tab:depth-bands}), the early band is the worst of the 3 at \BandOneFourMinusAllInputSide{} [\BandOneFourMinusAllInputSideLow{}, \BandOneFourMinusAllInputSideHigh{}], which is what the mechanism predicts for a backdoor written in the last third of the network. This is the opposite of what residual dropout showed in \cref{tab:staircase-residual}, where the middle band was the best. \Cref{sec:mechanism} gives the reason. A token mask before attention removes the trigger's tokens at whatever depth they are routed to the class token, so every added block is another chance to remove them, while a perturbation on the stream hits the decision itself and is best kept away from the early blocks.
 
 \subsection{PSBD-TM across attacks, poison rates and datasets}
 \label{sec:results:headline}

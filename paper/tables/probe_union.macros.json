@@ -3,9 +3,17 @@
   "inputs": [
     "results/_experiments/probe_union/probe_union.json"
   ],
-  "written_at": "2026-09-23T17:02:37.584744+00:00",
-  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
+  "written_at": "2026-09-23T18:33:01.425574+00:00",
+  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
   "macros": {
+    "ProbeUnionThreeProbeAuroc": {
+      "value": "0.988",
+      "meaning": "mean AUROC of the 3-probe union of the adaptive section on the ordinary models"
+    },
+    "ProbeUnionThreeProbeN": {
+      "value": "37",
+      "meaning": "models holding all 3 probes of the adaptive section"
+    },
     "ProbeUnionTmBranchGain": {
       "value": "+0.022",
       "meaning": "paired AUROC gain of the PSBD-TM + branch-output union over PSBD-TM alone"

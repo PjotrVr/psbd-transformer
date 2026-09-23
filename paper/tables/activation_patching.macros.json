@@ -4,8 +4,8 @@
     "results/coverage/coverage.json",
     "results/<folder>/activation_patching.json (65 cells)"
   ],
-  "written_at": "2026-09-23T16:50:33.768515+00:00",
-  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
+  "written_at": "2026-09-23T18:15:30.204971+00:00",
+  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
   "macros": {
     "PatchingCells": {
       "value": "65",

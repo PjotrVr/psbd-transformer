@@ -5,8 +5,8 @@
     "results/<folder>/prediction_depth.json (65 cells)",
     "results/<folder>/psbd_metrics.json"
   ],
-  "written_at": "2026-09-23T16:54:10.616334+00:00",
-  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
+  "written_at": "2026-09-23T18:19:33.838852+00:00",
+  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
   "macros": {
     "DepthCells": {
       "value": "65",

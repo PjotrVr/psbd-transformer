@@ -4,8 +4,8 @@
     "checkpoints/<folder>/args.json",
     "configs/psbd_basis.json"
   ],
-  "written_at": "2026-09-23T16:57:12.668868+00:00",
-  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
+  "written_at": "2026-09-23T18:36:31.871807+00:00",
+  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
   "macros": {
     "SigGtsrbTargetClass": {
       "value": "1",
@@ -49,11 +49,11 @@
     },
     "GtsrbDivergedRuns": {
       "value": "11",
-      "meaning": "ViT GTSRB training runs whose clean accuracy collapsed below half the benign reference"
+      "meaning": "of every vit_gtsrb_* checkpoint with a recorded clean accuracy, variants included, the runs whose clean accuracy collapsed below half the benign reference"
     },
     "GtsrbRunsScored": {
       "value": "240",
-      "meaning": "ViT GTSRB training runs with a recorded clean accuracy"
+      "meaning": "vit_gtsrb_* checkpoints with a clean accuracy in their args.json sidecar, variants included, the population gtsrb_diverged_runs is of"
     },
     "SigGtsrbTlOneFivePercentMeanAsr": {
       "value": "0.722",

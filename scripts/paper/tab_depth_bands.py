@@ -38,7 +38,6 @@ from scripts.paper._common import (  # noqa: E402
 )
 
 GENERATOR = "scripts/paper/tab_depth_bands.py"
-PENDING = r"\pending"
 
 INPUT_SIDE_ALL = "before_attention_norm_token_mask"
 INPUT_SIDE_5_8 = "before_attention_norm_blocks_5_8_token_mask"
@@ -70,7 +69,7 @@ def measure_placement(
     report: dict | None, placement_id: str
 ) -> dict[str, float] | None:
     """This placement's matched-06 AUROC and achieved clean-validation shift ratio."""
-    if report is None or placement_id == INPUT_SIDE_1_4:
+    if report is None:
         return None
     block = report.get("placements", {}).get(placement_id)
     if block is None:
@@ -121,6 +120,7 @@ def main() -> None:
     table_rows = []
     macros = {}
     macro_stem_of = {
+        (INPUT_SIDE_1_4, INPUT_SIDE_ALL): "band_1_4_minus_all_input_side",
         (INPUT_SIDE_5_8, INPUT_SIDE_ALL): "band_5_8_minus_all_input_side",
         (INPUT_SIDE_9_12, INPUT_SIDE_ALL): "band_9_12_minus_all_input_side",
         (RESIDUAL_1_4, RESIDUAL_ALL): "band_1_4_minus_all_residual",
@@ -128,10 +128,6 @@ def main() -> None:
         (RESIDUAL_9_12, RESIDUAL_ALL): "band_9_12_minus_all_residual",
     }
     for label, placement_id, reference_id in ROWS:
-        if placement_id == INPUT_SIDE_1_4:
-            table_rows.append([label] + [PENDING] * 5)
-            continue
-
         aurocs = [
             cell["bands"][placement_id]["auroc"]
             for cell in cells
@@ -180,13 +176,12 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "Depth-band placements at the matched 0.6 rate, mean AUROC at q0.25, "
-            "the paired delta against the family's all-blocks placement with a "
-            f"{args.bootstrap}-resample bootstrap 95\\% interval, and the mean "
-            "achieved clean-validation shift ratio at the chosen rate. Token "
-            "masking at the attention input restricted to blocks 1 to 4 has not "
-            "been swept yet on any model in the panel of 65 backdoored models "
-            "and prints pending throughout."
+            "Depth-band placements at the matched 0.6 rate, mean AUROC at the "
+            "headline quantile, the paired delta against the family's all-blocks "
+            f"placement with a {args.bootstrap}-resample bootstrap 95\\% interval, "
+            "and the mean achieved clean-validation shift ratio at the chosen rate. "
+            "The n column is the models behind each row, which differs by band "
+            "because the bands were swept at different times."
         ),
         label="tab:depth-bands",
         header=[

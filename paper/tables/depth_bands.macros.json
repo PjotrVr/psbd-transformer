@@ -4,8 +4,8 @@
     "results/coverage/coverage.json",
     "results/<folder>/psbd_metrics.json (65 cells)"
   ],
-  "written_at": "2026-09-23T16:57:50.587528+00:00",
-  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
+  "written_at": "2026-09-23T18:23:20.570217+00:00",
+  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
   "macros": {
     "BandFiveEightMinusAllInputSide": {
       "value": "$-$0.055",
@@ -30,6 +30,18 @@
     "BandNineOneTwoMinusAllInputSideHigh": {
       "value": "$-$0.034",
       "meaning": "upper bound of the 95% bootstrap interval on band_9_12_minus_all_input_side"
+    },
+    "BandOneFourMinusAllInputSide": {
+      "value": "$-$0.103",
+      "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_1_4_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 65 cells it covers"
+    },
+    "BandOneFourMinusAllInputSideLow": {
+      "value": "$-$0.139",
+      "meaning": "lower bound of the 95% bootstrap interval on band_1_4_minus_all_input_side"
+    },
+    "BandOneFourMinusAllInputSideHigh": {
+      "value": "$-$0.070",
+      "meaning": "upper bound of the 95% bootstrap interval on band_1_4_minus_all_input_side"
     },
     "BandOneFourMinusAllResidual": {
       "value": "$-$0.060",

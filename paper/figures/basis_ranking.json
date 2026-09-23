@@ -4,8 +4,8 @@
     "results/coverage/coverage.json",
     "configs/psbd_basis.json"
   ],
-  "written_at": "2026-09-23T16:49:13.568838+00:00",
-  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
+  "written_at": "2026-09-23T18:13:57.199508+00:00",
+  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
   "plotted": {
     "placements": [
       "input_pixels_scale_up",

@@ -7,8 +7,8 @@
     "results/<folder>/artifact_tokens.json (69)",
     "results/<folder>/sink_anatomy.json (69)"
   ],
-  "written_at": "2026-09-23T16:54:21.118891+00:00",
-  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
+  "written_at": "2026-09-23T18:19:45.125909+00:00",
+  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
   "plotted": {
     "cls_attention_on_trigger": {
       "bpp": [

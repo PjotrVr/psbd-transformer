@@ -115,6 +115,14 @@ def main() -> None:
     tm_rd = record["probe_sets"]["psbd_tm_rd"]
     wanet = record["wanet_cifar10"]
     macros = {
+        "probe_union_three_probe_auroc": (
+            fmt(record["probe_sets"]["adaptive_3probe"]["summary"]["auroc_mean"]),
+            "mean AUROC of the 3-probe union of the adaptive section on the ordinary models",
+        ),
+        "probe_union_three_probe_n": (
+            str(record["probe_sets"]["adaptive_3probe"]["summary"]["n_models"]),
+            "models holding all 3 probes of the adaptive section",
+        ),
         "probe_union_tm_branch_gain": (
             fmt(branch["gain_over_psbd_tm"]["mean_gain"], signed=True),
             "paired AUROC gain of the PSBD-TM + branch-output union over PSBD-TM alone",

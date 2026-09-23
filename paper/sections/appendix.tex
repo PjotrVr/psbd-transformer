@@ -27,6 +27,14 @@ A model whose attack success is below 0.85 prints its ASR and CA but no detectio
 \input{tables/basis_ranking}
 \FloatBarrier
 
+\section{Depth bands at matched disturbance}
+\label{app:bands}
+
+\Cref{tab:depth-bands} reads every depth band at the matched 0.6 rate, where the bands are read on the same models rather than on whichever of them reach the adaptive target. The adaptive-rule readings in \cref{tab:staircase-bands} put the early input-side band near the top on the 12 models that reach the target there, and at matched disturbance on 65 models it is the worst band of the 3. A band's n is worth reading beside its mean.
+
+\input{tables/depth_bands}
+\FloatBarrier
+
 \section{Every attention-side probe}
 \label{app:attention}
 
@@ -71,7 +79,7 @@ AUROC is flat above a shift ratio of about 0.6, at 0.927 at 0.6 and 0.936 at 0.8
 \section{Per-layer profiles of the backdoor direction}
 \label{app:layers}
 
-\Cref{tab:tac-layers} gives, for each of the 18 models in \cref{fig:tac-layers}, the block at which the backdoor direction's norm relative to the clean activation peaks, that peak value, the first block at which the relative norm reaches half its final value (the onset), the final-layer linear centered kernel alignment (CKA) \cite{kornblith2019cka} between clean and triggered activations (1.0 means the trigger leaves the representation unchanged), and the mean absolute trigger-activated change (TAC) per dimension at the final layer. The benign rows are the control. Their peak relative norm never exceeds 0.12 and their CKA is 1.0, so the profiles of the backdoored rows are learned structure and not an artifact of the trigger's pixels. TaCT stands out with a peak of 0.26 to 0.38 and a CKA of 0.98 to 0.99. A source-specific attack changes the representation of the few source classes only, so a direction averaged over all classes is small even though the attack succeeds.
+\Cref{tab:tac-layers} gives, for each of the \TacLayersCheckpoints{} models in \cref{fig:tac-layers}, read on \TacLayersSamples{} paired images per model, the block at which the backdoor direction's norm relative to the clean activation peaks, that peak value, the first block at which the relative norm reaches half its final value (the onset), the final-layer linear centered kernel alignment (CKA) \cite{kornblith2019cka} between clean and triggered activations (1.0 means the trigger leaves the representation unchanged), and the mean absolute trigger-activated change (TAC) per dimension at the final layer. The benign rows are the control. Their peak relative norm never exceeds 0.12 and their CKA is 1.0, so the profiles of the backdoored rows are learned structure and not an artifact of the trigger's pixels. TaCT stands out with a peak of 0.26 to 0.38 and a CKA of 0.98 to 0.99. A source-specific attack changes the representation of the few source classes only, so a direction averaged over all classes is small even though the attack succeeds.
 
 \input{tables/tac_layers}
 \FloatBarrier
@@ -79,12 +87,12 @@ AUROC is flat above a shift ratio of about 0.6, at 0.927 at 0.6 and 0.936 at 0.8
 \section{Comparison with Karayal\c{c}{\i}n et al. in detail}
 \label{app:picek}
 
-Karayal\c{c}{\i}n et al.~\cite{karayalcin2026backdoor} remove a backdoor by projecting the direction of 1 selected layer out of every weight matrix that writes to the residual stream, the patch embedding and every attention and MLP output projection. They report attack success falling from 97.7 to 6.7 on average. Blend on CIFAR-100 is their 1 survivor. \Cref{tab:erasure} repeats their procedure on our models with their layer selection rule. It adds 2 controls, the same edit restricted to blocks 10 and 11 and the same edit with a random direction of the same norm.
+Karayal\c{c}{\i}n et al.~\cite{karayalcin2026backdoor} remove a backdoor by projecting the direction of 1 selected layer out of every weight matrix that writes to the residual stream, the patch embedding and every attention and MLP output projection. They report attack success falling from 97.7 to 6.7 on average, in percentage points. Blend on CIFAR-100 is their 1 survivor. \Cref{tab:erasure} repeats their procedure on our models with their layer selection rule. It adds 2 controls, the same edit restricted to blocks 10 and 11 and the same edit with a random direction of the same norm.
 
 \IfFileExists{tables/erasure.tex}{\input{tables/erasure}}{}
 \FloatBarrier
 
-The removal reproduces. Every attack except Blend on CIFAR-100 falls to an attack success at or below 0.034 at a clean-accuracy cost of 0.4 to 9.5 points, Blend on CIFAR-100 stays at 1.000 at both poison rates exactly as they report, and neither control moves any attack. Our first attempt had edited only the last 2 blocks and left every attack intact, which the blocks 10 and 11 column now shows to be expected. The direction is re-created by every block, so removing it means removing it everywhere.
+The removal reproduces. Over \ErasureCheckpoints{} checkpoints attack success falls from \ErasureAsrBeforeMean{} to \ErasureAsrAfterAllWritesMean{} and clean accuracy from \ErasureCaBeforeMean{} to \ErasureCaAfterAllWritesMean{}. Blend on CIFAR-100 stays at \ErasureAsrAfterAllWritesMax{} at both poison rates exactly as they report. Neither control moves any attack: \ErasureAsrAfterBlocksOneZeroOneOneMean{} for the blocks 10 and 11 edit and \ErasureAsrAfterRandomDirectionMean{} for the random direction. Our first attempt had edited only the last 2 blocks and left every attack intact, which the blocks 10 and 11 column now shows to be expected. The direction is re-created by every block, so removing it means removing it everywhere.
 
 Their second claim, that distributed triggers reach the class token earlier than patch triggers, is measured independently in \cref{fig:tac-layers}. It holds on CIFAR-100 and Tiny ImageNet, where the onset of the backdoor direction comes earlier for Blend, BPP and LF than for BadNets. It reverses on GTSRB, which they did not run.
 
@@ -93,7 +101,7 @@ Their third contribution is a data-free detector that scores the classifier head
 \section{Seed replicates}
 \label{app:seeds}
 
-\Cref{tab:seeds} gives the 3-seed readings behind \cref{sec:robustness:seeds}. Each row is a backdoored model trained 3 times with different seeds. The columns give the smallest attack success rate among the 3 runs, the AUROC of PSBD-TM on each seed with its standard deviation, the same for PSBD-RD and the mean and standard deviation of their paired gain. PSBD-TM's standard deviation stays under 0.04 on every row, while PSBD-RD's reaches 0.28 on CIFAR-100 BadNets at 5\%.
+\Cref{tab:seeds} gives the 3-seed readings behind \cref{sec:robustness:seeds}. Each row is a backdoored model trained 3 times with different seeds. The columns give the smallest attack success rate among the 3 runs, the AUROC of PSBD-TM on each seed with its standard deviation, the same for PSBD-RD and the mean and standard deviation of their paired gain. PSBD-TM's seed standard deviation averages \SeedSdRecommended{} against \SeedSdPublished{} for PSBD-RD, and the paired gain's own standard deviation reaches \SeedSdGainMax{} on its worst row.
 
 \input{tables/seeds}
 \FloatBarrier

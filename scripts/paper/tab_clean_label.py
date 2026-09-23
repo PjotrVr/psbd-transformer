@@ -387,11 +387,14 @@ def main() -> None:
         ),
         "gtsrb_diverged_runs": (
             str(diverged),
-            "ViT GTSRB training runs whose clean accuracy collapsed below half the benign reference",
+            "of every vit_gtsrb_* checkpoint with a recorded clean accuracy, "
+            "variants included, the runs whose clean accuracy collapsed below half "
+            "the benign reference",
         ),
         "gtsrb_runs_scored": (
             str(total),
-            "ViT GTSRB training runs with a recorded clean accuracy",
+            "vit_gtsrb_* checkpoints with a clean accuracy in their args.json "
+            "sidecar, variants included, the population gtsrb_diverged_runs is of",
         ),
         "sig_gtsrb_tl_one_five_percent_mean_asr": (
             fmt(mean_or_none([run["asr"] for run in sig_5_percent])),

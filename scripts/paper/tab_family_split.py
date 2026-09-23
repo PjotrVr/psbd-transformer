@@ -39,12 +39,13 @@ from scripts.paper._common import (  # noqa: E402
     load_declaration,
     load_psbd_metrics,
     mean_or_none,
+    POSITION_WORDS,
+    split_placement,
     write_macros,
     write_table,
 )
 
 GENERATOR = "scripts/paper/tab_family_split.py"
-PENDING = r"\pending"
 DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny", "svhn", "eurosat")
 RATE_ORDER = (0.01, 0.05, 0.1)
 RULES = ("matched", "adaptive")
@@ -61,7 +62,22 @@ TOKEN_MASK_RESIDUAL_ADJACENT = (
     "before_attention_residual_token_mask",
     "after_attention_residual_token_mask",
 )
+# The same comparison with dropout held fixed instead. The earlier version of
+# this file asserted the basis carries dropout at no input-side site and printed
+# a pending row, while the basis declares 3 and each is swept on 65 models.
+DROPOUT_INPUT_SIDE = (
+    "before_attention_norm",
+    "before_mlp_norm",
+    "after_embedding",
+)
+DROPOUT_RESIDUAL_ADJACENT = (
+    "before_attention_residual",
+    "after_attention_residual",
+    "pre_residual",
+    "post_residual",
+)
 OPERATOR_MATCHED = "token_mask"
+OPERATOR_MATCHED_DROPOUT = "dropout"
 CONFOUNDED = "basis_tags"
 
 # Local triggers occupy a fixed spatial patch, global triggers cover the whole
@@ -96,16 +112,25 @@ def family_definitions(declaration: dict) -> dict[str, dict[str, list[str]]]:
         "input_side": list(TOKEN_MASK_INPUT_SIDE),
         "residual_adjacent": list(TOKEN_MASK_RESIDUAL_ADJACENT),
     }
+    dropout_matched = {
+        "input_side": list(DROPOUT_INPUT_SIDE),
+        "residual_adjacent": list(DROPOUT_RESIDUAL_ADJACENT),
+    }
     declared = {entry["id"] for entry in basis}
     missing = [
         placement
-        for family in operator_matched.values()
+        for definition in (operator_matched, dropout_matched)
+        for family in definition.values()
         for placement in family
         if placement not in declared
     ]
     if missing:
         raise SystemExit(f"basis file lacks operator-matched placements: {missing}")
-    definitions = {OPERATOR_MATCHED: operator_matched, CONFOUNDED: confounded}
+    definitions = {
+        OPERATOR_MATCHED: operator_matched,
+        OPERATOR_MATCHED_DROPOUT: dropout_matched,
+        CONFOUNDED: confounded,
+    }
     return definitions
 
 
@@ -185,7 +210,22 @@ def gap_row(
 
 
 def placement_list(placement_ids: list[str]) -> str:
-    text = ", ".join(f"`{placement}`" for placement in placement_ids)
+    """The family's sites in words, the operator left to the caption to name.
+
+    A caption is written into the .tex as given, so an identifier with an
+    underscore in one is a syntax error rather than a typo, and this table was
+    orphaned long enough for that to go unnoticed. Only the site is named,
+    because a caption that holds the operator fixed and then repeats it in front
+    of every member reads as a list twice as long as it is.
+    """
+    sites = [
+        POSITION_WORDS.get(
+            split_placement(placement)["position"],
+            split_placement(placement)["position"],
+        )
+        for placement in placement_ids
+    ]
+    text = ", ".join(sites[:-1]) + f" and {sites[-1]}" if len(sites) > 1 else sites[0]
     return text
 
 
@@ -197,20 +237,25 @@ def write_gap_table(
         gap_row(name, subset, definition, args.bootstrap, args.seed)
         for name, subset in subsets(cells)
     ]
-    if definition == OPERATOR_MATCHED:
-        rows.append(["all, dropout (pending sweep)"] + [PENDING] * 6)
-        path = os.path.join(args.paper_dir, "tables", "family_split.tex")
-        label = "tab:family-split"
+    if definition in (OPERATOR_MATCHED, OPERATOR_MATCHED_DROPOUT):
+        stem = (
+            "family_split" if definition == OPERATOR_MATCHED else "family_split_dropout"
+        )
+        path = os.path.join(args.paper_dir, "tables", f"{stem}.tex")
+        label = (
+            "tab:family-split"
+            if definition == OPERATOR_MATCHED
+            else "tab:family-split-dropout"
+        )
+        operator = "token masking" if definition == OPERATOR_MATCHED else "dropout"
         caption = (
-            "The within-model family gap with the operator held fixed at token_mask: "
-            f"input-side ({placement_list(families['input_side'])}) minus "
+            f"The within-model family gap with the operator held fixed at {operator}. "
+            f"Input-side ({placement_list(families['input_side'])}) minus "
             f"residual-adjacent ({placement_list(families['residual_adjacent'])}), "
-            "each family's per-model value the mean AUROC at q0.25 over whichever of "
-            "its members are cached. Read at the matched 0.6 rate and separately at "
-            f"the adaptive 0.8 rate, {args.bootstrap}-resample bootstrap 95\\% "
-            "intervals. The dropout row is H20's original operator, which the basis "
-            r"panel carries at no input-side site, so it prints \pending until "
-            "the operator-matched sweep runs."
+            "each family's per-model value the mean AUROC at the headline quantile "
+            "over whichever of its members are cached. Read at the matched 0.6 rate "
+            f"and separately at the adaptive 0.8 rate, {args.bootstrap}-resample "
+            "bootstrap 95\\% intervals."
         )
     else:
         path = os.path.join(args.paper_dir, "tables", "family_split_confounded.tex")
@@ -393,7 +438,7 @@ def main() -> None:
     inputs = [
         coverage_path,
         args.declaration,
-        f"{args.results_dir}/<folder>/psbd_metrics.json (65 cells)",
+        f"{args.results_dir}/<folder>/psbd_metrics.json ({len(cells)} cells)",
     ]
     attacks_present = sorted({c["attack"] for c in cells})
 
@@ -405,6 +450,22 @@ def main() -> None:
     )
 
     macros = {}
+    for stem, rule in (
+        ("family_gap_dropout_matched", "matched"),
+        ("family_gap_dropout_adaptive", "adaptive"),
+    ):
+        macros.update(
+            gap_macros(
+                stem,
+                cells,
+                OPERATOR_MATCHED_DROPOUT,
+                rule,
+                "mean paired AUROC gap, input-side minus residual-adjacent, dropout "
+                f"at every position, at the {rule} rule",
+                args.bootstrap,
+                args.seed,
+            )
+        )
     macros.update(
         gap_macros(
             "family_gap_matched",

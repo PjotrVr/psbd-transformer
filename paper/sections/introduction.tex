@@ -76,10 +76,16 @@ each of them is.
     \DetectorsAurocDefensesRanked{} defenses where PSBD-RD ranks
     \DetectorsAurocRankPublished{}, though its margin over the strongest competitor is
     only \DetectorsAurocMargin{} (\cref{sec:robustness:detectors}).
-  \item A refutation. The claim that dropout before the residual add beats
-    dropout after it, which motivated this project, does not hold at matched
-    disturbance. Neither does the reading that the winning
-    family is the input-side family, once the operator is held fixed (\cref{sec:results:operator}).
+  \item 2 refutations. The claim that dropout before the residual add beats
+    dropout after it, which motivated this project, does not hold:
+    \PreMinusPostMatched{} [\PreMinusPostMatchedLow{},
+    \PreMinusPostMatchedHigh{}] at matched disturbance over \PreMinusPostN{}
+    models. Nor is the winner the input-side family. Held at token masking the
+    family gap is \FamilyGapMatched{} [\FamilyGapMatchedLow{},
+    \FamilyGapMatchedHigh{}] at matched disturbance, and held at dropout it
+    reverses to \FamilyGapDropoutMatched{} [\FamilyGapDropoutMatchedLow{},
+    \FamilyGapDropoutMatchedHigh{}]. A split whose sign follows the operator is
+    not a fact about sites (\cref{sec:results:family}).
   \item A mechanistic account, tested on the same models and hedged to the
     regimes where we tested it. It explains the winning site, the choice of whole
     tokens over coordinates and the reversal through LayerNorm absorption, and it

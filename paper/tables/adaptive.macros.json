@@ -4,8 +4,8 @@
     "results/adaptive_attacker_analysis.json",
     "results/multi_probe_analysis.json"
   ],
-  "written_at": "2026-09-23T16:56:01.417142+00:00",
-  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
+  "written_at": "2026-09-23T18:21:30.652903+00:00",
+  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
   "macros": {
     "AdaptiveHighAsr": {
       "value": "0.9",
