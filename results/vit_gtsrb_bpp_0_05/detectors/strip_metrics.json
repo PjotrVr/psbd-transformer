@@ -1,0 +1,202 @@
+{
+  "detector": "strip",
+  "status": "scored",
+  "folder_name": "vit_gtsrb_bpp_0_05",
+  "dataset": "gtsrb",
+  "attack": "bpp",
+  "poison_rate": 0.05,
+  "architecture": "vit",
+  "probe_attack": "bpp",
+  "probe_target_label": 0,
+  "label_mode": "all_to_one",
+  "headline_quantile": 0.25,
+  "detection": {
+    "q0.01": {
+      "quantile": 0.01,
+      "threshold": 0.0423605851829052,
+      "tpr": 0.7008886337280273,
+      "fpr": 0.010777084156870842,
+      "auroc": 0.9141897349997521,
+      "auroc_two_sided": 0.9141897349997521,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.6978634902628096
+    },
+    "q0.05": {
+      "quantile": 0.05,
+      "threshold": 0.11608487367630005,
+      "tpr": 0.7704669833183289,
+      "fpr": 0.052372850477695465,
+      "auroc": 0.9141897349997521,
+      "auroc_two_sided": 0.9141897349997521,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.7684817545849877
+    },
+    "q0.10": {
+      "quantile": 0.1,
+      "threshold": 0.15619893372058868,
+      "tpr": 0.8024201393127441,
+      "fpr": 0.10606919974088669,
+      "auroc": 0.9141897349997521,
+      "auroc_two_sided": 0.9141897349997521,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.7984496124031008
+    },
+    "q0.15": {
+      "quantile": 0.15,
+      "threshold": 0.18518111109733582,
+      "tpr": 0.8304972648620605,
+      "fpr": 0.15494422614574432,
+      "auroc": 0.9141897349997521,
+      "auroc_two_sided": 0.9141897349997521,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.8276611835885801
+    },
+    "q0.20": {
+      "quantile": 0.2,
+      "threshold": 0.21134929358959198,
+      "tpr": 0.8549820184707642,
+      "fpr": 0.21090944111347198,
+      "auroc": 0.9141897349997521,
+      "auroc_two_sided": 0.9141897349997521,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.8523350349782568
+    },
+    "q0.25": {
+      "quantile": 0.25,
+      "threshold": 0.23424339294433594,
+      "tpr": 0.8753072619438171,
+      "fpr": 0.2595953941345215,
+      "auroc": 0.9141897349997521,
+      "auroc_two_sided": 0.9141897349997521,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.8713367366231802
+    }
+  },
+  "detection_captured_only": {
+    "q0.01": {
+      "quantile": 0.01,
+      "threshold": 0.0423605851829052,
+      "tpr": 0.7073752284049988,
+      "fpr": 0.009922717697918415,
+      "auroc": 0.918820623442253,
+      "auroc_two_sided": 0.918820623442253,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.708329357885698
+    },
+    "q0.05": {
+      "quantile": 0.05,
+      "threshold": 0.11608487367630005,
+      "tpr": 0.7767388820648193,
+      "fpr": 0.05056769400835037,
+      "auroc": 0.918820623442253,
+      "auroc_two_sided": 0.918820623442253,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.7755939318767293
+    },
+    "q0.10": {
+      "quantile": 0.1,
+      "threshold": 0.15619893372058868,
+      "tpr": 0.8087014555931091,
+      "fpr": 0.10380689054727554,
+      "auroc": 0.918820623442253,
+      "auroc_two_sided": 0.918820623442253,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.8068886556626276
+    },
+    "q0.15": {
+      "quantile": 0.15,
+      "threshold": 0.18518111109733582,
+      "tpr": 0.8369430303573608,
+      "fpr": 0.1528480052947998,
+      "auroc": 0.918820623442253,
+      "auroc_two_sided": 0.918820623442253,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.8350348249212861
+    },
+    "q0.20": {
+      "quantile": 0.2,
+      "threshold": 0.21134929358959198,
+      "tpr": 0.8612727522850037,
+      "fpr": 0.2090449333190918,
+      "auroc": 0.918820623442253,
+      "auroc_two_sided": 0.918820623442253,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.8597462074229558
+    },
+    "q0.25": {
+      "quantile": 0.25,
+      "threshold": 0.23424339294433594,
+      "tpr": 0.8813090324401855,
+      "fpr": 0.25799065828323364,
+      "auroc": 0.918820623442253,
+      "auroc_two_sided": 0.918820623442253,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.878160480870146
+    }
+  },
+  "provenance": {
+    "git_commit": "63b334d799b2a4e17a8d4ed305bbdfb5dfc393f2-dirty",
+    "scored_at": "2026-09-11T10:11:19.071760+00:00",
+    "device": "NVIDIA A100-SXM4-40GB",
+    "precision": "bfloat16",
+    "batch_size": 64,
+    "max_samples": null,
+    "forward_passes_per_input": 8,
+    "data_requirement": "8 clean images, unlabelled",
+    "needs_fitting": false,
+    "cross_fitted": false,
+    "hyperparameters": {
+      "overlays": 8
+    },
+    "runtime_seconds": {
+      "fit": 0.17955676279962063,
+      "validation": 6.4614318665117025,
+      "clean": 33.28469461761415,
+      "backdoor": 33.17800807952881
+    },
+    "split": {
+      "seed": 0,
+      "n_validation": 2000,
+      "n_clean": 10630,
+      "n_backdoor": 10578,
+      "n_backdoor_captured": 10481,
+      "manifest_sha256": "e5884244adccc40ab7ff667418783a20509d4094f33dc07cb216b5c957ccba26",
+      "manifest_matches_psbd_cache": true
+    },
+    "score_summary": {
+      "validation": {
+        "n": 2000,
+        "mean": 0.4172230064868927,
+        "std": 0.2972954511642456,
+        "min": 0.013296714052557945,
+        "max": 2.204538345336914
+      },
+      "clean": {
+        "n": 10630,
+        "mean": 0.41248565912246704,
+        "std": 0.2985188663005829,
+        "min": 0.010329185985028744,
+        "max": 2.5110607147216797
+      },
+      "backdoor": {
+        "n": 10578,
+        "mean": 0.08276761323213577,
+        "std": 0.14342065155506134,
+        "min": 0.008452034555375576,
+        "max": 1.5834970474243164
+      }
+    }
+  }
+}

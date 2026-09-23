@@ -1,0 +1,209 @@
+{
+  "detector": "sentinet",
+  "status": "scored",
+  "folder_name": "vit_cifar100_benign",
+  "dataset": "cifar100",
+  "attack": "benign",
+  "poison_rate": 0.0,
+  "architecture": "vit",
+  "probe_attack": "badnet_a2o",
+  "probe_target_label": 0,
+  "label_mode": "all_to_one",
+  "headline_quantile": 0.25,
+  "detection": {
+    "q0.01": {
+      "quantile": 0.01,
+      "threshold": 0.00593054573982954,
+      "tpr": 0.009096652269363403,
+      "fpr": 0.00972836371511221,
+      "auroc": 0.5001257517791091,
+      "auroc_two_sided": 0.5001257517791091,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0005000000237487257,
+      "tpr_interpolated": 0.009349336702463677
+    },
+    "q0.05": {
+      "quantile": 0.05,
+      "threshold": 0.015764819458127022,
+      "tpr": 0.043209098279476166,
+      "fpr": 0.04497788846492767,
+      "auroc": 0.5001257517791091,
+      "auroc_two_sided": 0.5001257517791091,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.04838913455464308
+    },
+    "q0.10": {
+      "quantile": 0.1,
+      "threshold": 0.024449815973639488,
+      "tpr": 0.08755527436733246,
+      "fpr": 0.08932406455278397,
+      "auroc": 0.5001257517791091,
+      "auroc_two_sided": 0.5001257517791091,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.09639924194567277
+    },
+    "q0.15": {
+      "quantile": 0.15,
+      "threshold": 0.025573259219527245,
+      "tpr": 0.13960833847522736,
+      "fpr": 0.14301958680152893,
+      "auroc": 0.5001257517791091,
+      "auroc_two_sided": 0.5001257517791091,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0005000000237487257,
+      "tpr_interpolated": 0.1470625394819962
+    },
+    "q0.20": {
+      "quantile": 0.2,
+      "threshold": 0.026680519804358482,
+      "tpr": 0.18180669844150543,
+      "fpr": 0.18003790080547333,
+      "auroc": 0.5001257517791091,
+      "auroc_two_sided": 0.5001257517791091,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.20113708149084017
+    },
+    "q0.25": {
+      "quantile": 0.25,
+      "threshold": 0.02923743613064289,
+      "tpr": 0.22665823996067047,
+      "fpr": 0.2260265350341797,
+      "auroc": 0.5001257517791091,
+      "auroc_two_sided": 0.5001257517791091,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.24851547694251422
+    }
+  },
+  "detection_captured_only": {
+    "q0.01": {
+      "quantile": 0.01,
+      "threshold": 0.00593054573982954,
+      "tpr": 0.0,
+      "fpr": 0.0,
+      "auroc": 0.0,
+      "auroc_two_sided": 1.0,
+      "direction": "inverted",
+      "tie_share_at_threshold": 0.0005000000237487257,
+      "tpr_interpolated": 0.0
+    },
+    "q0.05": {
+      "quantile": 0.05,
+      "threshold": 0.015764819458127022,
+      "tpr": 0.0,
+      "fpr": 0.0,
+      "auroc": 0.0,
+      "auroc_two_sided": 1.0,
+      "direction": "inverted",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.0
+    },
+    "q0.10": {
+      "quantile": 0.1,
+      "threshold": 0.024449815973639488,
+      "tpr": 0.0,
+      "fpr": 0.0,
+      "auroc": 0.0,
+      "auroc_two_sided": 1.0,
+      "direction": "inverted",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.0
+    },
+    "q0.15": {
+      "quantile": 0.15,
+      "threshold": 0.025573259219527245,
+      "tpr": 0.0,
+      "fpr": 1.0,
+      "auroc": 0.0,
+      "auroc_two_sided": 1.0,
+      "direction": "inverted",
+      "tie_share_at_threshold": 0.0005000000237487257,
+      "tpr_interpolated": 0.0
+    },
+    "q0.20": {
+      "quantile": 0.2,
+      "threshold": 0.026680519804358482,
+      "tpr": 1.0,
+      "fpr": 1.0,
+      "auroc": 0.0,
+      "auroc_two_sided": 1.0,
+      "direction": "inverted",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.0
+    },
+    "q0.25": {
+      "quantile": 0.25,
+      "threshold": 0.02923743613064289,
+      "tpr": 1.0,
+      "fpr": 1.0,
+      "auroc": 0.0,
+      "auroc_two_sided": 1.0,
+      "direction": "inverted",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.0
+    }
+  },
+  "provenance": {
+    "git_commit": "349f6f69df5698bfba009ae1e45ab203e850400d-dirty",
+    "scored_at": "2026-09-11T15:06:05.661057+00:00",
+    "device": "NVIDIA A100-SXM4-40GB",
+    "precision": "bfloat16",
+    "batch_size": 64,
+    "max_samples": null,
+    "forward_passes_per_input": 202,
+    "data_requirement": "100 clean images, unlabelled, plus the clean validation split for the envelope",
+    "needs_fitting": true,
+    "cross_fitted": false,
+    "hyperparameters": {
+      "overlays": 100,
+      "mask_threshold": 0.85,
+      "boundary_bin_width": 0.04,
+      "boundary_points_per_bin": 2,
+      "cam_layer_offset": {
+        "vit": -1,
+        "swin": 0
+      }
+    },
+    "runtime_seconds": {
+      "fit": 148.19834239035845,
+      "validation": 5.120411515235901e-06,
+      "clean": 590.3981832079589,
+      "backdoor": 584.8555429801345
+    },
+    "split": {
+      "seed": 0,
+      "n_validation": 2000,
+      "n_clean": 8000,
+      "n_backdoor": 7915,
+      "n_backdoor_captured": 1,
+      "manifest_sha256": "05b1ade69b91071664df8af2ba27df33b5da78b4e73c6cd0cd0df0ba38fbbbd5",
+      "manifest_matches_psbd_cache": true
+    },
+    "score_summary": {
+      "validation": {
+        "n": 2000,
+        "mean": 0.03680628538131714,
+        "std": 0.011923224665224552,
+        "min": -0.15213467180728912,
+        "max": 0.054256223142147064
+      },
+      "clean": {
+        "n": 8000,
+        "mean": 0.03766034543514252,
+        "std": 0.011963778175413609,
+        "min": -0.2260107696056366,
+        "max": 0.054256271570920944
+      },
+      "backdoor": {
+        "n": 7915,
+        "mean": 0.037752676755189896,
+        "std": 0.011380363255739212,
+        "min": -0.1257532685995102,
+        "max": 0.054256267845630646
+      }
+    }
+  }
+}

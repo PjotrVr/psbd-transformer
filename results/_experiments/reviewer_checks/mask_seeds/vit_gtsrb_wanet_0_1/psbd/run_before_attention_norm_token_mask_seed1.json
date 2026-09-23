@@ -1,0 +1,17 @@
+{
+  "git_commit": "a0818dbc892a61fb2fbe2d23339ab48171f33a97-dirty",
+  "position": "before_attention_norm",
+  "operator": "token_mask",
+  "block_range": null,
+  "dropout_rates": [
+    0.4
+  ],
+  "forward_passes": 3,
+  "effective_forward_passes": 3,
+  "mask_seed": 1,
+  "split_seed": 0,
+  "batch_size": 64,
+  "max_samples": null,
+  "use_bfloat16": true,
+  "device": "NVIDIA A100-PCIE-40GB"
+}

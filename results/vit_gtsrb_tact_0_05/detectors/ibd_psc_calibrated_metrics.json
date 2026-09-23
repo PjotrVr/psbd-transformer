@@ -1,0 +1,213 @@
+{
+  "detector": "ibd_psc_calibrated",
+  "status": "scored",
+  "folder_name": "vit_gtsrb_tact_0_05",
+  "dataset": "gtsrb",
+  "attack": "tact",
+  "poison_rate": 0.05,
+  "architecture": "vit",
+  "probe_attack": "tact",
+  "probe_target_label": 0,
+  "label_mode": "all_to_one",
+  "headline_quantile": 0.25,
+  "detection": {
+    "q0.01": {
+      "quantile": 0.01,
+      "threshold": -0.7967085242271423,
+      "tpr": 0.18677686154842377,
+      "fpr": 0.0,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.5983471074380166
+    },
+    "q0.05": {
+      "quantile": 0.05,
+      "threshold": -0.6018598079681396,
+      "tpr": 0.5057851076126099,
+      "fpr": 0.0033057851251214743,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.9057851239669421
+    },
+    "q0.10": {
+      "quantile": 0.1,
+      "threshold": -0.49033311009407043,
+      "tpr": 0.7239669561386108,
+      "fpr": 0.01652892492711544,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.968595041322314
+    },
+    "q0.15": {
+      "quantile": 0.15,
+      "threshold": -0.41008105874061584,
+      "tpr": 0.831404983997345,
+      "fpr": 0.03305784985423088,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.9768595041322314
+    },
+    "q0.20": {
+      "quantile": 0.2,
+      "threshold": -0.3998783528804779,
+      "tpr": 0.9041322469711304,
+      "fpr": 0.04628099128603935,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.9834710743801653
+    },
+    "q0.25": {
+      "quantile": 0.25,
+      "threshold": -0.34217149019241333,
+      "tpr": 0.937190055847168,
+      "fpr": 0.07438016682863235,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.9950413223140496
+    }
+  },
+  "detection_captured_only": {
+    "q0.01": {
+      "quantile": 0.01,
+      "threshold": -0.7967085242271423,
+      "tpr": 0.18677686154842377,
+      "fpr": 0.0,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.5983471074380166
+    },
+    "q0.05": {
+      "quantile": 0.05,
+      "threshold": -0.6018598079681396,
+      "tpr": 0.5057851076126099,
+      "fpr": 0.0033057851251214743,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.9057851239669421
+    },
+    "q0.10": {
+      "quantile": 0.1,
+      "threshold": -0.49033311009407043,
+      "tpr": 0.7239669561386108,
+      "fpr": 0.01652892492711544,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.968595041322314
+    },
+    "q0.15": {
+      "quantile": 0.15,
+      "threshold": -0.41008105874061584,
+      "tpr": 0.831404983997345,
+      "fpr": 0.03305784985423088,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.9768595041322314
+    },
+    "q0.20": {
+      "quantile": 0.2,
+      "threshold": -0.3998783528804779,
+      "tpr": 0.9041322469711304,
+      "fpr": 0.04628099128603935,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.9834710743801653
+    },
+    "q0.25": {
+      "quantile": 0.25,
+      "threshold": -0.34217149019241333,
+      "tpr": 0.937190055847168,
+      "fpr": 0.07438016682863235,
+      "auroc": 0.9810559388019944,
+      "auroc_two_sided": 0.9810559388019944,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0,
+      "tpr_interpolated": 0.9950413223140496
+    }
+  },
+  "provenance": {
+    "git_commit": "63b334d799b2a4e17a8d4ed305bbdfb5dfc393f2-dirty",
+    "scored_at": "2026-09-11T10:57:05.395370+00:00",
+    "device": "NVIDIA A100-SXM4-40GB",
+    "precision": "bfloat16",
+    "batch_size": 64,
+    "max_samples": null,
+    "forward_passes_per_input": 6,
+    "data_requirement": "the clean validation split, labelled",
+    "needs_fitting": true,
+    "cross_fitted": false,
+    "hyperparameters": {
+      "scaling_factors": [
+        1.5,
+        2.0,
+        3.0,
+        5.0,
+        8.0
+      ],
+      "ensemble_size": 5,
+      "error_threshold": 0.6,
+      "scaling_factor": 3.0,
+      "start_layer_count": 21,
+      "crossed_error_threshold": true
+    },
+    "runtime_seconds": {
+      "fit": 67.82063227333128,
+      "validation": 4.895146416500211,
+      "clean": 25.47370146214962,
+      "backdoor": 1.5879715979099274
+    },
+    "split": {
+      "seed": 0,
+      "n_validation": 2000,
+      "n_clean": 10630,
+      "n_backdoor": 605,
+      "n_backdoor_captured": 605,
+      "manifest_sha256": "06794acc5ad17541721e38296ecb55f09f9bb83fc91613e79d97a0b94c368333",
+      "manifest_matches_psbd_cache": true
+    },
+    "score_summary": {
+      "validation": {
+        "n": 2000,
+        "mean": -0.20750229060649872,
+        "std": 0.19881805777549744,
+        "min": -0.9999723434448242,
+        "max": -6.299748292803997e-06
+      },
+      "clean": {
+        "n": 10630,
+        "mean": -0.206605464220047,
+        "std": 0.19777415692806244,
+        "min": -0.9997740983963013,
+        "max": -7.098058176779887e-07
+      },
+      "backdoor": {
+        "n": 605,
+        "mean": -0.6031758189201355,
+        "std": 0.17043770849704742,
+        "min": -0.9999849200248718,
+        "max": -0.08835705369710922
+      }
+    }
+  }
+}

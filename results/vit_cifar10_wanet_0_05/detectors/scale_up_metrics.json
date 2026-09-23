@@ -1,0 +1,208 @@
+{
+  "detector": "scale_up",
+  "status": "scored",
+  "folder_name": "vit_cifar10_wanet_0_05",
+  "dataset": "cifar10",
+  "attack": "wanet",
+  "poison_rate": 0.05,
+  "architecture": "vit",
+  "probe_attack": "wanet",
+  "probe_target_label": 0,
+  "label_mode": "all_to_one",
+  "headline_quantile": 0.25,
+  "detection": {
+    "q0.01": {
+      "quantile": 0.01,
+      "threshold": -1.0,
+      "tpr": 0.0,
+      "fpr": 0.0,
+      "auroc": 0.9292926022376544,
+      "auroc_two_sided": 0.9292926022376544,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.13099999725818634,
+      "tpr_interpolated": 0.14553648068669528
+    },
+    "q0.05": {
+      "quantile": 0.05,
+      "threshold": -1.0,
+      "tpr": 0.0,
+      "fpr": 0.0,
+      "auroc": 0.9292926022376544,
+      "auroc_two_sided": 0.9292926022376544,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.13099999725818634,
+      "tpr_interpolated": 0.7144311377245509
+    },
+    "q0.10": {
+      "quantile": 0.1,
+      "threshold": -1.0,
+      "tpr": 0.0,
+      "fpr": 0.0,
+      "auroc": 0.9292926022376544,
+      "auroc_two_sided": 0.9292926022376544,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.13099999725818634,
+      "tpr_interpolated": 0.9033623737373737
+    },
+    "q0.15": {
+      "quantile": 0.15,
+      "threshold": -0.800000011920929,
+      "tpr": 0.4709722101688385,
+      "fpr": 0.03236111253499985,
+      "auroc": 0.9292926022376544,
+      "auroc_two_sided": 0.9292926022376544,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.02850000001490116,
+      "tpr_interpolated": 0.9294066794636399
+    },
+    "q0.20": {
+      "quantile": 0.2,
+      "threshold": -0.4000000059604645,
+      "tpr": 0.8887500166893005,
+      "fpr": 0.07736111432313919,
+      "auroc": 0.9292926022376544,
+      "auroc_two_sided": 0.9292926022376544,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.05400000140070915,
+      "tpr_interpolated": 0.9346645662938853
+    },
+    "q0.25": {
+      "quantile": 0.25,
+      "threshold": -0.20000000298023224,
+      "tpr": 0.9281944632530212,
+      "fpr": 0.13847222924232483,
+      "auroc": 0.9292926022376544,
+      "auroc_two_sided": 0.9292926022376544,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.24300000071525574,
+      "tpr_interpolated": 0.9399224531241306
+    }
+  },
+  "detection_captured_only": {
+    "q0.01": {
+      "quantile": 0.01,
+      "threshold": -1.0,
+      "tpr": 0.0,
+      "fpr": 0.0,
+      "auroc": 0.9471695274536562,
+      "auroc_two_sided": 0.9471695274536562,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.13099999725818634,
+      "tpr_interpolated": 0.1473478260869565
+    },
+    "q0.05": {
+      "quantile": 0.05,
+      "threshold": -1.0,
+      "tpr": 0.0,
+      "fpr": 0.0,
+      "auroc": 0.9471695274536562,
+      "auroc_two_sided": 0.9471695274536562,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.13099999725818634,
+      "tpr_interpolated": 0.7306138812554238
+    },
+    "q0.10": {
+      "quantile": 0.1,
+      "threshold": -1.0,
+      "tpr": 0.0,
+      "fpr": 0.0,
+      "auroc": 0.9471695274536562,
+      "auroc_two_sided": 0.9471695274536562,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.13099999725818634,
+      "tpr_interpolated": 0.9375016873975509
+    },
+    "q0.15": {
+      "quantile": 0.15,
+      "threshold": -0.800000011920929,
+      "tpr": 0.4901648759841919,
+      "fpr": 0.03326583653688431,
+      "auroc": 0.9471695274536562,
+      "auroc_two_sided": 0.9471695274536562,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.02850000001490116,
+      "tpr_interpolated": 0.9628550992551345
+    },
+    "q0.20": {
+      "quantile": 0.2,
+      "threshold": -0.4000000059604645,
+      "tpr": 0.9236332178115845,
+      "fpr": 0.07810240238904953,
+      "auroc": 0.9471695274536562,
+      "auroc_two_sided": 0.9471695274536562,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.05400000140070915,
+      "tpr_interpolated": 0.9662144742551345
+    },
+    "q0.25": {
+      "quantile": 0.25,
+      "threshold": -0.20000000298023224,
+      "tpr": 0.9621058702468872,
+      "fpr": 0.1388487070798874,
+      "auroc": 0.9471695274536562,
+      "auroc_two_sided": 0.9471695274536562,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.24300000071525574,
+      "tpr_interpolated": 0.9695738492551345
+    }
+  },
+  "provenance": {
+    "git_commit": "63b334d799b2a4e17a8d4ed305bbdfb5dfc393f2-dirty",
+    "scored_at": "2026-09-11T10:26:41.545329+00:00",
+    "device": "NVIDIA A100-SXM4-40GB",
+    "precision": "bfloat16",
+    "batch_size": 64,
+    "max_samples": null,
+    "forward_passes_per_input": 6,
+    "data_requirement": "none",
+    "needs_fitting": false,
+    "cross_fitted": false,
+    "hyperparameters": {
+      "scales": [
+        3,
+        5,
+        7,
+        9,
+        11
+      ]
+    },
+    "runtime_seconds": {
+      "fit": 5.953013896942139e-06,
+      "validation": 4.856243550777435,
+      "clean": 18.788469022139907,
+      "backdoor": 16.93920804001391
+    },
+    "split": {
+      "seed": 0,
+      "n_validation": 2000,
+      "n_clean": 8000,
+      "n_backdoor": 7200,
+      "n_backdoor_captured": 6914,
+      "manifest_sha256": "12b8fb9b2f5454467c04f306f75678c8acdc05006999b04aea46fbe24ffe0132",
+      "manifest_matches_psbd_cache": true
+    },
+    "score_summary": {
+      "validation": {
+        "n": 2000,
+        "mean": -0.23900002241134644,
+        "std": 0.3457438051700592,
+        "min": -1.0,
+        "max": -0.0
+      },
+      "clean": {
+        "n": 8000,
+        "mean": -0.22599998116493225,
+        "std": 0.33545202016830444,
+        "min": -1.0,
+        "max": -0.0
+      },
+      "backdoor": {
+        "n": 7200,
+        "mean": -0.8072778582572937,
+        "std": 0.2584584057331085,
+        "min": -1.0,
+        "max": -0.0
+      }
+    }
+  }
+}
