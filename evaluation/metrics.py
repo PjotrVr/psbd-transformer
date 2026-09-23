@@ -1,4 +1,4 @@
-"""Model behaviour metrics, and the evaluation of a single checkpoint.
+"""Model behavior metrics, and the evaluation of a single checkpoint.
 
 Accuracy on a loader is a single pass and a comparison, and what it means depends
 on the loader. On a clean loader it is clean accuracy. On an AttackSuccessSet,
@@ -387,7 +387,7 @@ def confusion_matrix(
 
     Row i is the true class and column j the prediction, as
     visual_utils.plot_confusion_matrix (lines 627 to 632) fills it. With
-    normalise the rows are divided by their totals plus 1e-24, upstream's guard
+    normalize the rows are divided by their totals plus 1e-24, upstream's guard
     against a class with no rows, so an empty row stays 0 rather than NaN.
     """
     if predictions.shape != labels.shape:

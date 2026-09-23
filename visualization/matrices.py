@@ -7,7 +7,7 @@ import numpy as np
 from .style import CONFUSION_CMAP, SINGLE_COLUMN, paper_style
 
 # Cell text is drawn only below this many classes, past which the numbers
-# overlap and hide the colour they annotate.
+# overlap and hide the color they annotate.
 ANNOTATION_CLASS_LIMIT = 20
 
 

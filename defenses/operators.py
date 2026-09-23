@@ -658,7 +658,7 @@ def masked_attention_forward(attention, mask, query, key, value, **kwargs):
     Matches torchvision's call site, self_attention(x, x, x, need_weights=False),
     which is self-attention with no mask and batch_first=True. Weights are read
     off the loaded module rather than copied, so nothing is mutated and removing
-    the wrapper restores the original behaviour exactly.
+    the wrapper restores the original behavior exactly.
 
     Does not support cross-attention or key padding. This project only ever calls
     it as self-attention, and silently accepting a key that differs from the query

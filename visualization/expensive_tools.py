@@ -1,7 +1,7 @@
-"""Registry of the expensive visualisation tools, each a callable of (case, args).
+"""Registry of the expensive visualization tools, each a callable of (case, args).
 
 Same contract as cheap_tools.TOOLS. These run minutes per checkpoint on an A100
-(the Hessian spectrum, the loss landscape, feature visualisation) and are never
+(the Hessian spectrum, the loss landscape, feature visualization) and are never
 part of --all-cheap. Each writes <out_dir>/<tool>.pdf, .png and .json and
 prints its wall time. The constants below are the cost knobs, sized for the
 login node's 15 GB GPU budget and measured in docs/visualization/expensive-tools.md.
@@ -352,7 +352,7 @@ def _plot_synthesised_grid(
 
 
 def run_feature_visualization(case, args) -> None:
-    """The input that maximises each of the 16 highest-TAC dimensions of a block.
+    """The input that maximizes each of the 16 highest-TAC dimensions of a block.
 
     --layer picks the block, the last one by default as upstream picks the last
     convolution. The ranking always reads the paired clean and backdoor loaders,

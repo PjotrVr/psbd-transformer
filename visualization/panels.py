@@ -2,7 +2,7 @@
 
 Every builder takes pixels as (num_images, height, width, channels) float
 arrays in [0, 1], the layout imshow draws, and returns a Figure the caller
-saves. The overlay follows pytorch_grad_cam's show_cam_on_image, a jet colour
+saves. The overlay follows pytorch_grad_cam's show_cam_on_image, a jet color
 map blended half and half with the image and rescaled by its maximum, which is
 what upstream draws.
 """
@@ -24,7 +24,7 @@ from .style import (
 # show_cam_on_image's image_weight: the overlay is half image and half heat map.
 OVERLAY_IMAGE_WEIGHT = 0.5
 
-# shap.image_plot clips the colour scale at this percentile of |attribution|,
+# shap.image_plot clips the color scale at this percentile of |attribution|,
 # so a single extreme pixel does not wash out every other one.
 ATTRIBUTION_CLIP_PERCENTILE = 99.9
 
@@ -55,7 +55,7 @@ def paired_image_panels(
 
     companion_kind "rgb" draws companions as (N, H, W, 3) images, the Grad-CAM
     overlay. companion_kind "frequency" draws them as (N, H, W) maps on the
-    coolwarm scale from 0 to 255 with a colour bar per panel, the frequency
+    coolwarm scale from 0 to 255 with a color bar per panel, the frequency
     saliency layout.
     """
     num_images = pixels.shape[0]

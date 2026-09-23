@@ -202,7 +202,7 @@ def fit_class_spc_statistics(
     return class_means, class_stds
 
 
-# Folds for standardising the fitting set against itself. 2 keeps every class's
+# Folds for standardizing the fitting set against itself. 2 keeps every class's
 # per-fold count as large as the shared split allows while still holding out
 # every sample from the statistics it is scored against.
 CROSS_FIT_FOLDS = 2
@@ -218,11 +218,11 @@ def cross_fitted_validation_scores(
     """Data-limited scores for the fitting set itself, shape (N,), low meaning poisoned.
 
     The clean validation split is both the set Eq. (3) is fitted on and the set
-    the detection threshold is read from. A sample standardised against
+    the detection threshold is read from. A sample standardized against
     statistics it helped fit sits closer to the class mean than a fresh sample
     would, so an in-sample threshold is too tight and the achieved false positive
     rate on the paired clean split exceeds the budget. Each fold is therefore
-    standardised against the statistics of the other folds, cut by position. The
+    standardized against the statistics of the other folds, cut by position. The
     result is negated here exactly as scale_up_scores negates at its boundary.
     """
     assert spc.shape == predicted_labels.shape == true_labels.shape, (

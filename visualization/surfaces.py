@@ -1,7 +1,7 @@
 """The 2-D loss surface as a 3-D plot with a contour beside it, per split.
 
 The 3-D view is BackdoorBench's visual_landscape figure, plot_surface under the
-coolwarm map with a shrunk colour bar. The contour is the loss-landscape
+coolwarm map with a shrunk color bar. The contour is the loss-landscape
 repository's plot_2d_contour, which upstream leaves commented out, with its
 levels 0.1 to 10 in steps of 0.5 and inline labels. Rows are splits, so the
 clean and the triggered surface of the same checkpoint, which share their 2

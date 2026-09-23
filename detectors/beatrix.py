@@ -1,7 +1,7 @@
 """Beatrix: class-conditional Gram-matrix deviation (Ma et al., NDSS 2023).
 
 Paper: "The 'Beatrix' Resurrections: Robust Backdoor Detection via Gram
-Matrices", arXiv:2209.11715. Feature modelling is Section IV-A, Equations (8)
+Matrices", arXiv:2209.11715. Feature modeling is Section IV-A, Equations (8)
 and (9). The deviation measurement is Section IV-B, Equations (10) to (14), and
 the threshold determination paragraph of the same section is the 5-fold
 jackknife the validation split is scored with here.
@@ -40,7 +40,7 @@ with how many entries fall outside and by how much. A clean input of the class
 lands inside the band on nearly every entry and its deviation stays near 0.
 
 Data requirement: the clean validation split, without its labels. The paper
-budgets 30 labelled images per class, and this port groups the shared split by
+budgets 30 labeled images per class, and this port groups the shared split by
 the model's predicted label as both released implementations do, so the labels
 are never read. Forward-pass cost: 1 per input plus the Gram algebra, and a
 fixed cost of 1 pass over the validation split for the bands.

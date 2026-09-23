@@ -388,7 +388,7 @@ VALID_POSITION_NAMES: frozenset[str] = frozenset(
 VARIANT_SUFFIXES = (
     # The superseded batch-coupled Gaussian. Its caches were archived out of
     # results/, but the psbd_metrics.json records they produced were not, so they
-    # still reach this script and must be labelled.
+    # still reach this script and must be labeled.
     ("_gaussian_batchstd", "gaussian", "batch_coupled_superseded"),
 )
 
@@ -443,10 +443,10 @@ def split_operator(
     Longest operator names are tried first so channel_mask is not read as a
     position ending in mask.
 
-    An unrecognized placement is labelled UNKNOWN_OPERATOR rather than falling
+    An unrecognized placement is labeled UNKNOWN_OPERATOR rather than falling
     back to dropout. Dropout is the baseline every other operator is compared
     against, so a suffix silently attributed to it would inflate the thing every
-    margin is measured from. Labelled, it can be found and excluded.
+    margin is measured from. Labeled, it can be found and excluded.
     """
     variant = None
     remaining = placement
@@ -861,7 +861,7 @@ TABLES_DEFAULT_SIGMA = {
 # too coarse for this operator, but it must never be read as strength-matched.
 TABLES_SIGMA_MISMATCH_MARKER = "*"
 
-# Below this ASR the backdoor is present but unreliable, so the row is labelled
+# Below this ASR the backdoor is present but unreliable, so the row is labeled
 # rather than silently averaged in with the ones that implanted cleanly.
 TABLES_WEAK_ASR = 0.8
 

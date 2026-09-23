@@ -91,7 +91,7 @@ def _normalised(vector: torch.Tensor) -> torch.Tensor:
 
 
 def _orthonormalised(vector: torch.Tensor, basis: list[torch.Tensor]) -> torch.Tensor:
-    """The vector with its component along each basis vector removed, then normalised.
+    """The vector with its component along each basis vector removed, then normalized.
 
     Sequential Gram-Schmidt, as PyHessian's orthnormal, each projection taken
     against the already-updated vector. The basis may live on another device than
@@ -175,12 +175,12 @@ def top_hessian_eigenpairs(
     """The top_n eigenvalues of largest magnitude and their unit eigenvectors.
 
     Power iteration with deflation, PyHessian's eigenvalues() line for line: a
-    Gaussian start vector, orthogonalisation against every eigenvector already
+    Gaussian start vector, orthogonalization against every eigenvector already
     found before each product, the Rayleigh quotient as the estimate and a stop
     when 2 consecutive quotients agree to tolerance in relative terms. 2 quirks are
     kept because the numbers upstream reports carry them: the eigenvalue kept at
     the stop is the earlier of the 2 agreeing quotients, and the eigenvector is
-    the normalised product of the final iteration.
+    the normalized product of the final iteration.
 
     original form (iteration k, for the j-th eigenpair)
         v_k    = orthnormal(v_k, {u_1 .. u_{j-1}})

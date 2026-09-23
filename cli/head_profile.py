@@ -1,6 +1,6 @@
 """Per-head sensitivity profile: ablate each of the 144 attention heads in turn.
 
-PSBD summarises a random perturbation into a single number per sample. This measures
+PSBD summarizes a random perturbation into a single number per sample. This measures
 the whole profile instead: for every attention head, how far the model's
 confidence in its own unperturbed prediction falls when exactly that head is
 removed.

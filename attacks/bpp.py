@@ -1,6 +1,6 @@
 """BppAttack: a bit-depth-reduction trigger (Wang et al., 2022).
 
-The trigger reduces the colour depth of the image, and with Floyd-Steinberg
+The trigger reduces the color depth of the image, and with Floyd-Steinberg
 dithering the change is hard to see. The paper also trains with a contrastive
 adversarial loss to sharpen the model's sensitivity to the quantization. That is a
 training-loop change not included here, so this is the standard-training variant.
@@ -24,7 +24,7 @@ class BppConfig:
     # Negative samples: images quantized to a DIFFERENT depth with their label kept,
     # so the network cannot learn "quantized" as the cue and has to learn this
     # specific depth. BackdoorBench calls this neg_ratio and sets it to 0.1. Without
-    # it the trigger is a generic quantization artefact and easier to detect.
+    # it the trigger is a generic quantization artifact and easier to detect.
     cover_rate: float = 0.0
 
 

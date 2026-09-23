@@ -77,7 +77,7 @@ def _grouped_target(
     m is how many distinct classes the trigger maps onto. PSBD's premise is that a
     trigger is a constant shortcut that never has to read the image. all_to_one
     satisfies that exactly and all_to_all violates it exactly, since (y + 1) mod K
-    has to recognise the source class before it can increment. m interpolates
+    has to recognize the source class before it can increment. m interpolates
     between the 2, and the backdoor has to encode log2(m) bits of content to do it.
     Both poles are reproduced exactly: m = 1 gives class 0 for every sample, which
     is all_to_one on target 0, and m = num_classes is all_to_all.

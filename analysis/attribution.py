@@ -53,7 +53,7 @@ def frequency_saliency(
     ifft2 of a real array equals the conjugate of fft2 divided by the pixel
     count, so the magnitude is fft2's up to a constant factor and the min-max
     step removes the constant: the forward and inverse transforms give the same
-    map. image is (channels, height, width) in normalised space.
+    map. image is (channels, height, width) in normalized space.
     """
     pixels = image.detach().to(device)[None].requires_grad_(True)  # (1, C, H, W)
     with torch.enable_grad(), frozen_parameters(model):
@@ -132,7 +132,7 @@ def expected_gradients(
     each of the ranked_outputs top classes as upstream's ranked_outputs asks.
 
     images is (batch, C, H, W) and background (num_background, C, H, W), both
-    normalised. Returns attributions (batch, ranked_outputs, C, H, W) float32
+    normalized. Returns attributions (batch, ranked_outputs, C, H, W) float32
     on the CPU and the explained classes (batch, ranked_outputs) long.
     """
     if background.shape[1:] != images.shape[1:]:

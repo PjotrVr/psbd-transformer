@@ -29,7 +29,7 @@ def layer_by_dimension_heatmap(
     """1 imshow of values (num_layers, dim), layers on the vertical axis.
 
     normalize_by_layer divides every row by its own maximum, upstream's
-    --normalize_by_layer, so each layer's strongest dimension is full colour
+    --normalize_by_layer, so each layer's strongest dimension is full color
     and the comparison is within a layer rather than across depth.
     """
     matrix = np.asarray(values, dtype=np.float64)  # (num_layers, dim)
@@ -70,7 +70,7 @@ def token_map_grid(
 
     clean_maps and triggered_maps are (num_dims, grid, grid), 1 map per
     dimension, at most TOKEN_MAP_GRID squared of them. Each dimension's 2 maps
-    share a colour scale so the trigger's footprint reads as a change rather
+    share a color scale so the trigger's footprint reads as a change rather
     than as a rescaling.
     """
     num_dims = clean_maps.shape[0]

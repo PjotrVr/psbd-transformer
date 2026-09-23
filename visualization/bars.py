@@ -73,7 +73,7 @@ def purity_raster(purity: np.ndarray, colours: np.ndarray) -> np.ndarray:
     )  # (dim, num_colours)
     column = np.arange(PURITY_COLUMNS)[None, :]  # (1, PURITY_COLUMNS)
 
-    # The colour of a pixel is the first class whose cumulative boundary lies
+    # The color of a pixel is the first class whose cumulative boundary lies
     # past it, which argmax over the boolean comparison finds.
     past = column[:, :, None] < boundaries[:, None, :]  # (dim, PURITY_COLUMNS, colours)
     owner = past.argmax(axis=2)  # (dim, PURITY_COLUMNS)

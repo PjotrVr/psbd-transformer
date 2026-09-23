@@ -5,7 +5,7 @@ label. They flatten the latent separation between clean and poisoned that many
 defenses look for, and cover_rate sets how many there are. The trigger is
 asymmetric: training plants a random subset of the pattern's cells and
 evaluation plants the whole pattern. Training on partial evidence forces the
-model to generalise over the pattern, so the full pattern lands far inside the
+model to generalize over the pattern, so the full pattern lands far inside the
 learned region and ASR rises, while the weaker training signal keeps poisoned
 latents close to clean ones.
 

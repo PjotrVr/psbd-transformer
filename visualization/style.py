@@ -1,10 +1,10 @@
-"""1 palette, 1 set of colour maps, 1 set of sizes and 1 save routine for every figure.
+"""1 palette, 1 set of color maps, 1 set of sizes and 1 save routine for every figure.
 
-Categorical colour follows Okabe and Ito's colour-blind safe order for the
+Categorical color follows Okabe and Ito's color-blind safe order for the
 first 7 classes, extended by 3 hues from Tol's scheme that stay distinct from
 them, so a figure with up to 10 classes reads without a legend key. The
 poisoned class is always black, as BackdoorBench draws it, and any class past
-the 10th is grey, since a categorical figure with more hues than that reads
+the 10th is gray, since a categorical figure with more hues than that reads
 as noise anyway. Each statistic family keeps 1 sequential map, blues for TAC
 and oranges for Lipschitz as upstream, and attributions share 1 diverging map.
 """
@@ -66,7 +66,7 @@ def paper_style() -> matplotlib.RcParams:
 
 
 def class_colour(position: int) -> str:
-    """The colour of the class drawn at this position in the legend order."""
+    """The color of the class drawn at this position in the legend order."""
     if position < len(CLASS_COLOURS):
         return CLASS_COLOURS[position]
     return OTHER_COLOUR
@@ -76,7 +76,7 @@ def colour_table(class_order: np.ndarray, num_classes: int) -> np.ndarray:
     """RGB rows for every class index plus the poisoned pseudo class, (num_classes + 1, 3).
 
     class_order lists the classes a figure draws, in legend order, and fixes
-    which of them gets which hue. Classes outside it are grey and the row at
+    which of them gets which hue. Classes outside it are gray and the row at
     index num_classes is black for the poisoned rows.
     """
     table = np.tile(matplotlib.colors.to_rgb(OTHER_COLOUR), (num_classes + 1, 1))

@@ -18,7 +18,7 @@ the degenerate case.
                          and cannot be negative. A negative value there is a bug in
                          the caller and is rejected rather than used.
 
-Not every clamped denominator is this failure. Normalising a vector by its own
+Not every clamped denominator is this failure. Normalizing a vector by its own
 sum to form a distribution, or flooring a probability before a log for an
 entropy, divides by a quantity that is non-negative by construction, and
 clamping there correctly yields 0 for an all-zero row. The failure is specific

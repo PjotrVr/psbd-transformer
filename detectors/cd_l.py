@@ -2,7 +2,7 @@
 
 Paper: "Distilling Cognitive Backdoor Patterns within an Image", arXiv:2301.10908.
 The objective is Section 3.1, Equations (1) and (2), the detection rule Section
-3.2, Equation (4) and the optimiser settings Appendix B.3.
+3.2, Equation (4) and the optimizer settings Appendix B.3.
 
     original form
         argmin_m || f_theta(x) - f_theta(x_cp) ||_1
@@ -17,9 +17,9 @@ The objective is Section 3.1, Equations (1) and (2), the detection rule Section
         cd_l_score      = sum of the final mask, low meaning poisoned
 
 f_theta is the model's logit map, m in [0, 1]^{h x w} a single-channel mask shared
-by the colour channels, delta in [0, 1]^c a per-channel uniform fill redrawn at
-every optimisation step, TV the total variation and t a threshold set on clean
-data. The mask is parametrised through a scaled tanh, so the optimiser works on
+by the color channels, delta in [0, 1]^c a per-channel uniform fill redrawn at
+every optimization step, TV the total variation and t a threshold set on clean
+data. The mask is parameterized through a scaled tanh, so the optimizer works on
 an unconstrained parameter and the mask itself never leaves [0, 1].
 
 Mechanism. The L1 term pushes the mask toward 0 everywhere, and only pixels whose
@@ -41,8 +41,8 @@ Deviations from the paper, each recorded in full in docs/detectors/cd_l.md:
 
   1. The TV weight is 1.0, the released code's default, where Appendix B.3
      states 10. The paper's own ablation finds detection insensitive to it.
-  2. Both the reference pass and every distilled pass are normalised. The
-     released class normalises the reference pass only, harmless there because
+  2. Both the reference pass and every distilled pass are normalized. The
+     released class normalizes the reference pass only, harmless there because
      its models consume [0, 1] input, wrong on a model that does not.
   3. The mask lives at the dataset's native resolution and the model's own
      Resize upsamples the distilled input. At 224 the L1 term would be 50 times
@@ -89,7 +89,7 @@ DEFAULT_TV_WEIGHT = 1.0
 # p of the reference's torch.norm, line 14. Eq. (1) and Eq. (4) both use L1.
 MASK_NORM = 1
 
-# The reference initialises the parameter with torch.ones on line 35, so the
+# The reference initializes the parameter with torch.ones on line 35, so the
 # effective mask starts at (tanh(1) + 1) / 2 = 0.8808 rather than at 1, where
 # the tanh gradient would be too small to move it.
 MASK_PARAMETER_INIT = 1.0
@@ -113,7 +113,7 @@ def effective_mask(mask_parameter: torch.Tensor) -> torch.Tensor:
 
 
 def total_variation(mask: torch.Tensor) -> torch.Tensor:
-    """TV(m) of Eq. (1) per image, shape (batch,), in the reference's normalisation.
+    """TV(m) of Eq. (1) per image, shape (batch,), in the reference's normalization.
 
     original form (reference total_variation_loss)
         TV(m) = ( sum_{i,j} (m_{i+1,j} - m_{i,j})^2
@@ -165,10 +165,10 @@ def distill_masks(
 ) -> torch.Tensor:
     """Eq. (1) solved for 1 batch, the final effective masks, (batch, 1, height, width).
 
-    images is the batch exactly as the loader serves it, normalised and at the
+    images is the batch exactly as the loader serves it, normalized and at the
     dataset's native resolution. The reference logits come from that tensor. The
-    mask is optimised in [0, 1] pixel space at the same resolution, the Eq. (2)
-    blend is renormalised with the same statistics, and the model's own Resize
+    mask is optimized in [0, 1] pixel space at the same resolution, the Eq. (2)
+    blend is renormalized with the same statistics, and the model's own Resize
     takes the distilled input up to 224.
 
     The model is frozen for the whole loop and the gradient is taken against the
@@ -179,7 +179,7 @@ def distill_masks(
     documents. The mask, the Adam state and the objective stay float32.
     """
     model.eval()
-    images = images.to(device)  # (batch, channels, height, width), normalised
+    images = images.to(device)  # (batch, channels, height, width), normalized
     batch, channels, height, width = images.shape
 
     mean_tensor, std_tensor = normalization_buffers(

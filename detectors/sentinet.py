@@ -54,7 +54,7 @@ Grad-CAM under bf16 autocast reads a float32 tensor. The residual stream stays
 float32 because the position-embedding add and every residual add promote the
 bf16 branch output, so the captured tokens and their gradient are float32 and
 autocast rounds the branches rather than the map. The CAM is then scaled and
-thresholded, which is a rounding of a map and not an optimisation trajectory,
+thresholded, which is a rounding of a map and not an optimization trajectory,
 so the shared autocast policy applies.
 
 Deviations from the paper, recorded in full in docs/detectors/sentinet.md:
@@ -122,7 +122,7 @@ OFFICIAL_TOOLBOX_MASK_FRACTION = 0.15
 
 # OutPts(B) in Algorithm 4 as Beatrix's DecisionBoundary implements it: avg_conf
 # bins of 0.04 and the 2 largest fooled values per bin. backdoor-toolbox uses
-# bins of 0.02 and 1 point per bin, placed at the bin centre.
+# bins of 0.02 and 1 point per bin, placed at the bin center.
 BOUNDARY_BIN_WIDTH = 0.04
 BOUNDARY_POINTS_PER_BIN = 2
 
@@ -474,7 +474,7 @@ def sentinet_statistics(
 
     The raw Algorithm 3 statistics, not scored. The builder fits the envelope on
     the clean validation split's pair and sentinet_scores turns another loader's
-    pair into residuals, so the 2-D behaviour is kept where a run's provenance
+    pair into residuals, so the 2-D behavior is kept where a run's provenance
     can read it back.
     """
     model.eval()
@@ -577,7 +577,7 @@ def boundary_residual(
 
     The paper measures the perpendicular COBYLA distance from the curve and sets
     d from the clean points. The vertical residual keeps the sign and the
-    ordering the curve induces without an optimiser per sample, and a quantile of
+    ordering the curve induces without an optimizer per sample, and a quantile of
     the clean residuals plays the role of d.
     """
     conf_values = np.asarray(avg_conf, dtype=np.float64)  # (N,)

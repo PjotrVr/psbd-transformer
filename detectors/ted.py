@@ -46,7 +46,7 @@ input's sequence is an outlier among the clean sequences. Ranks are invariant to
 any positive rescaling of a layer's activations, so the scale drift across a
 residual stream never enters the statistic.
 
-Data requirement: the clean validation split, labelled, since the bank keeps only
+Data requirement: the clean validation split, labeled, since the bank keeps only
 the samples the model classifies correctly. Forward-pass cost: 1 per input, plus
 1 euclidean distance matrix against the bank at each of the N layers, and a fixed
 cost of 2 passes over the validation split, 1 for the bank and 1 for its
@@ -57,7 +57,7 @@ Deviations from the paper, each recorded in full in docs/detectors/ted.md:
   1. The considered layers are the residual stream at every block boundary, 13
      on ViT-B/16 and 25 on Swin-S, in place of every Conv2d, ReLU and Linear
      output.
-  2. The outlier model is a squared Mahalanobis distance on standardised
+  2. The outlier model is a squared Mahalanobis distance on standardized
      trajectories, replacing pyod's PCA detector, which is not installed. The
      direction of the score is preserved and no equivalence is claimed.
   3. The bank is every correctly classified sample of the shared 2000-sample
@@ -164,7 +164,7 @@ class TrajectoryModel:
 
     mean and std are (num_layers,) float64, precision is (num_layers,
     num_layers) float64, the floored pseudo-inverse of the covariance of the
-    standardised clean trajectories.
+    standardized clean trajectories.
     """
 
     mean: torch.Tensor
@@ -522,9 +522,9 @@ def fit_trajectory_model(benign: torch.Tensor) -> TrajectoryModel:
         Sigma    = covariance of z over the benign trajectories
         epsilon  = COVARIANCE_FLOOR
 
-    pyod's quantity is a weighted sum of distances from a standardised point to
+    pyod's quantity is a weighted sum of distances from a standardized point to
     each eigenvector treated as a point, so it is no reconstruction error. Both
-    scores grow with the standardised distance from the clean centre, which is
+    scores grow with the standardized distance from the clean center, which is
     the direction Algorithm 2 line 19 relies on, and nothing more is claimed.
 
     The fit runs in float64 because the pseudo-inverse's default cutoff in

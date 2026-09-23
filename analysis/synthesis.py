@@ -1,12 +1,12 @@
-"""Feature visualisation: the input that maximises 1 residual dimension of a block.
+"""Feature visualization: the input that maximizes 1 residual dimension of a block.
 
 Olah, Mordvintsev and Schubert, "Feature Visualization", Distill 2017, in the
 form OmniXAI's FeatureVisualizer runs it and BackdoorBench's visual_fv.py calls
-it. An image is parameterised in the Fourier basis with a 1/frequency scaling
-and a colour decorrelation, mapped to valid RGB by a sigmoid, transformed at
+it. An image is parameterized in the Fourier basis with a 1/frequency scaling
+and a color decorrelation, mapped to valid RGB by a sigmoid, transformed at
 random each step and pushed by Adam to raise the activation of a chosen unit,
 against an L1 and a total-variation penalty on the image. Every constant below
-is the one those 2 sources use, and the Fourier and colour parameterisation is
+is the one those 2 sources use, and the Fourier and color parameterization is
 lucid's, which lucent ports to torch and OmniXAI copies.
 
     original form (per image b with its own unit k_b)
@@ -49,8 +49,8 @@ from analysis.features import (
 from defenses.inference import forward_logits, frozen_parameters
 from models.backbones import network_core
 
-# lucid's colour decorrelation: the square root of the SVD of the ImageNet pixel
-# colour covariance, normalised by its largest column norm.
+# lucid's color decorrelation: the square root of the SVD of the ImageNet pixel
+# color covariance, normalized by its largest column norm.
 COLOUR_CORRELATION_SVD_SQRT = torch.tensor(
     [[0.26, 0.09, 0.02], [0.27, 0.00, -0.05], [0.27, -0.09, 0.03]]
 )  # (3, 3)
@@ -65,7 +65,7 @@ VALUE_RANGE = (0.05, 0.95)
 INIT_STD = 0.01
 LEARNING_RATE = 0.05
 FFT_DECAY = 1.0
-# The regulariser weights BackdoorBench's visual_fv.py passes. Its l2 weight is 0,
+# The regularizer weights BackdoorBench's visual_fv.py passes. Its l2 weight is 0,
 # so the l2 term is not implemented.
 L1_WEIGHT = 0.15
 TV_WEIGHT = 0.25
@@ -95,9 +95,9 @@ def fourier_scale(
 ) -> torch.Tensor:
     """The 1/frequency weight of each spectrum entry, (height, width // 2 + 1).
 
-    Low frequencies are amplified relative to high ones, so an optimiser step of
+    Low frequencies are amplified relative to high ones, so an optimizer step of
     a given size moves the image more in its smooth components than in its noise,
-    the preconditioning that gives feature visualisation its readable images.
+    the preconditioning that gives feature visualization its readable images.
     """
     frequencies = rfft2d_frequencies(height, width)  # (height, columns)
     floor = 1.0 / max(width, height)
@@ -128,10 +128,10 @@ def spectrum_to_image(
 
 
 def decorrelate_colours(image: torch.Tensor) -> torch.Tensor:
-    """Map decorrelated colour channels to correlated RGB, (batch, 3, height, width).
+    """Map decorrelated color channels to correlated RGB, (batch, 3, height, width).
 
     lucid's _linear_decorrelate_color: each pixel's 3 channels times the
-    normalised correlation matrix transposed.
+    normalized correlation matrix transposed.
     """
     matrix = COLOUR_CORRELATION_NORMALISED.to(image.device, image.dtype)  # (3, 3)
     channels_last = image.permute(0, 2, 3, 1)  # (batch, height, width, 3)
@@ -251,11 +251,11 @@ def maximising_input(
     Returns (images, objectives): images (len(dimensions), 3, image_size,
     image_size) in [0, 1] without any transform applied, objectives (steps,
     len(dimensions)) holding each image's unit activation at every step, under
-    that step's transform. All images are optimised as 1 batch, so 1 forward and
+    that step's transform. All images are optimized as 1 batch, so 1 forward and
     1 backward per step serve every dimension. The model's parameters are frozen
     for the duration and every hook is removed on exit.
 
-    mean and std are the dataset's normalisation, applied after the transform and
+    mean and std are the dataset's normalization, applied after the transform and
     before the model, the place BackdoorBench's train transform put them.
     """
     core = network_core(model)

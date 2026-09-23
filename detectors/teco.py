@@ -246,7 +246,7 @@ def _hsv_to_rgb(images: torch.Tensor) -> torch.Tensor:
 
 
 def _clipped_zoom(images: torch.Tensor, zoom_factor: float) -> torch.Tensor:
-    """The reference's clipped_zoom: centre crop by 1/zoom, then bilinear upscale.
+    """The reference's clipped_zoom: center crop by 1/zoom, then bilinear upscale.
 
     scipy.ndimage.zoom with grid_mode=False aligns the corner pixel centres, which
     is align_corners=True in torch.

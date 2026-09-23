@@ -442,7 +442,7 @@ def train_classifier(
     run can never be mistaken for an ordinary training run. A run whose
     validation accuracy collapses raises instead of returning.
 
-    record_sample_loss, off by default, additionally scatters every training
+    record_sample_loss, off by default, also scatters every training
     sample's cross entropy into a per-epoch row (train_one_epoch's
     sample_loss_row) and writes the stacked (epoch, sample) history plus the
     poison index set to <checkpoint_dir>/sample_loss.npz after every epoch

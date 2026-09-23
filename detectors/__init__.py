@@ -38,8 +38,8 @@ training pool and produce a partition rather than a per-input decision.
 | ibd_psc_calibrated | Hou et al., ICML 2024, omega searched | the same at the smallest omega Algorithm 1 accepts | the shared split | 6 |
 | teco | Liu et al., CVPR 2023 | spread of corruption hardness thresholds | none | 71 |
 | cd_l | Huang et al., ICLR 2023 | L1 norm of the distilled input mask | none | 251 |
-| beatrix | Ma et al., NDSS 2023 | Gram-matrix deviation from class bands | the shared split, unlabelled | 1 |
-| ted | Mo et al., IEEE S&P 2024 | outlier rank trajectory over depth | the shared split, labelled | 1 |
+| beatrix | Ma et al., NDSS 2023 | Gram-matrix deviation from class bands | the shared split, unlabeled | 1 |
+| ted | Mo et al., IEEE S&P 2024 | outlier rank trajectory over depth | the shared split, labeled | 1 |
 | sentinet | Chou et al., S&P Workshops 2020 | residual above the clean (avgConf, fooled) envelope | 100 samples plus the split | 202 |
 
 PSBD itself is not in this registry. It is scored through defenses.inference and
@@ -147,7 +147,7 @@ CROSS_FITTED: frozenset[str] = frozenset({"scale_up_data_limited", "beatrix", "t
 
 # "autocast" methods run under context.use_bfloat16 like PSBD's own passes. A
 # "float32" method forces full precision for its gradient step whatever the
-# context says, because bf16 gradient noise changes an optimisation trajectory
+# context says, because bf16 gradient noise changes an optimization trajectory
 # where it only rounds a forward pass. The effective dtype of a run is recorded
 # in its provenance and must be identical across every cell a table compares.
 PRECISION_POLICY: dict[str, str] = {

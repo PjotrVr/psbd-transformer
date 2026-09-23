@@ -1,4 +1,4 @@
-"""The 2-D loss surface around a checkpoint along filter-normalised random directions.
+"""The 2-D loss surface around a checkpoint along filter-normalized random directions.
 
 Li et al., "Visualizing the Loss Landscape of Neural Nets", NeurIPS 2018,
 Section 4, as the authors' loss-landscape repository computes it and as
@@ -60,7 +60,7 @@ def landscape_parameters(model: nn.Module) -> list[nn.Parameter]:
 def random_direction(
     model: nn.Module, seed: int, normalisation: str = "filter"
 ) -> Direction:
-    """1 normalised random direction, 1 tensor per parameter, on the parameters' device.
+    """1 normalized random direction, 1 tensor per parameter, on the parameters' device.
 
     The Gaussian draw happens on the CPU in the parameters' dtype, in
     model.parameters() order, so the same seed gives the same direction on any
@@ -109,7 +109,7 @@ def direction_cosine(first: Direction, second: Direction) -> float:
     """The cosine between 2 directions as flat vectors, the repository's proj.cal_angle.
 
     Near 0 in a space of 86 M dimensions, which is what makes the 2 axes of the
-    surface effectively orthogonal without an explicit orthogonalisation.
+    surface effectively orthogonal without an explicit orthogonalization.
     """
     first_flat = torch.cat([tensor.reshape(-1) for tensor in first])  # (n_params,)
     second_flat = torch.cat(

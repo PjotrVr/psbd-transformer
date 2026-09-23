@@ -164,7 +164,7 @@ def clean_error_rate(
 ) -> float:
     """Eq. (3): top-1 error of the currently amplified model on the clean split.
 
-    Ground truth comes from the loader, which is why Algorithm 1 needs a labelled
+    Ground truth comes from the loader, which is why Algorithm 1 needs a labeled
     benign set while the score itself needs none.
     """
     model.eval()

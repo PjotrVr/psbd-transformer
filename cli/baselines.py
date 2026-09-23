@@ -451,7 +451,7 @@ def failed_record(name: str, case_folder: str, error: BaseException) -> dict:
 def write_scored(
     args: argparse.Namespace, name: str, case: ScoringCase, scores: dict, record: dict
 ) -> None:
-    """Persist the score tensors first, then the record that summarises them."""
+    """Persist the score tensors first, then the record that summarizes them."""
     for split, values in scores.items():
         save_scores(scores_path(args.results_dir, case.folder, name, split), values)
     save_report(report_path(args.results_dir, case.folder, name), record)

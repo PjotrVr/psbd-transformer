@@ -1,4 +1,4 @@
-"""Git and clock stamps every artefact writer records so a number traces to a commit."""
+"""Git and clock stamps every artifact writer records so a number traces to a commit."""
 
 import subprocess
 from datetime import datetime, timezone
@@ -20,7 +20,7 @@ def current_git_commit() -> str | None:
     uncommitted changes were present, so a dirty tree records <sha>-dirty. Dirty
     means a tracked file is modified or an untracked Python file exists, since
     either can change what ran. Untracked data, tables and caches do not count,
-    otherwise every generated artefact would mark the tree dirty. None outside a
+    otherwise every generated artifact would mark the tree dirty. None outside a
     git checkout, so provenance never blocks a run.
     """
     try:

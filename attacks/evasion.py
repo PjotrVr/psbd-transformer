@@ -46,7 +46,7 @@ paper itself describes (Li, Chen, Liu, Wang, arXiv 2406.05826, Appendix
 "Resistance to Potential Adaptive Attacks"). Selected with
 `probe["objective"] = "psu_mean"`, default `"psu_gap_hinge"`, the objective
 above. The 2 canonical names state what each loss computes: `psu_gap_hinge`
-penalises the gap between the poisoned and the clean mean fractional PSU
+penalizes the gap between the poisoned and the clean mean fractional PSU
 under the probe, `psu_mean` adds alpha times the mean absolute PSU over every
 training sample to the backdoor loss. The old names `"hinge"` and
 `"psbd_paper"` are still accepted (`normalize_evasion_objective`), so an
@@ -230,7 +230,7 @@ def _probe_confidences(
 
     Shared by the fractional PSU (`psu_for_batch`, the defender's headline
     statistic) and the absolute PSU (`absolute_psu_for_batch`, the paper's own
-    form), which differ only in whether (base - dropped) is normalised by base.
+    form), which differ only in whether (base - dropped) is normalized by base.
 
     The model is switched to eval mode for this computation so the attacker
     measures the same statistic as the defender. On Swin this disables stochastic

@@ -1,8 +1,8 @@
-"""The dataset views a visualisation tool reads, built over the paired PSBD splits.
+"""The dataset views a visualization tool reads, built over the paired PSBD splits.
 
 BackdoorBench's analysis scripts draw their images from 5 places: the clean test
 set, the poisoned test set, a mixed test set where a poison ratio of the rows
-carry the trigger, a class-balanced subset of any of those, and a handful of
+carry the trigger, a class-balanced subset of any of those and a handful of
 2 clean plus 2 poisoned examples for the image panels (visual_utils.py,
 generate_clean_dataset, generate_bd_dataset, generate_mix_dataset and
 sub_sample_euqal_ratio_classes_index at commit f02e353). This module builds the
@@ -17,7 +17,7 @@ mask, never a row's position, because upstream titles its panels by position
 ("clean, clean, poison, poison") and mislabels them when fewer than 2 poisoned
 rows exist and clean rows fill the gap.
 
-Images stay at the dataset's native resolution in normalised space, which is
+Images stay at the dataset's native resolution in normalized space, which is
 what the loaders serve and what the model's own Resize wrapper consumes.
 """
 
@@ -39,7 +39,7 @@ POISON_CLASS_MARK = -1
 class SampleView:
     """1 population of rows a tool reads: images, true labels and who carries the trigger.
 
-    images is (num_rows, channels, height, width) in normalised space, labels
+    images is (num_rows, channels, height, width) in normalized space, labels
     (num_rows,) long holds the TRUE class of every row even when the row is
     triggered, poison_mask (num_rows,) bool marks the triggered rows and
     test_indices (num_rows,) long names the original test index of each row.
@@ -343,7 +343,7 @@ def paired_examples(
 def to_pixels(
     images: torch.Tensor, mean: tuple[float, ...], std: tuple[float, ...]
 ) -> torch.Tensor:
-    """Normalised images back in [0, 1] pixel space, (N, C, H, W), for drawing."""
+    """Normalized images back in [0, 1] pixel space, (N, C, H, W), for drawing."""
     mean_tensor, std_tensor = normalization_buffers(
         mean, std, images.device, images.dtype
     )  # (1, C, 1, 1) each

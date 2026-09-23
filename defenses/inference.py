@@ -71,11 +71,11 @@ def forward_probs(
 def frozen_parameters(model: nn.Module):
     """A context in which no parameter requires a gradient, restored exactly on exit.
 
-    A detector that optimises an input mask or differentiates a logit with respect
+    A detector that optimizes an input mask or differentiates a logit with respect
     to an activation wants the backward pass to stop at the activations. With
     every parameter frozen autograd builds no weight-gradient graph, so the
     backward costs about a third less, and no parameter can accumulate a .grad
-    that a later optimiser step would consume by mistake. Flags are saved per
+    that a later optimizer step would consume by mistake. Flags are saved per
     parameter, so a model that already had some frozen gets them back as they were.
     """
     saved = [(parameter, parameter.requires_grad) for parameter in model.parameters()]
@@ -106,7 +106,7 @@ def build_baseline_cache(
     for, on the backdoor split the attack-success label, so comparing it to the
     argmax says per sample whether the trigger actually flipped the image. A
     triggered image the model still classifies correctly is behaviourally clean,
-    and scoring it as a positive would penalise the detector for the attack's
+    and scoring it as a positive would penalize the detector for the attack's
     failure.
     """
     model.eval()

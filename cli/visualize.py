@@ -1,10 +1,10 @@
-"""Run 1 visualisation tool against 1 checkpoint and write its figure with a sidecar.
+"""Run 1 visualization tool against 1 checkpoint and write its figure with a sidecar.
 
 The tools mirror BackdoorBench's analysis module, re-implemented over this
 project's loaders and hooks (docs/visualization/README.md). Every tool reads the
 same loaded case: the checkpoint's model, the 3 PSBD splits (validation, paired
 clean and backdoor) built by the standard permutation, its args.json metadata,
-and the dataset's normalisation statistics. Output lands under
+and the dataset's normalization statistics. Output lands under
 results/<folder>/visual/<tool>.{pdf,png,json,csv} with the git commit, layer,
 view and sample count in the sidecar.
 

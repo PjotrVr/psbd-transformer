@@ -1,4 +1,4 @@
-"""Registry of the cheap visualisation tools, each a (case, args) -> None callable.
+"""Registry of the cheap visualization tools, each a callable that takes the loaded case and the parsed arguments and returns nothing.
 
 A tool reads what it needs from the loaded case (model, loaders, metadata,
 device, dataset statistics) and the parsed arguments (layer, view, samples,
@@ -599,7 +599,7 @@ def run_pca(case, args: argparse.Namespace) -> None:
 
 
 def run_confusion(case, args: argparse.Namespace) -> None:
-    """visual_cm.py: the row-normalised confusion matrix of the view, true class down."""
+    """visual_cm.py: the row-normalized confusion matrix of the view, true class down."""
     view = _view(case, args)
     predictions = _probabilities(case, args, view.images).argmax(dim=1)  # (N,)
     matrix = confusion_matrix(
