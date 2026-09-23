@@ -18,6 +18,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from scripts.paper._common import (  # noqa: E402
+    as_float,
     attack_label,
     build_parser,
     dataset_label,
@@ -144,6 +145,81 @@ def main() -> None:
         ],
         rows=table_rows,
         align="llllrrrrrr",
+    )
+
+    # The 4 rows the body needs: the population before and after the attack, and
+    # the 2 worst single models, 1 for the probe the attacker trained against and
+    # 1 for the union. It was hand-typed in the section, which is how it came to
+    # quote the population as a row of the table it summarizes.
+    summary_rows = []
+    for arch, stats in sorted(per_arch.items()):
+        by_probe = min(
+            (row for row in table_rows if row[0] == arch),
+            key=lambda row: as_float(row[7]),
+        )
+        by_union = min(
+            (row for row in table_rows if row[0] == arch and row[9] != "--"),
+            key=lambda row: as_float(row[9]),
+        )
+        summary_rows.append(
+            [
+                "before the attack",
+                fmt(mean_or_none(stats["base"])),
+                "--",
+                fmt(mean_or_none(stats["base"])),
+                "--",
+                "--",
+            ]
+        )
+        summary_rows.append(
+            [
+                f"after the attack, mean of {len(stats['base'])}",
+                fmt(
+                    mean_or_none(
+                        [
+                            row["evade_asr"]
+                            for row in attacker_rows
+                            if row.get("evade_asr", 0) >= HIGH_ASR
+                        ]
+                    )
+                ),
+                fmt(mean_or_none(stats["ca_cost"]), signed=True),
+                f"\\textbf{{{fmt(mean_or_none(stats['evade']))}}}",
+                fmt(mean_or_none(stats["transfer"])),
+                f"\\textbf{{{fmt(mean_or_none(stats['union']))}}}",
+            ]
+        )
+        for label, row in (
+            ("worst model for the probe", by_probe),
+            ("worst model for the union", by_union),
+        ):
+            summary_rows.append(
+                [
+                    f"{label} ({row[2]} {as_float(row[3]) * 100:g}%)",
+                    row[4],
+                    row[5],
+                    row[7],
+                    row[8],
+                    row[9],
+                ]
+            )
+    write_table(
+        path=os.path.join(args.paper_dir, "tables", "adaptive_summary.tex"),
+        generator=GENERATOR,
+        inputs=inputs,
+        caption=(
+            "The adaptive attacker on the CIFAR-100 ViT-B/16 models whose evasive "
+            f"version keeps attack success at or above {HIGH_ASR:g}. ASR is the attack "
+            "success rate of the evasive model and cost its clean-accuracy loss. "
+            "Probed is the AUROC of the placement the attacker trained against, "
+            "transfer the mean AUROC of the 2 probes the attacker never saw, and union "
+            "the AUROC of the min-rank union of all 3. \\Cref{tab:adaptive-attacker} "
+            "gives every model separately."
+        ),
+        label="tab:adaptive",
+        header=["", "ASR", "cost", "probed", "transfer", "union"],
+        rows=summary_rows,
+        align="lrrrrr",
     )
 
     macros = {

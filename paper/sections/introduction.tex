@@ -56,8 +56,8 @@ attention block, which we call PSBD-TM, reaches a mean AUROC of
 original placement, which we call PSBD-RD. The 2 axes separate because the same
 operator moves by \AttentionInputMinusMlpInputTokenMask between the attention
 input and the MLP input, while at the attention input alone the operator moves the
-score by \GaussianMinusTokenMaskAttentionNorm, and what decides the operator is not the
-site but the side of the LayerNorm the perturbation lands on. Holding that side
+score by \StaircaseOperatorsBeforeAttentionNormGaussianGain{}. What decides the operator
+is not the site but the side of the LayerNorm the perturbation lands on. Holding that side
 fixed leaves no interaction between the 2 axes that we can separate from 0. The mechanism is that a backdoor in a ViT is 1 direction in
 the residual stream, written in the last third of the network and routed through
 attention from the trigger's patch tokens to the class token.
@@ -66,12 +66,16 @@ attention from the trigger's patch tokens to the class token.
 each of them is.
 
 \begin{enumerate}
-  \item A systematic result. Over \PanelCellsCached backdoored ViT-B/16 models on
-    \PanelDatasetsCached datasets, PSBD-TM beats PSBD-RD by
-    \HeadlineGainAdaptiveAuroc [\HeadlineGainAdaptiveAurocLow,
-    \HeadlineGainAdaptiveAurocHigh], with its largest advantage at 1\% poisoning
-    and \SwinGainRecommendedMinusPreResidual on Swin-S
-    (\cref{sec:results,sec:swin}).
+  \item A systematic result. Over \PanelCellsCached{} backdoored ViT-B/16 models on
+    \PanelDatasetsCached{} datasets, PSBD-TM beats PSBD-RD by
+    \HeadlineGainAdaptiveAuroc{} [\HeadlineGainAdaptiveAurocLow{},
+    \HeadlineGainAdaptiveAurocHigh{}], with its largest advantage at \PanelRateLow{}
+    poisoning, and by \SwinGainRecommendedMinusPublished{} over \SwinCells{} Swin-S
+    models (\cref{sec:results,sec:swin}). Against \DetectorsComparedCount{} ported
+    input-level detectors on the same splits it ranks \DetectorsAurocRankOurs{} of
+    \DetectorsAurocDefensesRanked{} defenses where PSBD-RD ranks
+    \DetectorsAurocRankPublished{}, though its margin over the strongest competitor is
+    only \DetectorsAurocMargin{} (\cref{sec:robustness:detectors}).
   \item A refutation. The claim that dropout before the residual add beats
     dropout after it, which motivated this project, does not hold at matched
     disturbance. Neither does the reading that the winning
@@ -83,6 +87,7 @@ each of them is.
     original work describes (\cref{sec:mechanism}).
 \end{enumerate}
 
-Every number in this paper is produced by a script from a coverage ledger that
-declares the models, and the code, the ledger and the generators are released.
-\Cref{sec:limitations} states what the evidence does not cover.
+Every measurement in this paper is produced by a script from a coverage ledger
+that declares the models before any sweep, and the build fails on a hand-typed one.
+The code, the ledger and the generators are released. \Cref{sec:limitations} states
+what the evidence does not cover.

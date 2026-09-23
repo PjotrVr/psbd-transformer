@@ -1,0 +1,66 @@
+{
+  "generator": "scripts/paper/mech_layernorm.py",
+  "inputs": [
+    "results/*/layernorm_absorption.json (2 models)"
+  ],
+  "written_at": "2026-09-23T16:05:24.020274+00:00",
+  "git_commit": "afe5fd94d50b77f30f654fe075b768040987adef-dirty",
+  "macros": {
+    "AbsorptionModels": {
+      "value": "2",
+      "meaning": "models carrying the LayerNorm absorption record"
+    },
+    "AbsorptionAttentionInputTokenMaskSurvival": {
+      "value": "1.002",
+      "meaning": "share of a token mask disturbance the attention_input LayerNorm passes through"
+    },
+    "AbsorptionAttentionInputTokenMaskRemoved": {
+      "value": "$-$0.002",
+      "meaning": "share of a token mask disturbance the attention_input LayerNorm absorbs"
+    },
+    "AbsorptionAttentionInputChannelMaskSurvival": {
+      "value": "0.968",
+      "meaning": "share of a channel mask disturbance the attention_input LayerNorm passes through"
+    },
+    "AbsorptionAttentionInputChannelMaskRemoved": {
+      "value": "0.032",
+      "meaning": "share of a channel mask disturbance the attention_input LayerNorm absorbs"
+    },
+    "AbsorptionAttentionInputGaussianSurvival": {
+      "value": "0.821",
+      "meaning": "share of a gaussian disturbance the attention_input LayerNorm passes through"
+    },
+    "AbsorptionAttentionInputGaussianRemoved": {
+      "value": "0.179",
+      "meaning": "share of a gaussian disturbance the attention_input LayerNorm absorbs"
+    },
+    "AbsorptionMlpInputTokenMaskSurvival": {
+      "value": "0.971",
+      "meaning": "share of a token mask disturbance the mlp_input LayerNorm passes through"
+    },
+    "AbsorptionMlpInputTokenMaskRemoved": {
+      "value": "0.029",
+      "meaning": "share of a token mask disturbance the mlp_input LayerNorm absorbs"
+    },
+    "AbsorptionMlpInputChannelMaskSurvival": {
+      "value": "0.981",
+      "meaning": "share of a channel mask disturbance the mlp_input LayerNorm passes through"
+    },
+    "AbsorptionMlpInputChannelMaskRemoved": {
+      "value": "0.019",
+      "meaning": "share of a channel mask disturbance the mlp_input LayerNorm absorbs"
+    },
+    "AbsorptionMlpInputGaussianSurvival": {
+      "value": "0.872",
+      "meaning": "share of a gaussian disturbance the mlp_input LayerNorm passes through"
+    },
+    "AbsorptionMlpInputGaussianRemoved": {
+      "value": "0.128",
+      "meaning": "share of a gaussian disturbance the mlp_input LayerNorm absorbs"
+    },
+    "AbsorptionControlSurvival": {
+      "value": "1.000",
+      "meaning": "survival at the positions no LayerNorm follows, the control"
+    }
+  }
+}

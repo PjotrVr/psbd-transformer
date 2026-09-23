@@ -139,12 +139,30 @@ def ci_text(low: float, high: float) -> str:
     return text
 
 
+# A hyphen is not a minus sign, and the paper carries hundreds of negative
+# readings. $-$ sets a real minus in text mode, which is where every generated
+# cell and every macro lands.
+MINUS = "$-$"
+
+
 def fmt(value: float | None, places: int = 3, signed: bool = False) -> str:
     """A number for a table cell, `--` where there is none."""
     if value is None or value != value:
         return "--"
     text = f"{value:+.{places}f}" if signed else f"{value:.{places}f}"
+    text = text.replace("-", MINUS, 1) if text.startswith("-") else text
     return text
+
+
+def as_float(cell: str) -> float:
+    """A formatted cell back to a number, for a generator that ranks its own rows.
+
+    fmt sets a negative with $-$, so the cell is no longer something float() can
+    read. A cell with no number at all raises, which is the loud failure a caller
+    that sorts on it wants.
+    """
+    number = float(cell.replace(MINUS, "-").replace("\\%", "").strip())
+    return number
 
 
 def provenance_comment(generator: str, inputs: list[str]) -> str:

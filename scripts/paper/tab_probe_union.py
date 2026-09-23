@@ -110,10 +110,19 @@ def main() -> None:
         align="lrrrrl",
     )
 
+    branch = record["probe_sets"]["psbd_tm_attn_branch"]
     tm = record["probe_sets"]["psbd_tm"]["summary"]
     tm_rd = record["probe_sets"]["psbd_tm_rd"]
     wanet = record["wanet_cifar10"]
     macros = {
+        "probe_union_tm_branch_gain": (
+            fmt(branch["gain_over_psbd_tm"]["mean_gain"], signed=True),
+            "paired AUROC gain of the PSBD-TM + branch-output union over PSBD-TM alone",
+        ),
+        "probe_union_tm_branch_auroc": (
+            fmt(branch["summary"]["auroc_mean"]),
+            "mean AUROC of the PSBD-TM + branch-output union",
+        ),
         "probe_union_n_models": (
             str(record["n_models_selected"]),
             "backdoored ViT-B/16 models the probe-union check reads, "

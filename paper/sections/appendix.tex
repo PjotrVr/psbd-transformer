@@ -78,7 +78,7 @@ The removal reproduces. Every attack except Blend on CIFAR-100 falls to an attac
 
 Their second claim, that distributed triggers reach the class token earlier than patch triggers, is measured independently in \cref{fig:tac-layers}. It holds on CIFAR-100 and Tiny ImageNet, where the onset of the backdoor direction comes earlier for Blend, BPP and LF than for BadNets. It reverses on GTSRB, which they did not run.
 
-Their third contribution is a data-free detector that scores the classifier head's rows against the early layers' output projections and flags a model when 1 class stands out by more than 3 standard deviations, and it is reported to flag WaNet and BPP reliably and patch triggers never. We ran the rule with their grid over the number of layers and the floor of the standard deviation on 15 of our backdoored models and 4 benign ones. It names the correct target on all 5 WaNet models, with a best $Z$ of 35 to 139. On BPP it names it only on CIFAR-10. On CIFAR-100 and Tiny ImageNet it names a wrong class at every poison rate. It never fires on BadNets, Blend or TaCT. It raises a false alarm on 3 to 15\% of the grid on every benign model. Their WaNet result reproduces, their BPP result does not on 2 of 3 datasets, and \cref{tab:direction} says why a weight-space rule reads little. The backdoor is a rotated direction rather than a coordinate pattern, so a score built from coordinates of the head and the weights sees only its projection.
+Their third contribution is a data-free detector that scores the classifier head's rows against the early layers' output projections and flags a model when 1 class stands out by more than 3 standard deviations, and it is reported to flag WaNet and BPP reliably and patch triggers never. We ran the rule with their grid over the number of layers and the floor of the standard deviation on 15 of our backdoored models and 4 benign ones. It names the correct target on all 5 WaNet models, with a best $Z$ of 35 to 139. On BPP it names it only on CIFAR-10. On CIFAR-100 and Tiny ImageNet it names a wrong class at every poison rate. It never fires on BadNets, Blend or TaCT. It raises a false alarm on 3 to 15\% of the grid on every benign model. Their WaNet result reproduces, their BPP result does not on 2 of 3 datasets, and \cref{tab:direction-ablation} says why a weight-space rule reads little. The backdoor is a rotated direction rather than a coordinate pattern, so a score built from coordinates of the head and the weights sees only its projection.
 
 \section{Seed replicates}
 \label{app:seeds}
@@ -104,6 +104,14 @@ Their third contribution is a data-free detector that scores the classifier head
 \Cref{tab:detector-smoke} is the acceptance test each port had to pass before it entered the comparison above: a benign, a BadNets and a Blend GTSRB model at 5\% poisoning with 500 validation images, on the same splits and threshold rule as PSBD. The passes column is the forward passes each detector spends per input and the last column the measured seconds per input on 1 A100. Every detector reads chance on the benign model, which is the check that its sign convention is right. The numbers here are not the comparison, which \cref{tab:detectors-auroc} carries over every backdoored model.
 
 \input{tables/detector_smoke}
+\FloatBarrier
+
+\section{The adaptive attacker per model}
+\label{app:adaptive}
+
+\Cref{tab:adaptive-attacker} gives every evasive model behind \cref{tab:adaptive}: its attack success after the evasion, its clean-accuracy cost, the AUROC of the probe the attacker trained against before and after, the mean AUROC of the 2 probes it never saw, and the AUROC of the min-rank union of all 3.
+
+\input{tables/adaptive_attacker}
 \FloatBarrier
 
 \section{Swin-S per model}

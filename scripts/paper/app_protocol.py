@@ -44,6 +44,7 @@ from models.positions import (  # noqa: E402
     VIT_POSITIONS,
 )
 from scripts.paper._common import (  # noqa: E402
+    fmt,
     BOOTSTRAP_RESAMPLES,
     BOOTSTRAP_SEED,
     build_parser_with_checkpoints,
@@ -149,12 +150,15 @@ def main() -> None:
             "attack success rate a cell must reach to enter a detection table",
         ),
         "clean_drop_bar": (
-            f"{declaration['clean_accuracy_drop_bar']:+g}",
+            fmt(declaration["clean_accuracy_drop_bar"], places=2, signed=True),
             "the clean-accuracy drop a cell may show against its benign reference",
         ),
+        # Read in a sentence, so the last item needs its conjunction rather than
+        # another comma.
         "panel_rates": (
-            ", ".join(percent(rate) for rate in rates),
-            "the poison rates the panel declares",
+            ", ".join(percent(rate) for rate in rates[:-1])
+            + f" and {percent(rates[-1])}",
+            "the poison rates the panel declares, as a phrase",
         ),
         "panel_rate_low": (percent(rates[0]), "the lowest panel poison rate"),
         "panel_rate_mid": (percent(rates[1]), "the middle panel poison rate"),

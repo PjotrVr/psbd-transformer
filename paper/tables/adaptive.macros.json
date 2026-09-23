@@ -4,8 +4,8 @@
     "results/adaptive_attacker_analysis.json",
     "results/multi_probe_analysis.json"
   ],
-  "written_at": "2026-09-23T14:36:53.701395+00:00",
-  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
+  "written_at": "2026-09-23T16:09:46.052247+00:00",
+  "git_commit": "afe5fd94d50b77f30f654fe075b768040987adef-dirty",
   "macros": {
     "AdaptiveHighAsr": {
       "value": "0.9",
@@ -32,7 +32,7 @@
       "meaning": "vit mean AUROC of the best probe union on the evasive checkpoints"
     },
     "AdaptiveVitCaCost": {
-      "value": "-0.030",
+      "value": "$-$0.030",
       "meaning": "vit mean clean-accuracy cost of evasion"
     },
     "AdaptiveVitAsrCost": {

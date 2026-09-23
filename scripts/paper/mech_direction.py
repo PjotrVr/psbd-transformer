@@ -227,6 +227,29 @@ def main() -> None:
             str(len(direction_rows)),
             "checkpoints in the causal ablation outside the SAM set",
         ),
+        "ablation_direction_min_asr": (
+            fmt(
+                min(
+                    row["ablated"]["direction"]["asr"]
+                    for row in direction_rows
+                    if row["attack"] != "badnet_a2a"
+                ),
+                places=3,
+            ),
+            "lowest attack success left after removing the rank-1 direction, all-to-one attacks",
+        ),
+        "ablation_clean_accuracy_cost": (
+            fmt(
+                max(
+                    row["baseline"]["clean_accuracy"]
+                    - row["ablated"]["direction"]["clean_accuracy"]
+                    for row in direction_rows
+                    if row["attack"] != "badnet_a2a"
+                ),
+                places=3,
+            ),
+            "largest clean-accuracy loss caused by removing the rank-1 direction",
+        ),
         "ablation_direction_max_asr": (
             fmt(
                 max(
@@ -234,7 +257,7 @@ def main() -> None:
                     for row in direction_rows
                     if row["attack"] != "badnet_a2a"
                 ),
-                places=2,
+                places=3,
             ),
             "highest attack success left after removing the rank-1 direction, all-to-one attacks",
         ),

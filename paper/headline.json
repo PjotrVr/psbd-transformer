@@ -153,7 +153,7 @@
     ]
   },
   "AdaptiveVitCaCost": {
-    "value": "-0.030",
+    "value": "$-$0.030",
     "meaning": "vit mean clean-accuracy cost of evasion",
     "generator": "scripts/paper/tab_adaptive.py",
     "inputs": [
@@ -802,7 +802,7 @@
     ]
   },
   "BandFiveEightMinusAllInputSide": {
-    "value": "-0.055",
+    "value": "$-$0.055",
     "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_5_8_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -811,7 +811,7 @@
     ]
   },
   "BandFiveEightMinusAllInputSideLow": {
-    "value": "-0.089",
+    "value": "$-$0.089",
     "meaning": "lower bound of the 95% bootstrap interval on band_5_8_minus_all_input_side",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -820,7 +820,7 @@
     ]
   },
   "BandFiveEightMinusAllInputSideHigh": {
-    "value": "-0.026",
+    "value": "$-$0.026",
     "meaning": "upper bound of the 95% bootstrap interval on band_5_8_minus_all_input_side",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -829,7 +829,7 @@
     ]
   },
   "BandNineOneTwoMinusAllInputSide": {
-    "value": "-0.077",
+    "value": "$-$0.077",
     "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_9_12_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -838,7 +838,7 @@
     ]
   },
   "BandNineOneTwoMinusAllInputSideLow": {
-    "value": "-0.125",
+    "value": "$-$0.125",
     "meaning": "lower bound of the 95% bootstrap interval on band_9_12_minus_all_input_side",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -847,7 +847,7 @@
     ]
   },
   "BandNineOneTwoMinusAllInputSideHigh": {
-    "value": "-0.034",
+    "value": "$-$0.034",
     "meaning": "upper bound of the 95% bootstrap interval on band_9_12_minus_all_input_side",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -856,7 +856,7 @@
     ]
   },
   "BandOneFourMinusAllResidual": {
-    "value": "-0.060",
+    "value": "$-$0.060",
     "meaning": "mean paired AUROC delta, `pre_residual_blocks_1_4` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -865,7 +865,7 @@
     ]
   },
   "BandOneFourMinusAllResidualLow": {
-    "value": "-0.079",
+    "value": "$-$0.079",
     "meaning": "lower bound of the 95% bootstrap interval on band_1_4_minus_all_residual",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -874,7 +874,7 @@
     ]
   },
   "BandOneFourMinusAllResidualHigh": {
-    "value": "-0.041",
+    "value": "$-$0.041",
     "meaning": "upper bound of the 95% bootstrap interval on band_1_4_minus_all_residual",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -919,7 +919,7 @@
     ]
   },
   "BandNineOneTwoMinusAllResidualLow": {
-    "value": "-0.030",
+    "value": "$-$0.030",
     "meaning": "lower bound of the 95% bootstrap interval on band_9_12_minus_all_residual",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -1081,11 +1081,11 @@
     ]
   },
   "DetectorsComparedModels": {
-    "value": "71",
+    "value": "69",
     "meaning": "backdoored models in the detector comparison",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1095,7 +1095,7 @@
     "meaning": "competitor detectors in the comparison",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1105,7 +1105,7 @@
     "meaning": "defenses the auroc ranking covers, ours and the competitors together",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1115,7 +1115,7 @@
     "meaning": "rank of the recommended placement among every defense by mean auroc",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1125,7 +1125,7 @@
     "meaning": "rank of the published placement among every defense by mean auroc",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1135,7 +1135,7 @@
     "meaning": "defenses with a higher mean auroc than the published placement",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1145,27 +1145,27 @@
     "meaning": "mean auroc of the recommended placement over the compared models",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsAurocPublished": {
-    "value": "0.818",
+    "value": "0.823",
     "meaning": "mean auroc of the published placement over the same models",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsAurocBestCompetitor": {
-    "value": "0.912",
+    "value": "0.914",
     "meaning": "mean auroc of the strongest competitor detector, IBD-PSC$^\\ast$",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1175,37 +1175,37 @@
     "meaning": "the strongest competitor detector by mean auroc",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsAurocMargin": {
-    "value": "+0.016",
+    "value": "+0.013",
     "meaning": "mean auroc of the recommended placement minus the strongest competitor",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsAurocSentinet": {
-    "value": "0.429",
+    "value": "0.415",
     "meaning": "mean auroc of the SentiNet port, whose Grad-CAM mask misses the trigger",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsAurocIbdPsc": {
-    "value": "0.733",
+    "value": "0.739",
     "meaning": "mean auroc of IBD-PSC at the paper's fixed amplification factor",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1215,7 +1215,7 @@
     "meaning": "competitor detectors whose mean auroc sits below chance",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1225,7 +1225,7 @@
     "meaning": "defenses the tpr10 ranking covers, ours and the competitors together",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1235,7 +1235,7 @@
     "meaning": "rank of the recommended placement among every defense by mean tpr10",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1245,7 +1245,7 @@
     "meaning": "rank of the published placement among every defense by mean tpr10",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1255,7 +1255,7 @@
     "meaning": "defenses with a higher mean tpr10 than the published placement",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1265,27 +1265,27 @@
     "meaning": "mean tpr10 of the recommended placement over the compared models",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprOneZeroPublished": {
-    "value": "0.621",
+    "value": "0.634",
     "meaning": "mean tpr10 of the published placement over the same models",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprOneZeroBestCompetitor": {
-    "value": "0.737",
+    "value": "0.743",
     "meaning": "mean tpr10 of the strongest competitor detector, IBD-PSC$^\\ast$",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1295,37 +1295,37 @@
     "meaning": "the strongest competitor detector by mean tpr10",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprOneZeroMargin": {
-    "value": "+0.029",
+    "value": "+0.023",
     "meaning": "mean tpr10 of the recommended placement minus the strongest competitor",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprOneZeroSentinet": {
-    "value": "0.098",
+    "value": "0.097",
     "meaning": "mean tpr10 of the SentiNet port, whose Grad-CAM mask misses the trigger",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprOneZeroIbdPsc": {
-    "value": "0.374",
+    "value": "0.378",
     "meaning": "mean tpr10 of IBD-PSC at the paper's fixed amplification factor",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1335,7 +1335,7 @@
     "meaning": "competitor detectors whose mean tpr10 sits below chance",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1345,17 +1345,17 @@
     "meaning": "defenses the tpr20 ranking covers, ours and the competitors together",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprTwoZeroRankOurs": {
-    "value": "1",
+    "value": "2",
     "meaning": "rank of the recommended placement among every defense by mean tpr20",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1365,7 +1365,7 @@
     "meaning": "rank of the published placement among every defense by mean tpr20",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1375,7 +1375,7 @@
     "meaning": "defenses with a higher mean tpr20 than the published placement",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1385,27 +1385,27 @@
     "meaning": "mean tpr20 of the recommended placement over the compared models",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprTwoZeroPublished": {
-    "value": "0.693",
+    "value": "0.703",
     "meaning": "mean tpr20 of the published placement over the same models",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprTwoZeroBestCompetitor": {
-    "value": "0.832",
+    "value": "0.837",
     "meaning": "mean tpr20 of the strongest competitor detector, IBD-PSC$^\\ast$",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1415,47 +1415,47 @@
     "meaning": "the strongest competitor detector by mean tpr20",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprTwoZeroMargin": {
-    "value": "+0.003",
+    "value": "$-$0.002",
     "meaning": "mean tpr20 of the recommended placement minus the strongest competitor",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprTwoZeroSentinet": {
-    "value": "0.189",
+    "value": "0.173",
     "meaning": "mean tpr20 of the SentiNet port, whose Grad-CAM mask misses the trigger",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprTwoZeroIbdPsc": {
-    "value": "0.496",
+    "value": "0.500",
     "meaning": "mean tpr20 of IBD-PSC at the paper's fixed amplification factor",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
   },
   "DetectorsTprTwoZeroBelowChanceColumns": {
-    "value": "3",
+    "value": "4",
     "meaning": "competitor detectors whose mean tpr20 sits below chance",
     "generator": "scripts/paper/tab_detectors.py",
     "inputs": [
-      "results/coverage/coverage.json (71 clearing cells)",
+      "results/coverage/coverage.json (69 of 71 clearing cells carry every defense)",
       "results/*/detectors/*_metrics.json",
       "results/*/psbd_metrics.json"
     ]
@@ -1500,8 +1500,28 @@
       "results/direction_persistence.json"
     ]
   },
+  "AblationDirectionMinAsr": {
+    "value": "0.000",
+    "meaning": "lowest attack success left after removing the rank-1 direction, all-to-one attacks",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
+    ]
+  },
+  "AblationCleanAccuracyCost": {
+    "value": "0.038",
+    "meaning": "largest clean-accuracy loss caused by removing the rank-1 direction",
+    "generator": "scripts/paper/mech_direction.py",
+    "inputs": [
+      "results/vit_cifar10_*/backdoor_neurons.json (5)",
+      "results/_experiments/backdoor_neurons/backdoor_neuron_ablation.json",
+      "results/direction_persistence.json"
+    ]
+  },
   "AblationDirectionMaxAsr": {
-    "value": "0.57",
+    "value": "0.572",
     "meaning": "highest attack success left after removing the rank-1 direction, all-to-one attacks",
     "generator": "scripts/paper/mech_direction.py",
     "inputs": [
@@ -1635,7 +1655,7 @@
     ]
   },
   "FamilyGapMatchedLow": {
-    "value": "-0.001",
+    "value": "$-$0.001",
     "meaning": "lower bound of the 95% bootstrap interval on family_gap_matched",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1685,7 +1705,7 @@
     ]
   },
   "FamilyGapConfoundedMatched": {
-    "value": "-0.029",
+    "value": "$-$0.029",
     "meaning": "mean paired AUROC gap under the basis file's operator-mixing family tags, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1695,7 +1715,7 @@
     ]
   },
   "FamilyGapConfoundedMatchedLow": {
-    "value": "-0.047",
+    "value": "$-$0.047",
     "meaning": "lower bound of the 95% bootstrap interval on family_gap_confounded_matched",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1705,7 +1725,7 @@
     ]
   },
   "FamilyGapConfoundedMatchedHigh": {
-    "value": "-0.010",
+    "value": "$-$0.010",
     "meaning": "upper bound of the 95% bootstrap interval on family_gap_confounded_matched",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1715,7 +1735,7 @@
     ]
   },
   "FamilyGapLocal": {
-    "value": "-0.009",
+    "value": "$-$0.009",
     "meaning": "mean paired token_mask family gap at the matched 0.6 rate, local-trigger cells only, over the 23 cells it covers",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1725,7 +1745,7 @@
     ]
   },
   "FamilyGapLocalLow": {
-    "value": "-0.032",
+    "value": "$-$0.032",
     "meaning": "lower bound of the 95% bootstrap interval on family_gap_local",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -2040,9 +2060,162 @@
       "results/<folder>/psbd/"
     ]
   },
+  "GainsModels": {
+    "value": "69",
+    "meaning": "models carrying both compared placements",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsAll": {
+    "value": "+0.104",
+    "meaning": "mean paired AUROC gain over every compared model at the adaptive rule",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsLowestRate": {
+    "value": "+0.161",
+    "meaning": "mean paired gain at 1% poisoning",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsLowestRateN": {
+    "value": "19",
+    "meaning": "models at 1% poisoning",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsHighestRate": {
+    "value": "+0.073",
+    "meaning": "mean paired gain at 10% poisoning",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsHighestRateN": {
+    "value": "27",
+    "meaning": "models at 10% poisoning",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsLeaveOneAttackOut": {
+    "value": "+0.051",
+    "meaning": "smallest mean gain left after dropping any single attack",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsLeaveOneAttackOutLow": {
+    "value": "+0.005",
+    "meaning": "lower bootstrap bound of gains_leave_one_attack_out",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsLeaveOneAttackOutAttack": {
+    "value": "TaCT",
+    "meaning": "the attack whose removal costs the gain the most",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsPositiveDatasets": {
+    "value": "6",
+    "meaning": "datasets whose mean paired gain is positive",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsDatasets": {
+    "value": "6",
+    "meaning": "datasets in the gain table",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsCifarOneZeroZero": {
+    "value": "+0.150",
+    "meaning": "mean paired gain on CIFAR-100 over 15 models",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsCifarOneZero": {
+    "value": "+0.083",
+    "meaning": "mean paired gain on CIFAR-10 over 18 models",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsEurosat": {
+    "value": "+0.005",
+    "meaning": "mean paired gain on EuroSAT over 2 models",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsGtsrb": {
+    "value": "+0.142",
+    "meaning": "mean paired gain on GTSRB over 15 models",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsSvhn": {
+    "value": "+0.234",
+    "meaning": "mean paired gain on SVHN over 2 models",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "GainsTiny": {
+    "value": "+0.049",
+    "meaning": "mean paired gain on Tiny ImageNet over 17 models",
+    "generator": "scripts/paper/tab_gains.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
   "HeadlineAurocAdaptive": {
     "value": "0.927",
-    "meaning": "mean AUROC of the recommended placement at the adaptive rule, over the 69 cells it covers of the 65-cell panel",
+    "meaning": "mean AUROC of the recommended placement at the adaptive rule, over the 69 cells carrying both compared placements",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -2059,8 +2232,8 @@
     ]
   },
   "PublishedAurocAdaptive": {
-    "value": "0.818",
-    "meaning": "mean AUROC of the published placement at the adaptive rule, over the 71 cells it covers of the 65-cell panel",
+    "value": "0.823",
+    "meaning": "mean AUROC of the published placement at the adaptive rule, over the 69 cells carrying both compared placements",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -2248,7 +2421,7 @@
     ]
   },
   "PreMinusPostMatchedLow": {
-    "value": "-0.024",
+    "value": "$-$0.024",
     "meaning": "lower bootstrap bound of pre_minus_post_matched",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -2275,7 +2448,7 @@
     ]
   },
   "PreMinusPostAdaptiveLow": {
-    "value": "-0.016",
+    "value": "$-$0.016",
     "meaning": "lower bootstrap bound of pre_minus_post_adaptive",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -2339,6 +2512,118 @@
     "generator": "scripts/paper/app_hypothesis_ledger.py",
     "inputs": [
       "docs/hypothesis/README.md"
+    ]
+  },
+  "AbsorptionModels": {
+    "value": "2",
+    "meaning": "models carrying the LayerNorm absorption record",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionAttentionInputTokenMaskSurvival": {
+    "value": "1.002",
+    "meaning": "share of a token mask disturbance the attention_input LayerNorm passes through",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionAttentionInputTokenMaskRemoved": {
+    "value": "$-$0.002",
+    "meaning": "share of a token mask disturbance the attention_input LayerNorm absorbs",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionAttentionInputChannelMaskSurvival": {
+    "value": "0.968",
+    "meaning": "share of a channel mask disturbance the attention_input LayerNorm passes through",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionAttentionInputChannelMaskRemoved": {
+    "value": "0.032",
+    "meaning": "share of a channel mask disturbance the attention_input LayerNorm absorbs",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionAttentionInputGaussianSurvival": {
+    "value": "0.821",
+    "meaning": "share of a gaussian disturbance the attention_input LayerNorm passes through",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionAttentionInputGaussianRemoved": {
+    "value": "0.179",
+    "meaning": "share of a gaussian disturbance the attention_input LayerNorm absorbs",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionMlpInputTokenMaskSurvival": {
+    "value": "0.971",
+    "meaning": "share of a token mask disturbance the mlp_input LayerNorm passes through",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionMlpInputTokenMaskRemoved": {
+    "value": "0.029",
+    "meaning": "share of a token mask disturbance the mlp_input LayerNorm absorbs",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionMlpInputChannelMaskSurvival": {
+    "value": "0.981",
+    "meaning": "share of a channel mask disturbance the mlp_input LayerNorm passes through",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionMlpInputChannelMaskRemoved": {
+    "value": "0.019",
+    "meaning": "share of a channel mask disturbance the mlp_input LayerNorm absorbs",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionMlpInputGaussianSurvival": {
+    "value": "0.872",
+    "meaning": "share of a gaussian disturbance the mlp_input LayerNorm passes through",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionMlpInputGaussianRemoved": {
+    "value": "0.128",
+    "meaning": "share of a gaussian disturbance the mlp_input LayerNorm absorbs",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
+    ]
+  },
+  "AbsorptionControlSurvival": {
+    "value": "1.000",
+    "meaning": "survival at the positions no LayerNorm follows, the control",
+    "generator": "scripts/paper/mech_layernorm.py",
+    "inputs": [
+      "results/*/layernorm_absorption.json (2 models)"
     ]
   },
   "AgreementWithinInputSideClean": {
@@ -2406,7 +2691,7 @@
     ]
   },
   "GaussianMinusTokenMaskAttentionNorm": {
-    "value": "-0.183",
+    "value": "$-$0.183",
     "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus token_mask at before_attention_norm, over the 71 cells it covers of the 65-cell panel",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -2415,7 +2700,7 @@
     ]
   },
   "GaussianMinusTokenMaskAttentionNormLow": {
-    "value": "-0.234",
+    "value": "$-$0.234",
     "meaning": "lower bound of the 95% bootstrap interval on gaussian_minus_token_mask_attention_norm",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -2424,7 +2709,7 @@
     ]
   },
   "GaussianMinusTokenMaskAttentionNormHigh": {
-    "value": "-0.133",
+    "value": "$-$0.133",
     "meaning": "upper bound of the 95% bootstrap interval on gaussian_minus_token_mask_attention_norm",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -2433,7 +2718,7 @@
     ]
   },
   "GaussianMinusChannelMaskAttentionNorm": {
-    "value": "-0.103",
+    "value": "$-$0.103",
     "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus channel_mask at before_attention_norm, over the 71 cells it covers of the 65-cell panel",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -2442,7 +2727,7 @@
     ]
   },
   "GaussianMinusChannelMaskAttentionNormLow": {
-    "value": "-0.137",
+    "value": "$-$0.137",
     "meaning": "lower bound of the 95% bootstrap interval on gaussian_minus_channel_mask_attention_norm",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -2451,7 +2736,7 @@
     ]
   },
   "GaussianMinusChannelMaskAttentionNormHigh": {
-    "value": "-0.070",
+    "value": "$-$0.070",
     "meaning": "upper bound of the 95% bootstrap interval on gaussian_minus_channel_mask_attention_norm",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -2566,7 +2851,7 @@
     ]
   },
   "DepthMinusPsbdAuroc": {
-    "value": "-0.024",
+    "value": "$-$0.024",
     "meaning": "mean paired AUROC delta, prediction depth minus PSBD, all clearing cells",
     "generator": "scripts/paper/mech_prediction_depth.py",
     "inputs": [
@@ -2576,7 +2861,7 @@
     ]
   },
   "DepthMinusPsbdAurocCi": {
-    "value": "[-0.078, +0.023]",
+    "value": "[$-$0.078, +0.023]",
     "meaning": "bootstrap interval on depth_minus_psbd_auroc",
     "generator": "scripts/paper/mech_prediction_depth.py",
     "inputs": [
@@ -2596,7 +2881,7 @@
     ]
   },
   "DepthMinusPsbdTprCi": {
-    "value": "[-0.079, +0.113]",
+    "value": "[$-$0.079, +0.113]",
     "meaning": "bootstrap interval on depth_minus_psbd_tpr",
     "generator": "scripts/paper/mech_prediction_depth.py",
     "inputs": [
@@ -2655,6 +2940,22 @@
       "results/<folder>/psbd_metrics.json"
     ]
   },
+  "ProbeUnionTmBranchGain": {
+    "value": "+0.022",
+    "meaning": "paired AUROC gain of the PSBD-TM + branch-output union over PSBD-TM alone",
+    "generator": "scripts/paper/tab_probe_union.py",
+    "inputs": [
+      "results/_experiments/probe_union/probe_union.json"
+    ]
+  },
+  "ProbeUnionTmBranchAuroc": {
+    "value": "0.957",
+    "meaning": "mean AUROC of the PSBD-TM + branch-output union",
+    "generator": "scripts/paper/tab_probe_union.py",
+    "inputs": [
+      "results/_experiments/probe_union/probe_union.json"
+    ]
+  },
   "ProbeUnionNModels": {
     "value": "65",
     "meaning": "backdoored ViT-B/16 models the probe-union check reads, the models with both headline placements",
@@ -2680,7 +2981,7 @@
     ]
   },
   "ProbeUnionTmRdGainCi": {
-    "value": "[-0.016, +0.032]",
+    "value": "[$-$0.016, +0.032]",
     "meaning": "95% bootstrap interval of that gain",
     "generator": "scripts/paper/tab_probe_union.py",
     "inputs": [
@@ -2872,7 +3173,7 @@
     ]
   },
   "CleanDropBar": {
-    "value": "-0.05",
+    "value": "$-$0.05",
     "meaning": "the clean-accuracy drop a cell may show against its benign reference",
     "generator": "scripts/paper/app_protocol.py",
     "inputs": [
@@ -2886,8 +3187,8 @@
     ]
   },
   "PanelRates": {
-    "value": "1\\%, 5\\%, 10\\%",
-    "meaning": "the poison rates the panel declares",
+    "value": "1\\%, 5\\% and 10\\%",
+    "meaning": "the poison rates the panel declares, as a phrase",
     "generator": "scripts/paper/app_protocol.py",
     "inputs": [
       "defences/decision.py",
@@ -3807,7 +4108,7 @@
     ]
   },
   "SamRhoZeroZeroFiveTokenMaskDeltaCi": {
-    "value": "[-0.000, +0.082]",
+    "value": "[$-$0.000, +0.082]",
     "meaning": "95% bootstrap interval on sam_rho_0_05_token_mask_delta",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
@@ -3815,7 +4116,7 @@
     ]
   },
   "SamRhoZeroZeroFiveResidualDropoutDelta": {
-    "value": "-0.041",
+    "value": "$-$0.041",
     "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.05 minus Adam, over the 24 combinations both sides swept",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
@@ -3855,7 +4156,7 @@
     ]
   },
   "SamRhoZeroOneFiveTokenMaskDeltaCi": {
-    "value": "[-0.032, +0.058]",
+    "value": "[$-$0.032, +0.058]",
     "meaning": "95% bootstrap interval on sam_rho_0_15_token_mask_delta",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
@@ -3863,7 +4164,7 @@
     ]
   },
   "SamRhoZeroOneFiveResidualDropoutDelta": {
-    "value": "-0.074",
+    "value": "$-$0.074",
     "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.15 minus Adam, over the 24 combinations both sides swept",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
@@ -3879,7 +4180,7 @@
     ]
   },
   "SamRhoZeroTwoTokenMaskDeltaCi": {
-    "value": "[-0.024, +0.076]",
+    "value": "[$-$0.024, +0.076]",
     "meaning": "95% bootstrap interval on sam_rho_0_2_token_mask_delta",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
@@ -3887,7 +4188,7 @@
     ]
   },
   "SamRhoZeroTwoResidualDropoutDelta": {
-    "value": "-0.069",
+    "value": "$-$0.069",
     "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.2 minus Adam, over the 24 combinations both sides swept",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
@@ -3919,7 +4220,7 @@
     ]
   },
   "SamRateZeroZeroOneRhoZeroZeroFiveTokenMaskDelta": {
-    "value": "-0.001",
+    "value": "$-$0.001",
     "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 1% poisoning and rho 0.05, n=7",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -3927,7 +4228,7 @@
     ]
   },
   "SamRateZeroZeroOneRhoZeroZeroFiveTokenMaskDeltaCi": {
-    "value": "[-0.035, +0.027]",
+    "value": "[$-$0.035, +0.027]",
     "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_05_token_mask_delta",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -3943,7 +4244,7 @@
     ]
   },
   "SamRateZeroZeroOneRhoZeroOneTokenMaskDeltaCi": {
-    "value": "[-0.018, +0.039]",
+    "value": "[$-$0.018, +0.039]",
     "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_1_token_mask_delta",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -3951,7 +4252,7 @@
     ]
   },
   "SamRateZeroZeroOneRhoZeroOneFiveTokenMaskDelta": {
-    "value": "-0.036",
+    "value": "$-$0.036",
     "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 1% poisoning and rho 0.15, n=7",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -3959,7 +4260,7 @@
     ]
   },
   "SamRateZeroZeroOneRhoZeroOneFiveTokenMaskDeltaCi": {
-    "value": "[-0.125, +0.025]",
+    "value": "[$-$0.125, +0.025]",
     "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_15_token_mask_delta",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -3967,7 +4268,7 @@
     ]
   },
   "SamRateZeroZeroOneRhoZeroTwoTokenMaskDelta": {
-    "value": "-0.052",
+    "value": "$-$0.052",
     "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 1% poisoning and rho 0.2, n=7",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -3975,7 +4276,7 @@
     ]
   },
   "SamRateZeroZeroOneRhoZeroTwoTokenMaskDeltaCi": {
-    "value": "[-0.132, +0.024]",
+    "value": "[$-$0.132, +0.024]",
     "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_2_token_mask_delta",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -4007,7 +4308,7 @@
     ]
   },
   "SamRateZeroZeroFiveRhoZeroOneTokenMaskDeltaCi": {
-    "value": "[-0.024, +0.071]",
+    "value": "[$-$0.024, +0.071]",
     "meaning": "95% bootstrap interval on sam_rate_0_05_rho_0_1_token_mask_delta",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -4015,7 +4316,7 @@
     ]
   },
   "SamRateZeroZeroFiveRhoZeroOneFiveTokenMaskDelta": {
-    "value": "-0.026",
+    "value": "$-$0.026",
     "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 5% poisoning and rho 0.15, n=7",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -4023,7 +4324,7 @@
     ]
   },
   "SamRateZeroZeroFiveRhoZeroOneFiveTokenMaskDeltaCi": {
-    "value": "[-0.073, +0.014]",
+    "value": "[$-$0.073, +0.014]",
     "meaning": "95% bootstrap interval on sam_rate_0_05_rho_0_15_token_mask_delta",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -4039,7 +4340,7 @@
     ]
   },
   "SamRateZeroZeroFiveRhoZeroTwoTokenMaskDeltaCi": {
-    "value": "[-0.003, +0.073]",
+    "value": "[$-$0.003, +0.073]",
     "meaning": "95% bootstrap interval on sam_rate_0_05_rho_0_2_token_mask_delta",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -4055,7 +4356,7 @@
     ]
   },
   "SamRateZeroOneRhoZeroZeroFiveTokenMaskDeltaCi": {
-    "value": "[-0.010, +0.199]",
+    "value": "[$-$0.010, +0.199]",
     "meaning": "95% bootstrap interval on sam_rate_0_1_rho_0_05_token_mask_delta",
     "generator": "scripts/paper/tab_sam_low_rate.py",
     "inputs": [
@@ -4281,7 +4582,7 @@
     ]
   },
   "StaircaseResidualAfterAttentionResidualGain": {
-    "value": "-0.028",
+    "value": "$-$0.028",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, after the attention add only against this table's first row, over the 65 models it covers, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4290,7 +4591,7 @@
     ]
   },
   "StaircaseResidualAfterAttentionResidualGainLow": {
-    "value": "-0.043",
+    "value": "$-$0.043",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_after_attention_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4299,7 +4600,7 @@
     ]
   },
   "StaircaseResidualAfterAttentionResidualGainHigh": {
-    "value": "-0.015",
+    "value": "$-$0.015",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_residual_after_attention_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4362,7 +4663,7 @@
     ]
   },
   "StaircaseResidualPreResidualGainLow": {
-    "value": "-0.016",
+    "value": "$-$0.016",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_pre_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4425,7 +4726,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksOneFourGain": {
-    "value": "-0.022",
+    "value": "$-$0.022",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 1 to 4 against this table's first row, over the 69 models it covers, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4434,7 +4735,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksOneFourGainLow": {
-    "value": "-0.064",
+    "value": "$-$0.064",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_pre_residual_blocks_1_4_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4578,7 +4879,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksNineOneTwoGainLow": {
-    "value": "-0.012",
+    "value": "$-$0.012",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_pre_residual_blocks_9_12_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4695,7 +4996,7 @@
     ]
   },
   "StaircaseDropoutSitesPreResidualGainLow": {
-    "value": "-0.016",
+    "value": "$-$0.016",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_pre_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4767,7 +5068,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionNormGainLow": {
-    "value": "-0.016",
+    "value": "$-$0.016",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_before_attention_norm_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4830,7 +5131,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionGain": {
-    "value": "-0.021",
+    "value": "$-$0.021",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, attention input after norm against this table's first row, over the 65 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4839,7 +5140,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionGainLow": {
-    "value": "-0.066",
+    "value": "$-$0.066",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_before_attention_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4902,7 +5203,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeMlpNormGain": {
-    "value": "-0.073",
+    "value": "$-$0.073",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, MLP input against this table's first row, over the 65 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4911,7 +5212,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeMlpNormGainLow": {
-    "value": "-0.111",
+    "value": "$-$0.111",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_before_mlp_norm_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4920,7 +5221,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeMlpNormGainHigh": {
-    "value": "-0.038",
+    "value": "$-$0.038",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_dropout_sites_before_mlp_norm_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4974,7 +5275,7 @@
     ]
   },
   "StaircaseDropoutSitesAfterEmbeddingGain": {
-    "value": "-0.022",
+    "value": "$-$0.022",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, embedding output against this table's first row, over the 65 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4983,7 +5284,7 @@
     ]
   },
   "StaircaseDropoutSitesAfterEmbeddingGainLow": {
-    "value": "-0.054",
+    "value": "$-$0.054",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_after_embedding_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5091,7 +5392,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskGain": {
-    "value": "-0.046",
+    "value": "$-$0.046",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, attention input, before the norm against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5100,7 +5401,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskGainLow": {
-    "value": "-0.084",
+    "value": "$-$0.084",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_channel_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5109,7 +5410,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskGainHigh": {
-    "value": "-0.011",
+    "value": "$-$0.011",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_channel_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5163,7 +5464,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianGain": {
-    "value": "-0.128",
+    "value": "$-$0.128",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, attention input, before the norm against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5172,7 +5473,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianGainLow": {
-    "value": "-0.188",
+    "value": "$-$0.188",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gaussian_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5181,7 +5482,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianGainHigh": {
-    "value": "-0.073",
+    "value": "$-$0.073",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gaussian_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5235,7 +5536,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGain": {
-    "value": "-0.076",
+    "value": "$-$0.076",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, attention input against this table's first row, over the 65 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5244,7 +5545,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGainLow": {
-    "value": "-0.121",
+    "value": "$-$0.121",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5253,7 +5554,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGainHigh": {
-    "value": "-0.037",
+    "value": "$-$0.037",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5307,7 +5608,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionResidualTokenMaskGain": {
-    "value": "-0.002",
+    "value": "$-$0.002",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, attention output before the add against this table's first row, over the 66 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5316,7 +5617,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionResidualTokenMaskGainLow": {
-    "value": "-0.028",
+    "value": "$-$0.028",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_residual_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5379,7 +5680,7 @@
     ]
   },
   "StaircaseOperatorsBothSublayerInputsTokenMaskGain": {
-    "value": "-0.029",
+    "value": "$-$0.029",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, both sublayer inputs against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5388,7 +5689,7 @@
     ]
   },
   "StaircaseOperatorsBothSublayerInputsTokenMaskGainLow": {
-    "value": "-0.058",
+    "value": "$-$0.058",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_both_sublayer_inputs_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5451,7 +5752,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskGain": {
-    "value": "-0.106",
+    "value": "$-$0.106",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, MLP input, before the norm against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5460,7 +5761,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskGainLow": {
-    "value": "-0.151",
+    "value": "$-$0.151",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5469,7 +5770,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskGainHigh": {
-    "value": "-0.064",
+    "value": "$-$0.064",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5523,7 +5824,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormGaussianGain": {
-    "value": "-0.268",
+    "value": "$-$0.268",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, before the norm against this table's first row, over the 36 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5532,7 +5833,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormGaussianGainLow": {
-    "value": "-0.381",
+    "value": "$-$0.381",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_gaussian_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5541,7 +5842,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormGaussianGainHigh": {
-    "value": "-0.163",
+    "value": "$-$0.163",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_gaussian_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5595,7 +5896,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpGaussianGain": {
-    "value": "-0.056",
+    "value": "$-$0.056",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, after the norm against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5604,7 +5905,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpGaussianGainLow": {
-    "value": "-0.100",
+    "value": "$-$0.100",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_mlp_gaussian_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5613,7 +5914,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpGaussianGainHigh": {
-    "value": "-0.014",
+    "value": "$-$0.014",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_mlp_gaussian_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5667,7 +5968,7 @@
     ]
   },
   "StaircaseOperatorsAfterAttentionResidualTokenMaskGain": {
-    "value": "-0.162",
+    "value": "$-$0.162",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, after the attention add against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5676,7 +5977,7 @@
     ]
   },
   "StaircaseOperatorsAfterAttentionResidualTokenMaskGainLow": {
-    "value": "-0.217",
+    "value": "$-$0.217",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_after_attention_residual_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5685,7 +5986,7 @@
     ]
   },
   "StaircaseOperatorsAfterAttentionResidualTokenMaskGainHigh": {
-    "value": "-0.109",
+    "value": "$-$0.109",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_after_attention_residual_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5739,7 +6040,7 @@
     ]
   },
   "StaircaseOperatorsMlpNeuronsChannelMaskGain": {
-    "value": "-0.121",
+    "value": "$-$0.121",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, MLP neurons against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5748,7 +6049,7 @@
     ]
   },
   "StaircaseOperatorsMlpNeuronsChannelMaskGainLow": {
-    "value": "-0.168",
+    "value": "$-$0.168",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_mlp_neurons_channel_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5757,7 +6058,7 @@
     ]
   },
   "StaircaseOperatorsMlpNeuronsChannelMaskGainHigh": {
-    "value": "-0.074",
+    "value": "$-$0.074",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_mlp_neurons_channel_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5811,7 +6112,7 @@
     ]
   },
   "StaircaseOperatorsMlpNormOutGainScaleGain": {
-    "value": "-0.032",
+    "value": "$-$0.032",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gain scale, MLP norm output against this table's first row, over the 68 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5820,7 +6121,7 @@
     ]
   },
   "StaircaseOperatorsMlpNormOutGainScaleGainLow": {
-    "value": "-0.067",
+    "value": "$-$0.067",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_mlp_norm_out_gain_scale_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5829,7 +6130,7 @@
     ]
   },
   "StaircaseOperatorsMlpNormOutGainScaleGainHigh": {
-    "value": "-0.000",
+    "value": "$-$0.000",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_mlp_norm_out_gain_scale_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5883,7 +6184,7 @@
     ]
   },
   "StaircaseOperatorsInputPixelsScaleUpGain": {
-    "value": "-0.176",
+    "value": "$-$0.176",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, scale up, input pixels against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5892,7 +6193,7 @@
     ]
   },
   "StaircaseOperatorsInputPixelsScaleUpGainLow": {
-    "value": "-0.235",
+    "value": "$-$0.235",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_input_pixels_scale_up_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5901,7 +6202,7 @@
     ]
   },
   "StaircaseOperatorsInputPixelsScaleUpGainHigh": {
-    "value": "-0.117",
+    "value": "$-$0.117",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_input_pixels_scale_up_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5955,7 +6256,7 @@
     ]
   },
   "StaircaseOperatorsPostResidualGain": {
-    "value": "-0.104",
+    "value": "$-$0.104",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, after both residual adds against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5964,7 +6265,7 @@
     ]
   },
   "StaircaseOperatorsPostResidualGainLow": {
-    "value": "-0.158",
+    "value": "$-$0.158",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_post_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5973,7 +6274,7 @@
     ]
   },
   "StaircaseOperatorsPostResidualGainHigh": {
-    "value": "-0.052",
+    "value": "$-$0.052",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_post_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -6072,7 +6373,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskGain": {
-    "value": "-0.053",
+    "value": "$-$0.053",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 1 to 4 against this table's first row, over the 12 models it covers, staircase bands table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -6081,7 +6382,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskGainLow": {
-    "value": "-0.102",
+    "value": "$-$0.102",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_1_4_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -6090,7 +6391,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskGainHigh": {
-    "value": "-0.022",
+    "value": "$-$0.022",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_1_4_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -6144,7 +6445,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormBlocksFiveEightTokenMaskGain": {
-    "value": "-0.063",
+    "value": "$-$0.063",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 5 to 8 against this table's first row, over the 44 models it covers, staircase bands table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -6153,7 +6454,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormBlocksFiveEightTokenMaskGainLow": {
-    "value": "-0.115",
+    "value": "$-$0.115",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_5_8_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -6162,7 +6463,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormBlocksFiveEightTokenMaskGainHigh": {
-    "value": "-0.021",
+    "value": "$-$0.021",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_5_8_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -6216,7 +6517,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormBlocksNineOneTwoTokenMaskGain": {
-    "value": "-0.050",
+    "value": "$-$0.050",
     "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 9 to 12 against this table's first row, over the 31 models it covers, staircase bands table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -6225,7 +6526,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormBlocksNineOneTwoTokenMaskGainLow": {
-    "value": "-0.093",
+    "value": "$-$0.093",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_9_12_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -6234,7 +6535,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormBlocksNineOneTwoTokenMaskGainHigh": {
-    "value": "-0.012",
+    "value": "$-$0.012",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_9_12_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -6360,7 +6661,7 @@
     ]
   },
   "SwinGainDropoutInputMinusPublishedLow": {
-    "value": "-0.037",
+    "value": "$-$0.037",
     "meaning": "lower bootstrap bound of swin_gain_dropout_input_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -6677,6 +6978,15 @@
   "SwinPublishedTprTwoZero": {
     "value": "0.74",
     "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.20 budget over 80 cells",
+    "generator": "scripts/paper/tab_swin.py",
+    "inputs": [
+      "results/swin_*/psbd_metrics.json (90 implanted cells)",
+      "checkpoints/swin_*/args.json"
+    ]
+  },
+  "SwinSameSiteDropoutAuroc": {
+    "value": "0.875",
+    "meaning": "Swin mean AUROC of dropout at the attention input over 80 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",

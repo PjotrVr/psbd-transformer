@@ -4,8 +4,8 @@
     "results/coverage/coverage.json",
     "results/<folder>/psbd_metrics.json (65 models)"
   ],
-  "written_at": "2026-09-23T14:46:15.493017+00:00",
-  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
+  "written_at": "2026-09-23T16:18:32.724062+00:00",
+  "git_commit": "afe5fd94d50b77f30f654fe075b768040987adef-dirty",
   "macros": {
     "StaircaseResidualPostResidualN": {
       "value": "69",
@@ -48,15 +48,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, after the attention add only, staircase residual table"
     },
     "StaircaseResidualAfterAttentionResidualGain": {
-      "value": "-0.028",
+      "value": "$-$0.028",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, after the attention add only against this table's first row, over the 65 models it covers, staircase residual table"
     },
     "StaircaseResidualAfterAttentionResidualGainLow": {
-      "value": "-0.043",
+      "value": "$-$0.043",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_after_attention_residual_gain"
     },
     "StaircaseResidualAfterAttentionResidualGainHigh": {
-      "value": "-0.015",
+      "value": "$-$0.015",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_residual_after_attention_residual_gain"
     },
     "StaircaseResidualPreResidualN": {
@@ -84,7 +84,7 @@
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds against this table's first row, over the 69 models it covers, staircase residual table"
     },
     "StaircaseResidualPreResidualGainLow": {
-      "value": "-0.016",
+      "value": "$-$0.016",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_pre_residual_gain"
     },
     "StaircaseResidualPreResidualGainHigh": {
@@ -112,11 +112,11 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 1 to 4, staircase residual table"
     },
     "StaircaseResidualPreResidualBlocksOneFourGain": {
-      "value": "-0.022",
+      "value": "$-$0.022",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 1 to 4 against this table's first row, over the 69 models it covers, staircase residual table"
     },
     "StaircaseResidualPreResidualBlocksOneFourGainLow": {
-      "value": "-0.064",
+      "value": "$-$0.064",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_pre_residual_blocks_1_4_gain"
     },
     "StaircaseResidualPreResidualBlocksOneFourGainHigh": {
@@ -180,7 +180,7 @@
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 9 to 12 against this table's first row, over the 46 models it covers, staircase residual table"
     },
     "StaircaseResidualPreResidualBlocksNineOneTwoGainLow": {
-      "value": "-0.012",
+      "value": "$-$0.012",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_pre_residual_blocks_9_12_gain"
     },
     "StaircaseResidualPreResidualBlocksNineOneTwoGainHigh": {
@@ -232,7 +232,7 @@
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds against this table's first row, over the 69 models it covers, staircase dropout_sites table"
     },
     "StaircaseDropoutSitesPreResidualGainLow": {
-      "value": "-0.016",
+      "value": "$-$0.016",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_pre_residual_gain"
     },
     "StaircaseDropoutSitesPreResidualGainHigh": {
@@ -264,7 +264,7 @@
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, attention input against this table's first row, over the 65 models it covers, staircase dropout_sites table"
     },
     "StaircaseDropoutSitesBeforeAttentionNormGainLow": {
-      "value": "-0.016",
+      "value": "$-$0.016",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_before_attention_norm_gain"
     },
     "StaircaseDropoutSitesBeforeAttentionNormGainHigh": {
@@ -292,11 +292,11 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, attention input after norm, staircase dropout_sites table"
     },
     "StaircaseDropoutSitesBeforeAttentionGain": {
-      "value": "-0.021",
+      "value": "$-$0.021",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, attention input after norm against this table's first row, over the 65 models it covers, staircase dropout_sites table"
     },
     "StaircaseDropoutSitesBeforeAttentionGainLow": {
-      "value": "-0.066",
+      "value": "$-$0.066",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_before_attention_gain"
     },
     "StaircaseDropoutSitesBeforeAttentionGainHigh": {
@@ -324,15 +324,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, MLP input, staircase dropout_sites table"
     },
     "StaircaseDropoutSitesBeforeMlpNormGain": {
-      "value": "-0.073",
+      "value": "$-$0.073",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, MLP input against this table's first row, over the 65 models it covers, staircase dropout_sites table"
     },
     "StaircaseDropoutSitesBeforeMlpNormGainLow": {
-      "value": "-0.111",
+      "value": "$-$0.111",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_before_mlp_norm_gain"
     },
     "StaircaseDropoutSitesBeforeMlpNormGainHigh": {
-      "value": "-0.038",
+      "value": "$-$0.038",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_dropout_sites_before_mlp_norm_gain"
     },
     "StaircaseDropoutSitesAfterEmbeddingN": {
@@ -356,11 +356,11 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, embedding output, staircase dropout_sites table"
     },
     "StaircaseDropoutSitesAfterEmbeddingGain": {
-      "value": "-0.022",
+      "value": "$-$0.022",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, embedding output against this table's first row, over the 65 models it covers, staircase dropout_sites table"
     },
     "StaircaseDropoutSitesAfterEmbeddingGainLow": {
-      "value": "-0.054",
+      "value": "$-$0.054",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_after_embedding_gain"
     },
     "StaircaseDropoutSitesAfterEmbeddingGainHigh": {
@@ -408,15 +408,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, channel mask, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormChannelMaskGain": {
-      "value": "-0.046",
+      "value": "$-$0.046",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, attention input, before the norm against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormChannelMaskGainLow": {
-      "value": "-0.084",
+      "value": "$-$0.084",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_channel_mask_gain"
     },
     "StaircaseOperatorsBeforeAttentionNormChannelMaskGainHigh": {
-      "value": "-0.011",
+      "value": "$-$0.011",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_channel_mask_gain"
     },
     "StaircaseOperatorsBeforeAttentionNormGaussianN": {
@@ -440,15 +440,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, attention input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormGaussianGain": {
-      "value": "-0.128",
+      "value": "$-$0.128",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, attention input, before the norm against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormGaussianGainLow": {
-      "value": "-0.188",
+      "value": "$-$0.188",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gaussian_gain"
     },
     "StaircaseOperatorsBeforeAttentionNormGaussianGainHigh": {
-      "value": "-0.073",
+      "value": "$-$0.073",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gaussian_gain"
     },
     "StaircaseOperatorsBeforeAttentionNormN": {
@@ -472,15 +472,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, attention input, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormGain": {
-      "value": "-0.076",
+      "value": "$-$0.076",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, attention input against this table's first row, over the 65 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionNormGainLow": {
-      "value": "-0.121",
+      "value": "$-$0.121",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gain"
     },
     "StaircaseOperatorsBeforeAttentionNormGainHigh": {
-      "value": "-0.037",
+      "value": "$-$0.037",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gain"
     },
     "StaircaseOperatorsBeforeAttentionResidualTokenMaskN": {
@@ -504,11 +504,11 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, attention output before the add, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionResidualTokenMaskGain": {
-      "value": "-0.002",
+      "value": "$-$0.002",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, attention output before the add against this table's first row, over the 66 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeAttentionResidualTokenMaskGainLow": {
-      "value": "-0.028",
+      "value": "$-$0.028",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_residual_token_mask_gain"
     },
     "StaircaseOperatorsBeforeAttentionResidualTokenMaskGainHigh": {
@@ -536,11 +536,11 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, both sublayer inputs, staircase operators table"
     },
     "StaircaseOperatorsBothSublayerInputsTokenMaskGain": {
-      "value": "-0.029",
+      "value": "$-$0.029",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, both sublayer inputs against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBothSublayerInputsTokenMaskGainLow": {
-      "value": "-0.058",
+      "value": "$-$0.058",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_both_sublayer_inputs_token_mask_gain"
     },
     "StaircaseOperatorsBothSublayerInputsTokenMaskGainHigh": {
@@ -568,15 +568,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, MLP input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpNormTokenMaskGain": {
-      "value": "-0.106",
+      "value": "$-$0.106",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, MLP input, before the norm against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpNormTokenMaskGainLow": {
-      "value": "-0.151",
+      "value": "$-$0.151",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_token_mask_gain"
     },
     "StaircaseOperatorsBeforeMlpNormTokenMaskGainHigh": {
-      "value": "-0.064",
+      "value": "$-$0.064",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_token_mask_gain"
     },
     "StaircaseOperatorsBeforeMlpNormGaussianN": {
@@ -600,15 +600,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, before the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpNormGaussianGain": {
-      "value": "-0.268",
+      "value": "$-$0.268",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, before the norm against this table's first row, over the 36 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpNormGaussianGainLow": {
-      "value": "-0.381",
+      "value": "$-$0.381",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_gaussian_gain"
     },
     "StaircaseOperatorsBeforeMlpNormGaussianGainHigh": {
-      "value": "-0.163",
+      "value": "$-$0.163",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_gaussian_gain"
     },
     "StaircaseOperatorsBeforeMlpGaussianN": {
@@ -632,15 +632,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, after the norm, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpGaussianGain": {
-      "value": "-0.056",
+      "value": "$-$0.056",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input, after the norm against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsBeforeMlpGaussianGainLow": {
-      "value": "-0.100",
+      "value": "$-$0.100",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_mlp_gaussian_gain"
     },
     "StaircaseOperatorsBeforeMlpGaussianGainHigh": {
-      "value": "-0.014",
+      "value": "$-$0.014",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_mlp_gaussian_gain"
     },
     "StaircaseOperatorsAfterAttentionResidualTokenMaskN": {
@@ -664,15 +664,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, after the attention add, staircase operators table"
     },
     "StaircaseOperatorsAfterAttentionResidualTokenMaskGain": {
-      "value": "-0.162",
+      "value": "$-$0.162",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, after the attention add against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsAfterAttentionResidualTokenMaskGainLow": {
-      "value": "-0.217",
+      "value": "$-$0.217",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_after_attention_residual_token_mask_gain"
     },
     "StaircaseOperatorsAfterAttentionResidualTokenMaskGainHigh": {
-      "value": "-0.109",
+      "value": "$-$0.109",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_after_attention_residual_token_mask_gain"
     },
     "StaircaseOperatorsMlpNeuronsChannelMaskN": {
@@ -696,15 +696,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, channel mask, MLP neurons, staircase operators table"
     },
     "StaircaseOperatorsMlpNeuronsChannelMaskGain": {
-      "value": "-0.121",
+      "value": "$-$0.121",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, MLP neurons against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsMlpNeuronsChannelMaskGainLow": {
-      "value": "-0.168",
+      "value": "$-$0.168",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_mlp_neurons_channel_mask_gain"
     },
     "StaircaseOperatorsMlpNeuronsChannelMaskGainHigh": {
-      "value": "-0.074",
+      "value": "$-$0.074",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_mlp_neurons_channel_mask_gain"
     },
     "StaircaseOperatorsMlpNormOutGainScaleN": {
@@ -728,15 +728,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, gain scale, MLP norm output, staircase operators table"
     },
     "StaircaseOperatorsMlpNormOutGainScaleGain": {
-      "value": "-0.032",
+      "value": "$-$0.032",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gain scale, MLP norm output against this table's first row, over the 68 models it covers, staircase operators table"
     },
     "StaircaseOperatorsMlpNormOutGainScaleGainLow": {
-      "value": "-0.067",
+      "value": "$-$0.067",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_mlp_norm_out_gain_scale_gain"
     },
     "StaircaseOperatorsMlpNormOutGainScaleGainHigh": {
-      "value": "-0.000",
+      "value": "$-$0.000",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_mlp_norm_out_gain_scale_gain"
     },
     "StaircaseOperatorsInputPixelsScaleUpN": {
@@ -760,15 +760,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, scale up, input pixels, staircase operators table"
     },
     "StaircaseOperatorsInputPixelsScaleUpGain": {
-      "value": "-0.176",
+      "value": "$-$0.176",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, scale up, input pixels against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsInputPixelsScaleUpGainLow": {
-      "value": "-0.235",
+      "value": "$-$0.235",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_input_pixels_scale_up_gain"
     },
     "StaircaseOperatorsInputPixelsScaleUpGainHigh": {
-      "value": "-0.117",
+      "value": "$-$0.117",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_input_pixels_scale_up_gain"
     },
     "StaircaseOperatorsPostResidualN": {
@@ -792,15 +792,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, after both residual adds, staircase operators table"
     },
     "StaircaseOperatorsPostResidualGain": {
-      "value": "-0.104",
+      "value": "$-$0.104",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, after both residual adds against this table's first row, over the 69 models it covers, staircase operators table"
     },
     "StaircaseOperatorsPostResidualGainLow": {
-      "value": "-0.158",
+      "value": "$-$0.158",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_post_residual_gain"
     },
     "StaircaseOperatorsPostResidualGainHigh": {
-      "value": "-0.052",
+      "value": "$-$0.052",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_post_residual_gain"
     },
     "StaircaseBandsBeforeAttentionNormTokenMaskN": {
@@ -844,15 +844,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 1 to 4, staircase bands table"
     },
     "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskGain": {
-      "value": "-0.053",
+      "value": "$-$0.053",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 1 to 4 against this table's first row, over the 12 models it covers, staircase bands table"
     },
     "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskGainLow": {
-      "value": "-0.102",
+      "value": "$-$0.102",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_1_4_token_mask_gain"
     },
     "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskGainHigh": {
-      "value": "-0.022",
+      "value": "$-$0.022",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_1_4_token_mask_gain"
     },
     "StaircaseBandsBeforeAttentionNormBlocksFiveEightTokenMaskN": {
@@ -876,15 +876,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 5 to 8, staircase bands table"
     },
     "StaircaseBandsBeforeAttentionNormBlocksFiveEightTokenMaskGain": {
-      "value": "-0.063",
+      "value": "$-$0.063",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 5 to 8 against this table's first row, over the 44 models it covers, staircase bands table"
     },
     "StaircaseBandsBeforeAttentionNormBlocksFiveEightTokenMaskGainLow": {
-      "value": "-0.115",
+      "value": "$-$0.115",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_5_8_token_mask_gain"
     },
     "StaircaseBandsBeforeAttentionNormBlocksFiveEightTokenMaskGainHigh": {
-      "value": "-0.021",
+      "value": "$-$0.021",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_5_8_token_mask_gain"
     },
     "StaircaseBandsBeforeAttentionNormBlocksNineOneTwoTokenMaskN": {
@@ -908,15 +908,15 @@
       "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 9 to 12, staircase bands table"
     },
     "StaircaseBandsBeforeAttentionNormBlocksNineOneTwoTokenMaskGain": {
-      "value": "-0.050",
+      "value": "$-$0.050",
       "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 9 to 12 against this table's first row, over the 31 models it covers, staircase bands table"
     },
     "StaircaseBandsBeforeAttentionNormBlocksNineOneTwoTokenMaskGainLow": {
-      "value": "-0.093",
+      "value": "$-$0.093",
       "meaning": "lower bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_9_12_token_mask_gain"
     },
     "StaircaseBandsBeforeAttentionNormBlocksNineOneTwoTokenMaskGainHigh": {
-      "value": "-0.012",
+      "value": "$-$0.012",
       "meaning": "upper bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_9_12_token_mask_gain"
     }
   }

@@ -4,8 +4,8 @@
     "results/coverage/coverage.json",
     "results/<folder>/psbd_metrics.json (71 cells)"
   ],
-  "written_at": "2026-09-23T14:41:38.825594+00:00",
-  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
+  "written_at": "2026-09-23T16:14:55.291042+00:00",
+  "git_commit": "afe5fd94d50b77f30f654fe075b768040987adef-dirty",
   "macros": {
     "PanelCellsCached": {
       "value": "69",
@@ -48,7 +48,7 @@
       "meaning": "pre_residual minus post_residual dropout, matched rule, paired over the basis panel"
     },
     "PreMinusPostMatchedLow": {
-      "value": "-0.024",
+      "value": "$-$0.024",
       "meaning": "lower bootstrap bound of pre_minus_post_matched"
     },
     "PreMinusPostMatchedHigh": {
@@ -60,7 +60,7 @@
       "meaning": "pre_residual minus post_residual dropout, adaptive rule, paired over the basis panel"
     },
     "PreMinusPostAdaptiveLow": {
-      "value": "-0.016",
+      "value": "$-$0.016",
       "meaning": "lower bootstrap bound of pre_minus_post_adaptive"
     },
     "PreMinusPostAdaptiveHigh": {

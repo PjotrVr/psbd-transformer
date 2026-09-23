@@ -19,6 +19,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from scripts.paper._common import (  # noqa: E402
+    as_float,
     attack_label,
     build_parser_with_checkpoints,
     dataset_label,
@@ -424,7 +425,9 @@ def main() -> None:
         "new_dataset_cells_clearing_on_mean": (
             str(
                 sum(
-                    1 for row in new_rows if row[5] != "--" and float(row[5]) >= asr_bar
+                    1
+                    for row in new_rows
+                    if row[5] != "--" and as_float(row[5]) >= asr_bar
                 )
             ),
             "SVHN and EuroSAT cells whose seed-mean ASR clears the bar",

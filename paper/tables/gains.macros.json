@@ -1,0 +1,79 @@
+{
+  "generator": "scripts/paper/tab_gains.py",
+  "inputs": [
+    "results/coverage/coverage.json (71 clearing cells)",
+    "results/*/psbd_metrics.json"
+  ],
+  "written_at": "2026-09-23T16:13:52.321325+00:00",
+  "git_commit": "afe5fd94d50b77f30f654fe075b768040987adef-dirty",
+  "macros": {
+    "GainsModels": {
+      "value": "69",
+      "meaning": "models carrying both compared placements"
+    },
+    "GainsAll": {
+      "value": "+0.104",
+      "meaning": "mean paired AUROC gain over every compared model at the adaptive rule"
+    },
+    "GainsLowestRate": {
+      "value": "+0.161",
+      "meaning": "mean paired gain at 1% poisoning"
+    },
+    "GainsLowestRateN": {
+      "value": "19",
+      "meaning": "models at 1% poisoning"
+    },
+    "GainsHighestRate": {
+      "value": "+0.073",
+      "meaning": "mean paired gain at 10% poisoning"
+    },
+    "GainsHighestRateN": {
+      "value": "27",
+      "meaning": "models at 10% poisoning"
+    },
+    "GainsLeaveOneAttackOut": {
+      "value": "+0.051",
+      "meaning": "smallest mean gain left after dropping any single attack"
+    },
+    "GainsLeaveOneAttackOutLow": {
+      "value": "+0.005",
+      "meaning": "lower bootstrap bound of gains_leave_one_attack_out"
+    },
+    "GainsLeaveOneAttackOutAttack": {
+      "value": "TaCT",
+      "meaning": "the attack whose removal costs the gain the most"
+    },
+    "GainsPositiveDatasets": {
+      "value": "6",
+      "meaning": "datasets whose mean paired gain is positive"
+    },
+    "GainsDatasets": {
+      "value": "6",
+      "meaning": "datasets in the gain table"
+    },
+    "GainsCifarOneZeroZero": {
+      "value": "+0.150",
+      "meaning": "mean paired gain on CIFAR-100 over 15 models"
+    },
+    "GainsCifarOneZero": {
+      "value": "+0.083",
+      "meaning": "mean paired gain on CIFAR-10 over 18 models"
+    },
+    "GainsEurosat": {
+      "value": "+0.005",
+      "meaning": "mean paired gain on EuroSAT over 2 models"
+    },
+    "GainsGtsrb": {
+      "value": "+0.142",
+      "meaning": "mean paired gain on GTSRB over 15 models"
+    },
+    "GainsSvhn": {
+      "value": "+0.234",
+      "meaning": "mean paired gain on SVHN over 2 models"
+    },
+    "GainsTiny": {
+      "value": "+0.049",
+      "meaning": "mean paired gain on Tiny ImageNet over 17 models"
+    }
+  }
+}

@@ -4,31 +4,31 @@
     "results/coverage/coverage.json",
     "results/<folder>/psbd_metrics.json (65 cells)"
   ],
-  "written_at": "2026-09-23T14:42:08.311644+00:00",
-  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
+  "written_at": "2026-09-23T16:15:23.852199+00:00",
+  "git_commit": "afe5fd94d50b77f30f654fe075b768040987adef-dirty",
   "macros": {
     "GaussianMinusTokenMaskAttentionNorm": {
-      "value": "-0.183",
+      "value": "$-$0.183",
       "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus token_mask at before_attention_norm, over the 71 cells it covers of the 65-cell panel"
     },
     "GaussianMinusTokenMaskAttentionNormLow": {
-      "value": "-0.234",
+      "value": "$-$0.234",
       "meaning": "lower bound of the 95% bootstrap interval on gaussian_minus_token_mask_attention_norm"
     },
     "GaussianMinusTokenMaskAttentionNormHigh": {
-      "value": "-0.133",
+      "value": "$-$0.133",
       "meaning": "upper bound of the 95% bootstrap interval on gaussian_minus_token_mask_attention_norm"
     },
     "GaussianMinusChannelMaskAttentionNorm": {
-      "value": "-0.103",
+      "value": "$-$0.103",
       "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus channel_mask at before_attention_norm, over the 71 cells it covers of the 65-cell panel"
     },
     "GaussianMinusChannelMaskAttentionNormLow": {
-      "value": "-0.137",
+      "value": "$-$0.137",
       "meaning": "lower bound of the 95% bootstrap interval on gaussian_minus_channel_mask_attention_norm"
     },
     "GaussianMinusChannelMaskAttentionNormHigh": {
-      "value": "-0.070",
+      "value": "$-$0.070",
       "meaning": "upper bound of the 95% bootstrap interval on gaussian_minus_channel_mask_attention_norm"
     },
     "GaussianMinusTokenMaskMlp": {

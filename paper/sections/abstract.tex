@@ -1,25 +1,27 @@
 \begin{abstract}
-Prediction Shift Backdoor Detection (PSBD) flags a poisoned input by how little
-its prediction moves when the network is perturbed at inference. It was built for
-ResNets, where the residual stream is the one obvious place to put that
-perturbation, and a transformer block offers many places and several kinds of
-perturbation. We show that this choice, rather than the method, decides whether
-the detector works. Masking whole tokens at the input of every attention block
-reaches a mean AUROC of \HeadlineAurocAdaptive over \PanelCellsCached backdoored
-ViT-B/16 models spanning \PanelDatasetsCached datasets and poison rates from 1\% to
-10\%, against \PublishedAurocAdaptive for the placement the original work used.
-The paired gain is \HeadlineGainAdaptiveAuroc
-[\HeadlineGainAdaptiveAurocLow, \HeadlineGainAdaptiveAurocHigh] and it grows to
-\HardGainAdaptiveAuroc on the attacks that resist detection. Where the
-perturbation goes and what it injects are separate axes, and what decides the
-operator is the side of the LayerNorm the perturbation lands on. Injected before
-a LayerNorm, Gaussian noise costs \GaussianMinusTokenMaskAttentionNorm AUROC
-against token masking at the attention input. Injected after a LayerNorm, the 2 operators
-tie. We explain that by locating the backdoor, which is 1 direction in the
-residual stream, written in the last third of the network and routed through
-attention from the trigger's own tokens to the class token. Removing whole tokens
-before attention removes that route, while noise at the same site is
-renormalized away by the LayerNorm behind it. We also report the limits. An attacker who trains against 1 probe
-defeats it, a union of probes restores detection and all-to-all attacks remain
-open.
+Prediction Shift Backdoor Detection (PSBD) flags a poisoned input by how little its
+prediction moves when the network is perturbed at inference. It was built for ResNets,
+where the residual stream is the one obvious place to put that perturbation. A
+transformer block offers many places and several kinds of perturbation, and we show that
+this choice, rather than the method, decides whether the detector works. Masking whole
+tokens at the input of every attention block reaches a mean AUROC of
+\HeadlineAurocAdaptive{} over \PanelCellsCached{} backdoored ViT-B/16 models spanning
+\PanelDatasetsCached{} datasets and poison rates of \PanelRates{}, against
+\PublishedAurocAdaptive{} for the placement the original work used, a paired gain of
+\HeadlineGainAdaptiveAuroc{} [\HeadlineGainAdaptiveAurocLow{},
+\HeadlineGainAdaptiveAurocHigh{}] that grows to \HardGainAdaptiveAuroc{} on the attacks
+that resist detection. It transfers to Swin-S, where windowed attention leaves the
+ranking intact over \SwinCells{} models. Against \DetectorsComparedCount{} ported
+input-level detectors on the same models and splits, the original placement ranks
+\DetectorsAurocRankPublished{} of \DetectorsAurocDefensesRanked{} defenses and ours
+ranks \DetectorsAurocRankOurs{}, by \DetectorsAurocMargin{} over the strongest of
+them, which is a tie rather than a lead. Site and operator are separate axes, and the operator is decided by
+the side of the LayerNorm the perturbation lands on: injected before one, Gaussian noise
+costs \StaircaseOperatorsBeforeAttentionNormGaussianGain{} AUROC against token masking
+at the same site, and injected after a LayerNorm the 2 tie. We explain that by locating the
+backdoor, which is 1 direction in the residual stream, written in the last third of the
+network and routed through attention from the trigger's own tokens to the class token.
+Removing whole tokens before attention removes that route, while noise at the same site
+is renormalized away. We also report the limits. An attacker who trains against 1 probe
+defeats it, a union of probes restores detection and all-to-all attacks remain open.
 \end{abstract}

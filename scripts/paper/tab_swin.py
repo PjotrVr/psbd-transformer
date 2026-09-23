@@ -623,6 +623,11 @@ def main() -> None:
             fmt(mean_or_none(values), places=2),
             f"Swin mean TPR of {placement_words(placement)} at the {key} budget over {len(values)} cells",
         )
+    same_site = stats.get(SWIN_DROPOUT_INPUT, {}).get(HEADLINE_RULE, {})
+    macros["swin_same_site_dropout_auroc"] = (
+        fmt(same_site.get("mean")),
+        f"Swin mean AUROC of dropout at the attention input over {same_site.get('n', 0)} cells",
+    )
     published = stats.get(PUBLISHED_PLACEMENT, {}).get(HEADLINE_RULE, {})
     macros["swin_published_auroc_adaptive"] = (
         fmt(published.get("mean")),

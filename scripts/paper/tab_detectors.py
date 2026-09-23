@@ -262,12 +262,29 @@ def metric_macros(stem: str, overall: dict[str, float | None]) -> dict:
     return macros
 
 
+def fully_covered(results_dir: str, cells: list[dict]) -> list[dict]:
+    """The cells every compared defense has a reading on.
+
+    A mean per column over whichever cells that column happens to cover makes the
+    columns incomparable, and it is how the same placement came to read 0.818 here
+    and 0.823 in the body. Every column is read on 1 population instead.
+    """
+    kept = []
+    for cell in cells:
+        readings = cell_readings(results_dir, cell, HEADLINE_KEY, "auroc")
+        if all(value is not None for value in readings.values()):
+            kept.append(cell)
+    return kept
+
+
 def main() -> None:
     args = build_parser(__doc__).parse_args()
     coverage = load_coverage(args.results_dir)
-    cells = [cell for cell in coverage["cells"] if cell.get("asr_class") == "clears"]
+    clearing = [cell for cell in coverage["cells"] if cell.get("asr_class") == "clears"]
+    cells = fully_covered(args.results_dir, clearing)
     inputs = [
-        f"{args.results_dir}/coverage/coverage.json ({len(cells)} clearing cells)",
+        f"{args.results_dir}/coverage/coverage.json "
+        f"({len(cells)} of {len(clearing)} clearing cells carry every defense)",
         f"{args.results_dir}/*/detectors/*_metrics.json",
         f"{args.results_dir}/*/psbd_metrics.json",
     ]
@@ -291,8 +308,10 @@ def main() -> None:
             generator=GENERATOR,
             inputs=inputs,
             caption=(
-                f"{words} of every defense on every backdoored ViT-B/16 model, "
-                f"{len(cells)} models over {len({cell['dataset'] for cell in cells})} "
+                f"{words} of every defense on every backdoored ViT-B/16 model that "
+                f"carries all {len(columns())} of them, {len(cells)} of "
+                f"{len(clearing)} models over "
+                f"{len({cell['dataset'] for cell in cells})} "
                 "datasets. Rows are attacks and columns defenses, ours first. Best in "
                 "each row is bold and second best underlined. AUROC is one-sided and "
                 "never flipped, so gray marks a reading below chance, where the "

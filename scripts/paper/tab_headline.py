@@ -232,9 +232,21 @@ def main() -> None:
         all_cells_delta_match, args.bootstrap, args.seed
     )
 
-    rec_adapt_auroc = config_values(cells, "rec_adapt", HEADLINE_KEY, "auroc")
+    # The abstract quotes these 2 means side by side as a head-to-head, so they
+    # have to be read on the same models. Taken over whichever cells each
+    # placement happened to cover, the recommended mean sat on 69 cells and the
+    # published mean on 71, which is an unpaired comparison presented as a paired
+    # one. Both are now restricted to the cells carrying both placements, which is
+    # also the population the paired gain is computed on.
+    paired_cells = [
+        cell
+        for cell in cells
+        if metric(cell["values"]["rec_adapt"], HEADLINE_KEY, "auroc") is not None
+        and metric(cell["values"]["pub_adapt"], HEADLINE_KEY, "auroc") is not None
+    ]
+    rec_adapt_auroc = config_values(paired_cells, "rec_adapt", HEADLINE_KEY, "auroc")
     rec_match_auroc = config_values(cells, "rec_match", HEADLINE_KEY, "auroc")
-    pub_adapt_auroc = config_values(cells, "pub_adapt", HEADLINE_KEY, "auroc")
+    pub_adapt_auroc = config_values(paired_cells, "pub_adapt", HEADLINE_KEY, "auroc")
     rec_adapt_tpr_at_1pct = config_values(cells, "rec_adapt", "q0.01", "tpr")
 
     primary_cells = [c for c in cells if c["dataset"] in PRIMARY_DATASETS]
@@ -246,8 +258,8 @@ def main() -> None:
     macros = {
         "headline_auroc_adaptive": (
             fmt(mean_or_none(rec_adapt_auroc)),
-            "mean AUROC of the recommended placement at the adaptive rule, "
-            f"over the {len(rec_adapt_auroc)} cells it covers of the 65-cell panel",
+            "mean AUROC of the recommended placement at the adaptive rule, over "
+            f"the {len(rec_adapt_auroc)} cells carrying both compared placements",
         ),
         "headline_auroc_matched": (
             fmt(mean_or_none(rec_match_auroc)),
@@ -256,8 +268,8 @@ def main() -> None:
         ),
         "published_auroc_adaptive": (
             fmt(mean_or_none(pub_adapt_auroc)),
-            "mean AUROC of the published placement at the adaptive rule, "
-            f"over the {len(pub_adapt_auroc)} cells it covers of the 65-cell panel",
+            "mean AUROC of the published placement at the adaptive rule, over "
+            f"the {len(pub_adapt_auroc)} cells carrying both compared placements",
         ),
         "headline_gain_adaptive_auroc": (
             fmt(mean_or_none(all_cells_delta_adapt), signed=True),

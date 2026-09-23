@@ -4,20 +4,20 @@
     "results/coverage/coverage.json",
     "results/<folder>/psbd_metrics.json (65 cells)"
   ],
-  "written_at": "2026-09-23T14:41:06.861558+00:00",
-  "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
+  "written_at": "2026-09-23T16:23:18.532580+00:00",
+  "git_commit": "afe5fd94d50b77f30f654fe075b768040987adef-dirty",
   "macros": {
     "HeadlineAurocAdaptive": {
       "value": "0.927",
-      "meaning": "mean AUROC of the recommended placement at the adaptive rule, over the 69 cells it covers of the 65-cell panel"
+      "meaning": "mean AUROC of the recommended placement at the adaptive rule, over the 69 cells carrying both compared placements"
     },
     "HeadlineAurocMatched": {
       "value": "0.921",
       "meaning": "mean AUROC of the recommended placement at the matched 0.6 rule, over the 71 cells it covers of the 65-cell panel"
     },
     "PublishedAurocAdaptive": {
-      "value": "0.818",
-      "meaning": "mean AUROC of the published placement at the adaptive rule, over the 71 cells it covers of the 65-cell panel"
+      "value": "0.823",
+      "meaning": "mean AUROC of the published placement at the adaptive rule, over the 69 cells carrying both compared placements"
     },
     "HeadlineGainAdaptiveAuroc": {
       "value": "+0.104",
