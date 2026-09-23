@@ -149,7 +149,7 @@ def main() -> None:
     ]
 
     # Figure: class-token attention on the trigger tokens by layer, triggered images,
-    # 1 line per attack, the benign references as a grey band.
+    # 1 line per attack, the benign references as a gray band.
     attacks = ordered_attacks(set(routing) - {"benign"})
     fig, (left, right) = plt.subplots(1, 2, figsize=(10, 3.8))
     plotted = {"cls_attention_on_trigger": {}, "trigger_norm_rank": {}}

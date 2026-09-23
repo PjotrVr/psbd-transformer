@@ -3,8 +3,8 @@
   "inputs": [
     "results/<folder>/psbd_metrics.json (65 clearing cells, placements.before_attention_norm_token_mask.rates)"
   ],
-  "written_at": "2026-09-23T19:50:55.896709+00:00",
-  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
+  "written_at": "2026-09-23T21:21:04.112989+00:00",
+  "git_commit": "b843c4451e8ca520fbe4e574bbdf5314e45bcb74-dirty",
   "plotted": {
     "recommended_placement": "before_attention_norm_token_mask",
     "adaptive_rule_target": 0.8,

@@ -10,6 +10,7 @@ as such.
     PYTHONPATH=. python scripts/paper/tab_detector_smoke.py --paper-dir paper
 """
 
+import collections
 import os
 import sys
 
@@ -18,8 +19,10 @@ sys.path.insert(0, os.getcwd())
 from detectors import DETECTOR_NAMES, FORWARD_PASSES_PER_INPUT  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     build_parser,
+    detector_label,
     fmt,
     markdown_table_rows,
+    word_list,
     write_macros,
     write_table,
 )
@@ -120,7 +123,28 @@ def main() -> None:
         return value
 
     benign_values = [auroc(detector, "benign") for detector in by_detector]
+    # The gradient detectors ran on fewer validation images than the rest, so the
+    # appendix states the common size and names the detectors that used another.
+    size_counts = collections.Counter(row["n val"] for row in acceptance)
+    common_size = size_counts.most_common(1)[0][0]
+    smaller = sorted(
+        {row["detector"] for row in acceptance if row["n val"] != common_size},
+        key=DETECTOR_NAMES.index,
+    )
+    smaller_sizes = {row["n val"] for row in acceptance if row["n val"] != common_size}
     macros = {
+        "smoke_validation_images": (
+            common_size,
+            "clean validation images per model for most detectors in the smoke run",
+        ),
+        "smoke_validation_images_exceptions": (
+            word_list([detector_label(name) for name in smaller]),
+            "detectors the smoke run read on a different number of validation images",
+        ),
+        "smoke_validation_images_exception_size": (
+            word_list(sorted(smaller_sizes)),
+            "validation images per model for those detectors",
+        ),
         "smoke_checkpoints": (str(len(MODEL_ORDER)), "checkpoints in the smoke run"),
         "smoke_backdoored_checkpoints": (
             str(len(MODEL_ORDER) - 1),

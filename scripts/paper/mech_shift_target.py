@@ -43,6 +43,7 @@ from scripts.paper._common import (
     load_declaration,
     load_psbd_metrics,
     rate_row,
+    word_list,
     write_macros,
     write_table,
 )
@@ -491,6 +492,69 @@ def write_shift_target_figure(args, records: list[dict], benign_reports: dict) -
     )
 
 
+# An excess below this is read as no drift toward the target. The per-dataset
+# uniform expectation runs from 0.005 on Tiny ImageNet to 0.1 on CIFAR-10, so a
+# fixed floor this small calls nothing a drift that the uniform rate explains.
+NO_DRIFT_EXCESS = 0.02
+
+
+def pattern_macros(records: list[dict], seed: int) -> dict:
+    """Which attacks drift toward the target, and where the drift is largest.
+
+    The paper used to say the drift is carried by local triggers on few-class
+    datasets and absent for global ones. The per-dataset table says otherwise
+    (LF, BPP and WaNet drift on Tiny ImageNet, TaCT does not drift anywhere), so
+    the sentence now names the attacks and the largest cell from the records.
+    """
+    excess_by_group: dict[tuple[str, str], float] = {}
+    for dataset in DATASET_ORDER:
+        for attack in {r["attack"] for r in records if r["dataset"] == dataset}:
+            group = [
+                r for r in records if r["dataset"] == dataset and r["attack"] == attack
+            ]
+            _, _, deltas, _ = paired_excess(group, MACRO_RULE, 0, seed)
+            excess_by_group[(dataset, attack)] = statistics.mean(deltas)
+    attacks = sorted({attack for _, attack in excess_by_group})
+    never = [
+        attack
+        for attack in attacks
+        if all(
+            value < NO_DRIFT_EXCESS
+            for (_, other), value in excess_by_group.items()
+            if other == attack
+        )
+    ]
+    largest = max(excess_by_group.items(), key=lambda item: item[1])
+    (largest_dataset, largest_attack), largest_value = largest
+
+    def phrase(names: list[str]) -> str:
+        return word_list([attack_label(name) for name in names])
+
+    macros = {
+        "shift_to_target_no_drift_attacks": (
+            phrase(never) if never else "none",
+            f"attacks whose excess stays under {NO_DRIFT_EXCESS} on every dataset",
+        ),
+        "shift_to_target_drift_attacks": (
+            phrase([attack for attack in attacks if attack not in never]),
+            "attacks with an excess of at least the floor on some dataset",
+        ),
+        "shift_to_target_largest_cell": (
+            f"{attack_label(largest_attack)} on {dataset_label(largest_dataset)}",
+            "the attack and dataset with the largest mean excess",
+        ),
+        "shift_to_target_largest_excess": (
+            fmt(largest_value, signed=True),
+            "the largest mean excess over any attack and dataset",
+        ),
+        "shift_to_target_no_drift_floor": (
+            f"{NO_DRIFT_EXCESS:g}",
+            "the excess below which an attack is read as not drifting",
+        ),
+    }
+    return macros
+
+
 def write_shift_target_macros(args, records: list[dict], benign_reports: dict) -> None:
     shares = [r["by_rule"][MACRO_RULE]["attack"]["share"] for r in records]
     benign_shares = [r["by_rule"][MACRO_RULE]["benign"]["share"] for r in records]
@@ -530,6 +594,7 @@ def write_shift_target_macros(args, records: list[dict], benign_reports: dict) -
             "placement, adaptive-0.8 rate rule",
         ),
     }
+    macros.update(pattern_macros(records, args.seed))
     write_macros(
         sidecar_path=os.path.join(
             args.paper_dir, "tables", "mech_shift_target.macros.json"

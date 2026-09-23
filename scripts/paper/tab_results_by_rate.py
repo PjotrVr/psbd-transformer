@@ -1,4 +1,4 @@
-"""Detection results by poison rate, modelled on the PSBD paper's Table 1.
+"""Detection results by poison rate, modeled on the PSBD paper's Table 1.
 
 1 `table*` per poison rate (1%, 5%, 10%), rows grouped by dataset, 1 row per
 attack that was trained at that rate on that dataset: attack success rate and

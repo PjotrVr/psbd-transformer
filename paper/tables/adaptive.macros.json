@@ -4,8 +4,8 @@
     "results/adaptive_attacker_analysis.json",
     "results/multi_probe_analysis.json"
   ],
-  "written_at": "2026-09-23T18:21:30.652903+00:00",
-  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
+  "written_at": "2026-09-23T20:55:04.755401+00:00",
+  "git_commit": "b843c4451e8ca520fbe4e574bbdf5314e45bcb74-dirty",
   "macros": {
     "AdaptiveHighAsr": {
       "value": "0.9",
@@ -26,6 +26,22 @@
     "AdaptiveVitTransfer": {
       "value": "0.893",
       "meaning": "vit mean AUROC of the unprobed operators on the evasive checkpoints"
+    },
+    "AdaptiveVitUnionTpr": {
+      "value": "0.97",
+      "meaning": "vit mean TPR of the probe union at the headline budget on the evasive checkpoints"
+    },
+    "AdaptiveVitUnionFpr": {
+      "value": "0.26",
+      "meaning": "vit mean realized FPR of the probe union at the headline budget"
+    },
+    "AdaptiveVitOracleGap": {
+      "value": "+0.004",
+      "meaning": "vit mean AUROC of the union without the attacked probe minus the full union"
+    },
+    "AdaptiveVitCaCostMaxPoints": {
+      "value": "4.5",
+      "meaning": "vit largest clean-accuracy loss of an evasive checkpoint, in points"
     },
     "AdaptiveVitUnion": {
       "value": "0.967",

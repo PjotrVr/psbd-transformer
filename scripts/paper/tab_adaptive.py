@@ -3,7 +3,7 @@
 An attacker who trains against 1 probe collapses that probe and leaves the
 others standing, and a union over probes recovers most of the loss. Both records
 were written before the paper folder existed and live at the results root. This
-reads them, splits ViT from Swin, and reports the probed operator's AUROC before
+reads them, splits ViT from Swin and reports the probed operator's AUROC before
 and after evasion, the transfer operators' AUROC on the evasive checkpoint, and
 the best union's AUROC, with the attack success and clean accuracy the evasion
 cost.
@@ -30,6 +30,13 @@ from scripts.paper._common import (  # noqa: E402
 )
 
 GENERATOR = "scripts/paper/tab_adaptive.py"
+# How multi_probe_analysis.json abbreviates an operator in its probe labels.
+OPERATOR_ABBREVIATIONS = {
+    "token_mask": "tm",
+    "dropout": "do",
+    "gain_scale": "gs",
+    "gaussian": "ga",
+}
 ATTACKER_FILE = "adaptive_attacker_analysis.json"
 UNION_FILE = "multi_probe_analysis.json"
 HIGH_ASR = 0.9
@@ -101,6 +108,29 @@ def main() -> None:
                 "ca_cost": [],
             },
         )
+        union_row = union_by_key.get(
+            (row["arch"], row["dataset"], row["attack"], row["rate"]), {}
+        )
+        # The attacker's record names the probe in full (token_mask@ban) and the
+        # union record abbreviates the operator (tm@ban), so the full name has to
+        # be shortened before it can pick the union that leaves the probe out.
+        operator, _, site = row["probed_label"].partition("@")
+        probed_short = f"{OPERATOR_ABBREVIATIONS.get(operator, operator)}@{site}"
+        without_probed = [
+            key
+            for key in union_row
+            if key.startswith("combo_")
+            and key.endswith("_auroc")
+            and probed_short not in key
+            and key.count("+") == len(union_row.get("operator_labels", [])) - 2
+        ]
+        if union_row.get("all_calibrated_tpr") is not None:
+            stats.setdefault("union_tpr", []).append(union_row["all_calibrated_tpr"])
+            stats.setdefault("union_fpr", []).append(union_row["all_calibrated_fpr"])
+        if without_probed and union is not None:
+            stats.setdefault("oracle_gap", []).append(
+                union_row[without_probed[0]] - union
+            )
         stats["base"].append(probed_base)
         stats["evade"].append(probed_evade)
         stats["transfer"].append(mean_or_none(transfer))
@@ -244,6 +274,22 @@ def main() -> None:
         macros[f"adaptive_{arch}_transfer"] = (
             fmt(mean_or_none(stats["transfer"])),
             f"{arch} mean AUROC of the unprobed operators on the evasive checkpoints",
+        )
+        macros[f"adaptive_{arch}_union_tpr"] = (
+            fmt(mean_or_none(stats.get("union_tpr", [])), places=2),
+            f"{arch} mean TPR of the probe union at the headline budget on the evasive checkpoints",
+        )
+        macros[f"adaptive_{arch}_union_fpr"] = (
+            fmt(mean_or_none(stats.get("union_fpr", [])), places=2),
+            f"{arch} mean realized FPR of the probe union at the headline budget",
+        )
+        macros[f"adaptive_{arch}_oracle_gap"] = (
+            fmt(mean_or_none(stats.get("oracle_gap", [])), signed=True),
+            f"{arch} mean AUROC of the union without the attacked probe minus the full union",
+        )
+        macros[f"adaptive_{arch}_ca_cost_max_points"] = (
+            fmt(-100 * min(stats["ca_cost"]), places=1),
+            f"{arch} largest clean-accuracy loss of an evasive checkpoint, in points",
         )
         macros[f"adaptive_{arch}_union"] = (
             fmt(mean_or_none(stats["union"])),

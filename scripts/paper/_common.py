@@ -415,6 +415,16 @@ def std_or_none(values: list[float]) -> float | None:
     return deviation
 
 
+def word_list(labels: list[str]) -> str:
+    """Labels as running prose without the Oxford comma, "none" when empty."""
+    if not labels:
+        return "none"
+    if len(labels) == 1:
+        return labels[0]
+    text = ", ".join(labels[:-1]) + f" and {labels[-1]}"
+    return text
+
+
 DATASET_LABELS = {
     "cifar10": "CIFAR-10",
     "cifar100": "CIFAR-100",

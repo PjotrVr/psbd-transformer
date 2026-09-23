@@ -3,10 +3,11 @@
   "inputs": [
     "attacks.default_config",
     "results/coverage/coverage.json",
-    "checkpoints/<folder>/args.json"
+    "checkpoints/<folder>/args.json",
+    "raw_data/<dataset> training labels"
   ],
-  "written_at": "2026-09-23T19:44:32.306842+00:00",
-  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
+  "written_at": "2026-09-23T21:18:00.619268+00:00",
+  "git_commit": "b843c4451e8ca520fbe4e574bbdf5314e45bcb74-dirty",
   "macros": {
     "AttackLcPgdSteps": {
       "value": "100",
@@ -127,6 +128,114 @@
     "AttackWanetAsrMax": {
       "value": "0.968",
       "meaning": "highest attack success of wanet over its 12 main-dataset cells"
+    },
+    "AttackAdaptiveBlendAsrLowRateMin": {
+      "value": "0.536",
+      "meaning": "lowest attack success of adaptive_blend at the lowest panel rate"
+    },
+    "AttackAdaptiveBlendAsrLowRateMax": {
+      "value": "0.622",
+      "meaning": "highest attack success of adaptive_blend at the lowest panel rate"
+    },
+    "AttackAdaptiveBlendAsrNeverClearingMin": {
+      "value": "0.505",
+      "meaning": "lowest attack success of adaptive_blend on cifar10, cifar100, gtsrb and tiny, the datasets where no rate clears"
+    },
+    "AttackAdaptiveBlendAsrNeverClearingMax": {
+      "value": "0.838",
+      "meaning": "highest attack success of adaptive_blend on cifar10, cifar100, gtsrb and tiny, the datasets where no rate clears"
+    },
+    "AttackBadnetATwooAsrLowRateMin": {
+      "value": "0.997",
+      "meaning": "lowest attack success of badnet_a2o at the lowest panel rate"
+    },
+    "AttackBadnetATwooAsrLowRateMax": {
+      "value": "1.000",
+      "meaning": "highest attack success of badnet_a2o at the lowest panel rate"
+    },
+    "AttackBlendAsrLowRateMin": {
+      "value": "0.989",
+      "meaning": "lowest attack success of blend at the lowest panel rate"
+    },
+    "AttackBlendAsrLowRateMax": {
+      "value": "1.000",
+      "meaning": "highest attack success of blend at the lowest panel rate"
+    },
+    "AttackBppAsrLowRateMin": {
+      "value": "0.868",
+      "meaning": "lowest attack success of bpp at the lowest panel rate"
+    },
+    "AttackBppAsrLowRateMax": {
+      "value": "0.982",
+      "meaning": "highest attack success of bpp at the lowest panel rate"
+    },
+    "AttackLfAsrLowRateMin": {
+      "value": "0.922",
+      "meaning": "lowest attack success of lf at the lowest panel rate"
+    },
+    "AttackLfAsrLowRateMax": {
+      "value": "0.982",
+      "meaning": "highest attack success of lf at the lowest panel rate"
+    },
+    "AttackSigAsrLowRateMin": {
+      "value": "0.076",
+      "meaning": "lowest attack success of sig at the lowest panel rate"
+    },
+    "AttackSigAsrLowRateMax": {
+      "value": "0.356",
+      "meaning": "highest attack success of sig at the lowest panel rate"
+    },
+    "AttackSigAsrNeverClearingMin": {
+      "value": "0.076",
+      "meaning": "lowest attack success of sig on cifar100, gtsrb and tiny, the datasets where no rate clears"
+    },
+    "AttackSigAsrNeverClearingMax": {
+      "value": "0.673",
+      "meaning": "highest attack success of sig on cifar100, gtsrb and tiny, the datasets where no rate clears"
+    },
+    "AttackTactAsrLowRateMin": {
+      "value": "0.976",
+      "meaning": "lowest attack success of tact at the lowest panel rate"
+    },
+    "AttackTactAsrLowRateMax": {
+      "value": "0.989",
+      "meaning": "highest attack success of tact at the lowest panel rate"
+    },
+    "AttackWanetAsrLowRateMin": {
+      "value": "0.057",
+      "meaning": "lowest attack success of wanet at the lowest panel rate"
+    },
+    "AttackWanetAsrLowRateMax": {
+      "value": "0.178",
+      "meaning": "highest attack success of wanet at the lowest panel rate"
+    },
+    "AttackWanetAsrNeverClearingMin": {
+      "value": "0.057",
+      "meaning": "lowest attack success of wanet on cifar100, the datasets where no rate clears"
+    },
+    "AttackWanetAsrNeverClearingMax": {
+      "value": "0.793",
+      "meaning": "highest attack success of wanet on cifar100, the datasets where no rate clears"
+    },
+    "CleanLabelCapCifarOneZeroClassZero": {
+      "value": "10\\%",
+      "meaning": "clean-label rate ceiling on cifar10 at target class 0, 5000 of 50000 training images"
+    },
+    "CleanLabelCapCifarOneZeroZeroClassZero": {
+      "value": "1\\%",
+      "meaning": "clean-label rate ceiling on cifar100 at target class 0, 500 of 50000 training images"
+    },
+    "CleanLabelCapTinyClassZero": {
+      "value": "0.5\\%",
+      "meaning": "clean-label rate ceiling on tiny at target class 0, 500 of 100000 training images"
+    },
+    "CleanLabelCapGtsrbClassZero": {
+      "value": "0.56\\%",
+      "meaning": "clean-label rate ceiling on gtsrb at target class 0, 150 of 26640 training images"
+    },
+    "CleanLabelCapGtsrbClassOne": {
+      "value": "5.63\\%",
+      "meaning": "clean-label rate ceiling on gtsrb at target class 1, 1500 of 26640 training images"
     },
     "AttackAdaptiveBlendCoverRatio": {
       "value": "1",

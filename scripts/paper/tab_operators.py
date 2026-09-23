@@ -1,4 +1,4 @@
-"""A2 and C1: the operator axis at before_attention_norm, and 1 input-side site pair.
+"""A2 and C1: the operator axis at the attention input, and 1 input-side site pair.
 
 At `before_attention_norm`, the capacity-removing operators `token_mask` and
 `channel_mask` against `gaussian`, which removes no capacity (H23). At
@@ -19,6 +19,7 @@ import sys
 sys.path.insert(0, os.getcwd())
 
 from cli.compare_detectors import psbd_values  # noqa: E402
+from defenses.decision import PLACEMENT_MATCH_TARGET  # noqa: E402
 from scripts.paper._common import (  # noqa: E402
     HEADLINE_KEY,
     bootstrap_ci,
@@ -47,33 +48,35 @@ PLACEMENTS = (
     (MLP_GAUSSIAN, "before_mlp", "gaussian"),
     (MLP_NORM_TOKEN_MASK, "before_mlp_norm", "token_mask"),
 )
-RULES = ("matched", "adaptive")
+RULES = ("matched",)
 
-# Each comparison paired within cell at the matched 0.6 rate. A2 isolates the
-# operator with the site held fixed, C1 isolates the site with the operator
-# held fixed.
+# Each comparison paired within cell at the matched 0.6 rate. The first 3 (A2)
+# isolate the operator with the site held fixed, the last (C1) isolates the
+# site with the operator held fixed. The third crosses the MLP's LayerNorm, noise
+# after it against masking before it, which is the apparent reversal the paper
+# traces to the side of the norm.
 COMPARISONS = (
     (
         "gaussian_minus_token_mask_attention_norm",
-        "A2: gaussian minus token_mask at before_attention_norm",
+        "noise minus token mask, attention input",
         ATTENTION_NORM_GAUSSIAN,
         ATTENTION_NORM_TOKEN_MASK,
     ),
     (
         "gaussian_minus_channel_mask_attention_norm",
-        "A2: gaussian minus channel_mask at before_attention_norm",
+        "noise minus channel mask, attention input",
         ATTENTION_NORM_GAUSSIAN,
         ATTENTION_NORM_CHANNEL_MASK,
     ),
     (
         "gaussian_minus_token_mask_mlp",
-        "A2: gaussian minus token_mask at before_mlp",
+        "noise after the MLP norm minus token mask before it",
         MLP_GAUSSIAN,
         MLP_NORM_TOKEN_MASK,
     ),
     (
         "attention_input_minus_mlp_input_token_mask",
-        "C1: before_attention_norm minus before_mlp_norm, both token_mask",
+        "attention input minus MLP input, both token mask",
         ATTENTION_NORM_TOKEN_MASK,
         MLP_NORM_TOKEN_MASK,
     ),
@@ -95,12 +98,6 @@ def measure_cell(results_dir: str, folder: str) -> dict[str, dict[str, float | N
             )
         auroc_by_placement[placement] = by_rule
     return auroc_by_placement
-
-
-def placement_values(cells: list[dict], placement: str, rule: str) -> list[float]:
-    values = [cell["auroc"][placement][rule] for cell in cells]
-    present = [value for value in values if value is not None]
-    return present
 
 
 def paired_deltas(
@@ -126,47 +123,8 @@ def main() -> None:
 
     inputs = [
         coverage_path,
-        f"{args.results_dir}/<folder>/psbd_metrics.json (65 cells)",
+        f"{args.results_dir}/<folder>/psbd_metrics.json ({len(cells)} cells)",
     ]
-
-    mean_rows = []
-    for placement, site, operator in PLACEMENTS:
-        matched = placement_values(cells, placement, "matched")
-        adaptive = placement_values(cells, placement, "adaptive")
-        mean_rows.append(
-            [
-                placement,
-                site,
-                operator,
-                str(len(matched)),
-                fmt(mean_or_none(matched)),
-                str(len(adaptive)),
-                fmt(mean_or_none(adaptive)),
-            ]
-        )
-    write_table(
-        path=os.path.join(args.paper_dir, "tables", "operators.tex"),
-        generator=GENERATOR,
-        inputs=inputs,
-        caption=(
-            "Mean AUROC at q0.25 for each placement of the operator and site "
-            "comparison, at the matched 0.6 rate and the adaptive 0.8 rate, over "
-            "the panel of 65 backdoored models. n is the number of models the "
-            "placement covers under that rule."
-        ),
-        label="tab:operators",
-        header=[
-            "placement",
-            "site",
-            "operator",
-            "n match",
-            "mean AUROC matched06",
-            "n adapt",
-            "mean AUROC adaptive08",
-        ],
-        rows=mean_rows,
-        align="lllrrrr",
-    )
 
     delta_rows = []
     macros = {}
@@ -180,7 +138,7 @@ def main() -> None:
         macros[macro_stem] = (
             fmt(mean, signed=True),
             f"mean paired AUROC delta at the matched 0.6 rate, {label}, "
-            f"over the {len(deltas)} cells it covers of the 65-cell panel",
+            f"over the {len(deltas)} cells it covers of the {len(cells)} clearing cells",
         )
         macros[f"{macro_stem}_low"] = (
             fmt(low, signed=True),
@@ -196,13 +154,14 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            "Paired AUROC deltas at the matched 0.6 rate, "
-            f"{args.bootstrap}-resample bootstrap 95\\% intervals. A2 isolates the "
-            "operator with the site held fixed, C1 isolates the site with the "
-            "operator held fixed."
+            "Paired AUROC differences between placements on the same ViT-B/16 "
+            f"models at matched disturbance, a clean shift ratio of {PLACEMENT_MATCH_TARGET:g}, "
+            f"with {args.bootstrap}-resample bootstrap 95\\% intervals. The first 3 "
+            "rows change the perturbation at a fixed site and the last changes the "
+            "site at a fixed perturbation."
         ),
         label="tab:operators-deltas",
-        header=["comparison", "n", "mean delta AUROC", "95% CI"],
+        header=["comparison", "models", "mean difference", "95% interval"],
         rows=delta_rows,
         align="lrrl",
     )

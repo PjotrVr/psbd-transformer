@@ -42,7 +42,10 @@ LEDGERS = {"app_hypothesis_ledger.py", "ledger_macros.py"}
 ALLOWED = (
     r"\\(?:cite|citep|citet|cited|ref|cref|Cref|label|input|include|includegraphics(?:\[[^\]]*\])?|eqref|pageref|bibliography)\{[^}]*\}",
     r"\\[A-Za-z]+",
-    r"%[^\n]*",
+    # A comment, but not an escaped percent sign. Without the lookbehind every
+    # line with a percentage was checked only up to its first \\%, which is how
+    # the shift-target paragraph kept typed numbers past this check.
+    r"(?<!\\)%[^\n]*",
     r"\b(?:19|20)\d\d\b",
     r"\$[^$]*\$",
     # Proper names that carry a digit are names, not measurements: architectures,

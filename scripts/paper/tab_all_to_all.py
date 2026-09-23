@@ -1,4 +1,4 @@
-"""All-to-all: where PSU fails, what the discarded softmax carries, and the sign router.
+"""All-to-all: where PSU fails, what the discarded softmax carries and the sign router.
 
 Reads the 2 records the all-to-all study left at the results root. The first
 scores 4 statistics from the cached no-perturbation softmax and from PSU on

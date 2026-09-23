@@ -36,6 +36,7 @@ from scripts.paper._common import (  # noqa: E402
     load_psbd_metrics,
     mean_or_none,
     write_macros,
+    word_list,
     write_table,
 )
 
@@ -172,14 +173,7 @@ def strong_attack_macros(paired: list[dict]) -> dict:
             "the AUROC called strong in the results",
         ),
         "gains_strong_attacks": (
-            ", ".join(attack_label(attack) for attack in strong[:-1])
-            + (
-                f" and {attack_label(strong[-1])}"
-                if len(strong) > 1
-                else attack_label(strong[0])
-                if strong
-                else "none"
-            ),
+            word_list([attack_label(attack) for attack in strong]),
             "attacks whose every model reads at least the strong AUROC under the recommended placement",
         ),
         "gains_strong_attack_count": (

@@ -52,7 +52,9 @@ PRIMARY_DATASETS = ("cifar10", "cifar100", "gtsrb", "tiny")
 HARD_ATTACKS = ("bpp", "wanet", "tact", "sig")
 
 GRID = [round(0.20 + 0.02 * i, 2) for i in range(40)]  # 0.20, 0.22, ..., 0.98
-REPORT_TARGETS = (0.6, 0.8, 0.9, 0.95)
+# The target past the adaptive one that the appendix reads the ladder at.
+STRETCH_TARGET = 0.9
+REPORT_TARGETS = (0.6, 0.8, STRETCH_TARGET, 0.95)
 
 # quantile is the false-positive budget by construction, so TPR at 1% and 10%
 # FPR reads the q0.10 and q0.20 blocks of detection_psu_ratio, the 2 budgets
@@ -188,7 +190,14 @@ def target_macros(at_targets: dict) -> dict[str, tuple[str, str]]:
     The appendix argues from these readings, and they had been typed from an
     earlier version of the figure that plotted TPR at a 1% budget.
     """
-    macros = {}
+    macros = {
+        "ladder_grid_low": (f"{GRID[0]:g}", "lowest shift ratio on the shared grid"),
+        "ladder_grid_high": (f"{GRID[-1]:g}", "highest shift ratio on the shared grid"),
+        "ladder_stretch_target": (
+            f"{STRETCH_TARGET:g}",
+            "the shift ratio past the adaptive target the appendix reads",
+        ),
+    }
     for metric, by_target in at_targets.items():
         for target, reading in by_target.items():
             stem = f"ladder_{metric}_at_{f'{target:g}'.replace('.', '_')}"

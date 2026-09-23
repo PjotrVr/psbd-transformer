@@ -100,8 +100,8 @@ GAP_HEADER = [
 def family_definitions(declaration: dict) -> dict[str, dict[str, list[str]]]:
     """The 2 definitions, each a family name to its placement ids.
 
-    The confounded definition reads the basis file's family tags as written, the
-    operator-matched one keeps only the token_mask members of each family.
+    The confounded definition reads the basis file's family tags as written. The
+    operator-matched split keeps only the token_mask members of each family.
     """
     basis = declaration["basis"]
     confounded = {

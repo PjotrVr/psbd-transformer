@@ -3,9 +3,21 @@
   "inputs": [
     "results/<folder>/psbd_metrics.json"
   ],
-  "written_at": "2026-09-23T19:51:03.043187+00:00",
-  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
+  "written_at": "2026-09-23T21:21:10.421948+00:00",
+  "git_commit": "b843c4451e8ca520fbe4e574bbdf5314e45bcb74-dirty",
   "macros": {
+    "LadderGridLow": {
+      "value": "0.2",
+      "meaning": "lowest shift ratio on the shared grid"
+    },
+    "LadderGridHigh": {
+      "value": "0.98",
+      "meaning": "highest shift ratio on the shared grid"
+    },
+    "LadderStretchTarget": {
+      "value": "0.9",
+      "meaning": "the shift ratio past the adaptive target the appendix reads"
+    },
     "LadderAurocAtZeroSix": {
       "value": "0.927",
       "meaning": "mean auroc of the recommended placement at clean shift ratio 0.6"

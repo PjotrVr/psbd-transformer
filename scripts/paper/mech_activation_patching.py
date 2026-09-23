@@ -1,6 +1,6 @@
 """Activation patching across the panel: where in depth the backdoor is causally located.
 
-Every clearing cell carries an activation_patching.json with the normalised
+Every clearing cell carries an activation_patching.json with the normalized
 recovery of the clean answer when 1 token group at 1 layer is patched from the
 clean run into the triggered run. Recovery near 1 at a (layer, group) means the
 backdoor was carried there and nowhere else at that depth. This averages the
