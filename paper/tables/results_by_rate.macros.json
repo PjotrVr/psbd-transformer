@@ -1,0 +1,39 @@
+{
+  "generator": "scripts/paper/tab_results_by_rate.py",
+  "inputs": [
+    "results/coverage/coverage.json",
+    "results/<folder>/psbd_metrics.json"
+  ],
+  "written_at": "2026-09-11T04:16:32.148691+00:00",
+  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
+  "macros": {
+    "ResultsRateOneRows": {
+      "value": "34",
+      "meaning": "rows in the 1% poisoning table"
+    },
+    "ResultsRateFiveRows": {
+      "value": "34",
+      "meaning": "rows in the 5% poisoning table"
+    },
+    "ResultsRateOneZeroRows": {
+      "value": "35",
+      "meaning": "rows in the 10% poisoning table"
+    },
+    "ResultsBelowBarRows": {
+      "value": "34",
+      "meaning": "rows across the 3 rate tables printed with -- in every detection column because the attack did not clear the ASR bar"
+    },
+    "ResultsMissingSweep": {
+      "value": "6",
+      "meaning": "checkpoints that cleared the ASR bar but have no psbd_metrics.json yet, printed as pending across the 3 rate tables"
+    },
+    "ResultsPartialMissing": {
+      "value": "0",
+      "meaning": "checkpoint, placement pairs where the sweep exists but the token-mask or the post-residual dropout placement has no reading yet"
+    },
+    "ResultsBenignDatasets": {
+      "value": "6",
+      "meaning": "datasets with a benign reference model"
+    }
+  }
+}

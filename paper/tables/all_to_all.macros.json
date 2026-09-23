@@ -1,11 +1,11 @@
 {
   "generator": "scripts/paper/tab_all_to_all.py",
   "inputs": [
-    "/lustre/home/pstika/projects/PSBD-ViT/results/all_to_all_entropy.json",
-    "/lustre/home/pstika/projects/PSBD-ViT/results/regime_router.json"
+    "results/all_to_all_entropy.json",
+    "results/regime_router.json"
   ],
-  "written_at": "2026-09-11T02:54:21.447041+00:00",
-  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
+  "written_at": "2026-09-11T04:11:43.672315+00:00",
+  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
   "macros": {
     "ATwoaCells": {
       "value": "12",

@@ -3,8 +3,8 @@
   "inputs": [
     "docs/runs/2026-09-10-detector-smoke.md"
   ],
-  "written_at": "2026-09-11T02:55:35.862498+00:00",
-  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
+  "written_at": "2026-09-11T04:13:12.568220+00:00",
+  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
   "macros": {
     "SmokeCheckpoints": {
       "value": "3",

@@ -1,0 +1,42 @@
+{
+  "generator": "scripts/paper/tab_cost.py",
+  "inputs": [
+    "results/_experiments/psbd_cost/cost.json"
+  ],
+  "written_at": "2026-09-11T04:39:32.063924+00:00",
+  "git_commit": "152daf8d7b528cd377fdc22e649d0d0da0e2f9c3-dirty",
+  "macros": {
+    "CostPlainSecondsVit": {
+      "value": "0.0022",
+      "meaning": "ViT-B/16 seconds per input, 1 plain unperturbed forward pass"
+    },
+    "CostSlowdownKThreeVit": {
+      "value": "3.04x",
+      "meaning": "ViT-B/16 slowdown of PSBD at k=3 against the plain pass, token_mask at before_attention_norm"
+    },
+    "CostSlowdownKTwoZeroVit": {
+      "value": "20.94x",
+      "meaning": "ViT-B/16 slowdown of PSBD at k=20 against the plain pass, token_mask at before_attention_norm"
+    },
+    "CostPlacementGapKThreeVit": {
+      "value": "+0.043",
+      "meaning": "ViT-B/16 fractional difference in seconds per input at k=3 between dropout at post_residual and token_mask at before_attention_norm"
+    },
+    "CostPlainSecondsSwin": {
+      "value": "0.0017",
+      "meaning": "Swin-S seconds per input, 1 plain unperturbed forward pass"
+    },
+    "CostSlowdownKThreeSwin": {
+      "value": "3.03x",
+      "meaning": "Swin-S slowdown of PSBD at k=3 against the plain pass, token_mask at before_attention_norm"
+    },
+    "CostSlowdownKTwoZeroSwin": {
+      "value": "20.22x",
+      "meaning": "Swin-S slowdown of PSBD at k=20 against the plain pass, token_mask at before_attention_norm"
+    },
+    "CostPlacementGapKThreeSwin": {
+      "value": "+0.012",
+      "meaning": "Swin-S fractional difference in seconds per input at k=3 between dropout at post_residual and token_mask at before_attention_norm"
+    }
+  }
+}

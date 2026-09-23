@@ -1,11 +1,11 @@
 {
   "generator": "scripts/paper/tab_depth_bands.py",
   "inputs": [
-    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
-    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    "results/coverage/coverage.json",
+    "results/<folder>/psbd_metrics.json (65 cells)"
   ],
-  "written_at": "2026-09-11T02:59:48.113278+00:00",
-  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
+  "written_at": "2026-09-11T04:12:49.532854+00:00",
+  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
   "macros": {
     "BandFiveEightMinusAllInputSide": {
       "value": "-0.063",

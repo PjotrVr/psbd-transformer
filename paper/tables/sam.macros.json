@@ -1,0 +1,78 @@
+{
+  "generator": "scripts/paper/tab_sam.py",
+  "inputs": [
+    "results/_experiments/sam_reading/sam_reading.json"
+  ],
+  "written_at": "2026-09-11T04:28:11.271746+00:00",
+  "git_commit": "41e7e254285b33871fd7bfffbea78145a56b264c-dirty",
+  "macros": {
+    "SamPairs": {
+      "value": "120",
+      "meaning": "matched architecture, dataset, attack and poison-rate combinations with both an Adam and a SAM checkpoint, badnet_a2a excluded"
+    },
+    "SamAdamReferenceAurocTokenMask": {
+      "value": "0.968",
+      "meaning": "mean AUROC of the token-mask placement at the attention input on the Adam checkpoints in the matched grid"
+    },
+    "SamAdamReferenceAurocResidualDropout": {
+      "value": "0.899",
+      "meaning": "mean AUROC of the dropout placement after the residual add on the Adam checkpoints in the matched grid"
+    },
+    "SamMaxRhoTokenMaskDelta": {
+      "value": "+0.035",
+      "meaning": "highest paired AUROC delta of the token-mask placement, SAM minus Adam, over any rho, reached at rho 0.1, n=24"
+    },
+    "SamMinRhoTokenMaskDelta": {
+      "value": "+0.010",
+      "meaning": "lowest paired AUROC delta of the token-mask placement, SAM minus Adam, over any rho, reached at rho 0.15, n=24"
+    },
+    "SamRhoZeroZeroFiveTokenMaskDelta": {
+      "value": "+0.034",
+      "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.05 minus Adam, over the 24 combinations both sides swept"
+    },
+    "SamRhoZeroZeroFiveTokenMaskDeltaCi": {
+      "value": "[-0.000, +0.082]",
+      "meaning": "95% bootstrap interval on sam_rho_0_05_token_mask_delta"
+    },
+    "SamRhoZeroZeroFiveResidualDropoutDelta": {
+      "value": "-0.041",
+      "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.05 minus Adam, over the 24 combinations both sides swept"
+    },
+    "SamRhoZeroOneTokenMaskDelta": {
+      "value": "+0.035",
+      "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.1 minus Adam, over the 24 combinations both sides swept"
+    },
+    "SamRhoZeroOneTokenMaskDeltaCi": {
+      "value": "[+0.002, +0.079]",
+      "meaning": "95% bootstrap interval on sam_rho_0_1_token_mask_delta"
+    },
+    "SamRhoZeroOneResidualDropoutDelta": {
+      "value": "+0.004",
+      "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.1 minus Adam, over the 24 combinations both sides swept"
+    },
+    "SamRhoZeroOneFiveTokenMaskDelta": {
+      "value": "+0.010",
+      "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.15 minus Adam, over the 24 combinations both sides swept"
+    },
+    "SamRhoZeroOneFiveTokenMaskDeltaCi": {
+      "value": "[-0.032, +0.058]",
+      "meaning": "95% bootstrap interval on sam_rho_0_15_token_mask_delta"
+    },
+    "SamRhoZeroOneFiveResidualDropoutDelta": {
+      "value": "-0.074",
+      "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.15 minus Adam, over the 24 combinations both sides swept"
+    },
+    "SamRhoZeroTwoTokenMaskDelta": {
+      "value": "+0.023",
+      "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.2 minus Adam, over the 24 combinations both sides swept"
+    },
+    "SamRhoZeroTwoTokenMaskDeltaCi": {
+      "value": "[-0.024, +0.076]",
+      "meaning": "95% bootstrap interval on sam_rho_0_2_token_mask_delta"
+    },
+    "SamRhoZeroTwoResidualDropoutDelta": {
+      "value": "-0.069",
+      "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.2 minus Adam, over the 24 combinations both sides swept"
+    }
+  }
+}

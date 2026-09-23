@@ -4,8 +4,8 @@
     "checkpoints/<folder>/args.json",
     "configs/psbd_basis.json"
   ],
-  "written_at": "2026-09-11T02:54:52.680967+00:00",
-  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
+  "written_at": "2026-09-11T04:12:14.828802+00:00",
+  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
   "macros": {
     "SigGtsrbTargetClass": {
       "value": "1",
@@ -68,7 +68,7 @@
       "meaning": "usable SIG GTSRB seeds at target class 1 and the middle rate"
     },
     "LcEpsilonChosen": {
-      "value": "cifar10 none, cifar100 none, gtsrb 16, tiny none",
+      "value": "CIFAR-10 none, CIFAR-100 none, GTSRB 16, Tiny ImageNet none",
       "meaning": "the Label-Consistent epsilon over 255 the pilot rule picks per dataset, none where no run passes"
     },
     "LcDatasetsWithEpsilon": {

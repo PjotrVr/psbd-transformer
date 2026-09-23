@@ -1,12 +1,12 @@
 {
   "generator": "scripts/paper/tab_family_split.py",
   "inputs": [
-    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+    "results/coverage/coverage.json",
     "configs/psbd_basis.json",
-    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (65 cells)"
+    "results/<folder>/psbd_metrics.json (65 cells)"
   ],
-  "written_at": "2026-09-11T02:56:24.473662+00:00",
-  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
+  "written_at": "2026-09-11T04:14:12.993206+00:00",
+  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
   "macros": {
     "FamilyGapMatched": {
       "value": "+0.005",
@@ -33,15 +33,15 @@
       "meaning": "upper bound of the 95% bootstrap interval on family_gap_adaptive"
     },
     "FamilyGapConfoundedMatched": {
-      "value": "-0.034",
+      "value": "-0.035",
       "meaning": "mean paired AUROC gap under the basis file's operator-mixing family tags, at the matched 0.6 rate, over the 65 cells it covers"
     },
     "FamilyGapConfoundedMatchedLow": {
-      "value": "-0.052",
+      "value": "-0.053",
       "meaning": "lower bound of the 95% bootstrap interval on family_gap_confounded_matched"
     },
     "FamilyGapConfoundedMatchedHigh": {
-      "value": "-0.015",
+      "value": "-0.017",
       "meaning": "upper bound of the 95% bootstrap interval on family_gap_confounded_matched"
     },
     "FamilyGapLocal": {

@@ -1,0 +1,34 @@
+{
+  "generator": "scripts/paper/tab_probe_union.py",
+  "inputs": [
+    "results/_experiments/probe_union/probe_union.json"
+  ],
+  "written_at": "2026-09-11T05:01:32.599336+00:00",
+  "git_commit": "7ac412898822b9ee18826060e2fc674b3e96415e-dirty",
+  "macros": {
+    "ProbeUnionNModels": {
+      "value": "65",
+      "meaning": "backdoored ViT-B/16 models the probe-union check reads, the models with both headline placements"
+    },
+    "ProbeUnionPsbdTmAuroc": {
+      "value": "0.935",
+      "meaning": "mean AUROC of PSBD-TM alone over the models the probe-union check reads"
+    },
+    "ProbeUnionTmRdGain": {
+      "value": "+0.006",
+      "meaning": "paired AUROC gain of the PSBD-TM + PSBD-RD union over PSBD-TM alone"
+    },
+    "ProbeUnionTmRdGainCi": {
+      "value": "[-0.016, +0.032]",
+      "meaning": "95% bootstrap interval of that gain"
+    },
+    "ProbeUnionWanetCifarOneZeroTm": {
+      "value": "0.459",
+      "meaning": "PSBD-TM alone on WaNet at 10% on CIFAR-10, the inverted cell the headline names"
+    },
+    "ProbeUnionWanetCifarOneZeroTmRd": {
+      "value": "0.910",
+      "meaning": "PSBD-TM + PSBD-RD union on the same cell"
+    }
+  }
+}

@@ -1,12 +1,12 @@
 {
   "generator": "scripts/paper/app_basis.py",
   "inputs": [
-    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
+    "results/coverage/coverage.json",
     "configs/psbd_basis.json",
-    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/psbd_metrics.json (71 cells)"
+    "results/<folder>/psbd_metrics.json (71 cells)"
   ],
-  "written_at": "2026-09-11T02:49:48.991111+00:00",
-  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
+  "written_at": "2026-09-11T04:20:08.493589+00:00",
+  "git_commit": "ce6f85eb8836cbaebfd6366152eb1269e7de2cb9-dirty",
   "macros": {
     "BasisRankRecommendedAdaptive": {
       "value": "2",
@@ -17,7 +17,7 @@
       "meaning": "rank of the recommended placement among the basis by matched-rule mean AUROC"
     },
     "BasisRankPublishedAdaptive": {
-      "value": "12",
+      "value": "15",
       "meaning": "rank of the published placement among the basis by adaptive-rule mean AUROC"
     },
     "BasisBestPlacement": {
@@ -29,11 +29,11 @@
       "meaning": "the highest adaptive-rule mean AUROC in the basis"
     },
     "BasisWorstPlacement": {
-      "value": "input\\_pixels\\_scale\\_up",
+      "value": "before\\_attention\\_norm\\_blocks\\_1\\_4\\_token\\_mask",
       "meaning": "the basis placement with the lowest adaptive-rule mean AUROC"
     },
     "BasisWorstAurocAdaptive": {
-      "value": "0.746",
+      "value": "--",
       "meaning": "the lowest adaptive-rule mean AUROC in the basis"
     },
     "PublishedInversions": {
@@ -49,7 +49,7 @@
       "meaning": "cells the recommended placement reaches at the matched rule"
     },
     "BasisSpreadAdaptive": {
-      "value": "0.191",
+      "value": "0.936",
       "meaning": "adaptive-rule mean AUROC spread between the best and worst basis placement"
     },
     "PositionRangeTokenMaskMatched": {

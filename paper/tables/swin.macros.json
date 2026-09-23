@@ -1,11 +1,11 @@
 {
   "generator": "scripts/paper/tab_swin.py",
   "inputs": [
-    "/lustre/home/pstika/projects/PSBD-ViT/results/swin_*/psbd_metrics.json (64 implanted cells)",
+    "results/swin_*/psbd_metrics.json (64 implanted cells)",
     "checkpoints/swin_*/args.json"
   ],
-  "written_at": "2026-09-11T02:59:00.047968+00:00",
-  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
+  "written_at": "2026-09-11T04:18:01.098657+00:00",
+  "git_commit": "9df2ce36e6044bb46e4438e652a6afdb83e4895c-dirty",
   "macros": {
     "SwinCells": {
       "value": "64",
@@ -17,7 +17,7 @@
     },
     "SwinGainRecommendedMinusPublished": {
       "value": "+0.091",
-      "meaning": "Swin paired AUROC gain, recommended minus published, adaptive rule, over 53 cells"
+      "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after residual add, adaptive rule, over 53 cells"
     },
     "SwinGainRecommendedMinusPublishedN": {
       "value": "53",
@@ -33,7 +33,7 @@
     },
     "SwinGainDropoutInputMinusPublished": {
       "value": "-0.022",
-      "meaning": "Swin paired AUROC gain, dropout at the attention input minus published, adaptive rule, over 56 cells"
+      "meaning": "Swin paired AUROC gain, dropout, attention input minus dropout, after residual add, adaptive rule, over 56 cells"
     },
     "SwinGainDropoutInputMinusPublishedN": {
       "value": "56",
@@ -49,7 +49,7 @@
     },
     "SwinGainRecommendedMinusPreResidual": {
       "value": "+0.128",
-      "meaning": "Swin paired AUROC gain, recommended minus pre_residual, adaptive rule, over 51 cells"
+      "meaning": "Swin paired AUROC gain, token mask, attention input minus pre_residual, adaptive rule, over 51 cells"
     },
     "SwinGainRecommendedMinusPreResidualN": {
       "value": "51",

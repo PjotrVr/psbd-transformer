@@ -1,11 +1,11 @@
 {
   "generator": "scripts/paper/mech_activation_patching.py",
   "inputs": [
-    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
-    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>/activation_patching.json (65 cells)"
+    "results/coverage/coverage.json",
+    "results/<folder>/activation_patching.json (65 cells)"
   ],
-  "written_at": "2026-09-11T02:50:35.772686+00:00",
-  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
+  "written_at": "2026-09-11T04:07:50.637468+00:00",
+  "git_commit": "f2d5782d3d0417e887985131455a9b38b72c2b27-dirty",
   "macros": {
     "PatchingCells": {
       "value": "65",

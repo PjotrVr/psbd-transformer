@@ -1,11 +1,11 @@
 {
   "generator": "scripts/paper/tab_adaptive.py",
   "inputs": [
-    "/lustre/home/pstika/projects/PSBD-ViT/results/adaptive_attacker_analysis.json",
-    "/lustre/home/pstika/projects/PSBD-ViT/results/multi_probe_analysis.json"
+    "results/adaptive_attacker_analysis.json",
+    "results/multi_probe_analysis.json"
   ],
-  "written_at": "2026-09-11T02:54:05.698344+00:00",
-  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
+  "written_at": "2026-09-11T04:22:00.966548+00:00",
+  "git_commit": "ce6f85eb8836cbaebfd6366152eb1269e7de2cb9-dirty",
   "macros": {
     "AdaptiveHighAsr": {
       "value": "0.9",
@@ -28,7 +28,7 @@
       "meaning": "vit mean AUROC of the unprobed operators on the evasive checkpoints"
     },
     "AdaptiveVitUnion": {
-      "value": "0.973",
+      "value": "0.967",
       "meaning": "vit mean AUROC of the best probe union on the evasive checkpoints"
     },
     "AdaptiveVitCaCost": {

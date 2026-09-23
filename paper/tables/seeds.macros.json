@@ -1,12 +1,12 @@
 {
   "generator": "scripts/paper/tab_seeds.py",
   "inputs": [
-    "/lustre/home/pstika/projects/PSBD-ViT/results/coverage/coverage.json",
-    "/lustre/home/pstika/projects/PSBD-ViT/results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
+    "results/coverage/coverage.json",
+    "results/<folder>[_seed_N]/psbd_metrics.json (14 cells)",
     "checkpoints/<folder>_seed_N/args.json"
   ],
-  "written_at": "2026-09-11T02:58:35.309797+00:00",
-  "git_commit": "8e51d579049371c06dcaf4c318714f3b070c9656-dirty",
+  "written_at": "2026-09-11T04:25:57.040445+00:00",
+  "git_commit": "ce6f85eb8836cbaebfd6366152eb1269e7de2cb9-dirty",
   "macros": {
     "SeedsPerCell": {
       "value": "3",
