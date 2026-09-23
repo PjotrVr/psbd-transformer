@@ -11,6 +11,7 @@ number that appears in prose has exactly 1 source.
 """
 
 import argparse
+import re
 import json
 import math
 import os
@@ -52,6 +53,22 @@ def load_json(path: str) -> dict | None:
     with open(path) as handle:
         loaded = json.load(handle)
     return loaded
+
+
+def experiment_artifact(results_dir: str, slug: str, filename: str) -> str:
+    """Where a cross-checkpoint experiment record lives, new layout first.
+
+    Commit 2aea959 moved these records from results/<file> to
+    results/_experiments/<slug>/<file> and 2 generators kept the old path, so they
+    failed silently for every build after it. Resolving through 1 helper means the
+    next move breaks 1 function rather than every reader of it. The old path is
+    still accepted, because a record written before the move is still on disk
+    there and is still the only copy of its numbers.
+    """
+    moved = os.path.join(results_dir, "_experiments", slug, filename)
+    if os.path.exists(moved):
+        return moved
+    return os.path.join(results_dir, filename)
 
 
 def load_coverage(results_dir: str) -> dict:
@@ -140,7 +157,7 @@ def provenance_comment(generator: str, inputs: list[str]) -> str:
 
 
 def tex_escape(text: str) -> str:
-    """Underscores and percent signs, the 2 characters a folder or attack name brings."""
+    """The 2 characters a folder or attack name holds that TeX reads as syntax."""
     escaped = text.replace("_", r"\_").replace("%", r"\%")
     return escaped
 
@@ -178,6 +195,35 @@ def write_table(
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as handle:
         handle.write("\n".join(lines))
+
+
+def write_wide_table(
+    path: str,
+    generator: str,
+    inputs: list[str],
+    caption: str,
+    label: str,
+    header: list[str],
+    rows: list[list[str]],
+    align: str | None = None,
+) -> None:
+    """The same table as a full-width float, for a table too wide for a single column.
+
+    A table* spans both columns, so its adjustbox caps at \\textwidth rather than
+    \\linewidth. Dropping the adjustbox instead is what let a 6-column table run
+    198pt past the text block and print over the margin.
+    """
+    write_table(path, generator, inputs, caption, label, header, rows, align)
+    with open(path) as handle:
+        text = handle.read()
+    text = text.replace(r"\begin{table}[htbp]", r"\begin{table*}[htbp]")
+    text = text.replace(r"\end{table}", r"\end{table*}")
+    text = text.replace(
+        r"\begin{adjustbox}{max width=\linewidth}",
+        r"\begin{adjustbox}{max width=\textwidth}",
+    )
+    with open(path, "w") as handle:
+        handle.write(text)
 
 
 def macro_name(text: str) -> str:
@@ -255,9 +301,34 @@ OKABE_ITO = (
     "#000000",
 )
 DEFAULT_CHECKPOINTS_DIR = "checkpoints"
+
+
 # Folder tokens that mark a checkpoint as outside the ViT panel: SAM ablations,
 # adaptive-attacker evasions, seed replicates, strength and trigger sweeps.
-NON_PANEL_TOKENS = ("sam_rho", "evade", "_ep", "a2m", "seed_", "_trig", "_pilot")
+# The declaration owns the exclusion list, so this filter and the coverage
+# ledger's cannot drift. "benign" is dropped from it because a benign reference
+# IS panel-shaped for the generators that read one as a null control, and those
+# generators select on the name themselves.
+def _non_panel_tokens() -> tuple[str, ...]:
+    declaration = load_json(
+        os.path.join(
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            ),
+            DEFAULT_DECLARATION,
+        )
+    )
+    declared = (declaration or {}).get("panel", {}).get("exclude_folder_tokens")
+    if not declared:
+        raise ValueError(
+            f"{DEFAULT_DECLARATION} declares no panel.exclude_folder_tokens, so a "
+            "generator cannot tell a panel cell from a variant."
+        )
+    tokens = tuple(token for token in declared if token != "benign")
+    return tokens
+
+
+NON_PANEL_TOKENS = _non_panel_tokens()
 
 
 def build_parser_with_checkpoints(description: str) -> argparse.ArgumentParser:
@@ -280,7 +351,7 @@ def is_panel_folder(folder: str) -> bool:
 
 
 def save_figure(figure, path: str) -> None:
-    """Write a figure as PDF, creating the directory, and release it."""
+    """Write a figure as PDF, creating the directory first, then release it."""
     import matplotlib.pyplot as plt
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -399,12 +470,17 @@ POSITION_WORDS = {
     "both_sublayer_inputs": "both sublayer inputs",
     "input_pixels": "input pixels",
     "before_attention_residual": "attention output before the add",
+    "before_mlp_residual": "MLP output before the add",
     "after_attention_residual": "stream after the attention add",
     "pre_residual": "before both residual adds",
     "post_residual": "after both residual adds",
     "mlp_neurons": "MLP neurons",
     "mlp_norm_out": "MLP norm output",
     "after_embedding": "embedding output",
+    "after_mlp_residual": "stream after the MLP add",
+    "attention_heads": "attention heads",
+    "attention_norm_out": "attention norm output",
+    "final_norm_out": "final norm output",
 }
 OPERATOR_WORDS = {
     "token_mask": "token mask",
@@ -413,7 +489,15 @@ OPERATOR_WORDS = {
     "dropout": "dropout",
     "gain_scale": "gain scale",
     "scale_up": "scale up",
+    "droppath": "drop path",
+    "head_mask": "head mask",
 }
+
+# Suffixes a sweep appends to name a variant of the same placement rather than a
+# different operator: a second mask seed, a pass count away from the panel's 3, or
+# a model-dropout rate. They are stripped before the operator is read so a variant
+# does not print as an unknown operator.
+VARIANT_SUFFIXES = re.compile(r"_(seed\d+|k\d+|pmodel[\d_]+)$")
 FAMILY_WORDS = {
     "input_side": "input side",
     "residual_adjacent": "residual adjacent",
@@ -429,6 +513,82 @@ def placement_label(entry: dict) -> str:
     block_range = entry.get("block_range")
     if block_range:
         words += f", blocks {block_range[0]} to {block_range[1]}"
+    variant = entry.get("variant")
+    if variant:
+        words += f" ({variant})"
+    return words
+
+
+def split_placement(placement: str) -> dict:
+    """A cache directory name parsed back into position, operator and block range.
+
+    A placement directory is built as position, then an optional block band, then
+    an optional operator suffix, and the "dropout" operator contributes no suffix
+    at all. Parsing longest-position-first is what keeps before_attention_norm
+    from being read as before_attention with a stray "norm" operator.
+
+    Returns the same 3 keys placement_label reads from a basis entry, so a
+    placement that is only on disk labels exactly like a declared one.
+    """
+    remainder = placement
+    variant = VARIANT_SUFFIXES.search(remainder)
+    if variant:
+        remainder = remainder[: variant.start()]
+    band = re.search(r"_blocks_(\d+)_(\d+)", remainder)
+    block_range = [int(band.group(1)), int(band.group(2))] if band else None
+    if band:
+        remainder = remainder[: band.start()] + remainder[band.end() :]
+
+    for position in sorted(POSITION_WORDS, key=len, reverse=True):
+        if remainder == position:
+            return {
+                "position": position,
+                "operator": "dropout",
+                "block_range": block_range,
+                "variant": variant.group(1) if variant else None,
+            }
+        if remainder.startswith(f"{position}_"):
+            return {
+                "position": position,
+                "operator": remainder[len(position) + 1 :],
+                "block_range": block_range,
+                "variant": variant.group(1) if variant else None,
+            }
+
+    return {
+        "position": remainder,
+        "operator": "dropout",
+        "block_range": block_range,
+        "variant": variant.group(1) if variant else None,
+    }
+
+
+# Competitor detector names as a reader knows them from their own papers, short
+# enough for a column header in a 14-column table.
+DETECTOR_LABELS = {
+    "confidence": "Conf",
+    "strip": "STRIP",
+    "scale_up": "Scale-Up",
+    "scale_up_data_limited": "Scale-Up$^\\dagger$",
+    "ibd_psc": "IBD-PSC",
+    "ibd_psc_calibrated": "IBD-PSC$^\\ast$",
+    "teco": "TeCo",
+    "cd_l": "CD-L",
+    "beatrix": "Beatrix",
+    "ted": "TED",
+    "sentinet": "SentiNet",
+}
+
+
+def detector_label(name: str) -> str:
+    """A detector's short name for a table header."""
+    label = DETECTOR_LABELS.get(name, name.replace("_", " "))
+    return label
+
+
+def placement_words(placement: str) -> str:
+    """A cache directory name in words, for a table a person reads."""
+    words = placement_label(split_placement(placement))
     return words
 
 

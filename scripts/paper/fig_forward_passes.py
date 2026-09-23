@@ -44,10 +44,12 @@ from scripts.paper._common import (  # noqa: E402
     build_parser,
     clearing_cells,
     figure_sidecar,
+    fmt,
     load_coverage,
     load_psbd_metrics,
     mean_or_none,
     std_or_none,
+    write_macros,
 )
 
 GENERATOR = "scripts/paper/fig_forward_passes.py"
@@ -83,6 +85,21 @@ def position_config_for_k(k: int) -> str:
 def k20_cache_dir(psbd_dir: str) -> str:
     path = os.path.join(psbd_dir, f"{RECOMMENDED_PLACEMENT}_k20")
     return path
+
+
+# A sweep that is killed or hits its walltime leaves a rate with some of its 3
+# splits written and the rest absent, so the directory existing is not the same
+# as the cell being readable.
+SPLITS = ("validation", "clean", "backdoor")
+
+
+def cache_holds_rate(psbd_dir: str, config: str, rate: float) -> bool:
+    """Whether a placement's cache holds all 3 splits of 1 rate."""
+    complete = all(
+        os.path.exists(dropout_pass_path(psbd_dir, config, rate, split))
+        for split in SPLITS
+    )
+    return complete
 
 
 def split_psu_ratio(psbd_dir: str, rate: float, split: str, k: int):
@@ -147,6 +164,10 @@ def collect_cell(
         return None
 
     psbd_dir = os.path.join(results_dir, folder, "psbd")
+    configs = {position_config_for_k(k) for k in k_values}
+    if not all(cache_holds_rate(psbd_dir, config, rate) for config in configs):
+        return None
+
     manifest = read_split_manifest(psbd_dir)
     by_k = {k: cell_metrics_at_k(psbd_dir, manifest, rate, k) for k in k_values}
     return {"rate": rate, "by_k": by_k}
@@ -169,9 +190,9 @@ def aggregate(per_cell: dict[str, dict], k_values: tuple[int, ...]) -> dict:
 def draw_panel(ax, k_values, pilot_agg, all_cells_agg, metric, ylabel):
     """1 panel: what each extra pass buys, as the change from a single pass.
 
-    The 2 series are different populations, the pilot being 8 cells at 1% poisoning
-    and the panel being all 65 backdoored models, so their absolute
-    levels differ by more than 0.04 for reasons that have nothing to do with k.
+    The 2 series are different populations, the long curve being the cells that
+    carry a k = 20 cache and the short one every primary clearing cell, so their
+    absolute levels differ for reasons that have nothing to do with k.
     Plotting them together on an absolute axis invites the reader to read that gap
     as an effect of sampling. The question the figure answers is what an extra pass
     buys, so both series are drawn as the change from k = 1 and both start at 0,
@@ -262,6 +283,45 @@ def write_figure(
     return path
 
 
+def pass_macros(pilot_agg: dict, all_cells_agg: dict, n_pilot: int, n_all: int) -> dict:
+    """What each extra pass buys, as macros, so the prose types no reading itself.
+
+    The 2 populations are named apart in every macro, because the whole point of
+    the figure is that their absolute levels are not comparable.
+    """
+    macros = {
+        "pass_all_cells": (str(n_all), "primary clearing cells with k up to 3"),
+        "pass_pilot_cells": (str(n_pilot), "cells whose sweep reached k = 20"),
+    }
+    for population, aggregated, k_values in (
+        ("all", all_cells_agg, BASE_K_VALUES),
+        ("pilot", pilot_agg, ALL_K_VALUES),
+    ):
+        for k in k_values:
+            for metric in ("auroc", "tpr10", "tpr20"):
+                macros[f"pass_{population}_{metric}_k{k}"] = (
+                    fmt(aggregated[k][metric]["mean"]),
+                    f"mean {metric} of the recommended placement at k = {k}, {population} population",
+                )
+        first, last = k_values[0], k_values[-1]
+        macros[f"pass_{population}_auroc_gain_full"] = (
+            fmt(
+                aggregated[last]["auroc"]["mean"] - aggregated[first]["auroc"]["mean"],
+                signed=True,
+            ),
+            f"AUROC gain from k = {first} to k = {last}, {population} population",
+        )
+    macros["pass_pilot_auroc_gain_beyond_three"] = (
+        fmt(
+            pilot_agg[ALL_K_VALUES[-1]]["auroc"]["mean"]
+            - pilot_agg[BASE_K_VALUES[-1]]["auroc"]["mean"],
+            signed=True,
+        ),
+        "AUROC gain from k = 3 to k = 20 on the cells that reached 20 passes",
+    )
+    return macros
+
+
 def main() -> None:
     args = build_parser(__doc__).parse_args()
     coverage = load_coverage(args.results_dir)
@@ -290,7 +350,7 @@ def main() -> None:
         record = collect_cell(args.results_dir, folder, ALL_K_VALUES)
         if record is None:
             pilot_excluded[folder] = (
-                "no adaptive-rule rate for the recommended placement"
+                "no adaptive-rule rate, or its rate is not cached at every k"
             )
             continue
         pilot_per_cell[folder] = record
@@ -305,6 +365,15 @@ def main() -> None:
         print(f"pilot cells excluded: {pilot_excluded}")
 
     figure_path = write_figure(args, pilot_agg, all_cells_agg, list(pilot_per_cell))
+
+    write_macros(
+        os.path.join(args.paper_dir, "tables", "forward_passes.macros.json"),
+        GENERATOR,
+        [f"{args.results_dir}/<folder>/psbd/"],
+        pass_macros(
+            pilot_agg, all_cells_agg, len(pilot_per_cell), len(all_cells_per_cell)
+        ),
+    )
 
     plotted = {
         "recommended_placement": RECOMMENDED_PLACEMENT,

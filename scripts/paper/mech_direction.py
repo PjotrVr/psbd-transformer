@@ -1,4 +1,4 @@
-"""The backdoor direction: its depth profile, its causal ablation and its crystallisation.
+"""The backdoor direction: its depth profile, its causal ablation and its crystallization.
 
 3 records. backdoor_neurons.json on the CIFAR-10 checkpoints gives the relative
 backdoor-direction norm, the mean trigger-activated change and the clean-versus-
@@ -7,7 +7,7 @@ trigger as the control. backdoor_neuron_ablation.json gives attack success after
 removing the rank-1 direction, a random direction, the top coordinates or random
 coordinates at the peak layer. direction_persistence.json on the CIFAR-100 and
 Tiny checkpoints gives each layer's direction's alignment to the final one,
-from which the crystallisation layer is read.
+from which the crystallization layer is read.
 
     PYTHONPATH=. python scripts/paper/mech_direction.py \\
         --results-dir /path/to/results --paper-dir paper
@@ -28,6 +28,7 @@ from scripts.paper._common import (  # noqa: E402
     build_parser,
     figure_sidecar,
     fmt,
+    experiment_artifact,
     is_panel_folder,
     load_json,
     mean_or_none,
@@ -62,8 +63,12 @@ def neuron_records(results_dir: str) -> dict[str, dict]:
 
 def main() -> None:
     args = build_parser(__doc__).parse_args()
-    ablation_path = os.path.join(args.results_dir, "backdoor_neuron_ablation.json")
-    persistence_path = os.path.join(args.results_dir, "direction_persistence.json")
+    ablation_path = experiment_artifact(
+        args.results_dir, "backdoor_neurons", "backdoor_neuron_ablation.json"
+    )
+    persistence_path = experiment_artifact(
+        args.results_dir, "backdoor_neurons", "direction_persistence.json"
+    )
     records = neuron_records(args.results_dir)
     ablation = [
         row
@@ -152,7 +157,7 @@ def main() -> None:
         align="lrrrrrrr",
     )
 
-    # Crystallisation: the first layer whose direction aligns at least half with the final one.
+    # Crystallization: the first layer whose direction aligns at least half with the final one.
     crystal_rows = []
     crystal: dict[str, list[int]] = {}
     for record in persistence:
@@ -176,15 +181,15 @@ def main() -> None:
             ]
         )
     write_table(
-        path=os.path.join(args.paper_dir, "tables", "direction_crystallisation.tex"),
+        path=os.path.join(args.paper_dir, "tables", "direction_crystallization.tex"),
         generator=GENERATOR,
         inputs=[persistence_path],
         caption=(
-            "Crystallisation depth on CIFAR-100 and Tiny across poison rates: the first "
+            "Crystallization depth on CIFAR-100 and Tiny across poison rates: the first "
             "layer whose backdoor direction aligns at cosine at least "
             f"{CRYSTALLISED:g} with the final layer's, per checkpoint, summarised per attack."
         ),
-        label="tab:direction-crystallisation",
+        label="tab:direction-crystallization",
         header=["attack", "checkpoints", "mean layer", "earliest", "latest"],
         rows=crystal_rows,
         align="lrrrr",
@@ -255,17 +260,17 @@ def main() -> None:
             ),
             "lowest attack success left after removing a random direction, all-to-one attacks",
         ),
-        "crystallisation_badnet_layer": (
+        "crystallization_badnet_layer": (
             fmt(mean_or_none(crystal.get("badnet_a2o", [])), places=1),
-            "mean crystallisation layer of badnet_a2o on CIFAR-100 and Tiny",
+            "mean crystallization layer of badnet_a2o on CIFAR-100 and Tiny",
         ),
-        "crystallisation_blend_layer": (
+        "crystallization_blend_layer": (
             fmt(mean_or_none(crystal.get("blend", [])), places=1),
-            "mean crystallisation layer of blend on CIFAR-100 and Tiny",
+            "mean crystallization layer of blend on CIFAR-100 and Tiny",
         ),
-        "crystallisation_checkpoints": (
+        "crystallization_checkpoints": (
             str(sum(map(len, crystal.values()))),
-            "checkpoints in the crystallisation record",
+            "checkpoints in the crystallization record",
         ),
     }
     write_macros(

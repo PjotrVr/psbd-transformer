@@ -95,7 +95,8 @@ def main() -> None:
         generator=GENERATOR,
         inputs=inputs,
         caption=(
-            f"Wall-clock cost of PSBD-TM against the number of forward passes k, batch 128, fp32, on 1 {cost['gpu_name']}."
+            "Wall-clock cost of PSBD-TM against the number of forward passes k for "
+            f"{architecture_names}, batch 128, fp32, on 1 {cost['gpu_name']}."
         ),
         label="tab:cost",
         header=header,

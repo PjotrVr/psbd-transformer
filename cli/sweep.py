@@ -71,7 +71,8 @@ PSBD_MASK_SEED = 0
 DEFAULT_FORWARD_PASSES = 3
 
 
-def parse_args() -> argparse.Namespace:
+def build_parser() -> argparse.ArgumentParser:
+    """The parser, separate from parsing so a job generator can check its flags."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint-folder", required=True, nargs="+")
     parser.add_argument(
@@ -161,7 +162,12 @@ def parse_args() -> argparse.Namespace:
             "there needs rates an order of magnitude smaller."
         ),
     )
-    return parser.parse_args()
+    return parser
+
+
+def parse_args() -> argparse.Namespace:
+    arguments = build_parser().parse_args()
+    return arguments
 
 
 def cache_config_name(
@@ -302,7 +308,7 @@ def run_one_rate(
 
 @dataclass(frozen=True)
 class SweepSettings:
-    """What 1 placement sweep injects, at which rates, and how it is named on disk."""
+    """What 1 placement sweep injects, at which rates and how it is named on disk."""
 
     operator: str = "dropout"
     rates: tuple[float, ...] = DROPOUT_RATES
@@ -395,6 +401,13 @@ def write_run_provenance(
         "batch_size": args.batch_size,
         "max_samples": args.max_samples,
         "use_bfloat16": not args.no_bfloat16,
+        # What the autocast context actually did, which is not the flag.
+        # defences.inference only enters bfloat16 autocast on CUDA, so a CPU node
+        # runs float32 whatever the flag says, and recording the flag alone would
+        # label an fp32 cache as bfloat16.
+        "effective_dtype": "bfloat16"
+        if (not args.no_bfloat16 and device.type == "cuda")
+        else "float32",
         "device": torch.cuda.get_device_name(device)
         if device.type == "cuda"
         else "cpu",

@@ -19,6 +19,7 @@ from scripts.paper._common import (  # noqa: E402
     build_parser,
     dataset_label,
     fmt,
+    experiment_artifact,
     is_panel_folder,
     load_json,
     mean_or_none,
@@ -28,11 +29,12 @@ from scripts.paper._common import (  # noqa: E402
 
 GENERATOR = "scripts/paper/mech_confidence_null.py"
 RECORD = "psu_vs_confidence.json"
+SLUG = "psu_vs_confidence"
 
 
 def main() -> None:
     args = build_parser(__doc__).parse_args()
-    path = os.path.join(args.results_dir, RECORD)
+    path = experiment_artifact(args.results_dir, SLUG, RECORD)
     record = load_json(path)
     if record is None:
         raise SystemExit(f"{path} is missing")
