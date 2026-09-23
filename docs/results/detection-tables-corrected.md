@@ -1,5 +1,9 @@
 # Detection tables, corrected thresholds
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The 48/48 coverage this document reports predates the 105-cell rebuild, so its per-cell AUROC and TPR figures are not the current headline numbers, though the threshold-correction methodology it describes still stands.
+
 Regenerated 2026-09-07 after the audit. Two changes from the previous
 version of these tables, both in `docs/audit-2026-09-07.md`:
 

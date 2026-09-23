@@ -63,7 +63,7 @@ and not silently omitted. Any 1% claim states which of the five it rests on.
 
 ## The question all of these serve
 
-PSBD (`literature/PSBD/`) detects backdoors by turning dropout on at inference and
+PSBD (`literature/psbd-li-arxiv2024-source/`) detects backdoors by turning dropout on at inference and
 measuring how far the model's confidence in its own no-dropout prediction falls.
 Clean samples lose a lot of confidence; backdoor samples barely move, because the
 trigger-to-target path is the most robust thing the model learned. On ResNet-18
@@ -72,7 +72,7 @@ reported to fail, and **pre-residual** (on each branch, just before the add) to
 work. This ledger is about localizing why, and turning the observation into a
 mechanism.
 
-The companion paper (`literature/backdoor_directions/`) supplies the candidate
+The companion paper (`literature/backdoor-directions-karayalcin-source/`) supplies the candidate
 mechanism: in ViT the backdoor is a linear direction in the residual stream, and
 when it reaches the `[CLS]` token is attack-dependent (final few layers for
 static patch triggers, layers 5 to 6 for distributed ones). A perturbation should

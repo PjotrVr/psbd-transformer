@@ -1,5 +1,9 @@
 # CIFAR-100 Detection Tables
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. Its numbers moved but its conclusions stand, these are per-cell tables from before the panel grew to 105 cells, so the mean AUROC figures here do not match the paper's headline values.
+
 CIFAR-100 is the hardest dataset in the evaluation grid. It has 100 classes, making the decision boundary more fragile and the backdoor direction harder to isolate. Any method that works here is likely to generalize. Results that fail on CIFAR-100 are not publishable regardless of CIFAR-10/GTSRB performance.
 
 All numbers: fractional PSU, sigma-matched (sigma >= 0.6), one-sided (low PSU = poisoned). AUROC / TPR@5%FPR shown side by side.

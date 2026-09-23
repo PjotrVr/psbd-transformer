@@ -1,5 +1,9 @@
 # Combined Position Test (both_sublayer_inputs)
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The 48/48 coverage figure and the mean AUROC values here predate the 105-cell rebuild, and `both_sublayer_inputs` is not the current recommended placement.
+
 ## Hypothesis
 
 Both `before_attention_norm` and `before_mlp_norm` are computation inputs (one to the attention sublayer, one to the MLP sublayer). If the backdoor direction propagates through both sublayers, perturbing both inputs simultaneously should compound the detection signal by disrupting two distinct processing stages in each block.

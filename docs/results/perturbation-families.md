@@ -1,5 +1,9 @@
 # Perturbation Families: Position vs Operator
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The "position variance is 1.43x operator variance" reading and the family comparisons below are contradicted by the current panel, which finds gaussian minus token_mask at the same site is -0.206 and the input-side against residual-adjacent gap is +0.005, not the +0.054 implied here.
+
 Evidence for H28 prediction 4: at matched shift ratio (sigma), detection is more sensitive to WHERE the perturbation is applied than WHAT kind of perturbation is used. The operator sets the Jacobian, the position selects it.
 
 ## Setup

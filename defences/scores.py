@@ -5,7 +5,7 @@ thresholds, quantiles, TPR or FPR. Nothing here imports decision either.
 Everything is CPU arithmetic over the tensors stage 1 wrote, so a scoring rule can
 be reconsidered in seconds without a GPU.
 
-2 quantities from the PSBD paper (literature/PSBD/sec/4_method.tex).
+2 quantities from the PSBD paper (literature/psbd-li-arxiv2024-source/sec/4_method.tex).
 
 Prediction Shift Uncertainty, Eq. (PSU definition):
 

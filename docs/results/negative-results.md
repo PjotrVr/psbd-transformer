@@ -1,5 +1,9 @@
 # Negative Results
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. Its numbers moved but its conclusions stand, the p* and combined-position negative findings do not depend on the panel size that has since grown to 105 cells.
+
 Documenting what did NOT work, so the reasoning is preserved and the same dead ends are not revisited.
 
 ## 1. Per-sample critical rate (p*) does not beat sigma-matched PSU

@@ -2,8 +2,7 @@
 
 ## Question
 
-The SAM paper (Zhang et al., arXiv 2411.11525, `literature/reliable_poisoned_sample_
-detection_against_backdoor_attacks_enhanced_by_sharpness_aware_minimization/`,
+The SAM paper (Zhang et al., arXiv 2411.11525, `literature/sam-poisoned-detection-zhang-arxiv2024-source/`,
 Section 3) claims sharpness-aware minimisation amplifies backdoor neurons, using
 3 amplification metrics: the per-neuron TAC difference between SAM and vanilla
 training (Fig. 3), the TAC-to-AUC correlation across attacks (Fig. 2, Pearson

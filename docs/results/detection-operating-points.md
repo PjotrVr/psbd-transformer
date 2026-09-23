@@ -1,5 +1,9 @@
 # Detection at Realistic Operating Points
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The zero-inversion claim for `token_mask @ before_attention_norm` no longer holds, the current panel reports 2 inverted cells for that placement.
+
 This report evaluates the detection system at practical false-positive rates (1%, 5%, 10%, 25%) rather than relying solely on AUROC. The question: if a defender sets a budget for how many clean samples they will wrongly flag, how many poisoned samples does the system catch?
 
 All numbers use one-sided fractional PSU (low PSU = poisoned), sigma-matched at 0.6, on ViT-B/16.

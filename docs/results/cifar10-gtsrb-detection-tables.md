@@ -1,5 +1,9 @@
 # CIFAR-10 and GTSRB Detection Tables (Completion)
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. Its numbers moved but its conclusions stand, these are per-cell tables from before the panel grew to 105 cells, so the mean AUROC figures here do not match the paper's headline values.
+
 These are the secondary datasets. CIFAR-10 is the most-studied dataset in backdoor detection literature and GTSRB is suspiciously easy (AUROC 0.998-1.000 at 1% for top configurations). Results here are for panel completion, not for primary claims. If the method fails on CIFAR-100 and Tiny, these results do not save it.
 
 All numbers: fractional PSU, sigma-matched (sigma >= 0.6), one-sided (low PSU = poisoned).

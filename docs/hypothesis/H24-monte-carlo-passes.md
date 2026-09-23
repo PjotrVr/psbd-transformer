@@ -93,7 +93,7 @@ PSU is an expectation estimated by sampling:
 The second term is a Monte Carlo mean over k = 3 draws. Its standard error falls
 as 1/sqrt(k), so at k = 3 the estimate carries roughly 58% of the noise of a
 single draw. k = 3 is the PSBD paper's own value
-(`literature/PSBD/sec/4_method.tex`, "We perform forward inference k=3 times"), so
+(`literature/psbd-li-arxiv2024-source/sec/4_method.tex`, "We perform forward inference k=3 times"), so
 this is not a porting error, but the paper never ablates it and never evaluates
 below 5% poisoning.
 

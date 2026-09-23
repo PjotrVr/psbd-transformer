@@ -70,7 +70,7 @@ to 10. The random-token null is exactly 0.000 at every layer.
 ## Scope and prior art
 
 The onset ordering and the "distributed early, consolidated at CLS mid-to-late" story are
-already in the companion paper (`literature/backdoor_directions/`, arXiv:2603.10806) in
+already in the companion paper (`literature/backdoor-directions-karayalcin-source/`, arXiv:2603.10806) in
 residual-stream direction language, on the same architecture. What is added here is the **exact
 per-sublayer decomposition**, the token-mixing argument, and the **causal patching**, none of
 which that paper does.

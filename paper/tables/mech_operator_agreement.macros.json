@@ -3,24 +3,24 @@
   "inputs": [
     "results/<folder>/psbd/<placement>/rate_*_{clean,backdoor}.pt"
   ],
-  "written_at": "2026-09-11T04:09:30.521711+00:00",
-  "git_commit": "f2d5782d3d0417e887985131455a9b38b72c2b27-dirty",
+  "written_at": "2026-09-23T11:22:02.228520+00:00",
+  "git_commit": "80807fe77ce0443a0dceb98c3964cee51264e1c6-dirty",
   "macros": {
     "AgreementWithinInputSideClean": {
-      "value": "0.507",
+      "value": "0.472",
       "meaning": "B1: mean clean-split PSU Spearman rho within the input-side family, 55 placement pairs"
     },
     "AgreementAcrossFamiliesClean": {
-      "value": "0.501",
-      "meaning": "B1: mean clean-split PSU Spearman rho between input-side and residual-adjacent placements, 55 placement pairs"
+      "value": "0.509",
+      "meaning": "B1: mean clean-split PSU Spearman rho between input-side and residual-adjacent placements, 77 placement pairs"
     },
     "AgreementGainScaleVsRecommendedClean": {
-      "value": "0.385",
-      "meaning": "B1: clean-split PSU Spearman rho, mlp_norm_out_gain_scale vs the recommended placement, n=65 cells"
+      "value": "0.384",
+      "meaning": "B1: clean-split PSU Spearman rho, mlp_norm_out_gain_scale vs the recommended placement, n=71 cells"
     },
     "AgreementGaussianVsTokenMaskClean": {
-      "value": "0.370",
-      "meaning": "B1: clean-split PSU Spearman rho, before_attention_norm_gaussian vs before_attention_norm_token_mask, same position different operator, n=65 cells"
+      "value": "0.396",
+      "meaning": "B1: clean-split PSU Spearman rho, before_attention_norm_gaussian vs before_attention_norm_token_mask, same position different operator, n=71 cells"
     }
   }
 }

@@ -1,5 +1,9 @@
 # Operator/Position Ranking
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The ranking here names `token_mask @ before_attention_norm` best at mean AUROC 0.911 with a 0.632 floor, while the current panel reads 0.935 mean AUROC with a 0.418 floor and 2 inverted cells.
+
 27 operator/position combinations evaluated at full coverage: 4 datasets (CIFAR-10, CIFAR-100, GTSRB, Tiny ImageNet), 3 poison rates (1%, 5%, 10%), 5-attack panel (BadNet A2O, Blend, WaNet, LC, Adaptive Blend). Each combination has 48/48 required cells after excluding attacks that failed to implant.
 
 All numbers use fractional PSU at sigma-matched rate (sigma >= 0.6), one-sided (low PSU = poisoned). Benign controls sit at AUROC ~0.50 across all configurations (range 0.484 to 0.501).

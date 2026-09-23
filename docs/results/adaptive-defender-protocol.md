@@ -1,5 +1,9 @@
 # Adaptive Defender Protocol
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. Its numbers moved but its conclusions stand, the mean-rank ensemble AUROC figures (0.900, 0.897) here are from the 48-cell adaptive-attacker matrix, not the current 105-cell panel.
+
 How a defender should respond when the attacker knows PSBD and trains against
 it. Based on H25 (adaptive attacker), H41 (multi-probe defence), and the
 forensic analysis in `experiments/adaptive_defender/analyze.py`.

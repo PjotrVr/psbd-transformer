@@ -1,5 +1,9 @@
 # PSBD-ViT: `before_attention_norm_token_mask`
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. Its numbers moved but its conclusions stand, this is a partial Swin sweep with many `--` cells still open, predating the full Swin panel that now backs `paper/`.
+
 The single placement `before_attention_norm_token_mask`.
 
 Each member is read at **its own** perturbation rate, chosen so the clean-validation

@@ -2,7 +2,7 @@
 
 ## Question
 
-The companion paper (`literature/backdoor_directions/`) says the backdoor in a ViT is a
+The companion paper (`literature/backdoor-directions-karayalcin-source/`) says the backdoor in a ViT is a
 linear direction in the residual stream, and that *when* it reaches the `[CLS]`
 token depends on the trigger: final few layers for static patch triggers, layers 5
 to 6 for distributed ones. If that holds here, it predicts which dropout placement

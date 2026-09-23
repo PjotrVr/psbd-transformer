@@ -3,7 +3,7 @@
 Zhang, Zhu, Zhu, Wu (CUHK-Shenzhen). "Reliable Poisoned Sample Detection against Backdoor
 Attacks Enhanced by Sharpness Aware Minimization."
 Source read: LaTeX at
-`literature/reliable_poisoned_sample_detection_against_backdoor_attacks_enhanced_by_sharpness_aware_minimization/`
+`literature/sam-poisoned-detection-zhang-arxiv2024-source/`
 (`main.tex`, `sec/0_abstract.tex`, `sec/1_intro.tex`, `sec/2_related.tex`, `sec/3_method.tex`,
 `sec/4_experiment.tex`, `sec/6_conclusion.tex`, `sec/proof.tex`, `sec/X_suppl.tex`, `tables/*.tex`,
 `figs/*.png`). No reference code is released (no GitHub URL anywhere in `sec/` or `main.bib`).

@@ -1,5 +1,9 @@
 # Supplementary Attack Detection: BPP and LF
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The `gain_scale @ mlp_norm_out` section presents that placement as matching `token_mask @ before_attention_norm`, but the `gain_scale @ mlp_norm_out` headline is withdrawn, see `docs/audit-2026-09-07.md`.
+
 BPP (Bit-level Perturbation Poisoning) and LF (Low-Frequency) are outside the 5-attack panel but have checkpoints and sweep data across CIFAR-100 and Tiny ImageNet. These results supplement the main tables.
 
 All numbers: fractional PSU, sigma-matched (sigma >= 0.6), one-sided (low PSU = poisoned).

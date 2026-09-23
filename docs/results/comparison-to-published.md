@@ -1,5 +1,9 @@
 # Comparison to Published Baselines
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. Beyond the H1 correction already noted below, the comparison also predates the current headline of 0.935 mean AUROC for the recommended placement against 0.832 for the published `post_residual` placement, a gap of +0.103.
+
 This document predates H1's refutation of this project's founding placement
 claim, so it wrongly treats `pre_residual` as PSBD's published placement
 throughout. The published PSBD placement is `post_residual`, dropout applied

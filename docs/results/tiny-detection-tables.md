@@ -1,5 +1,9 @@
 # Tiny ImageNet Detection Tables
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. Its numbers moved but its conclusions stand, the `gain_scale @ mlp_norm_out` row is the withdrawn +0.258 headline placement and the per-cell figures predate the 105-cell rebuild.
+
 Tiny ImageNet is the largest dataset in the evaluation grid (200 classes, 64x64 images). It is the most realistic proxy for real-world deployment. Together with CIFAR-100, it forms the primary evaluation pair: if the method does not work on these two, it is not publishable.
 
 All numbers: fractional PSU, sigma-matched (sigma >= 0.6), one-sided (low PSU = poisoned). AUROC / TPR@5%FPR shown side by side.

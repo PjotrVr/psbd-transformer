@@ -12,9 +12,9 @@ attacker.
 
 ## The paper's recipe, as read
 
-Sources: `literature/PSBD/sec/4_method.tex` ("Settings" under "Prediction Shift"),
-`literature/PSBD/sec/5_experiments.tex` ("Experiment Settings"),
-`literature/PSBD/sec/7_appendix.tex` (the training-hyperparameter table and the
+Sources: `literature/psbd-li-arxiv2024-source/sec/4_method.tex` ("Settings" under "Prediction Shift"),
+`literature/psbd-li-arxiv2024-source/sec/5_experiments.tex` ("Experiment Settings"),
+`literature/psbd-li-arxiv2024-source/sec/7_appendix.tex` (the training-hyperparameter table and the
 dataset table).
 
 | field | value | source |

@@ -61,7 +61,7 @@ indexed by $l$ and is written once, not per layer). $c_i$ is the raw row of
 
 The paper's own grid-search figures (`cifar100_vit_b_16_grid_search_all_ratios_
 subplots.png` and its main-text counterpart, both under
-`literature/backdoor_directions/images/model_detect/`) give the exact axes searched, so
+`literature/backdoor-directions-karayalcin-source/images/model_detect/`) give the exact axes searched, so
 the task's 1-to-12/quantile fallback was not needed:
 
 - $n \in \{1, \dots, 11\}$ (num layers, y axis)

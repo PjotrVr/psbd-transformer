@@ -36,7 +36,7 @@ Cheap: 2 operators x a few rates, well under one job.
 ### Why this is not a detail
 
 PSBD's protocol trains **without** dropout. The paper states it plainly
-(`literature/PSBD/sec/4_method.tex`): "the model is trained on the poisoned training
+(`literature/psbd-li-arxiv2024-source/sec/4_method.tex`): "the model is trained on the poisoned training
 set following the standard training procedure, which excludes the use of dropout,
 data augmentation, and data normalization. After that, we apply dropout ... during
 model inference."

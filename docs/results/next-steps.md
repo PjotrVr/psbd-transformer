@@ -1,5 +1,9 @@
 # Next Steps
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The "best: 0.911 mean, 0 inversions" figure for the ViT recommended placement is superseded, the current panel reads 0.935 mean AUROC with 2 inverted cells for that placement.
+
 ## High priority (directly tests the theory)
 
 ### 1. Direction norm vs poison rate (H28 prediction 1)

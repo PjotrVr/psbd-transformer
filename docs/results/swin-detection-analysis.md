@@ -1,5 +1,9 @@
 # Swin Transformer Detection Analysis
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. This is a provisional CIFAR-100-only Swin comparison from before the panel grew to its current size, so its mean AUROC figures for `token_mask @ before_attention_norm` should not be read against the paper's ViT headline of 0.935.
+
 How well do the ViT findings transfer to Swin-S? Tested on CIFAR-100 with 3
 operators and 6 dropout positions. All numbers: fractional PSU, sigma-matched
 (sigma >= 0.6), one-sided (low PSU = poisoned).

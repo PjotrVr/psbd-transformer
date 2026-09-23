@@ -1,5 +1,9 @@
 # Attack-Specific Analysis
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. 2 of its 3 "top 3 configurations" no longer hold, `gain_scale @ mlp_norm_out` is the withdrawn +0.258 headline and `dropout @ pre_residual` is the refuted founding placement, only `token_mask @ before_attention_norm` remains current.
+
 Per-attack detection patterns across the top 3 configurations (token_mask @ before_attention_norm, gain_scale @ mlp_norm_out, dropout @ pre_residual) on CIFAR-100 and Tiny ImageNet.
 
 ## Summary: per-attack mean AUROC on primary datasets

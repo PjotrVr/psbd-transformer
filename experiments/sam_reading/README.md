@@ -4,7 +4,7 @@
 
 Does training the victim with sharpness-aware minimisation help PSBD detect the
 backdoor on ViT and Swin, and does SAM amplify the backdoor the way its paper
-(`literature/reliable_poisoned_sample_detection_against_backdoor_attacks_enhanced_by_sharpness_aware_minimization/`,
+(`literature/sam-poisoned-detection-zhang-arxiv2024-source/`,
 Zhang et al., arXiv 2411.11525) claims.
 
 [H6](../../docs/hypothesis/H6-sam-improves-detectability.md) already dropped a naive

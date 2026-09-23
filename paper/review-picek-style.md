@@ -4,9 +4,9 @@
 
 Sources read for this note. The local LaTeX source of "Backdoor Directions in Vision
 Transformers" by Karayalcin, Krcek, Chen and Picek
-(`/lustre/home/pstika/projects/PSBD-ViT/literature/backdoor_directions/main.tex`), the PSBD
+(`/lustre/home/pstika/projects/PSBD-ViT/literature/backdoor-directions-karayalcin-source/main.tex`), the PSBD
 paper by Li, Chen, Liu and Wang
-(`/lustre/home/pstika/projects/PSBD-ViT/literature/PSBD/main.tex`, the method we adapt and a
+(`/lustre/home/pstika/projects/PSBD-ViT/literature/psbd-li-arxiv2024-source/main.tex`, the method we adapt and a
 Pin-Yu Chen paper in its own right), and 3 recent Picek-group papers fetched from arXiv:
 "Towards Backdoor Stealthiness in Model Parameter Space" (Grond, CCS 2025,
 https://arxiv.org/abs/2501.05928), "Context is the Key: Backdoor Attacks for In-Context

@@ -1,5 +1,9 @@
 # Theoretical explanation: why the results make sense
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The claim that input-side positions beat residual-adjacent positions by +0.054 because they are less likely to invert is refuted by the current panel, which reads +0.005 [-0.010, +0.023] once the operator is held fixed.
+
 ## Core claim (H28: perturbation consistency is margin estimation)
 
 All perturbation-consistency backdoor detectors (PSBD, IBD-PSC, SCALE-UP, STRIP) are fundamentally one method: they measure the decision margin by applying perturbations and observing prediction stability. The perturbation operator only sets the Jacobian of the perturbation-to-logit mapping. The key equation is:
