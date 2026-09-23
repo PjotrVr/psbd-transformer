@@ -221,7 +221,15 @@ def main() -> None:
             "perturbation operators in the registry, scale_up included",
         ),
         "panel_datasets_declared": (
-            str(len([key for key in declaration["benign_reference"] if not key.startswith("_")])),
+            str(
+                len(
+                    [
+                        key
+                        for key in declaration["benign_reference"]
+                        if not key.startswith("_")
+                    ]
+                )
+            ),
             "datasets with a benign reference in the declaration",
         ),
         "detector_count": (
@@ -249,12 +257,25 @@ def main() -> None:
     # The depth bands the basis declares, as "first to last" block ranges, and the
     # class count of every registered dataset, so a chapter names neither by hand.
     bands = sorted(
-        {tuple(entry["block_range"]) for entry in declaration["basis"] if entry.get("block_range")}
+        {
+            tuple(entry["block_range"])
+            for entry in declaration["basis"]
+            if entry.get("block_range")
+        }
     )
     for label, band in zip(("early", "middle", "late"), bands):
-        macros[f"band_{label}"] = (f"{band[0]} to {band[1]}", f"the {label} depth band's block range")
-        macros[f"band_{label}_first"] = (str(band[0]), f"first block of the {label} depth band")
-        macros[f"band_{label}_last"] = (str(band[1]), f"last block of the {label} depth band")
+        macros[f"band_{label}"] = (
+            f"{band[0]} to {band[1]}",
+            f"the {label} depth band's block range",
+        )
+        macros[f"band_{label}_first"] = (
+            str(band[0]),
+            f"first block of the {label} depth band",
+        )
+        macros[f"band_{label}_last"] = (
+            str(band[1]),
+            f"last block of the {label} depth band",
+        )
     for dataset, spec in DATASET_REGISTRY.items():
         macros[f"classes_{dataset}"] = (str(spec.num_classes), f"classes in {dataset}")
     write_macros(

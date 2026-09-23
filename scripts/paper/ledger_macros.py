@@ -15,7 +15,12 @@ import sys
 
 sys.path.insert(0, os.getcwd())
 
-from scripts.paper._common import build_parser, load_json, provenance_comment, tex_escape  # noqa: E402
+from scripts.paper._common import (
+    build_parser,
+    load_json,
+    provenance_comment,
+    tex_escape,
+)  # noqa: E402
 from scripts.paper.findings_index import registry_rows  # noqa: E402
 
 GENERATOR = "scripts/paper/ledger_macros.py"
@@ -51,8 +56,14 @@ def write_ledger(path: str, macros: dict, cited: dict[str, list[dict]]) -> None:
     for name in sorted(macros):
         entry = macros[name]
         findings = cited.get(name, [])
-        grade = ", ".join(sorted({f["grade"] for f in findings})) if findings else "unregistered"
-        status = ", ".join(sorted({f["status"] for f in findings})) if findings else "--"
+        grade = (
+            ", ".join(sorted({f["grade"] for f in findings}))
+            if findings
+            else "unregistered"
+        )
+        status = (
+            ", ".join(sorted({f["status"] for f in findings})) if findings else "--"
+        )
         generator = entry["generator"].replace("scripts/paper/", "")
         lines.append(
             f"\\texttt{{{tex_escape(name)}}} & {tex_escape(str(entry['value']))} & "
@@ -68,7 +79,9 @@ def main() -> None:
     macros = load_json(os.path.join(args.paper_dir, "headline.json")) or {}
     rows = registry_rows(os.path.join(args.paper_dir, "findings.md"))
     cited = citing_findings(rows)
-    write_ledger(os.path.join(args.paper_dir, "tables", "macro_ledger.tex"), macros, cited)
+    write_ledger(
+        os.path.join(args.paper_dir, "tables", "macro_ledger.tex"), macros, cited
+    )
     registered = sum(1 for name in macros if name in cited)
     print(f"macro ledger: {len(macros)} macros, {registered} cited by a finding")
 

@@ -43,14 +43,23 @@ def main() -> None:
     for row in acceptance:
         by_detector.setdefault(row["detector"], {})[row["model"]] = row
     table_rows = []
-    for detector in sorted(by_detector, key=lambda name: DETECTOR_NAMES.index(name) if name in DETECTOR_NAMES else 99):
+    for detector in sorted(
+        by_detector,
+        key=lambda name: DETECTOR_NAMES.index(name) if name in DETECTOR_NAMES else 99,
+    ):
         cells = by_detector[detector]
         table_rows.append(
             [
                 detector,
                 str(FORWARD_PASSES_PER_INPUT.get(detector, "--")),
-                *[cells.get(model, {}).get("AUROC q0.25", "--") for model in MODEL_ORDER],
-                *[cells.get(model, {}).get("TPR q0.01", "--") for model in MODEL_ORDER[1:]],
+                *[
+                    cells.get(model, {}).get("AUROC q0.25", "--")
+                    for model in MODEL_ORDER
+                ],
+                *[
+                    cells.get(model, {}).get("TPR q0.01", "--")
+                    for model in MODEL_ORDER[1:]
+                ],
                 cells.get("BadNet 5%", {}).get("s per input", "--"),
             ]
         )
@@ -91,7 +100,15 @@ def main() -> None:
         label="tab:detector-smoke-followups",
         header=["model", "detector", "n val", "AUROC", "TPR@1%", "precision", "batch"],
         rows=[
-            [row["model"], row["detector"], row["n val"], row["AUROC q0.25"], row["TPR q0.01"], row["precision"], row["batch"]]
+            [
+                row["model"],
+                row["detector"],
+                row["n val"],
+                row["AUROC q0.25"],
+                row["TPR q0.01"],
+                row["precision"],
+                row["batch"],
+            ]
             for row in followups
         ],
         align="lllrrll",
@@ -105,32 +122,88 @@ def main() -> None:
     benign_values = [auroc(detector, "benign") for detector in by_detector]
     macros = {
         "smoke_checkpoints": (str(len(MODEL_ORDER)), "checkpoints in the smoke run"),
-        "smoke_backdoored_checkpoints": (str(len(MODEL_ORDER) - 1), "backdoored checkpoints in the smoke run"),
+        "smoke_backdoored_checkpoints": (
+            str(len(MODEL_ORDER) - 1),
+            "backdoored checkpoints in the smoke run",
+        ),
         "smoke_followups": (str(len(followups)), "follow-up runs in the smoke entry"),
         "smoke_detectors": (str(len(by_detector)), "detectors in the smoke run"),
-        "smoke_benign_auroc_min": (fmt(min(value for value in benign_values if value is not None)), "lowest benign-reference AUROC across smoke detectors"),
-        "smoke_benign_auroc_max": (fmt(max(value for value in benign_values if value is not None)), "highest benign-reference AUROC across smoke detectors"),
-        "smoke_ibd_psc_badnet_auroc": (fmt(auroc("ibd_psc", "BadNet 5%")), "IBD-PSC AUROC on the smoke BadNet cell"),
-        "smoke_sentinet_badnet_auroc": (fmt(auroc("sentinet", "BadNet 5%")), "SentiNet AUROC on the smoke BadNet cell"),
-        "smoke_beatrix_badnet_auroc": (fmt(auroc("beatrix", "BadNet 5%")), "Beatrix AUROC on the smoke BadNet cell at the truncated split"),
-        "smoke_strip_badnet_auroc": (fmt(auroc("strip", "BadNet 5%")), "STRIP AUROC on the smoke BadNet cell"),
-        "smoke_ted_blend_auroc": (fmt(auroc("ted", "Blend 5%")), "TED AUROC on the smoke Blend cell"),
-        "smoke_confidence_blend_auroc": (fmt(auroc("confidence", "Blend 5%")), "confidence-null AUROC on the smoke Blend cell"),
+        "smoke_benign_auroc_min": (
+            fmt(min(value for value in benign_values if value is not None)),
+            "lowest benign-reference AUROC across smoke detectors",
+        ),
+        "smoke_benign_auroc_max": (
+            fmt(max(value for value in benign_values if value is not None)),
+            "highest benign-reference AUROC across smoke detectors",
+        ),
+        "smoke_ibd_psc_badnet_auroc": (
+            fmt(auroc("ibd_psc", "BadNet 5%")),
+            "IBD-PSC AUROC on the smoke BadNet cell",
+        ),
+        "smoke_sentinet_badnet_auroc": (
+            fmt(auroc("sentinet", "BadNet 5%")),
+            "SentiNet AUROC on the smoke BadNet cell",
+        ),
+        "smoke_beatrix_badnet_auroc": (
+            fmt(auroc("beatrix", "BadNet 5%")),
+            "Beatrix AUROC on the smoke BadNet cell at the truncated split",
+        ),
+        "smoke_strip_badnet_auroc": (
+            fmt(auroc("strip", "BadNet 5%")),
+            "STRIP AUROC on the smoke BadNet cell",
+        ),
+        "smoke_ted_blend_auroc": (
+            fmt(auroc("ted", "Blend 5%")),
+            "TED AUROC on the smoke Blend cell",
+        ),
+        "smoke_confidence_blend_auroc": (
+            fmt(auroc("confidence", "Blend 5%")),
+            "confidence-null AUROC on the smoke Blend cell",
+        ),
         "smoke_beatrix_badnet_full_auroc": (
-            next((row["AUROC q0.25"] for row in followups if row["detector"] == "beatrix"), "--"),
+            next(
+                (
+                    row["AUROC q0.25"]
+                    for row in followups
+                    if row["detector"] == "beatrix"
+                ),
+                "--",
+            ),
             "Beatrix AUROC on the smoke BadNet cell at the full validation split",
         ),
         "smoke_ibd_psc_badnet_full_auroc": (
-            next((row["AUROC q0.25"] for row in followups if row["detector"] == "ibd_psc"), "--"),
+            next(
+                (
+                    row["AUROC q0.25"]
+                    for row in followups
+                    if row["detector"] == "ibd_psc"
+                ),
+                "--",
+            ),
             "IBD-PSC AUROC on the smoke BadNet cell at the full validation split",
         ),
-        "registry_detectors": (str(len(DETECTOR_NAMES)), "detectors registered for the panel"),
-        "cd_l_passes": (str(FORWARD_PASSES_PER_INPUT["cd_l"]), "forward passes per input for CD-L"),
-        "teco_passes": (str(FORWARD_PASSES_PER_INPUT["teco"]), "forward passes per input for TeCo"),
-        "sentinet_passes": (str(FORWARD_PASSES_PER_INPUT["sentinet"]), "forward passes per input for SentiNet"),
+        "registry_detectors": (
+            str(len(DETECTOR_NAMES)),
+            "detectors registered for the panel",
+        ),
+        "cd_l_passes": (
+            str(FORWARD_PASSES_PER_INPUT["cd_l"]),
+            "forward passes per input for CD-L",
+        ),
+        "teco_passes": (
+            str(FORWARD_PASSES_PER_INPUT["teco"]),
+            "forward passes per input for TeCo",
+        ),
+        "sentinet_passes": (
+            str(FORWARD_PASSES_PER_INPUT["sentinet"]),
+            "forward passes per input for SentiNet",
+        ),
     }
     write_macros(
-        os.path.join(args.paper_dir, "tables", "detector_smoke.macros.json"), GENERATOR, [SMOKE_ENTRY], macros
+        os.path.join(args.paper_dir, "tables", "detector_smoke.macros.json"),
+        GENERATOR,
+        [SMOKE_ENTRY],
+        macros,
     )
     print(f"detector smoke: {len(by_detector)} detectors, {len(followups)} follow-ups")
 

@@ -115,7 +115,9 @@ def main() -> None:
     rows = index_rows(LEDGER)
     if not rows:
         raise SystemExit(f"no index rows found in {LEDGER}")
-    write_longtable(os.path.join(args.paper_dir, "tables", "hypothesis_ledger.tex"), rows)
+    write_longtable(
+        os.path.join(args.paper_dir, "tables", "hypothesis_ledger.tex"), rows
+    )
 
     verdicts = collections.Counter(
         leading_verdict(row["status"]).split()[0].lower() for row in rows

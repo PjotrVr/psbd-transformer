@@ -9,11 +9,18 @@ each checkpoint gets its own cli.baselines command so every failure stays
 attributable to 1 checkpoint in the log.
 
 Nothing here submits. The generator writes pbs/psbd_detectors/<group>_<index>.pbs
-and a dry run prints the plan with its estimated GPU hours. Every emitted flag is
+and a dry run prints the plan with its estimated hours. Every emitted flag is
 checked against cli.baselines' own parser before a file is written.
+
+--queue cpu emits the same work for the CPU queue instead. cli.baselines selects
+its device with torch.cuda.is_available(), so a CPU node needs no flag. The job
+records the device it used in each detector's provenance either way. The CPU
+estimates scale the measured GPU seconds by CPU_SLOWDOWN, so a CPU job asks for a
+walltime that matches what it will actually take rather than the GPU figure.
 
     PYTHONPATH=. python pbs/generate_detector_jobs.py --dry-run
     PYTHONPATH=. python pbs/generate_detector_jobs.py --group cheap
+    PYTHONPATH=. python pbs/generate_detector_jobs.py --queue cpu --group cheap
     PYTHONPATH=. python pbs/generate_detector_jobs.py --group cd_l --dataset gtsrb
 """
 
@@ -87,6 +94,17 @@ FIT_SECONDS_PER_VALIDATION_IMAGE = {
     "sentinet": 0.088,
 }
 VALIDATION_IMAGES = 2000
+# How much slower the same scoring is on a CPU node than on the login-node A100,
+# measured in the CPU smoke of 2026-09-23 (docs/runs/2026-09-23-cpu-timing.md) at
+# 16 threads: confidence scored GTSRB's 23208 rows in 1487s, 15.6 rows per second
+# against the A100's 1000, so 64. A factor per detector rather than 1 global one,
+# because a method dominated by data movement loses less than a method dominated
+# by matmul. The default is the measured figure until a smoke says otherwise.
+CPU_SLOWDOWN_DEFAULT = 64.0
+CPU_SLOWDOWN: dict[str, float] = {"confidence": 64.0}
+# Threads a CPU job asks for, and the value it exports so torch does not spawn
+# more than PBS granted it.
+CPU_THREADS = 16
 # Groups whose commands carry a batch size other than cli.baselines' default.
 BATCH_SIZE_BY_GROUP = {"teco": 256}
 # Model load and split construction, per checkpoint.
@@ -94,7 +112,7 @@ FIXED_MINUTES_PER_CHECKPOINT = 3.0
 MIN_WALLTIME_HOURS = 6.0
 WALLTIME_MARGIN = 2.0
 
-TEMPLATE = """#!/bin/bash
+GPU_TEMPLATE = """#!/bin/bash
 #PBS -q gpu
 #PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
 #PBS -l walltime={walltime}
@@ -121,6 +139,36 @@ echo "Finished: $(date)"
 exit 0
 """
 
+CPU_TEMPLATE = """#!/bin/bash
+#PBS -q cpu
+#PBS -l select=1:ncpus={threads}:mem=64gb
+#PBS -l walltime={walltime}
+#PBS -N det_{letter}_{index:03d}
+#PBS -o {base}/logs/psbd_detectors/{group}_cpu_{index:03d}.log
+#PBS -j oe
+
+export http_proxy="http://10.150.1.1:3128"
+export https_proxy="http://10.150.1.1:3128"
+# No GPU on this node, so cli.baselines' torch.cuda.is_available() selects CPU on
+# its own. The thread caps stop torch from oversubscribing the cores PBS granted.
+export OMP_NUM_THREADS={threads}
+export MKL_NUM_THREADS={threads}
+
+echo "Job ID:  $PBS_JOBID"
+echo "Node:    $(hostname)"
+echo "Started: $(date)"
+echo "Work:    {group}, {n} checkpoints on CPU, est {estimate} min"
+
+BASE={base}
+cd $BASE
+source .venv/bin/activate
+echo "Commit:  $(git rev-parse HEAD), dirty files: $(git status --porcelain | wc -l)"
+
+{commands}
+echo "Finished: $(date)"
+exit 0
+"""
+
 COMMAND = """python -m cli.baselines \\
     --checkpoint-folder {folder} \\
     --detectors {detectors} \\
@@ -134,6 +182,7 @@ COMMAND = """python -m cli.baselines \\
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--group", choices=sorted(DETECTOR_GROUPS), default=None)
+    parser.add_argument("--queue", choices=("gpu", "cpu"), default="gpu")
     parser.add_argument("--results-dir", default=os.path.join(REPO, "results"))
     parser.add_argument("--checkpoints-dir", default=os.path.join(REPO, "checkpoints"))
     parser.add_argument("--raw-data-dir", default=os.path.join(REPO, "raw_data"))
@@ -197,26 +246,39 @@ def pending_work(
     return work
 
 
-def estimated_minutes(cell: dict, detectors: list[str], group: str) -> float:
+def slowdown(name: str, queue: str) -> float:
+    """The factor a detector's measured GPU seconds carry on this queue."""
+    if queue == "gpu":
+        return 1.0
+    factor = CPU_SLOWDOWN.get(name, CPU_SLOWDOWN_DEFAULT)
+    return factor
+
+
+def estimated_minutes(
+    cell: dict, detectors: list[str], group: str, queue: str = "gpu"
+) -> float:
     """Wall-clock estimate for 1 checkpoint, from the smoke's measured seconds."""
     inputs = INPUTS_PER_CHECKPOINT[cell["dataset"]]
-    scoring = inputs * sum(SECONDS_PER_INPUT[name] for name in detectors)
+    scoring = inputs * sum(
+        SECONDS_PER_INPUT[name] * slowdown(name, queue) for name in detectors
+    )
     fitting = VALIDATION_IMAGES * sum(
-        FIT_SECONDS_PER_VALIDATION_IMAGE.get(name, 0.0) for name in detectors
+        FIT_SECONDS_PER_VALIDATION_IMAGE.get(name, 0.0) * slowdown(name, queue)
+        for name in detectors
     )
     minutes = (scoring + fitting) / 60.0 + FIXED_MINUTES_PER_CHECKPOINT
     return minutes
 
 
 def pack_jobs(
-    work: list[tuple[dict, list[str]]], group: str, hours: float
+    work: list[tuple[dict, list[str]]], group: str, hours: float, queue: str = "gpu"
 ) -> list[list[tuple[dict, list[str]]]]:
     """Consecutive checkpoints packed into jobs of at most hours estimated minutes."""
     jobs: list[list] = []
     current: list = []
     current_minutes = 0.0
     for item in work:
-        minutes = estimated_minutes(item[0], item[1], group)
+        minutes = estimated_minutes(item[0], item[1], group, queue)
         if current and current_minutes + minutes > hours * 60.0:
             jobs.append(current)
             current, current_minutes = [], 0.0
@@ -260,11 +322,14 @@ def walltime_text(estimate_minutes: float) -> str:
 
 
 def render_job(group: str, index: int, job: list, args: argparse.Namespace) -> str:
-    estimate = sum(estimated_minutes(cell, detectors, group) for cell, detectors in job)
+    estimate = sum(
+        estimated_minutes(cell, detectors, group, args.queue) for cell, detectors in job
+    )
     commands = "\n".join(
         render_command(cell, detectors, group, args) for cell, detectors in job
     )
-    script = TEMPLATE.format(
+    template = CPU_TEMPLATE if args.queue == "cpu" else GPU_TEMPLATE
+    script = template.format(
         walltime=walltime_text(estimate),
         letter=GROUP_LETTER[group],
         index=index,
@@ -272,6 +337,7 @@ def render_job(group: str, index: int, job: list, args: argparse.Namespace) -> s
         base=REPO,
         n=len(job),
         estimate=int(estimate),
+        threads=CPU_THREADS,
         commands=commands,
     )
     return script
@@ -326,12 +392,12 @@ def main() -> None:
     written = []
     for group in groups:
         work = pending_work(folders, group, args.results_dir)
-        jobs = pack_jobs(work, group, args.hours)
-        group_minutes = sum(estimated_minutes(c, d, group) for c, d in work)
+        jobs = pack_jobs(work, group, args.hours, args.queue)
+        group_minutes = sum(estimated_minutes(c, d, group, args.queue) for c, d in work)
         total_hours += group_minutes / 60.0
         print(
             f"{group:9s} {len(work):3d} checkpoints with work, {len(jobs):3d} jobs, "
-            f"est {group_minutes / 60.0:6.1f} GPU-hours"
+            f"est {group_minutes / 60.0:6.1f} {args.queue.upper()}-hours"
         )
         for index, job in enumerate(jobs, start=1):
             script = render_job(group, index, job, args)
@@ -340,11 +406,12 @@ def main() -> None:
                 continue
             os.makedirs(out_dir, exist_ok=True)
             os.makedirs(os.path.join(REPO, "logs", "psbd_detectors"), exist_ok=True)
-            path = os.path.join(out_dir, f"{group}_{index:03d}.pbs")
+            suffix = "_cpu" if args.queue == "cpu" else ""
+            path = os.path.join(out_dir, f"{group}{suffix}_{index:03d}.pbs")
             with open(path, "w") as handle:
                 handle.write(script)
             written.append(os.path.relpath(path, REPO))
-    print(f"total est {total_hours:.1f} GPU-hours")
+    print(f"total est {total_hours:.1f} {args.queue.upper()}-hours")
     if args.dry_run:
         print("(dry run, nothing written)")
     for path in written:

@@ -49,7 +49,9 @@ DEFAULT_FOLDERS = (
     "vit_tiny_badnet_a2o_0_1",
     "vit_tiny_blend_0_1",
 )
-DEFAULT_OUTPUT = os.path.join("results", "_experiments", "tac_layers", "tac_layers.json")
+DEFAULT_OUTPUT = os.path.join(
+    "results", "_experiments", "tac_layers", "tac_layers.json"
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -64,7 +66,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def layer_profile(clean: dict[int, torch.Tensor], triggered: dict[int, torch.Tensor]) -> list[dict]:
+def layer_profile(
+    clean: dict[int, torch.Tensor], triggered: dict[int, torch.Tensor]
+) -> list[dict]:
     """Per layer: mean and max TAC, relative direction norm and CKA, on (num_samples, dim) features."""
     rows = []
     for layer in sorted(clean):
@@ -102,7 +106,9 @@ def measure_folder(folder: str, args: argparse.Namespace, device: torch.device) 
         use_bfloat16=False,
     )
     clean = {layer: tensor.cpu() for layer, tensor in case.clean_features.items()}
-    triggered = {layer: tensor.cpu() for layer, tensor in case.backdoor_features.items()}
+    triggered = {
+        layer: tensor.cpu() for layer, tensor in case.backdoor_features.items()
+    }
     record = {
         "folder": folder,
         "dataset": case.dataset,
@@ -137,13 +143,17 @@ def main() -> None:
         raise SystemExit("this pass needs a GPU, refusing a CPU-bound run")
     records = []
     for folder in args.folders:
-        if not os.path.exists(os.path.join(args.checkpoints_dir, folder, "attack_result.pt")):
+        if not os.path.exists(
+            os.path.join(args.checkpoints_dir, folder, "attack_result.pt")
+        ):
             print(f"skip {folder}: no checkpoint")
             continue
         started = time.time()
         records.append(measure_folder(folder, args, device))
         peak = max(records[-1]["layers"], key=lambda row: row["rel_direction_norm"])
-        print(f"{folder}: peak layer {peak['layer']} rel norm {peak['rel_direction_norm']:.3f}, {time.time() - started:.0f}s")
+        print(
+            f"{folder}: peak layer {peak['layer']} rel norm {peak['rel_direction_norm']:.3f}, {time.time() - started:.0f}s"
+        )
         write_output(args.output, records, args)
     print(f"wrote {args.output} with {len(records)} records")
 
