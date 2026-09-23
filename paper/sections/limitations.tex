@@ -15,5 +15,5 @@ Adaptive-Blend never reaches the attack success bar on ViT, so no detection numb
 \paragraph{Seeds and the selection protocol.}
 Most models have 1 training seed. On the \SeedCells{} models with \SeedsPerCell{} seeds PSBD-TM moves by \SeedSdRecommended{} AUROC between seeds, small against every gain we report (\cref{app:cost}). On ViT the declared selection protocol would pick the branch-output twin, and the recommendation rests on Swin, seed stability and the mechanism (\cref{app:protocol}). \GtsrbDivergedRuns{} of the \GtsrbRunsScored{} GTSRB runs we trained collapsed in their last epochs and are excluded.
 
-\paragraph{Adaptive attackers.}
-A single probe can be defeated and the union of probes is not defeated by the same attacker (\cref{sec:robustness:adaptive}). An attacker who trains against the union, and a trigger designed to survive token masking, are untested.
+\paragraph{The operating point.}
+The threshold is a quantile of clean validation scores, so the false-positive rate on held-out clean images is measured rather than set. At a nominal 10\% budget PSBD-TM flags \RealizedFprOneZero{} of clean test images on average, and from \RealizedFprOneZeroMin{} to \RealizedFprOneZeroMax{} on a single model. When triggers are rare most flags are false. If \DeploymentPrevalence{} of inputs carry a trigger, a share of only \PrecisionOneZero{} of the inputs flagged at that budget do, by Bayes' rule on the mean rates, so PSBD-TM suits screening that sends flagged inputs to a second check rather than rejecting them.

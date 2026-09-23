@@ -7,9 +7,8 @@ attacker's class whenever a trigger appears in the input
 small share of the training data, often 1\% or less. The defender receives the
 trained model without ever seeing that data. Input-level detection asks the
 most practical question in this setting. Given the deployed model and 1 incoming
-input, is that input carrying a trigger? A detector that answers well runs in
-front of the model in production, needs no retraining and can be paired with a
-removal defense later.
+input, is that input carrying a trigger? A detector that answers well needs no
+retraining and runs in front of the deployed model.
 
 Prediction Shift Backdoor Detection (PSBD) \cite{li2025psbd} is such a detector.
 Its observation is that a backdoored input is decided by a shortcut the model
@@ -27,10 +26,8 @@ residual stream after the add, and the original work put it there. A transformer
 block has no such default. The input to attention, the input to the MLP, each
 branch output before its residual add, the stream after each add, the attention
 heads and the MLP hidden units are all different tensors with different roles.
-Dropout is also not the only thing that can be injected. Whole tokens can be
-masked, channels can be masked, noise can be added before a LayerNorm or its
-gain can be scaled, and each interacts differently with the attention and the
-normalization that follow.
+Nor is dropout the only thing to inject, since whole tokens or channels can be
+masked and noise can be added.
 
 \paragraph{Research questions.} Adapting PSBD to a Vision Transformer (ViT)
 \cite{dosovitskiy2021an} is therefore a design problem on 2 axes, where to
@@ -64,12 +61,8 @@ through attention from the trigger's patch tokens to the class token.
     dropout after it, which motivated this project, does not hold:
     \PreMinusPostMatched{} [\PreMinusPostMatchedLow{},
     \PreMinusPostMatchedHigh{}] at matched disturbance over \PreMinusPostN{}
-    models. Nor is the winner the input-side family. Held at token masking the
-    family gap is \FamilyGapMatched{} [\FamilyGapMatchedLow{},
-    \FamilyGapMatchedHigh{}] at matched disturbance, and held at dropout it
-    reverses to \FamilyGapDropoutMatched{} [\FamilyGapDropoutMatchedLow{},
-    \FamilyGapDropoutMatchedHigh{}]. A split whose sign follows the operator is
-    not a fact about sites (\cref{sec:results:family}).
+    models. Nor is the winner the input-side family of sites, since the family
+    gap changes sign with the operator (\cref{sec:results:family}).
   \item A mechanistic account, tested on the same models. It explains the winning
     site, the choice of whole tokens over coordinates and the reversal through
     LayerNorm absorption (\cref{sec:mechanism}).

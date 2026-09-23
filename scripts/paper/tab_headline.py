@@ -52,6 +52,10 @@ CONFIG_HEADERS = {
 }
 RATE_ORDER = (0.01, 0.05, 0.1)
 DATASET_ORDER = ("cifar10", "cifar100", "gtsrb", "tiny", "svhn", "eurosat")
+# The budgets a deployer reads, and a share of triggered inputs at deployment low
+# enough that the false positives on clean traffic dominate the flags.
+BUDGET_KEYS = ("q0.10", "q0.20")
+DEPLOYMENT_PREVALENCE = 0.01
 
 
 def measure_cell(results_dir: str, folder: str) -> dict[str, dict | None]:
@@ -161,6 +165,57 @@ def delta_table_row(
     return row
 
 
+def operating_point_macros(cells: list[dict]) -> dict:
+    """What the recommended placement's budgets mean for a deployer.
+
+    The threshold is a quantile of clean validation scores, so the false-positive
+    rate on the held-out clean test images is measured, not guaranteed. The share
+    of flags that are truly triggered follows from Bayes' rule at a prevalence
+    $\\pi$ of triggered inputs,
+
+    $$\\text{precision} = \\frac{\\pi \\, \\text{TPR}}{\\pi \\, \\text{TPR} + (1 - \\pi) \\, \\text{FPR}}$$
+
+    | symbol | meaning |
+    |---|---|
+    | $\\pi$ | share of deployment inputs that carry a trigger, `DEPLOYMENT_PREVALENCE` |
+    | TPR | mean share of triggered test inputs flagged at the budget |
+    | FPR | mean share of clean test inputs flagged at the same threshold |
+    """
+    macros = {
+        "deployment_prevalence": (
+            f"{DEPLOYMENT_PREVALENCE * 100:g}\\%",
+            "share of triggered inputs at deployment the precision macros assume",
+        )
+    }
+    for quantile_key in BUDGET_KEYS:
+        stem = f"realized_fpr_{quantile_key.replace('q0.', '')}"
+        fprs = config_values(cells, "rec_adapt", quantile_key, "fpr")
+        tprs = config_values(cells, "rec_adapt", quantile_key, "tpr")
+        fpr, tpr = mean_or_none(fprs), mean_or_none(tprs)
+        flagged = DEPLOYMENT_PREVALENCE * tpr
+        precision = flagged / (flagged + (1 - DEPLOYMENT_PREVALENCE) * fpr)
+        macros[stem] = (
+            fmt(fpr),
+            f"mean false-positive rate on clean test images of the recommended "
+            f"placement at the {quantile_key} threshold, over {len(fprs)} cells",
+        )
+        macros[f"{stem}_min"] = (
+            fmt(min(fprs)),
+            f"lowest single-model false-positive rate at the {quantile_key} threshold",
+        )
+        macros[f"{stem}_max"] = (
+            fmt(max(fprs)),
+            f"highest single-model false-positive rate at the {quantile_key} threshold",
+        )
+        macros[f"precision_{quantile_key.replace('q0.', '')}"] = (
+            fmt(precision, places=2),
+            f"share of flags that are triggered at the {quantile_key} threshold "
+            "when the deployment prevalence of triggered inputs is "
+            f"{DEPLOYMENT_PREVALENCE:g}, from the mean TPR and FPR",
+        )
+    return macros
+
+
 def main() -> None:
     args = build_parser(__doc__).parse_args()
     coverage_path = os.path.join(args.results_dir, "coverage", "coverage.json")
@@ -172,7 +227,7 @@ def main() -> None:
 
     inputs = [
         coverage_path,
-        f"{args.results_dir}/<folder>/psbd_metrics.json (65 cells)",
+        f"{args.results_dir}/<folder>/psbd_metrics.json ({len(cells)} cells)",
     ]
 
     big_rows = [big_table_row(name, subset) for name, subset in subsets(cells)]
@@ -185,7 +240,7 @@ def main() -> None:
             "at the attention input (`before\\_attention\\_norm\\_token\\_mask`) at the "
             "adaptive 0.8 rule and the matched 0.6 rule, and the dropout placement "
             "after the residual add (`post\\_residual`) at the adaptive rule, over "
-            "the panel of 65 backdoored models. n is the common-coverage count of "
+            f"the panel of {len(cells)} backdoored models. n is the common-coverage count of "
             "the row, the models where all 3 configurations returned a value."
         ),
         label="tab:headline",
@@ -264,7 +319,7 @@ def main() -> None:
         "headline_auroc_matched": (
             fmt(mean_or_none(rec_match_auroc)),
             "mean AUROC of the recommended placement at the matched 0.6 rule, "
-            f"over the {len(rec_match_auroc)} cells it covers of the 65-cell panel",
+            f"over the {len(rec_match_auroc)} cells it covers of the {len(cells)} clearing cells",
         ),
         "published_auroc_adaptive": (
             fmt(mean_or_none(pub_adapt_auroc)),
@@ -274,7 +329,8 @@ def main() -> None:
         "headline_gain_adaptive_auroc": (
             fmt(mean_or_none(all_cells_delta_adapt), signed=True),
             "mean AUROC gain of the recommended placement over the published "
-            "placement, both at the adaptive rule, paired over the 65-cell panel",
+            "placement, both at the adaptive rule, paired over the "
+            f"{len(all_cells_delta_adapt)} cells carrying both",
         ),
         "headline_gain_adaptive_auroc_low": (
             fmt(low_adapt, signed=True),
@@ -288,7 +344,7 @@ def main() -> None:
             fmt(mean_or_none(all_cells_delta_match), signed=True),
             "mean AUROC gain of the recommended placement at the matched 0.6 rule "
             "over the published placement at the adaptive rule, paired over the "
-            "65-cell panel",
+            f"{len(all_cells_delta_match)} cells carrying both",
         ),
         "headline_tpr_at_one_percent": (
             fmt(mean_or_none(rec_adapt_tpr_at_1pct)),
@@ -298,12 +354,12 @@ def main() -> None:
         "headline_floor_auroc": (
             fmt(min(rec_adapt_auroc)) if rec_adapt_auroc else "--",
             "minimum single-cell AUROC of the recommended placement at the "
-            "adaptive rule, over the 65-cell panel",
+            f"adaptive rule, over the {len(rec_adapt_auroc)} paired cells",
         ),
         "headline_inversions": (
             str(sum(1 for value in rec_adapt_auroc if value < 0.5)),
             "cells where the recommended placement at the adaptive rule scores "
-            "AUROC below 0.5, out of the 65-cell panel",
+            f"AUROC below 0.5, out of the {len(rec_adapt_auroc)} paired cells",
         ),
         "primary_gain_adaptive_auroc": (
             fmt(
@@ -333,6 +389,7 @@ def main() -> None:
             f"{len(cifar100_1pct_cells)}",
         ),
     }
+    macros.update(operating_point_macros(paired_cells))
     write_macros(
         os.path.join(args.paper_dir, "tables", "headline.macros.json"),
         GENERATOR,

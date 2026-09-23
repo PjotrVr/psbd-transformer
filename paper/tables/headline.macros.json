@@ -2,10 +2,10 @@
   "generator": "scripts/paper/tab_headline.py",
   "inputs": [
     "results/coverage/coverage.json",
-    "results/<folder>/psbd_metrics.json (65 cells)"
+    "results/<folder>/psbd_metrics.json (71 cells)"
   ],
-  "written_at": "2026-09-23T18:26:40.014505+00:00",
-  "git_commit": "5a1f1c5814dc5676c093f3021490a849712a13f4-dirty",
+  "written_at": "2026-09-23T21:43:17.518098+00:00",
+  "git_commit": "33809450714a8a0518a06b5ca5e2d64dacb27d3a-dirty",
   "macros": {
     "HeadlineAurocAdaptive": {
       "value": "0.927",
@@ -13,7 +13,7 @@
     },
     "HeadlineAurocMatched": {
       "value": "0.921",
-      "meaning": "mean AUROC of the recommended placement at the matched 0.6 rule, over the 71 cells it covers of the 65-cell panel"
+      "meaning": "mean AUROC of the recommended placement at the matched 0.6 rule, over the 71 cells it covers of the 71 clearing cells"
     },
     "PublishedAurocAdaptive": {
       "value": "0.823",
@@ -21,7 +21,7 @@
     },
     "HeadlineGainAdaptiveAuroc": {
       "value": "+0.104",
-      "meaning": "mean AUROC gain of the recommended placement over the published placement, both at the adaptive rule, paired over the 65-cell panel"
+      "meaning": "mean AUROC gain of the recommended placement over the published placement, both at the adaptive rule, paired over the 69 cells carrying both"
     },
     "HeadlineGainAdaptiveAurocLow": {
       "value": "+0.052",
@@ -33,7 +33,7 @@
     },
     "HeadlineGainMatchedAuroc": {
       "value": "+0.103",
-      "meaning": "mean AUROC gain of the recommended placement at the matched 0.6 rule over the published placement at the adaptive rule, paired over the 65-cell panel"
+      "meaning": "mean AUROC gain of the recommended placement at the matched 0.6 rule over the published placement at the adaptive rule, paired over the 71 cells carrying both"
     },
     "HeadlineTprAtOnePercent": {
       "value": "0.602",
@@ -41,11 +41,11 @@
     },
     "HeadlineFloorAuroc": {
       "value": "0.418",
-      "meaning": "minimum single-cell AUROC of the recommended placement at the adaptive rule, over the 65-cell panel"
+      "meaning": "minimum single-cell AUROC of the recommended placement at the adaptive rule, over the 69 paired cells"
     },
     "HeadlineInversions": {
       "value": "2",
-      "meaning": "cells where the recommended placement at the adaptive rule scores AUROC below 0.5, out of the 65-cell panel"
+      "meaning": "cells where the recommended placement at the adaptive rule scores AUROC below 0.5, out of the 69 paired cells"
     },
     "PrimaryGainAdaptiveAuroc": {
       "value": "+0.096",
@@ -58,6 +58,42 @@
     "CifarOneZeroZeroOnePercentGain": {
       "value": "+0.163",
       "meaning": "mean paired AUROC gain of recommended over published, both at the adaptive rule, on cifar100 at 1% poisoning only, n=5"
+    },
+    "DeploymentPrevalence": {
+      "value": "1\\%",
+      "meaning": "share of triggered inputs at deployment the precision macros assume"
+    },
+    "RealizedFprOneZero": {
+      "value": "0.088",
+      "meaning": "mean false-positive rate on clean test images of the recommended placement at the q0.10 threshold, over 69 cells"
+    },
+    "RealizedFprOneZeroMin": {
+      "value": "0.000",
+      "meaning": "lowest single-model false-positive rate at the q0.10 threshold"
+    },
+    "RealizedFprOneZeroMax": {
+      "value": "0.248",
+      "meaning": "highest single-model false-positive rate at the q0.10 threshold"
+    },
+    "PrecisionOneZero": {
+      "value": "0.08",
+      "meaning": "share of flags that are triggered at the q0.10 threshold when the deployment prevalence of triggered inputs is 0.01, from the mean TPR and FPR"
+    },
+    "RealizedFprTwoZero": {
+      "value": "0.176",
+      "meaning": "mean false-positive rate on clean test images of the recommended placement at the q0.20 threshold, over 69 cells"
+    },
+    "RealizedFprTwoZeroMin": {
+      "value": "0.006",
+      "meaning": "lowest single-model false-positive rate at the q0.20 threshold"
+    },
+    "RealizedFprTwoZeroMax": {
+      "value": "0.251",
+      "meaning": "highest single-model false-positive rate at the q0.20 threshold"
+    },
+    "PrecisionTwoZero": {
+      "value": "0.05",
+      "meaning": "share of flags that are triggered at the q0.20 threshold when the deployment prevalence of triggered inputs is 0.01, from the mean TPR and FPR"
     }
   }
 }

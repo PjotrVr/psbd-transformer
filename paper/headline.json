@@ -3370,16 +3370,16 @@
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "HeadlineAurocMatched": {
     "value": "0.921",
-    "meaning": "mean AUROC of the recommended placement at the matched 0.6 rule, over the 71 cells it covers of the 65-cell panel",
+    "meaning": "mean AUROC of the recommended placement at the matched 0.6 rule, over the 71 cells it covers of the 71 clearing cells",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "PublishedAurocAdaptive": {
@@ -3388,16 +3388,16 @@
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "HeadlineGainAdaptiveAuroc": {
     "value": "+0.104",
-    "meaning": "mean AUROC gain of the recommended placement over the published placement, both at the adaptive rule, paired over the 65-cell panel",
+    "meaning": "mean AUROC gain of the recommended placement over the published placement, both at the adaptive rule, paired over the 69 cells carrying both",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "HeadlineGainAdaptiveAurocLow": {
@@ -3406,7 +3406,7 @@
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "HeadlineGainAdaptiveAurocHigh": {
@@ -3415,16 +3415,16 @@
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "HeadlineGainMatchedAuroc": {
     "value": "+0.103",
-    "meaning": "mean AUROC gain of the recommended placement at the matched 0.6 rule over the published placement at the adaptive rule, paired over the 65-cell panel",
+    "meaning": "mean AUROC gain of the recommended placement at the matched 0.6 rule over the published placement at the adaptive rule, paired over the 71 cells carrying both",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "HeadlineTprAtOnePercent": {
@@ -3433,25 +3433,25 @@
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "HeadlineFloorAuroc": {
     "value": "0.418",
-    "meaning": "minimum single-cell AUROC of the recommended placement at the adaptive rule, over the 65-cell panel",
+    "meaning": "minimum single-cell AUROC of the recommended placement at the adaptive rule, over the 69 paired cells",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "HeadlineInversions": {
     "value": "2",
-    "meaning": "cells where the recommended placement at the adaptive rule scores AUROC below 0.5, out of the 65-cell panel",
+    "meaning": "cells where the recommended placement at the adaptive rule scores AUROC below 0.5, out of the 69 paired cells",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "PrimaryGainAdaptiveAuroc": {
@@ -3460,7 +3460,7 @@
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "HardGainAdaptiveAuroc": {
@@ -3469,7 +3469,7 @@
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "CifarOneZeroZeroOnePercentGain": {
@@ -3478,7 +3478,88 @@
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
-      "results/<folder>/psbd_metrics.json (65 cells)"
+      "results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "DeploymentPrevalence": {
+    "value": "1\\%",
+    "meaning": "share of triggered inputs at deployment the precision macros assume",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "RealizedFprOneZero": {
+    "value": "0.088",
+    "meaning": "mean false-positive rate on clean test images of the recommended placement at the q0.10 threshold, over 69 cells",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "RealizedFprOneZeroMin": {
+    "value": "0.000",
+    "meaning": "lowest single-model false-positive rate at the q0.10 threshold",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "RealizedFprOneZeroMax": {
+    "value": "0.248",
+    "meaning": "highest single-model false-positive rate at the q0.10 threshold",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PrecisionOneZero": {
+    "value": "0.08",
+    "meaning": "share of flags that are triggered at the q0.10 threshold when the deployment prevalence of triggered inputs is 0.01, from the mean TPR and FPR",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "RealizedFprTwoZero": {
+    "value": "0.176",
+    "meaning": "mean false-positive rate on clean test images of the recommended placement at the q0.20 threshold, over 69 cells",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "RealizedFprTwoZeroMin": {
+    "value": "0.006",
+    "meaning": "lowest single-model false-positive rate at the q0.20 threshold",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "RealizedFprTwoZeroMax": {
+    "value": "0.251",
+    "meaning": "highest single-model false-positive rate at the q0.20 threshold",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "PrecisionTwoZero": {
+    "value": "0.05",
+    "meaning": "share of flags that are triggered at the q0.20 threshold when the deployment prevalence of triggered inputs is 0.01, from the mean TPR and FPR",
+    "generator": "scripts/paper/tab_headline.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
   "PanelCellsCached": {
@@ -7706,8 +7787,8 @@
     ]
   },
   "SwinGainRecommendedMinusPublished": {
-    "value": "+0.118",
-    "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after both residual adds, adaptive rule, over 82 cells",
+    "value": "+0.122",
+    "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after both residual adds, adaptive rule, over 83 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",
@@ -7715,7 +7796,7 @@
     ]
   },
   "SwinGainRecommendedMinusPublishedN": {
-    "value": "82",
+    "value": "83",
     "meaning": "cells behind swin_gain_recommended_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -7724,7 +7805,7 @@
     ]
   },
   "SwinGainRecommendedMinusPublishedLow": {
-    "value": "+0.076",
+    "value": "+0.077",
     "meaning": "lower bootstrap bound of swin_gain_recommended_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -7733,7 +7814,7 @@
     ]
   },
   "SwinGainRecommendedMinusPublishedHigh": {
-    "value": "+0.165",
+    "value": "+0.168",
     "meaning": "upper bootstrap bound of swin_gain_recommended_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -7904,8 +7985,8 @@
     ]
   },
   "SwinSelectionHalfTwinAuroc": {
-    "value": "0.791",
-    "meaning": "Swin mean AUROC of the twin placement on the selection half, 44 cells",
+    "value": "0.798",
+    "meaning": "Swin mean AUROC of the twin placement on the selection half, 47 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",
@@ -7913,7 +7994,7 @@
     ]
   },
   "SwinSelectionHalfTwinN": {
-    "value": "44",
+    "value": "47",
     "meaning": "Swin cells behind swin_selection_half_twin_auroc",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -8012,7 +8093,7 @@
     ]
   },
   "SwinHardestAttacks": {
-    "value": "Adaptive-Blend, TaCT",
+    "value": "Adaptive-Blend and TaCT",
     "meaning": "the attacks holding the 4 lowest Swin readings of the recommended placement",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -8066,8 +8147,8 @@
     ]
   },
   "SwinPublishedTprOneZero": {
-    "value": "0.64",
-    "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.10 budget over 82 cells",
+    "value": "0.63",
+    "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.10 budget over 85 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",
@@ -8075,8 +8156,8 @@
     ]
   },
   "SwinPublishedTprTwoZero": {
-    "value": "0.74",
-    "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.20 budget over 82 cells",
+    "value": "0.73",
+    "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.20 budget over 85 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",
@@ -8094,7 +8175,7 @@
   },
   "SwinPublishedAurocAdaptive": {
     "value": "0.849",
-    "meaning": "Swin mean AUROC of the published placement at the adaptive rule over 82 cells",
+    "meaning": "Swin mean AUROC of the published placement at the adaptive rule over 85 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",

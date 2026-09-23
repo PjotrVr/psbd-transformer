@@ -16,9 +16,7 @@ We count only the calibrated IBD-PSC port as the competitor, because the port at
 \section{An adaptive attacker and the union of probes}
 \label{sec:robustness:adaptive}
 
-The PSBD paper reports that its rate rule survives an attacker who lowers the prediction shift of poisoned samples. We trained a stronger attacker on ViT: a hinge loss that pushes the poisoned samples' PSU up to the clean samples' under the exact probe the defender uses, PSBD-TM, trained jointly with the backdoor on CIFAR-100 for BadNets, Blend, BPP, LF and Adaptive-Blend at 3 poison rates. \AdaptiveVitCells{} evasive models keep an ASR of at least \AdaptiveHighAsr{} and lose \AdaptiveVitCaCost{} clean accuracy on average (\cref{tab:adaptive}).
-
-\input{tables/adaptive_summary}
+The PSBD paper reports that its rate rule survives an attacker who lowers the prediction shift of poisoned samples. We trained a stronger attacker on ViT: a hinge loss that pushes the poisoned samples' PSU up to the clean samples' under the exact probe the defender uses, PSBD-TM, trained jointly with the backdoor on CIFAR-100 for BadNets, Blend, BPP, LF and Adaptive-Blend at 3 poison rates. \AdaptiveVitCells{} evasive models keep an ASR of at least \AdaptiveHighAsr{} and lose \AdaptiveVitCaCost{} clean accuracy on average (\cref{tab:adaptive} in \cref{app:adaptive}).
 
 Against a single fixed probe the attacker wins: PSBD-TM falls from a mean AUROC of \AdaptiveVitProbedBase{} to \AdaptiveVitProbedEvade{}, with the rate rule already inside these numbers. The evasion does not transfer between probes, though, because the attacker's gradient only touches the features its 1 probe reads, and the 2 probes it never saw still read \AdaptiveVitTransfer{}.
 

@@ -46,6 +46,7 @@ from scripts.paper._common import (  # noqa: E402
     mean_or_none,
     placement_words,
     split_placement,
+    word_list,
     write_macros,
     write_table,
 )
@@ -376,7 +377,7 @@ def floor_macros(cells: list[dict]) -> dict[str, tuple[str, str]]:
     }
     hardest = sorted({cell["attack"] for _, cell in readings[:4]})
     macros["swin_hardest_attacks"] = (
-        ", ".join(attack_label(attack) for attack in hardest),
+        word_list([attack_label(attack) for attack in hardest]),
         "the attacks holding the 4 lowest Swin readings of the recommended placement",
     )
     return macros
@@ -429,9 +430,11 @@ def main() -> None:
     ]
     by_dataset = collections.Counter(cell["dataset"] for cell in cells)
     stats = placement_stats(cells)
-    scope = ", ".join(
-        f"{count} on {dataset_label(dataset)}"
-        for dataset, count in sorted(by_dataset.items())
+    scope = word_list(
+        [
+            f"{count} on {dataset_label(dataset)}"
+            for dataset, count in sorted(by_dataset.items())
+        ]
     )
 
     write_table(
