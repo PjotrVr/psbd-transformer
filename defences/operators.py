@@ -26,6 +26,8 @@ masks the same axis, add it to PERTURBATIONS and list its position restriction i
 PERTURBATION_POSITIONS if it only makes sense somewhere specific.
 """
 
+import math
+
 import torch
 import torch.nn as nn
 
@@ -169,6 +171,156 @@ class TokenMask(nn.Module):
         keep *= _keep_scale(self.rate)
         if protect_cls:
             keep[:, 0, :] = 1.0
+
+        masked = x * keep  # (batch, tokens, channels)
+        return masked
+
+
+class TokenSubstitute(nn.Module):
+    """Replace whole tokens with the same token of another sample in the batch.
+
+    TokenMask zeroes a token, and a zero token is off the data manifold: no
+    training image ever produced one, so part of the prediction shift it causes is
+    the network reacting to an input it has no calibration for rather than to the
+    loss of that token's content. Substitution removes the content and leaves the
+    input in distribution, which isolates the effect being measured.
+
+    The replacement is the token at the same position from another sample, taken
+    by rolling the batch axis, so every substituted token is a real activation
+    this layer has seen and the positional structure is preserved.
+
+    No inverted scaling is applied, unlike every masking operator here. Scaling
+    exists to hold the expectation equal to the input when part of it is zeroed.
+    A substituted token is already a sample from the right distribution, so
+    dividing by the keep probability would inflate the activations instead of
+    correcting them.
+
+    Token 0 is the CLS token and is never substituted, for the reason TokenMask
+    never masks it: it is the classifier's only read point.
+    """
+
+    def __init__(self, rate: float, protect_cls: bool = True):
+        super().__init__()
+        self.rate = float(rate)
+        self.protect_cls = protect_cls
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x with whole tokens swapped for another sample's, same layout out.
+
+        x is (batch, tokens, channels) from ViT or (batch, height, width,
+        channels) from Swin.
+        """
+        if not self.training or self.rate == 0.0:
+            return x
+
+        protect_cls = self.protect_cls and x.dim() == 3
+        tokens_view, original_shape = _to_token_layout(x)  # (batch, tokens, channels)
+        batch = tokens_view.shape[0]
+        if batch < 2:
+            # With 1 sample there is no other sample to borrow from, so the
+            # substitution is undefined and the pass is left unperturbed rather
+            # than silently degenerating into a no-op mask.
+            return x
+
+        swapped = self._substitute(tokens_view, protect_cls)
+        out = swapped.reshape(original_shape)
+        return out
+
+    def _substitute(self, x: torch.Tensor, protect_cls: bool) -> torch.Tensor:
+        """x with chosen tokens taken from another sample, (batch, tokens, channels)."""
+        batch, tokens, _ = x.shape  # (batch, tokens, channels)
+        donor = torch.roll(x, shifts=1, dims=0)  # (batch, tokens, channels)
+
+        replace = torch.empty(
+            batch, tokens, 1, device=x.device, dtype=x.dtype
+        ).bernoulli_(self.rate)  # (batch, tokens, 1)
+        if protect_cls:
+            replace[:, 0, :] = 0.0
+
+        substituted = x * (1.0 - replace) + donor * replace
+        return substituted
+
+
+class TokenBlockMask(nn.Module):
+    """Zero a contiguous patch-aligned rectangle of tokens rather than a random subset.
+
+    TokenMask drops tokens independently, so it removes a share of a local
+    trigger's tokens in proportion to the rate and degrades the shortcut
+    gradually. A contiguous mask either covers the trigger or misses it, which
+    turns that gradual degradation into a high-variance one, and the statistic
+    already averages over k passes.
+
+    The rectangle's area is the requested rate of the token grid, its aspect is
+    square where the grid allows, and its position is uniform over the grid. For
+    a global trigger this should do no better than dropping the same number of
+    tokens at random, which is the prediction that makes it a useful control.
+
+    Token 0 is the CLS token and sits outside the grid, so it is never covered.
+    """
+
+    def __init__(self, rate: float, protect_cls: bool = True):
+        super().__init__()
+        self.rate = float(rate)
+        self.protect_cls = protect_cls
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x with a contiguous block of tokens zeroed, same layout out.
+
+        x is (batch, tokens, channels) from ViT or (batch, height, width,
+        channels) from Swin.
+        """
+        if not self.training or self.rate == 0.0:
+            return x
+
+        protect_cls = self.protect_cls and x.dim() == 3
+        tokens_view, original_shape = _to_token_layout(x)  # (batch, tokens, channels)
+        grid = self._grid_side(tokens_view.shape[1], protect_cls)
+        if grid is None:
+            # A token count that is not a square grid has no rectangle to speak
+            # of, so fall back to independent dropping rather than inventing a
+            # geometry the layout does not have.
+            return TokenMask(self.rate, self.protect_cls).train(self.training)(x)
+
+        masked = self._mask_block(tokens_view, grid, protect_cls)
+        out = masked.reshape(original_shape)
+        return out
+
+    def _grid_side(self, tokens: int, protect_cls: bool) -> int | None:
+        """The side of the square patch grid, or None when there is not one."""
+        patches = tokens - 1 if protect_cls else tokens
+        side = int(math.isqrt(patches))
+        if side * side != patches:
+            return None
+        return side
+
+    def _mask_block(
+        self, x: torch.Tensor, grid: int, protect_cls: bool
+    ) -> torch.Tensor:
+        """x with 1 rectangle per sample zeroed, (batch, tokens, channels) in and out."""
+        batch, tokens, _ = x.shape  # (batch, tokens, channels)
+        offset = 1 if protect_cls else 0
+
+        # A square block whose area is the requested share of the grid, clamped so
+        # it always removes at least 1 token and never the whole grid.
+        side = max(1, min(grid, round(grid * math.sqrt(self.rate))))
+        keep = torch.ones(batch, tokens, 1, device=x.device, dtype=x.dtype)
+        rows = torch.randint(0, grid - side + 1, (batch,), device=x.device)
+        cols = torch.randint(0, grid - side + 1, (batch,), device=x.device)
+        for sample in range(batch):
+            row, col = int(rows[sample]), int(cols[sample])
+            for step in range(side):
+                start = offset + (row + step) * grid + col
+                keep[sample, start : start + side, :] = 0.0
+
+        # The surviving tokens carry the scale of the tokens that were removed, so
+        # the perturbed pass stays comparable to the unperturbed one, exactly as
+        # TokenMask does.
+        removed = side * side
+        kept_share = 1.0 - removed / float(grid * grid)
+        if kept_share > 0.0:
+            keep = keep / kept_share
+            if protect_cls:
+                keep[:, 0, :] = 1.0
 
         masked = x * keep  # (batch, tokens, channels)
         return masked
@@ -571,6 +723,12 @@ OPERATORS: dict[str, type[nn.Module]] = {
     "head_mask": head_mask,
     "channel_mask": channel_mask,
     "token_mask": TokenMask,
+    # 2 probes the basis did not contain, both motivated in
+    # docs/attack-design/improving-the-defense.md. token_substitute is
+    # token_mask without the off-manifold component, token_block_mask is
+    # token_mask with the geometry of a local trigger.
+    "token_substitute": TokenSubstitute,
+    "token_block_mask": TokenBlockMask,
     "droppath": DropPath,
     "gaussian": GaussianNoise,
     # Same isotropic covariance as gaussian, lower estimator variance. See the
