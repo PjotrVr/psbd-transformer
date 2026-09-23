@@ -78,7 +78,7 @@ def placement_aurocs(
 def ranking_rows(
     results_dir: str, cells: list[dict], basis: list[dict]
 ) -> tuple[list[list[str]], dict[str, dict]]:
-    """1 row per placement, sorted by adaptive-rule mean AUROC and the raw numbers."""
+    """The table rows, 1 per placement sorted by adaptive-rule mean AUROC, plus the raw numbers."""
     measured = {}
     for entry in basis:
         by_rule = placement_aurocs(results_dir, cells, entry["id"])

@@ -1,12 +1,10 @@
 """T6: the depth bands, input-side and residual-adjacent, against their all-blocks placement.
 
 Input-side: `before_attention_norm_token_mask` at all blocks, banded to blocks
-5-8 and 9-12. Blocks 1-4 has no cache anywhere in the 65-cell panel (verified
-against every cell's psbd_metrics.json placements dict), so that row prints
-`\\pending` in every column rather than a computed number.
+1-4, 5-8 and 9-12. Each band is read only on the cells swept on it and paired
+with the all-blocks reading there, and every macro carries its cell count.
 
-Residual-adjacent: `pre_residual` at all blocks, banded to 1-4, 5-8 and 9-12,
-the only family with a full 4-band ladder cached.
+Residual-adjacent: `pre_residual` at all blocks, banded to 1-4, 5-8 and 9-12.
 
 Every number is read at the matched 0.6 rate, the cross-placement comparison
 device, since a band changes how many blocks the perturbation touches and so
@@ -114,7 +112,7 @@ def main() -> None:
 
     inputs = [
         coverage_path,
-        f"{args.results_dir}/<folder>/psbd_metrics.json (65 cells)",
+        f"{args.results_dir}/<folder>/psbd_metrics.json ({len(cells)} cells)",
     ]
 
     table_rows = []

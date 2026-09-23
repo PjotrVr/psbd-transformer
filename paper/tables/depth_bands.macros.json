@@ -2,10 +2,10 @@
   "generator": "scripts/paper/tab_depth_bands.py",
   "inputs": [
     "results/coverage/coverage.json",
-    "results/<folder>/psbd_metrics.json (65 cells)"
+    "results/<folder>/psbd_metrics.json (71 cells)"
   ],
-  "written_at": "2026-09-23T19:53:07.920902+00:00",
-  "git_commit": "4087ff7b8dddaf7e969f38f703166a0e490aaacf-dirty",
+  "written_at": "2026-09-23T22:05:15.076644+00:00",
+  "git_commit": "37296798f86f58af055b8d6152c6e7087193f034-dirty",
   "macros": {
     "BandFiveEightMinusAllInputSide": {
       "value": "$-$0.055",
