@@ -267,7 +267,9 @@
         "fpr": 0.15208333730697632,
         "auroc": 0.8795405864197531,
         "auroc_two_sided": 0.8795405864197531,
-        "direction": "as_expected"
+        "direction": "as_expected",
+        "auprc": 0.9075870325020812,
+        "positive_share": 0.5
       },
       "oracle_rate": 0.9,
       "oracle": {
@@ -277,7 +279,9 @@
         "fpr": 0.14972221851348877,
         "auroc": 0.9400195312500002,
         "auroc_two_sided": 0.9400195312500002,
-        "direction": "as_expected"
+        "direction": "as_expected",
+        "auprc": 0.9470814359984167,
+        "positive_share": 0.5
       },
       "matched_shift": {
         "sigma0.2": {
