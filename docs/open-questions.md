@@ -99,3 +99,15 @@ properly matched on disturbance. What follows is what did not pass.
 |---|---|
 | Q32 | The headline statistic has no equation. `background.tex` writes the absolute PSU and `method.tex` describes the fractional form in prose, so the symbol denotes the absolute drop where it is defined and the fractional quantity everywhere it is used. The implementation in `defences/scores.py` is correct and the fractional form is this project's own contribution rather than the source paper's, which makes writing it down more important rather than less |
 | Q33 | A dead guard states a failure that cannot occur. `defences/scores.py` clamps the tracked probability at 1e-6, but the tracked class is the argmax so its probability is at least 1 over the label size, which is 0.005 on the largest panel dataset |
+
+## Settled on 2026-09-23, so nobody re-derives them
+
+| # | Claim | Verdict |
+|---|---|---|
+| Q34 | Dropping the modal perturbation attractor from the clean validation split before reading the quantile threshold is a free detection gain | **Refuted.** It raises TPR by 0.013 on average and raises the realized false-positive rate by the same trade. Against a plain quantile threshold chosen to realize the same clean FPR, the advantage is -0.0004 on average and 0.0000 at the median over 706 cells, winning on 4 and losing on 10. The whole effect was threshold loosening |
+| Q35 | A low-confidence or low-margin backdoor evades PSBD | **Refuted for the fractional statistic, and it points the wrong way.** The headline statistic divides the unperturbed confidence out, so under the masking operators the margin cancels and the statistic is margin-monotone increasing. Lowering the margin lowers the score, and low is the flagged side. Measured directly, baseline confidence explains 0.020 of the statistic's variance at the recommended placement. The literature's low-confidence results are against STRIP, which superposes inputs rather than perturbing the model, so they do not transfer. `docs/attack-design/README.md`'s claim that confidence matching removes about a tenth is generous at this placement |
+
+Q34's underlying observation is real and it explains Q27. The images that land on
+the modal attractor sit at low fractional PSU, so they drag the validation
+quantile down and the realized false-positive rate undershoots the budget the
+defender asked for. That is a calibration bug worth fixing on its own terms.

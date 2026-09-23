@@ -579,12 +579,31 @@ carried entirely by the class count. At 43 classes and above the mean TPR change
 is at most 0.001, and this project's primary datasets are CIFAR-100 and Tiny. An
 attacker who needs the attack to work on the primary panel gets nothing here.
 
-**What catches it instead.** A robust threshold. Reading the quantile after
-removing, or down-weighting, the validation images whose predicted class is the
-majority perturbation attractor is free, needs no labels beyond the predictions
-already cached and is a 3-line change in `threshold_at_quantile`. This is the
-cheapest defense improvement in the whole document and it is worth adopting
-whether or not anyone attacks it.
+**What catches it instead, and why the obvious answer does not work.** The
+obvious answer is a robust threshold: read the quantile after removing the
+validation images whose predicted class is the majority perturbation attractor.
+That looked like the cheapest defense improvement in this document and it is
+refuted. It was checked on 2026-09-23 over 706 cells and it does nothing.
+
+Removing the attractor does raise TPR, from 0.448 to 1.000 on
+`vit_eurosat_blend_0_1` and by 0.013 on average. It also raises the realized
+false-positive rate, from 0.156 to 0.226 on that cell and from 0.246 to 0.270 on
+average against a nominal budget of 0.25, so the mean distance from the nominal
+budget grows from 0.021 to 0.032. The removal is loosening the threshold, not
+sharpening the statistic.
+
+The control settles it. Comparing the attractor-dropped threshold against a plain
+quantile threshold chosen to realize the SAME clean false-positive rate, the
+advantage of dropping is -0.0004 on average and 0.0000 at the median. It wins on
+4 of 706 cells and loses on 10. Every apparent gain was the FPR it spent.
+
+The underlying observation is still real and it explains something else. The
+images that land on the modal attractor sit at low fractional PSU, so they drag
+the validation quantile down and the threshold comes out stricter than the
+defender asked for. That is the mechanism behind the left tail of realized
+false-positive rates recorded as Q27 in `docs/open-questions.md`, where the
+realized rate spans 0.009 to 0.333 against a 0.25 budget. Worth fixing as a
+calibration bug rather than sold as a detection gain.
 
 ## Construction 6, amplitude titration at deployment
 
