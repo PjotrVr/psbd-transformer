@@ -1,5 +1,9 @@
 # PSBD-ViT: `both_sublayer_inputs_token_mask`
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. This placement is not the current recommended placement (`before_attention_norm_token_mask`, canon `RECOMMENDED_PLACEMENT`), so its per-cell numbers below should not be read as the headline result.
+
 The single placement `both_sublayer_inputs_token_mask`.
 
 Each member is read at **its own** perturbation rate, chosen so the clean-validation

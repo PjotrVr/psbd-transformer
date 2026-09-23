@@ -93,7 +93,7 @@ This is not a detail the PSBD paper glossed over either. Its appendix records us
 precomputed adversarial images throughout: *"On CIFAR-10, we directly use the
 adversarial images provided by the original paper; on GTSRB and Tiny ImageNet we use
 the adversarial images provided by BackdoorBench"*
-(`papers/PSBD/sec/7_appendix.tex:543-546`).
+(`literature/PSBD/sec/7_appendix.tex:543-546`).
 
 ### What was implemented
 

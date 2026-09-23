@@ -21,9 +21,9 @@ experiments/                hypothesis-driven experiments, 1 directory per quest
 figures/                    figure output that predates the visualization/ package's JSON sidecar convention.
 logs/                       PBS job stdout and stderr, 1 subdirectory per job family, matching pbs/.
 models/                     the 2 architectures and the probe position registry.
-notebooks/                  the guided tour, numbered 00 to 14.
+notebooks/                  the guided tour, numbered 00 to 06.
 paper/                      the built paper: sections, tables, figures, headline.tex, main.pdf.
-papers/                     local copies of the source papers this project reproduces or ports from.
+literature/                     local copies of the source papers this project reproduces or ports from.
 pbs/                        cluster job generators and the job scripts they emit.
 raw_data/                   downloaded dataset archives and extracted images.
 results/                    per-checkpoint output, written on demand, plus results/_experiments/ and results/coverage/.
@@ -34,7 +34,7 @@ tmp/                        gitignored scratch output from smoke runs.
 training/                   the training loop, checkpoint provenance, SAM.
 utils/                      numerics and provenance helpers, no subject of their own.
 visualization/              the figures over analysis/'s statistics, 1 module per figure family, JSON sidecar per figure.
-.gitignore                  patterns kept out of version control: raw_data/, archive/, figures/, checkpoints/, logs/, tmp/, backdoor_bench_checkpoints/, scratch/, papers/, results/ and the rest of the generated tree.
+.gitignore                  patterns kept out of version control: raw_data/, archive/, figures/, checkpoints/, logs/, tmp/, backdoor_bench_checkpoints/, scratch/, literature/, results/ and the rest of the generated tree.
 pyproject.toml              the project's Python 3.11 and dependency pins, read by uv.
 README.md                   installation, the quick start, the command table, pointers into docs/.
 uv.lock                     the resolved dependency lock uv installs from.

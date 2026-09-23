@@ -4,7 +4,7 @@
 
 Zhang et al. (arXiv 2411.11525, "Reliable poisoned sample detection against
 backdoor attacks enhanced by sharpness-aware minimization", local copy under
-`papers/reliable_poisoned_sample_detection_against_backdoor_attacks_enhanced_by_sharpness_aware_minimization/`)
+`literature/reliable_poisoned_sample_detection_against_backdoor_attacks_enhanced_by_sharpness_aware_minimization/`)
 claim that training a backdoored model with SAM, rather than vanilla SGD,
 widens the gap between poisoned and clean features at the penultimate layer,
 which makes off-the-shelf training-set poison detectors more effective. This

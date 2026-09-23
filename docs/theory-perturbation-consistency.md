@@ -1,5 +1,12 @@
 # Perturbation consistency as curvature estimation
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The Gaussian noise result it treats as the project's most
+> consequential finding (prediction 1, H23) is now recorded as a refutation of
+> a broader mechanism claim rather than a confirmation, so the framing of
+> "removal is not required" no longer carries the headline result.
+
 The contribution this project can make that no prior paper makes is not a better
 detector. It is a statement about what the whole family of perturbation
 consistency detectors is measuring, which falls out of a second order expansion
@@ -412,8 +419,7 @@ story available to it, and it matches the best structured masks.
 
 ## The direction is causally sufficient, and it is not sparse
 
-Two measurements from `notebooks/07-locating-the-backdoor.ipynb` constrain what
-the backdoor can be.
+Two measurements constrain what the backdoor can be.
 
 Adding the backdoor direction to a clean batch's residual stream at the peak
 layer, with no trigger in the pixels:

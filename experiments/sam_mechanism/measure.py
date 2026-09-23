@@ -1,6 +1,6 @@
 """Whether SAM training amplifies the trigger's footprint or widens PSBD's margin.
 
-The SAM paper (Zhang et al., arXiv 2411.11525, papers/reliable_poisoned_sample_
+The SAM paper (Zhang et al., arXiv 2411.11525, literature/reliable_poisoned_sample_
 detection_against_backdoor_attacks_enhanced_by_sharpness_aware_minimization/,
 Section 3) claims sharpness-aware minimisation amplifies backdoor neurons, which
 is why poisoned samples separate more cleanly downstream. On our ViT-B/16

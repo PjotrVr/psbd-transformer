@@ -210,7 +210,7 @@ computes that the curvature peaks near `p = 0.789` and vanishes at both `p = 0.5
 
 The confidence-driven-sampling attack (He et al., TMLR 2024, arXiv:2310.05263) is the
 same idea reached by poison **selection** rather than by relabelling probability, and
-`papers/reference/README.md` already flags it as "the adaptive threat model our
+`literature/reference/README.md` already flags it as "the adaptive threat model our
 theory predicts".
 
 So H-A's instinct was right and its target was wrong. There is a
@@ -1158,7 +1158,7 @@ document lists as genuinely new, at number 3.
 | **`A5-low-confidence-backdoor.md`'s central proof** | **Wrong as stated**, and it is a sibling page in this same directory. It shows the attacker gains nothing by moving to the uniform point, which is true, and concludes the low-confidence backdoor cannot beat PSU, which does not follow. The attacker's optimum is the peak between the 2 zeros, and LSBA's rule lands on 97.0% of it. Section 2.4 has the closed form. **One of the 2 pages has to change before either is cited** |
 | PSBD and STRIP fuse into something better (H14) | STRIP's **own paper** publishes a free adaptive attack against it, CA 86.61% and ASR 99.95%, and section 8.1 adds 2 more attacks (WB, DEFEAT) that flatten STRIP's entropy as a side effect of aiming elsewhere. The fusion's STRIP half is the cheapest component in our pipeline to remove |
 | All-to-all is a PSBD limitation | Section 7.2: it is a **family-wide** limitation covering MM-BD, Neural Cleanse, Model X-ray and TeCo as well. Reporting it as ours alone understates the finding and overstates the weakness |
-| Our comparison set is a fair baseline set | Our IBD-PSC is a LayerNorm reinterpretation of a BatchNorm-only method (section 1.1). `papers/reference/README.md` already flags that our SCALE-UP and IBD-PSC were operator ports rather than the published methods. And `psbd/detectors/teco.py` records that both official TeCo implementations compound corruptions across severities, contradicting their own Algorithm 1, so a literal implementation will not reproduce the published numbers |
+| Our comparison set is a fair baseline set | Our IBD-PSC is a LayerNorm reinterpretation of a BatchNorm-only method (section 1.1). `literature/reference/README.md` already flags that our SCALE-UP and IBD-PSC were operator ports rather than the published methods. And `psbd/detectors/teco.py` records that both official TeCo implementations compound corruptions across severities, contradicting their own Algorithm 1, so a literal implementation will not reproduce the published numbers |
 
 ### 9.5 What would most change these verdicts
 

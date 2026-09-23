@@ -1,5 +1,9 @@
 # PSBD-ViT: merged top two at sigma 0.8 (before_attention_norm_token_mask + before_attention_residual_token_mask)
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The fusion pairs the current recommended placement with `before_attention_residual_token_mask`, which the current panel does not rank as a top placement, so the case for fusing these two specifically no longer holds.
+
 A **fused** configuration. Its members are swept separately and combined at the score
 level with the min-rank rule against the clean-validation reference, so a sample is
 flagged when ANY member finds it suspicious. This needs no extra training and no extra

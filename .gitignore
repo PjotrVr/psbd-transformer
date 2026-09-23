@@ -20,10 +20,11 @@ backdoor_bench_checkpoints/
 backdoor_bench_weights/
 scratch/
 
-# Paper sources, kept on disk for reference but never committed: two arXiv
-# tarballs plus their extracted figure trees are 35MB of binaries that would
-# live in history forever.
-papers/
+# Other people's papers, kept on disk for reading and for porting from, never
+# committed: the arXiv tarballs plus their extracted figure trees are tens of
+# megabytes of binaries that would live in history forever. Our own paper is
+# paper/, which is tracked.
+literature/
 
 # results/ holds three very different things. The raw PSBD stage-1 tensors are
 # large, regenerable, and stay out.

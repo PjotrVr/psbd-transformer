@@ -9,8 +9,8 @@
     "configs/psbd_basis.json",
     "checkpoints/<benign reference>/args.json"
   ],
-  "written_at": "2026-09-11T04:05:49.400460+00:00",
-  "git_commit": "f2d5782d3d0417e887985131455a9b38b72c2b27-dirty",
+  "written_at": "2026-09-23T11:15:19.785678+00:00",
+  "git_commit": "1a0f3cf2754543268bfb78a46b3ba2d037f8ed7a-dirty",
   "macros": {
     "AdaptiveShiftTarget": {
       "value": "0.8",
@@ -81,7 +81,7 @@
       "meaning": "the highest panel poison rate"
     },
     "BasisSize": {
-      "value": "24",
+      "value": "27",
       "meaning": "placements the basis declares for every panel cell"
     },
     "RecommendedRateLadderLow": {

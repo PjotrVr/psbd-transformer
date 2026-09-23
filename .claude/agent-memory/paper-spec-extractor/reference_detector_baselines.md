@@ -1,11 +1,11 @@
 ---
 name: reference-detector-baselines
-description: Statistic type and ViT-portability blockers for the four detector baselines (STRIP, SCALE-UP, IBD-PSC, TeCo) whose PDFs sit in papers/reference/backdoor-detectors/
+description: Statistic type and ViT-portability blockers for the four detector baselines (STRIP, SCALE-UP, IBD-PSC, TeCo) whose PDFs sit in literature/reference/backdoor-detectors/
 metadata:
   type: reference
 ---
 
-The four baseline detector PDFs live in `papers/reference/backdoor-detectors/`, PSBD itself in `papers/reference/prior-art/`. What each statistic consumes, which is what decides whether it ports to ViT at all:
+The four baseline detector PDFs live in `literature/reference/backdoor-detectors/`, PSBD itself in `literature/reference/prior-art/`. What each statistic consumes, which is what decides whether it ports to ViT at all:
 
 - STRIP (arXiv 1902.06531v2, ACSAC 2019): Shannon entropy, log base 2, over the FULL softmax vector of superimposed images. Needs soft outputs and a held-out clean image pool to superimpose.
 - SCALE-UP (ICLR 2023): hard label only (argmax agreement under pixel scaling). Architecture agnostic.

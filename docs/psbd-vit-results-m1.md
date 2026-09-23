@@ -1,5 +1,9 @@
 # PSBD-ViT: final results at m = 1, and how to fix the weak cases
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. Its numbers moved but its conclusions stand.
+
 **Setting.** All-to-one and clean-label only, which is what PSBD itself does and what the
 literature reports: a fraction of images from every class is stamped with the trigger and
 relabelled to one target class. All-to-all and the `all_to_m` family are out of scope here.

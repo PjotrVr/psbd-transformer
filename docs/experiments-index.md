@@ -3,7 +3,7 @@
 1 row per directory under `experiments/`, the question its README states, where
 its output lands, and the date its README (or, where there is none, its
 script) was last written. Directories with no README are marked, and their
-question is taken from their script's docstring instead. 47 to 48 of the 51
+question is taken from their script's docstring instead. 47 to 48 of the 62
 directories were added or substantially rewritten on 2026-09-11 during the
 reorganisation, so most dates below cluster there. See `experiments/README.md`
 for the package rule these directories follow.

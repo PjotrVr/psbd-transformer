@@ -3,8 +3,8 @@
   "inputs": [
     "docs/hypothesis/README.md"
   ],
-  "written_at": "2026-09-11T04:05:37.491942+00:00",
-  "git_commit": "f2d5782d3d0417e887985131455a9b38b72c2b27-dirty",
+  "written_at": "2026-09-23T11:14:44.533177+00:00",
+  "git_commit": "1a0f3cf2754543268bfb78a46b3ba2d037f8ed7a-dirty",
   "macros": {
     "HypothesisCount": {
       "value": "49",
@@ -19,7 +19,7 @@
       "meaning": "hypotheses whose leading verdict is supported or confirmed"
     },
     "HypothesisPartial": {
-      "value": "4",
+      "value": "5",
       "meaning": "hypotheses whose leading verdict is partial"
     },
     "HypothesisInconclusive": {

@@ -1,5 +1,12 @@
 # What this project can claim, and how strongly
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The mechanism claim it argues toward is now the settled
+> account (a backdoor direction routed through attention), but the numbers
+> supporting it below predate the H23 gaussian noise refutation and the 65-cell
+> basis panel.
+
 Written after a literature review found that the framing this project had been
 building toward is partly published already. Everything below is graded by how
 well it survives that, and by whether the number behind it currently reproduces.

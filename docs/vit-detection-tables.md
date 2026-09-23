@@ -1,5 +1,11 @@
 # ViT-B/16 detection panel
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. The recommended placement and its ranking against the
+> published ConvNet placement hold, but the per-cell AUROC figures below do not
+> match the 65-cell basis panel.
+
 `token_mask @ before_attention_norm`: whole patch tokens dropped from the
 residual stream entering attention in every one of the 12 encoder blocks,
 CLS never masked. Probe rate per cell is the one whose clean-validation

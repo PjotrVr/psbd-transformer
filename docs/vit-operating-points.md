@@ -1,5 +1,9 @@
 # ViT-B/16 detection at deployment operating points
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. Its numbers moved but its conclusions stand.
+
 `token_mask @ before_attention_norm`, the recommended configuration. Probe rate chosen
 per cell as the one whose clean-validation shift ratio is closest to 0.8. PSU variant
 fractional, one-sided. Base checkpoints only: `_evade_*` folders are adversarially

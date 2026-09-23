@@ -1,14 +1,26 @@
 # PSBD on Vision Transformers: Complete Results
 
+> **Superseded.** Written against the 48-cell panel, before the rebuild to
+> the 105-cell panel read on the 65 clearing cells (`paper/headline.tex`,
+> `results/coverage/COVERAGE.md`). The mechanism claim below, that gaussian
+> noise with no removal matches or beats all structured masks, is refuted:
+> gaussian minus token_mask at the same site is -0.206
+> (`docs/hypothesis/H23-gaussian-noise-control.md`). The numbers in section 1
+> are from the 48-cell era and do not match the current headline of +0.103 at
+> the matched rule. Retained for the record.
+
 Prediction Shift Backdoor Detection (PSBD) adapted from ConvNets to ViT-B/16
 and Swin-S. The published ConvNet recipe (dropout after the residual add)
 transfers to ViT but is far from optimal. Searching over 27 operator/position
 combinations recovers +0.166 mean AUROC at matched shift ratio at 1% poison rate
 on CIFAR-100 (token_mask at before_attention_norm, n=4), and +0.089 over the full
-48-cell panel. The
-hardest setting. The method works because backdoored predictions have larger
-decision margin under any perturbation, not because dropout removes specific
-neurons (gaussian noise with no removal matches or beats all structured masks).
+48-cell panel on CIFAR-100 at 1% poisoning, the
+hardest setting. The mechanism is a backdoor direction routed through attention
+from the trigger's patch tokens to the class token, not decision-margin
+estimation under an arbitrary perturbation
+(`docs/hypothesis/H23-gaussian-noise-control.md`). Gaussian noise with no
+removal does not match structured masks: at the same site it trails token
+masking by -0.206.
 The backdoor itself is a single linear direction in the residual stream that
 crystallizes at layers 8 to 10 with a phase transition, carried by 3 shared
 attention heads. 40 hypotheses tested, 27 operator/position configurations

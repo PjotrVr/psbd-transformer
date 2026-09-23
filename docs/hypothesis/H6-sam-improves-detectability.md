@@ -14,7 +14,7 @@ this line, including the +0.009 aggregate the 2026-09-07 drop rested on.
 
 ## Why this is a gap and not a reproduction
 
-`papers/reliable_poisoned_sample_detection_.../` claims SAM training amplifies the
+`literature/reliable_poisoned_sample_detection_.../` claims SAM training amplifies the
 backdoor and makes poisoned samples more detectable. Read closely, the claim is
 narrower than it sounds:
 

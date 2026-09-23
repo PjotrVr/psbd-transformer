@@ -70,7 +70,7 @@ def build_swin(num_classes: int) -> nn.Module:
 def build_resnet18(num_classes: int) -> nn.Module:
     """ResNet-18 at CIFAR scale, trained from scratch, the PSBD paper's own control.
 
-    The PSBD paper (papers/PSBD/sec/5_experiments.tex, sec/7_appendix.tex) trains
+    The PSBD paper (literature/PSBD/sec/5_experiments.tex, sec/7_appendix.tex) trains
     ResNet-18 on CIFAR-10 and GTSRB at their native 3x32x32 resolution, excludes
     dropout, data augmentation and data normalization for the attacks in scope
     here (BadNets, Blend) and states no pretrained weights, so this returns the

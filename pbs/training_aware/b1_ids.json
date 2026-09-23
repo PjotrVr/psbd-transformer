@@ -1,0 +1,10 @@
+{
+ "vit_cifar10_tact_0_05": "1060903",
+ "vit_cifar100_tact_0_05": "1060903",
+ "vit_cifar10_wanet_0_05": "1060903",
+ "vit_cifar10_bpp_0_05": "1060903",
+ "vit_cifar10_wanet_0_1": "1060903",
+ "vit_cifar10_sig_0_1": "1060903",
+ "vit_tiny_tact_0_05": "1060904",
+ "vit_tiny_wanet_0_05": "1060904"
+}

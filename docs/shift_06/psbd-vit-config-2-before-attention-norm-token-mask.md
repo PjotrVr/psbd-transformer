@@ -1,5 +1,9 @@
 # PSBD-ViT: `before_attention_norm_token_mask`
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. Its numbers moved but its conclusions stand, this is the current recommended placement, though the mean AUROC read off this smaller sweep does not match the panel headline of 0.926 at the matched 0.6 rule.
+
 The single placement `before_attention_norm_token_mask`.
 
 Each member is read at **its own** perturbation rate, chosen so the clean-validation

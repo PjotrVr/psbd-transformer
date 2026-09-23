@@ -1,5 +1,9 @@
 # PSBD-ViT: `before_attention_norm_token_mask`
 
+> **Superseded.** Written against the 48-cell panel. The current numbers are in
+> `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
+> for the record. Its numbers moved but its conclusions stand, this is the current recommended placement at the adaptive shift rate, and its ranking as the top configuration agrees with the current panel headline.
+
 The single placement `before_attention_norm_token_mask`.
 
 Each member is read at **its own** perturbation rate, chosen so the clean-validation

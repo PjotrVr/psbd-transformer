@@ -7,7 +7,7 @@
 There is no single best dropout position. The best position for an attack is the
 one that sits where that attack's backdoor direction is still being written into
 the residual stream, and the companion paper
-(`papers/backdoor_directions/`) shows that location is attack-dependent:
+(`literature/backdoor_directions/`) shows that location is attack-dependent:
 
 - **Static patch triggers** (BadNet, and by extension Blend): the direction only
   reaches the `[CLS]` token in the **final few layers**, because early layers have
