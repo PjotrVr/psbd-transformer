@@ -1,0 +1,51 @@
+{
+  "generator": "scripts/paper/tab_attention.py",
+  "inputs": [
+    "results/coverage/coverage.json (71 clearing cells)",
+    "results/*/psbd_metrics.json"
+  ],
+  "written_at": "2026-09-23T16:56:37.539470+00:00",
+  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
+  "macros": {
+    "AttentionProbesTotal": {
+      "value": "19",
+      "meaning": "attention-side probes measured on at least 5 clearing models"
+    },
+    "AttentionProbesInBasis": {
+      "value": "11",
+      "meaning": "of those the pre-registered basis declares"
+    },
+    "AttentionProbesOutsideBasis": {
+      "value": "8",
+      "meaning": "of those the basis does not declare, so they sit outside the ranking"
+    },
+    "AttentionProbesBestOutside": {
+      "value": "0.913",
+      "meaning": "best mean AUROC among the probes outside the basis, before_attention_gaussian"
+    },
+    "AttentionProbesBestOutsideName": {
+      "value": "noise, attention input after norm",
+      "meaning": "the probe outside the basis with the highest mean AUROC"
+    },
+    "AttentionProbesBestOutsideN": {
+      "value": "19",
+      "meaning": "models behind attention_probes_best_outside"
+    },
+    "AttentionProbesBeatingRecommended": {
+      "value": "0",
+      "meaning": "probes outside the basis whose mean AUROC exceeds the recommended placement"
+    },
+    "AttentionHeadMaskAuroc": {
+      "value": "0.896",
+      "meaning": "mean AUROC of masking whole attention heads at the adaptive rule"
+    },
+    "AttentionHeadMaskN": {
+      "value": "37",
+      "meaning": "clearing models carrying the head-masking probe"
+    },
+    "AttentionHeadMaskTprTen": {
+      "value": "0.74",
+      "meaning": "mean TPR of head masking at a 10% false-positive budget"
+    }
+  }
+}

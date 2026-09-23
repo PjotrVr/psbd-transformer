@@ -3,8 +3,8 @@
   "inputs": [
     "results/<folder>/psbd_metrics.json"
   ],
-  "written_at": "2026-09-23T16:08:53.938519+00:00",
-  "git_commit": "afe5fd94d50b77f30f654fe075b768040987adef-dirty",
+  "written_at": "2026-09-23T16:55:09.913607+00:00",
+  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
   "plotted": {
     "attack_curves": {
       "badnet_a2o": [

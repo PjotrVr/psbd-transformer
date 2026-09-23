@@ -3,8 +3,8 @@
   "inputs": [
     "results/_experiments/psu_vs_confidence/psu_vs_confidence.json"
   ],
-  "written_at": "2026-09-23T16:04:39.145234+00:00",
-  "git_commit": "afe5fd94d50b77f30f654fe075b768040987adef-dirty",
+  "written_at": "2026-09-23T16:50:49.551440+00:00",
+  "git_commit": "d4a8014354b8fcc8d014beec50fef60ed46fa47d-dirty",
   "macros": {
     "ConfidenceNullCheckpoints": {
       "value": "28",

@@ -563,7 +563,7 @@
       ]
     },
     {
-      "id": "before_attention_residual_dropout",
+      "id": "before_attention_residual",
       "position": "before_attention_residual",
       "operator": "dropout",
       "block_range": null,

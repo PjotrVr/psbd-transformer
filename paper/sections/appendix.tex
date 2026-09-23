@@ -17,7 +17,7 @@ A model whose attack success is below 0.85 prints its ASR and CA but no detectio
 \section{The placement basis}
 \label{app:basis}
 
-\Cref{tab:basis-declaration} lists the placements every model was swept over. A placement is a site (where the perturbation is injected, \cref{fig:vit-block}) paired with a perturbation (what the hook does), optionally restricted to a band of blocks. The family column groups sites by where they sit relative to the residual stream. Input-side sites perturb a sublayer's input before its LayerNorm. Residual-adjacent sites perturb a branch output just before its residual add or the stream just after it. The structured sites perturb attention heads and MLP hidden units, and the ported sites come from other detectors, scaling input pixels as SCALE-UP does and scaling a LayerNorm's gain as IBD-PSC does. The rates column is the ladder each placement was swept over. Masks and dropout use a share of the tensor, Gaussian noise a multiple of the tensor's standard deviation. The last entries were added after the first had been read, to fill \cref{tab:staircase-residual,tab:staircase-dropout-sites,tab:staircase-bands}. \BasisMeasuredSize{} of the \BasisSize{} declared placements reach the adaptive shift target somewhere on the panel. \BasisUnmeasuredSize{} does not, and every claim about the basis is restricted to the placements common to every compared cell.
+\Cref{tab:basis-declaration} lists the placements every model was swept over. A placement is a site (where the perturbation is injected, \cref{fig:vit-block}) paired with a perturbation (what the hook does), optionally restricted to a band of blocks. The family column groups sites by where they sit relative to the residual stream. Input-side sites perturb a sublayer's input before its LayerNorm. Residual-adjacent sites perturb a branch output just before its residual add or the stream just after it. The structured sites perturb attention heads and MLP hidden units, and the ported sites come from other detectors, scaling input pixels as SCALE-UP does and scaling a LayerNorm's gain as IBD-PSC does. The rates column is the ladder each placement was swept over. Masks and dropout use a share of the tensor, Gaussian noise a multiple of the tensor's standard deviation. The last entries were added after the first had been read, to fill \cref{tab:staircase-residual,tab:staircase-dropout-sites,tab:staircase-bands}. All \BasisSize{} declared placements now reach the adaptive shift target somewhere on the panel. Coverage is still uneven across them, so every claim about the basis is restricted to the placements common to every compared cell.
 
 \input{tables/basis_declaration}
 \FloatBarrier
@@ -25,6 +25,16 @@ A model whose attack success is below 0.85 prints its ASR and CA but no detectio
 \Cref{tab:basis-ranking} ranks the placements with a complete sweep by mean AUROC, and gives each placement's lowest single-model AUROC. The top 3 placements all mask whole tokens on an input to attention. The gain-scaling and noise placements sit in the bottom half, and scaling input pixels is last. PSBD-TM is second by 0.001 behind token masking on the attention branch before its residual add. We recommend it over the nominal first because its site has the mechanistic reading of \cref{sec:mechanism} and because it is the more stable of the 2 across seeds. \Cref{fig:basis} plots this table.
 
 \input{tables/basis_ranking}
+\FloatBarrier
+
+\section{Every attention-side probe}
+\label{app:attention}
+
+Attention is the only operation in a ViT block that moves information between tokens, so the mechanism of \cref{sec:mechanism} makes it the interesting sublayer to perturb. We measured \AttentionProbesTotal{} probes on it, \AttentionProbesInBasis{} of them declared by the basis and \AttentionProbesOutsideBasis{} not.
+
+\Cref{tab:attention-probes} gives them all. The probes the basis does not declare cannot join the ranking of \cref{tab:basis-ranking}, because a placement added to a ranking after its score is read is the oracle selection the declaration exists to prevent, so they are reported separately with their own coverage. The point of reporting them is that \AttentionProbesBeatingRecommended{} of them beats the placement we recommend. The best is \AttentionProbesBestOutsideName{} at \AttentionProbesBestOutside{} on \AttentionProbesBestOutsideN{} models, below the recommended placement and on far fewer models. Masking whole attention heads, the most attention-specific probe available, reads \AttentionHeadMaskAuroc{} on \AttentionHeadMaskN{} models with \AttentionHeadMaskTprTen{} TPR at a 10\% budget, which places it among the stronger probes without displacing token masking at the attention input.
+
+\input{tables/attention_probes}
 \FloatBarrier
 
 \section{Selection protocol}

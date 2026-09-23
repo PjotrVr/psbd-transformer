@@ -278,6 +278,96 @@
       "results/regime_router.json"
     ]
   },
+  "AttentionProbesTotal": {
+    "value": "19",
+    "meaning": "attention-side probes measured on at least 5 clearing models",
+    "generator": "scripts/paper/tab_attention.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "AttentionProbesInBasis": {
+    "value": "11",
+    "meaning": "of those the pre-registered basis declares",
+    "generator": "scripts/paper/tab_attention.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "AttentionProbesOutsideBasis": {
+    "value": "8",
+    "meaning": "of those the basis does not declare, so they sit outside the ranking",
+    "generator": "scripts/paper/tab_attention.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "AttentionProbesBestOutside": {
+    "value": "0.913",
+    "meaning": "best mean AUROC among the probes outside the basis, before_attention_gaussian",
+    "generator": "scripts/paper/tab_attention.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "AttentionProbesBestOutsideName": {
+    "value": "noise, attention input after norm",
+    "meaning": "the probe outside the basis with the highest mean AUROC",
+    "generator": "scripts/paper/tab_attention.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "AttentionProbesBestOutsideN": {
+    "value": "19",
+    "meaning": "models behind attention_probes_best_outside",
+    "generator": "scripts/paper/tab_attention.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "AttentionProbesBeatingRecommended": {
+    "value": "0",
+    "meaning": "probes outside the basis whose mean AUROC exceeds the recommended placement",
+    "generator": "scripts/paper/tab_attention.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "AttentionHeadMaskAuroc": {
+    "value": "0.896",
+    "meaning": "mean AUROC of masking whole attention heads at the adaptive rule",
+    "generator": "scripts/paper/tab_attention.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "AttentionHeadMaskN": {
+    "value": "37",
+    "meaning": "clearing models carrying the head-masking probe",
+    "generator": "scripts/paper/tab_attention.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
+  "AttentionHeadMaskTprTen": {
+    "value": "0.74",
+    "meaning": "mean TPR of head masking at a 10% false-positive budget",
+    "generator": "scripts/paper/tab_attention.py",
+    "inputs": [
+      "results/coverage/coverage.json (71 clearing cells)",
+      "results/*/psbd_metrics.json"
+    ]
+  },
   "BasisRankRecommendedAdaptive": {
     "value": "1",
     "meaning": "rank of the recommended placement among the basis by adaptive-rule mean AUROC",
@@ -329,7 +419,7 @@
     ]
   },
   "BasisMeasuredSize": {
-    "value": "26",
+    "value": "27",
     "meaning": "basis placements whose rate ladder reaches the adaptive target on the panel",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -339,7 +429,7 @@
     ]
   },
   "BasisUnmeasuredSize": {
-    "value": "1",
+    "value": "0",
     "meaning": "basis placements the panel declares but never reaches at the adaptive target",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -1705,7 +1795,7 @@
     ]
   },
   "FamilyGapConfoundedMatched": {
-    "value": "$-$0.029",
+    "value": "$-$0.025",
     "meaning": "mean paired AUROC gap under the basis file's operator-mixing family tags, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1715,7 +1805,7 @@
     ]
   },
   "FamilyGapConfoundedMatchedLow": {
-    "value": "$-$0.047",
+    "value": "$-$0.043",
     "meaning": "lower bound of the 95% bootstrap interval on family_gap_confounded_matched",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1725,7 +1815,7 @@
     ]
   },
   "FamilyGapConfoundedMatchedHigh": {
-    "value": "$-$0.010",
+    "value": "$-$0.006",
     "meaning": "upper bound of the 95% bootstrap interval on family_gap_confounded_matched",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -2635,8 +2725,8 @@
     ]
   },
   "AgreementAcrossFamiliesClean": {
-    "value": "0.509",
-    "meaning": "B1: mean clean-split PSU Spearman rho between input-side and residual-adjacent placements, 77 placement pairs",
+    "value": "0.512",
+    "meaning": "B1: mean clean-split PSU Spearman rho between input-side and residual-adjacent placements, 88 placement pairs",
     "generator": "scripts/paper/mech_operator_agreement.py",
     "inputs": [
       "results/<folder>/psbd/<placement>/rate_*_{clean,backdoor}.pt"
@@ -6607,8 +6697,8 @@
     ]
   },
   "SwinGainRecommendedMinusPublished": {
-    "value": "+0.115",
-    "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after both residual adds, adaptive rule, over 80 cells",
+    "value": "+0.116",
+    "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after both residual adds, adaptive rule, over 81 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",
@@ -6616,7 +6706,7 @@
     ]
   },
   "SwinGainRecommendedMinusPublishedN": {
-    "value": "80",
+    "value": "81",
     "meaning": "cells behind swin_gain_recommended_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -6625,7 +6715,7 @@
     ]
   },
   "SwinGainRecommendedMinusPublishedLow": {
-    "value": "+0.070",
+    "value": "+0.075",
     "meaning": "lower bootstrap bound of swin_gain_recommended_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -6715,8 +6805,8 @@
     ]
   },
   "SwinGainRecommendedMinusTwin": {
-    "value": "+0.136",
-    "meaning": "Swin paired AUROC gain, token mask, attention input minus token mask, attention output before the add, adaptive rule, over 80 cells",
+    "value": "+0.133",
+    "meaning": "Swin paired AUROC gain, token mask, attention input minus token mask, attention output before the add, adaptive rule, over 81 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",
@@ -6724,7 +6814,7 @@
     ]
   },
   "SwinGainRecommendedMinusTwinN": {
-    "value": "80",
+    "value": "81",
     "meaning": "cells behind swin_gain_recommended_minus_twin",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -6733,7 +6823,7 @@
     ]
   },
   "SwinGainRecommendedMinusTwinLow": {
-    "value": "+0.086",
+    "value": "+0.085",
     "meaning": "lower bootstrap bound of swin_gain_recommended_minus_twin",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -6742,7 +6832,7 @@
     ]
   },
   "SwinGainRecommendedMinusTwinHigh": {
-    "value": "+0.187",
+    "value": "+0.185",
     "meaning": "upper bootstrap bound of swin_gain_recommended_minus_twin",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -6851,7 +6941,7 @@
   },
   "SwinReportHalfTwinAuroc": {
     "value": "0.886",
-    "meaning": "Swin mean AUROC of the twin placement on the report half, 36 cells",
+    "meaning": "Swin mean AUROC of the twin placement on the report half, 37 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",
@@ -6859,7 +6949,7 @@
     ]
   },
   "SwinReportHalfTwinN": {
-    "value": "36",
+    "value": "37",
     "meaning": "Swin cells behind swin_report_half_twin_auroc",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
@@ -6868,8 +6958,8 @@
     ]
   },
   "SwinReportHalfTwinGap": {
-    "value": "+0.099",
-    "meaning": "Swin paired AUROC gap, recommended minus twin, report half, 36 cells",
+    "value": "+0.095",
+    "meaning": "Swin paired AUROC gap, recommended minus twin, report half, 37 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",
@@ -6967,8 +7057,8 @@
     ]
   },
   "SwinPublishedTprOneZero": {
-    "value": "0.65",
-    "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.10 budget over 80 cells",
+    "value": "0.64",
+    "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.10 budget over 81 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",
@@ -6977,7 +7067,7 @@
   },
   "SwinPublishedTprTwoZero": {
     "value": "0.74",
-    "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.20 budget over 80 cells",
+    "meaning": "Swin mean TPR of dropout, after both residual adds at the q0.20 budget over 81 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",
@@ -6994,8 +7084,8 @@
     ]
   },
   "SwinPublishedAurocAdaptive": {
-    "value": "0.855",
-    "meaning": "Swin mean AUROC of the published placement at the adaptive rule over 80 cells",
+    "value": "0.852",
+    "meaning": "Swin mean AUROC of the published placement at the adaptive rule over 81 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
       "results/swin_*/psbd_metrics.json (90 implanted cells)",

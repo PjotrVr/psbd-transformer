@@ -98,3 +98,33 @@ def test_the_quantile_ladder_carries_the_reported_operating_points():
     assert 0.10 in PSBD_QUANTILES
     assert 0.20 in PSBD_QUANTILES
     assert PSBD_QUANTILES == tuple(sorted(PSBD_QUANTILES))
+
+
+def test_every_declared_basis_id_is_the_name_its_own_sweep_would_write():
+    """A basis id has to equal the cache directory cli.sweep builds for it.
+
+    The declaration addresses a placement by its cache directory name, so an id
+    that cache_config_name would never produce names a directory that cannot
+    exist. Nothing then reports the placement as missing, because the ledger
+    counts what is on disk against what is declared and neither side has it: it
+    reads as declared-but-unswept forever. That is what happened to dropout on
+    the attention branch output, declared as before_attention_residual_dropout
+    while its 69 sweeps sat under before_attention_residual, which left it out of
+    the basis ranking for the whole project.
+    """
+    from cli.sweep import cache_config_name
+
+    with open(BASIS_PATH) as handle:
+        declaration = json.load(handle)
+
+    mismatched = []
+    for entry in declaration["basis"]:
+        block_range = tuple(entry["block_range"]) if entry.get("block_range") else None
+        built = cache_config_name(entry["position"], block_range, entry["operator"])
+        if built != entry["id"]:
+            mismatched.append((entry["id"], built))
+
+    assert mismatched == [], (
+        "these basis ids name a cache directory their own position and operator "
+        f"would not produce: {mismatched}"
+    )
