@@ -1,14 +1,14 @@
 """Structural tests for the hook-based dropout registry.
 
 The mechanism's invariant is that plugging a position only adds forward hooks (or
-one swapped forward, for the residual position) and never mutates the model:
+1 swapped forward, for the residual position) and never mutates the model:
 unplug must leave the state_dict byte-identical, and the attachment count must
-match the registry (one per targeted block, or one at model level). The Swin
+match the registry (1 per targeted block, or 1 at model level). The Swin
 shared-stochastic_depth finding, the reason its before_*_residual positions hook
 attn/mlp directly, is confirmed here too.
 
 after_attention_residual gets extra scrutiny because it is the only position
-realized by swapping a block's forward rather than by a hook. Two properties make
+realized by swapping a block's forward rather than by a hook. 2 properties make
 that swap trustworthy: at rate 0 it must reproduce torchvision's own forward
 bit-for-bit (so the rewrite introduced no algebraic drift), and it must perturb
 strictly more than a pre-hook on ln_2 does (so it really reaches the skip path,
@@ -39,8 +39,8 @@ def swin() -> nn.Module:
     return build_swin(num_classes=10)
 
 
-# after_embedding is the one model-level position, so it adds exactly 1
-# attachment; every other position is per-block, so it adds one per block.
+# after_embedding is the 1 model-level position, so it adds exactly 1
+# attachment. Every other position is per-block, so it adds 1 per block.
 VIT_HOOKS_PER_POSITION = {name: 12 for name in SINGLE_POSITION_NAMES}
 VIT_HOOKS_PER_POSITION["after_embedding"] = 1
 
@@ -109,9 +109,9 @@ def test_swin_unplug_restores_state_dict_exactly(swin, position):
 def test_swin_stochastic_depth_fires_twice_per_block(swin):
     """The finding behind hooking attn/mlp instead of stochastic_depth.
 
-    self.stochastic_depth is one instance called twice per block, so a hook on it
+    self.stochastic_depth is 1 instance called twice per block, so a hook on it
     cannot tell the attention branch from the MLP branch. A counting hook proves
-    the two calls per block: exactly 2 per SwinTransformerBlock.
+    the 2 calls per block: exactly 2 per SwinTransformerBlock.
     """
     first_block = next(
         module for module in swin.modules() if isinstance(module, SwinTransformerBlock)
@@ -131,7 +131,7 @@ def test_swin_stochastic_depth_fires_twice_per_block(swin):
 
 
 def test_plugged_dropout_actually_perturbs_forward(vit):
-    """A plugged position must change the output; unplug must restore it."""
+    """A plugged position must change the output. Unplug must restore it."""
     vit.eval()
     x = torch.randn(2, 3, 32, 32)
     with torch.inference_mode():

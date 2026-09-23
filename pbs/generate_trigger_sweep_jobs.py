@@ -1,19 +1,19 @@
 """Trigger dose-response sweeps: the causal test, and the WaNet fix.
 
-Two sweeps, one per trigger family, both varying trigger STRENGTH while holding attack
+2 sweeps, 1 per trigger family, both varying trigger STRENGTH while holding attack
 family, dataset, target label, poison rate and schedule fixed.
 
 BADNET PATCH SIZE is the additive-trigger arm. The mechanism under test says token masking
 beats channel masking because it removes a spatially concentrated trigger, and the evidence
 so far is a correlation across attacks whose footprint is constant within an attack, so it is
-really 8 points, not 67. Varying patch size inside ONE attack manipulates the cause instead
+really 8 points, not 67. Varying patch size inside 1 attack manipulates the cause instead
 of observing it.
 
 WANET STRENGTH is the geometric-trigger arm and also fixes an attack that does not implant.
 WaNet reads ASR 0.057 to 0.178 at 1% poisoning. The implementation is faithful: the warp
 displacement is `strength / 2` pixels at the size the attack is built at, about 0.17 px or
-0.54% of width at the paper's s=0.5 on a 32 px image. It is simply too subtle to learn from
-few poisoned samples. Note Tiny is built at 64 px, so the SAME strength gives half the
+0.54% of width at the paper's s=0.5 on a 32 px image, too subtle to learn from few
+poisoned samples. Note Tiny is built at 64 px, so the SAME strength gives half the
 relative warp (0.27%), which is why Tiny needs the highest rates.
 
 Nothing existing is overwritten: every run writes to its own folder tagged with the override.

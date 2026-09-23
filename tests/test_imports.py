@@ -2,7 +2,7 @@
 
 A reorganization's real failure mode is a broken import nobody happens to exercise
 in another test, so this is deliberately exhaustive rather than relying on the rest
-of the suite to catch it incidentally. One test case per module, parametrized, so a
+of the suite to catch it incidentally. 1 test case per module, parametrized, so a
 break names exactly which one broke.
 
 The list is walked from the filesystem rather than written out. A hand-maintained

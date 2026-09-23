@@ -1,4 +1,4 @@
-"""The filter normalisation's invariant and the surface's restoration, on the synthetic ViT.
+"""The filter normalization's invariant and the surface's restoration, on the synthetic ViT.
 
 The synthetic model carries every parameter kind the rule distinguishes: a
 rank-4 patch-embedding kernel, rank-2 Linear and fused qkv weights, the rank-3

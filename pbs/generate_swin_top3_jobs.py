@@ -1,18 +1,18 @@
 """Sweep the ViT top-3 configurations, and what their merges need, on the Swin panel.
 
 The placement ranking was established on ViT. Whether it transfers is a separate question, and
-it cannot be answered from cache: of the three configurations that lead on ViT, only
-`before_attention_norm_token_mask` exists on Swin at all, on 29 of 53 cells, and the other two
+it cannot be answered from cache: of the 3 configurations that lead on ViT, only
+`before_attention_norm_token_mask` exists on Swin at all, on 29 of 53 cells. The other 2 exist
 on none. Reading a transfer claim off that coverage would repeat the unequal-coverage defect
 the ViT basis was built to remove.
 
 Swept here, on every Swin cell whose attack implanted:
 
-    the three leading ViT configurations, so the comparison is like for like
+    the 3 leading ViT configurations, so the comparison is like for like
     pre_residual restricted to blocks 9-16 and 17-24, which the merges need
 
 Swin has 24 blocks against ViT's 12, so its depth bands are thirds of 8 rather than 4, and
-`blocks_5_8` has no Swin counterpart; `blocks_9_16` and `blocks_17_24` are the middle and late
+`blocks_5_8` has no Swin counterpart. `blocks_9_16` and `blocks_17_24` are the middle and late
 bands. Ladders follow what is already on disk so --skip-existing matches and nothing finished
 is recomputed.
 
@@ -108,7 +108,7 @@ def swin_cells(asr_bar: float) -> list[str]:
 
 
 def missing(cells, mask_seed: int = 0):
-    """(cell, target) pairs whose ladder is not already complete on disk, for one seed.
+    """(cell, target) pairs whose ladder is not already complete on disk, for 1 seed.
 
     A non-zero perturbation seed lives in its own cache directory, suffixed _seedN, so seed 0
     stays addressable by every cache written before the flag existed.
@@ -160,7 +160,7 @@ def main() -> None:
     for seed in args.mask_seeds:
         for cell, name, position, operator, band, rates in missing(cells, seed):
             gaps.append((cell, name, position, operator, band, rates, seed))
-    # Group so one invocation covers many cells that need the same thing, since
+    # Group so 1 invocation covers many cells that need the same thing, since
     # run_one_checkpoint loads a model once and loops the positions over it.
     grouped = {}
     for cell, _name, position, operator, band, rates, seed in gaps:

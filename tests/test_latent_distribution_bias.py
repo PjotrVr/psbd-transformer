@@ -4,17 +4,17 @@ are actually run at, rather than at the toy sizes the unit tests use.
 test_latent_distribution.py checks each statistic against a constructed answer,
 but it does so at 4 to 8 dimensions with hundreds of samples. The tools are run
 at 768 dimensions with 1000 samples, where several of them stop estimating what
-their docstring says. Three of the statistics fit their own direction, covariance
+their docstring says. 3 of the statistics fit their own direction, covariance
 or spectrum on the same samples they are then evaluated on, and the resulting
 bias scales with dim / num_samples, so it is invisible at 8 dimensions and
 dominant at 768.
 
-These tests pin that behaviour at the real operating point. They are not asserting
+These tests pin that behavior at the real operating point. They are not asserting
 that the bias is desirable. They exist so that the bias is a documented, measured
 quantity rather than a surprise inside a published number, and so that a later fix
 announces itself by failing here instead of silently changing a figure.
 
-Every case below has a known answer by construction: the two populations either
+Every case below has a known answer by construction: the 2 populations either
 differ by nothing at all, or differ by a controlled amount.
 """
 
@@ -70,7 +70,7 @@ def paired_null(num_samples: int, dim: int, seed: int, trigger_scale: float = 0.
 
 
 def unpaired_null(num_samples: int, dim: int, seed: int):
-    """Two independent draws from one distribution, so the truth is exactly chance.
+    """2 independent draws from 1 distribution, so the truth is exactly chance.
 
     Harsher than paired_null and closer to what a deep layer looks like once a
     strong trigger has decorrelated the 2 populations. It is the case where
@@ -99,7 +99,7 @@ def held_out_separation(
     """The same statistic with the direction fitted off the evaluated samples.
 
     The only difference from fitted_separation is which samples the direction is
-    estimated on, so any gap between the two is the cost of reusing the samples.
+    estimated on, so any gap between the 2 is the cost of reusing the samples.
     """
     num_samples = clean.shape[0]
     order = torch.randperm(num_samples, generator=torch.Generator().manual_seed(seed))
@@ -124,7 +124,7 @@ def held_out_separation(
 def test_separation_auroc_is_optimistically_biased_at_the_deployed_width():
     """The direction is fitted on the samples the AUROC is then measured on.
 
-    On two populations that differ by nothing but zero-mean noise the honest
+    On 2 populations that differ by nothing but zero-mean noise the honest
     answer is 0.5. At 768 dimensions and 1000 samples the fitted-direction
     estimate reads close to 0.58 instead, while the identical statistic with the
     direction fitted off the evaluated samples returns 0.5. The gap is entirely
@@ -179,7 +179,7 @@ def test_standardized_shift_has_a_positive_floor_on_data_with_no_shift():
 def test_standardized_shift_can_never_report_a_negative_effect():
     """The sign carries no information, because the direction points at the answer.
 
-    Swapping the two populations returns the same magnitude, so a reader cannot
+    Swapping the 2 populations returns the same magnitude, so a reader cannot
     use the sign to tell "no effect" from "effect in the other direction".
     """
     generator = torch.Generator().manual_seed(104)
@@ -227,9 +227,9 @@ def test_cross_fitting_removes_the_width_dependent_null_floor():
 
 
 def test_cross_fitted_separation_is_stable_in_sample_count():
-    """Two cases run at different sample counts must be comparable.
+    """2 cases run at different sample counts must be comparable.
 
-    load_latent_case takes samples as a free keyword, so nothing stops one case
+    load_latent_case takes samples as a free keyword, so nothing stops 1 case
     being measured at 200 and another at 5000. In-sample separation fell from
     0.66 to 0.53 across that range on pure null data, which exceeds most real
     effects. Cross-fitted separation does not move, so the comparison is sound.
@@ -264,7 +264,7 @@ def test_effective_rank_is_far_below_the_true_rank_at_the_deployed_sample_count(
 
     Isotropic noise fills all 768 directions, so the population answer is 768.
     The sample estimate is dim / (1 + dim / num_samples), which is 434 at the
-    default sample count. The formula itself is right; the number is simply not
+    default sample count. The formula itself is right. The number is not
     the population quantity, and the gap is a function of the sample count.
     """
     generator = torch.Generator().manual_seed(107)
@@ -609,7 +609,7 @@ def test_extraction_removes_its_hooks_when_the_loader_itself_raises():
 
 
 def test_a_layer_with_fewer_than_two_samples_reports_absent_rather_than_raising():
-    """One row defines no distribution, and must not lose every other layer's row.
+    """1 row defines no distribution, and must not lose every other layer's row.
 
     Constant layers were already guarded. A layer with a single sample raised out
     of shrunk_covariance instead, so a single tiny layer discarded the whole
@@ -633,7 +633,7 @@ def test_the_statistics_are_cpu_only_although_extraction_is_device_parameterized
 
     extract_layer_features moves its output to the CPU, so the intended flow is
     safe. A caller who assembles features itself is not, and the failure is loud
-    rather than silent, which is the behaviour worth pinning.
+    rather than silent, which is the behavior worth pinning.
     """
     reference = torch.randn(20, 4, device="meta")
     query = torch.randn(5, 4, device="meta")

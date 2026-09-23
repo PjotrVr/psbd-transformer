@@ -7,10 +7,10 @@ Barni et al. use 40/255, so the sinusoid was too faint to learn. Adaptive-Blend 
 whole pattern during training, dropping the asymmetry that makes the attack work.
 
 Nothing here overwrites a checkpoint. Every run writes to `<canonical>_v2`, so the original
-stays evaluable and a comparison between the two is available; args.json records the git
+stays evaluable and a comparison between the 2 is available. args.json records the git
 commit, which is what says exactly which fix produced the new number.
 
-Pilot first. A retrain batch is around 3 GPU-hours per cell, so one cell per attack is
+Pilot first. A retrain batch is around 3 GPU-hours per cell, so 1 cell per attack is
 trained and read before the rest are committed, on the dataset where the attack is weakest
 and cheapest to train.
 
@@ -71,7 +71,7 @@ def below_bar_cells(ledger: dict, attacks: set | None) -> list[dict]:
 
 
 def pilot_selection(cells: list[dict]) -> list[dict]:
-    """One cell per attack: the cheapest dataset, and within it the weakest cell.
+    """1 cell per attack: the cheapest dataset, and within it the weakest cell.
 
     Cost leads because a pilot's only job is a fast go or no-go on whether to commit the
     full batch, and the full batch contains the expensive cells regardless. Weakest within

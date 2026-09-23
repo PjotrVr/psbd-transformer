@@ -6,10 +6,10 @@ where PSBD's own rule gives 0.633, and nothing failed, because a literal is alwa
 a valid float. The number that reached a table was wrong by 0.126 and the notebook
 ran clean.
 
-0.6 is a real constant in this codebase, it is just a different one: it belongs to
+0.6 is a real constant in this codebase, but a different one. It belongs to
 SHIFT_MATCH_TARGETS, the grid for comparing placements at matched perturbation
-strength. Two protocols, both legitimate, and a bare literal cannot say which one
-it meant. An import can.
+strength. The 2 protocols are both legitimate and a bare literal cannot say which
+one it meant. An import can.
 """
 
 import json

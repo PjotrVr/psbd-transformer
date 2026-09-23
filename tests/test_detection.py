@@ -1,8 +1,8 @@
-"""Pooled and per-class accuracy share one forward pass, not two.
+"""Pooled and per-class accuracy share 1 forward pass, not 2.
 
 clean_accuracy_by_class and the pooled accuracy used to each run their own
 pass over the same loader when both were wanted (see metrics.py's
-evaluate_benign). class_correct_and_total is the shared computation; these
+evaluate_benign). class_correct_and_total is the shared computation. These
 tests check the aggregation on top of it is correct, in particular that the
 pooled figure is a count-weighted average, not a naive mean of per-class
 accuracies, since those differ on an imbalanced set.
@@ -49,7 +49,7 @@ def test_accuracy_by_class_from_counts_matches_fractions():
 
 
 def test_clean_accuracy_by_class_end_to_end():
-    # index: pred, label -> 0:(0,0) correct, 1:(0,0) correct, 2:(1,1) correct, 3:(1,2) wrong
+    # index: pred, label: 0:(0,0) correct, 1:(0,0) correct, 2:(1,1) correct, 3:(1,2) wrong
     predictions = [0, 0, 1, 1]
     labels = [0, 0, 1, 2]
     model, loader, num_classes = _fake_model_and_loader(predictions, labels)

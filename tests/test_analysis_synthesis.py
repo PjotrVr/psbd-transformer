@@ -1,9 +1,9 @@
-"""Feature visualisation on the synthetic ViT: the objective rises and the image is valid.
+"""Feature visualization on the synthetic ViT: the objective rises and the image is valid.
 
 The synthetic 2-block ViT is untrained, so nothing is claimed about what the
-images show. What is checked is the mechanics: the Fourier parameterisation
+images show. What is checked is the mechanics: the Fourier parameterization
 inverts to an image of the right shape, the valid-image map lands in [0, 1],
-the optimiser raises the unit it was pointed at, the same seed gives the same
+the optimizer raises the unit it was pointed at, the same seed gives the same
 image and the TAC ranking puts the dimension the trigger moves most first.
 """
 

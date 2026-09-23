@@ -1,10 +1,10 @@
 """Prove that a set of edits changed prose and nothing else.
 
-A docstring or comment rewrite must leave behaviour untouched, and the test suite
+A docstring or comment rewrite must leave behavior untouched, and the test suite
 cannot promise that on its own, since it does not cover every line. This compares
 the abstract syntax tree of each changed Python file against a git revision with
-every docstring removed from both sides. Comments never reach the tree at all. If
-the two trees are identical the edit was prose only, whatever the diff looks like.
+every docstring removed from both sides. Comments never reach the tree at all.
+If the 2 trees are identical the edit was prose only, whatever the diff looks like.
 
     python scripts/check_prose_only.py            # working tree against HEAD
     python scripts/check_prose_only.py HEAD~3     # working tree against 3 commits back

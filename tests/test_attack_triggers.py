@@ -174,7 +174,7 @@ def test_low_frequency() -> None:
 
 
 def dump_visuals(output_path: str) -> None:
-    """Save a grid of clean, poisoned, and amplified difference for eyeballing.
+    """Save a grid of clean, poisoned and amplified difference for eyeballing.
 
     Not a test, a manual utility. Denormalization is not needed because triggers
     act in 0-to-1 pixel space. The difference is amplified 10 times and
@@ -229,7 +229,7 @@ def test_overfit_sanity_check() -> None:
     train_loader = DataLoader(poisoned_train, batch_size=64, shuffle=True)
     asr_loader = DataLoader(asr_set, batch_size=64)
 
-    # ASR of an untrained model is the input-independent baseline, near one over
+    # ASR of an untrained model is the input-independent baseline, near 1 over
     # the class count. If it is already high, the ASR measurement itself is wrong.
     baseline_model = build_vit(spec.num_classes).to(device)
     asr_before = attack_success_rate(

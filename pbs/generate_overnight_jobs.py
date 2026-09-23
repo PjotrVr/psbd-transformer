@@ -1,6 +1,6 @@
 """Emit the full overnight PSBD grid: every viable checkpoint, both architectures.
 
-Differs from generate_psbd_jobs.py in three ways, each needed to go wide:
+Differs from generate_psbd_jobs.py in 3 ways, each needed to go wide:
 
 1. **Gated per (attack, poison rate), not per attack.** The earlier generator kept an
    attack only if it worked at every rate, which threw away `wanet` at 10% (ASR 0.96)
@@ -13,12 +13,12 @@ Differs from generate_psbd_jobs.py in three ways, each needed to go wide:
    coincidence of numbering.
 
 3. **A fixed placement shortlist.** Sweeping all 14 placements over the full
-   checkpoint set would be tens of thousands of jobs. These five are the ones the
+   checkpoint set would be tens of thousands of jobs. These 5 are the ones the
    comparison actually rests on: the published placement, the project's original
-   claim, the current best, and the two strongest single positions.
+   claim, the current best and the 2 strongest single positions.
 
 Run from the repo root with PYTHONPATH=. so the flat root imports resolve.
-Generation only writes files; qsub is a separate manual step.
+Generation only writes files. qsub is a separate manual step.
 
 Example
     python pbs/generate_overnight_jobs.py --dry-run
@@ -57,8 +57,8 @@ SAM_RHOS = ("0_05", "0_1", "0_15", "0_2")
 # failed-case line for TPR, reused here for ASR.
 MIN_ASR = 0.8
 
-# The five placements the comparison rests on. Named positions resolve on both
-# architectures; the band is added separately because its indices are depth-dependent.
+# The 5 placements the comparison rests on. Named positions resolve on both
+# architectures. The band is added separately because its indices are depth-dependent.
 PLACEMENTS = (
     "post_residual",  # the published ConvNet placement
     "pre_residual",  # this project's original claim
@@ -143,13 +143,13 @@ def candidate_checkpoints(architecture: str, datasets: tuple[str, ...], with_sam
 
 
 def gate(folders, checkpoints_dir: str):
-    """Keep checkpoints whose backdoor actually fires; report every exclusion."""
+    """Keep checkpoints whose backdoor actually fires. Report every exclusion."""
     kept, rejected = [], []
     for folder in folders:
         if not os.path.exists(
             os.path.join(checkpoints_dir, folder, "attack_result.pt")
         ):
-            continue  # not trained; silent, since the cartesian product overshoots
+            continue  # not trained, silent, since the cartesian product overshoots
         if "benign" in folder:
             kept.append(folder)
             continue
@@ -199,7 +199,7 @@ def jobs_for(checkpoint: str, architecture: str):
     """(position, band, rates) for every job this checkpoint needs."""
     for position in PLACEMENTS:
         # A residual-stream placement needs its own low-rate window as well as the
-        # standard grid; everything else only needs the standard grid.
+        # standard grid. Everything else only needs the standard grid.
         rates = FINE_RATES + MAIN_RATES if position == "post_residual" else ()
         yield position, None, rates
     for band in bands_for(architecture):

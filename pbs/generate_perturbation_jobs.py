@@ -1,7 +1,7 @@
-"""Generate PBS jobs for the perturbation study, one operator grid at a time.
+"""Generate PBS jobs for the perturbation study, 1 operator grid at a time.
 
 Separate from generate_batched_jobs.py because that generator hardcodes the
-dropout placement study: a fixed placement list, a fixed rate grid, and depth
+dropout placement study: a fixed placement list, a fixed rate grid and depth
 bands. This one sweeps the operator axis instead, and every operator needs its
 own positions and its own rate grid.
 
@@ -10,7 +10,7 @@ droppath at 0.5 removes half of all 24 branches, which is certainly saturated,
 while gaussian at 0.5 adds noise at half the activation's own standard deviation,
 which may be negligible. A shared grid would put most operators outside their
 usable window and make the comparison meaningless. The grids below are chosen to
-bracket clean-validation shift ratio across roughly [0.05, 0.95]; the first stage
+bracket clean-validation shift ratio across roughly [0.05, 0.95]. The first stage
 doubles as the calibration that confirms they do.
 
 Cross-operator comparison then happens at matched clean-validation shift ratio,
@@ -65,14 +65,14 @@ OPERATORS: dict[str, tuple[tuple[str, ...], tuple[float, ...]]] = {
         ("attention_heads",),
         (0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9),
     ),
-    # Ports of two published perturbation-consistency detectors. They complete
+    # Ports of 2 published perturbation-consistency detectors. They complete
     # the taxonomy: SCALE-UP perturbs the INPUT, the mask/noise operators perturb
     # ACTIVATIONS, and gain_scale perturbs PARAMETERS (scaling a LayerNorm's gamma
     # and beta is exactly scaling its output).
     #
     # Both rate axes are read as (factor - 1) so rate 0 is the identity, matching
     # every other operator. scale_up rates 0.5 to 10 are SCALE-UP's factors 1.5 to
-    # 11; gain_scale rates 0.25 to 9 are omega 1.25 to 10.
+    # 11. gain_scale rates 0.25 to 9 are omega 1.25 to 10.
     "scale_up": (
         ("input_pixels",),
         (0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0),
@@ -97,7 +97,7 @@ OPERATORS: dict[str, tuple[tuple[str, ...], tuple[float, ...]]] = {
 # Every position whose activation is (batch, tokens, channels), which is what the
 # channel/token/noise operators need. attention_heads is excluded: it exposes a
 # 4-D per-head tensor and only head_mask can read it. mlp_neurons is included and
-# is the interesting one, since a channel there is one MLP hidden neuron, so
+# is the interesting one, since a channel there is 1 MLP hidden neuron, so
 # channel_mask at that position is literally neuron masking.
 FULL_POSITIONS: tuple[str, ...] = (
     "after_embedding",
@@ -185,10 +185,10 @@ COMMAND = """python -m cli.sweep \\
 
 
 def work_units(folders: list[str], operators: list[str], passes: int) -> list[dict]:
-    """One unit is (operator, position, all rates) for one checkpoint.
+    """1 unit is (operator, position, all rates) for 1 checkpoint.
 
-    Kept at checkpoint granularity so packing never splits a checkpoint across two
-    jobs: the 3 no-dropout baseline tensors are computed once per checkpoint and
+    Kept at checkpoint granularity so packing never splits a checkpoint across 2
+    jobs. The 3 no-dropout baseline tensors are computed once per checkpoint and
     shared by every rate, so splitting would recompute them.
     """
     units = []
@@ -227,7 +227,7 @@ def pack(units: list[dict], target_minutes: float) -> list[list[dict]]:
 
 
 def build_commands(batch: list[dict], passes: int, model_dropout: float = 0.0) -> str:
-    """One command per (operator, position, benign-ness), covering many checkpoints."""
+    """1 command per (operator, position, benign-ness), covering many checkpoints."""
     grouped: dict[tuple, list[str]] = {}
     for unit in batch:
         key = (unit["operator"], unit["position"], "benign" in unit["folder"])

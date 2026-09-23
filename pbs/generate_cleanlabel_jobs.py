@@ -4,22 +4,22 @@ Clean-label attacks may only poison images that already carry the target label, 
 the highest reachable poison rate is |target class| / |train set|. This generator
 computes that from the data and emits ONLY reachable rates, which is the whole
 point: 188 of the 315 clean-label folders on disk were trained at a nominal rate
-the dataset silently clamped, and three of Tiny's four "rates" are the same run.
+the dataset silently clamped, and 3 of Tiny's 4 "rates" are the same run.
 
-Three stages, in order:
+3 stages, in order:
 
     python pbs/generate_cleanlabel_jobs.py --stage bases
     python pbs/generate_cleanlabel_jobs.py --stage pilot
     python pbs/generate_cleanlabel_jobs.py --stage full --epsilon cifar10=16 gtsrb=8
 
 `bases` builds the adversarially perturbed base images Label-Consistent needs.
-`pilot` trains one seed per (dataset, epsilon) at each dataset's highest reachable
+`pilot` trains 1 seed per (dataset, epsilon) at each dataset's highest reachable
 rate, so the smallest epsilon clearing ASR 0.85 without costing more than 0.05
 clean accuracy can be picked per dataset. `full` then runs that choice at seeds
 0 to 4.
 
-Basis sweeps are NOT emitted here. Run pbs/generate_basis_jobs.py once these land;
-it picks up any cell that clears the ASR bar, and pairing the two would spend a
+Basis sweeps are NOT emitted here. Run pbs/generate_basis_jobs.py once these land.
+It picks up any cell that clears the ASR bar, and pairing the 2 would spend a
 sweep on a training run that failed.
 """
 
@@ -42,7 +42,7 @@ TRAIN_MINUTES = {
     "vit": {"gtsrb": 90, "cifar10": 167, "cifar100": 167, "tiny": 332},
     "swin": {"gtsrb": 70, "cifar10": 129, "cifar100": 129, "tiny": 258},
 }
-# Generating bases is one PGD pass over the target class, far cheaper than training.
+# Generating bases is 1 PGD pass over the target class, far cheaper than training.
 BASES_MINUTES = {"gtsrb": 25, "cifar10": 60, "cifar100": 15, "tiny": 20}
 
 CANDIDATE_RATES = (0.005, 0.01, 0.05, 0.1)
@@ -128,10 +128,10 @@ def folder_name(
     seed: int,
     epsilon_tag: str = "",
 ) -> str:
-    """Canonical template plus the two tags this work introduces.
+    """Canonical template plus the 2 tags this work introduces.
 
     `_tl{n}` marks a non-default target class and `_adv` marks Label-Consistent
-    carrying its adversarial bases; `_adv` is also what psbd_basis.json names as
+    carrying its adversarial bases. `_adv` is also what psbd_basis.json names as
     the canonical LC variant, so the older patch-only runs keep their folders
     without competing for the same panel slot. Seed 0 takes no suffix, matching
     the existing seed-replicate convention.
@@ -140,10 +140,10 @@ def folder_name(
     if target_label != 0:
         name += f"_tl{target_label}"
     if adversarial:
-        # The pilot trains one folder per epsilon, so the tag has to distinguish
-        # them or the three runs overwrite each other. `_pilot` is an excluded
-        # panel token, which keeps these diagnostic runs out of the headline;
-        # the chosen epsilon reaches the full runs through adversarial_dir in
+        # The pilot trains 1 folder per epsilon, so the tag has to distinguish
+        # them or the 3 runs overwrite each other. `_pilot` is an excluded
+        # panel token, which keeps these diagnostic runs out of the headline.
+        # The chosen epsilon reaches the full runs through adversarial_dir in
         # args.json, so `_adv` alone stays traceable there.
         name += f"_adv{epsilon_tag}"
     if seed != 0:
@@ -174,7 +174,7 @@ def _all_training_runs(args) -> list[dict]:
             f"{[f'{rate:.1%}' for rate in rates] or 'none'}"
         )
         if args.stage == "pilot":
-            # One rate per dataset: the strongest the data allows, which is where an
+            # 1 rate per dataset: the strongest the data allows, which is where an
             # epsilon that cannot implant at all will fail most visibly.
             selected = [
                 (rate, epsilon, 0)
@@ -200,7 +200,7 @@ def _all_training_runs(args) -> list[dict]:
                     "adversarial": True,
                 }
             )
-        # SIG gains nothing from adversarial bases; on GTSRB it only needed a target
+        # SIG gains nothing from adversarial bases. On GTSRB it only needed a target
         # class with enough images, so it rides along wherever that switch applies.
         if args.stage == "full" and dataset in CLEAN_LABEL_TARGETS:
             runs.extend(
@@ -241,7 +241,7 @@ def train_body(run: dict, architecture: str) -> str:
     overrides = ""
     if run["adversarial"]:
         directory = bases_directory(run["dataset"], run["target_label"], run["epsilon"])
-        # One flag carrying both keys. Repeating the flag also works now that it
+        # 1 flag carrying both keys. Repeating the flag also works now that it
         # accumulates, but a single flag cannot regress if that ever changes back.
         overrides = (
             f"\n    --attack-override adversarial_dir={directory}"

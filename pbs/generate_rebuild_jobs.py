@@ -1,6 +1,6 @@
-"""Generate the PBS jobs for the rebuilt attacks, the TaCT re-sweep, and the sig sweeps.
+"""Generate the PBS jobs for the rebuilt attacks, the TaCT re-sweep and the sig sweeps.
 
-Three kinds of work, all independent:
+3 kinds of work, all independent:
 
   retrain  wanet, adaptive_blend and bpp were missing the mechanism that makes them
            stealthy (noise mode, correctly scaled cover, negative samples), so their
@@ -63,9 +63,9 @@ python -m cli.train_backdoor \\
     --output checkpoints/{folder}/attack_result.pt
 """
 
-# No --skip-existing anywhere in this file. Every cell here either has a NEW
+# No --skip-existing anywhere here. Every cell has either a NEW
 # checkpoint (retrain) or a stale cache built from the wrong split (tact), so a
-# skip would silently analyse the old sweep against the new model. That is the same
+# skip would silently analyze the old sweep against the new model. That is the same
 # failure mode as the sig sweeps, and it produces plausible numbers rather than an
 # error, which is what makes it dangerous.
 #
@@ -73,7 +73,7 @@ python -m cli.train_backdoor \\
 # placement leaves baseline_<split>.pt behind, and load_or_build_baseline reuses any
 # baseline whose row count matches, which it always does. PSU would then be the OLD
 # model's confidence minus the NEW model's dropout passes. It also leaves every other
-# placement's tensors behind, and psbd_analyze reads every subdirectory, so one
+# placement's tensors behind, and psbd_analyze reads every subdirectory, so 1
 # psbd_metrics.json would mix 2 different models under 1 checkpoint name. Both are
 # silent.
 SWEEP = """

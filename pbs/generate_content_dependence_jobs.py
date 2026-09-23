@@ -4,7 +4,7 @@ PSBD's premise is that a trigger is a CONSTANT, content-independent shortcut. Th
 perturbed prediction stays pinned because the shortcut never has to read the image,
 while clean predictions lose their features and drift. all_to_one satisfies that
 premise exactly. all_to_all violates it exactly: (y + 1) mod K forces the model to
-recognise the source class before it can increment, so the backdoor pathway inherits
+recognize the source class before it can increment, so the backdoor pathway inherits
 and then exceeds the clean pathway's fragility, and the detector inverts.
 
 Those are 2 points. This sweep fills in the line between them.
@@ -45,8 +45,8 @@ RATES = {
     "gtsrb": ((0.10, "0_1"),),
 }
 
-# Tiny has twice the images so its cells run roughly twice as long; jobs are sized to
-# keep every one inside the same wall-time band rather than to equalise cell counts.
+# Tiny has twice the images so its cells run roughly twice as long. Jobs are sized to
+# keep every one inside the same wall-time band rather than to equalize cell counts.
 JOBS_PER_DATASET = {"cifar10": 1, "cifar100": 3, "gtsrb": 1, "tiny": 4}
 
 HEADER = """#!/bin/bash
@@ -78,7 +78,7 @@ python -m cli.train_backdoor \\
 """
 
 # No --skip-existing. Every cell here is a brand new checkpoint, so there is nothing
-# legitimate to skip, and a skip would analyse an absent or unrelated cache. The
+# legitimate to skip, and a skip would analyze an absent or unrelated cache. The
 # subtree is removed anyway, because a resubmitted job must not inherit the cache its
 # own earlier attempt left: a baseline is reused whenever its row count matches, which
 # it always does, so a half-finished attempt would be read as this model's baseline.
@@ -95,7 +95,7 @@ python -m cli.sweep \\
 
 
 def m_values(dataset):
-    """Registered m strictly below the class count; m = num_classes is all_to_all."""
+    """Registered m strictly below the class count. m = num_classes is all_to_all."""
     return [m for m in REGISTERED_M if m < NUM_CLASSES[dataset]]
 
 

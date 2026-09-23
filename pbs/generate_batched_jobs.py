@@ -1,22 +1,22 @@
 """Pack the PSBD grid into a few long jobs instead of thousands of short ones.
 
-The earlier generators emitted one job per (checkpoint, placement). Each ran about
+The earlier generators emitted 1 job per (checkpoint, placement). Each ran about
 4 minutes, of which a real fraction was pure overhead: scheduler dispatch, venv
 activation, torch import, dataset construction, ImageNet weight load. Thousands of
 those both waste that overhead once per config and swamp the queue.
 
-Here one job carries many (checkpoint, placement) pairs and runs them in a single
+Here 1 job carries many (checkpoint, placement) pairs and runs them in a single
 process, so:
 
 - the clean test set is built once per job rather than once per config, since
-  loaders keeps it lru_cached per process;
-- torch import and venv activation are paid once per job;
+  loaders keeps it lru_cached per process
+- torch import and venv activation are paid once per job
 - the scheduler sees tens of jobs instead of thousands, which is the part that
   annoys everyone else on the cluster.
 
-Jobs are packed by checkpoint, never splitting a checkpoint across two jobs, because
-the three no-dropout baseline tensors are computed once per checkpoint and shared by
-all of its placements. Splitting one checkpoint across jobs would either recompute
+Jobs are packed by checkpoint, never splitting a checkpoint across 2 jobs, because
+the 3 no-dropout baseline tensors are computed once per checkpoint and shared by
+all of its placements. Splitting 1 checkpoint across jobs would either recompute
 them or race on the same files.
 
 --skip-existing is passed to every job, so a resubmitted batch costs nothing for work
@@ -70,7 +70,7 @@ BAND_FRACTIONS = ((0.0, 1 / 3), (1 / 3, 2 / 3), (2 / 3, 1.0))
 FINE_RATES = (0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.09)
 MAIN_RATES = tuple(i / 10 for i in range(1, 10))
 
-# Measured: one (checkpoint, placement) over the 9-rate grid and the full 10000-image
+# Measured: 1 (checkpoint, placement) over the 9-rate grid and the full 10000-image
 # split takes about 4 minutes on an A100. post_residual carries 16 rates rather than
 # 9, so it is weighted accordingly when packing.
 MINUTES_PER_PLACEMENT = 4.0
@@ -104,8 +104,8 @@ echo "Finished: $(date)"
 exit 0
 """
 
-# One command per placement group, each covering every checkpoint in the batch. Split
-# this way rather than one command per checkpoint because --position-config takes a
+# 1 command per placement group, each covering every checkpoint in the batch. Split
+# this way rather than 1 command per checkpoint because --position-config takes a
 # list and the rate grid differs between post_residual and the rest.
 COMMAND = """python -m cli.sweep \\
     --checkpoint-folder {folders} \\
@@ -173,7 +173,7 @@ def minutes_per_checkpoint(architecture: str) -> float:
 
 
 def pack(checkpoints, architecture, target_minutes):
-    """Greedy fixed-size packing; every checkpoint stays whole."""
+    """Greedy fixed-size packing. Every checkpoint stays whole."""
     per = minutes_per_checkpoint(architecture)
     per_batch = max(1, int(target_minutes // per))
     return [
@@ -182,7 +182,7 @@ def pack(checkpoints, architecture, target_minutes):
 
 
 def build_commands(folders, architecture):
-    """The command lines for one batch, grouped so each rate grid is issued once."""
+    """The command lines for 1 batch, grouped so each rate grid is issued once."""
     benign = [f for f in folders if "benign" in f]
     attacked = [f for f in folders if "benign" not in f]
     lines = []

@@ -1,5 +1,5 @@
 """The PSBD math the structural tests do not touch: the per-pass probability
-gather, the cache round-trips and idempotency, the rate tag, and the all-to-one
+gather, the cache round-trips and idempotency, the rate tag and the all-to-one
 eligibility exclusion in the split manifest.
 
 The core gather is checked against a controlled identity model whose logits are
@@ -61,7 +61,7 @@ def _distinct_peak_logits(n: int, num_classes: int) -> torch.Tensor:
     """Row i peaks at a different class with a different height.
 
     Distinct argmax classes and distinct peak probabilities per row mean a
-    batch-to-label misalignment gathers a visibly wrong number, so an off-by-one
+    batch-to-label misalignment gathers a visibly wrong number, so an off-by-1
     offset cannot pass silently.
     """
     logits = torch.zeros(n, num_classes)
@@ -148,9 +148,9 @@ def test_output_is_float32_even_without_bfloat16():
 
 
 def test_same_seed_reproduces_masks_paired_across_calls():
-    # A hooked stochastic dropout makes the passes differ. Two calls at the same
+    # A hooked stochastic dropout makes the passes differ. 2 calls at the same
     # seed must produce identical per-pass tensors, which is what keeps the
-    # validation, clean, and backdoor masks paired in the real sweep.
+    # validation, clean and backdoor masks paired in the real sweep.
     logits = _distinct_peak_logits(12, num_classes=5)
     baseline_labels = logits.argmax(dim=1)
 

@@ -3,9 +3,9 @@
 Written after a mutation audit found that token_mask, channel_mask, droppath and
 gain_scale could each be replaced by the identity function with the whole suite
 still passing. token_mask at before_attention_norm is the recommended deployment
-configuration, so its behaviour being untested was the largest hole in the suite.
+configuration, so its behavior being untested was the largest hole in the suite.
 
-Every test here is written to fail under at least one specific wrong
+Every test here is written to fail under at least 1 specific wrong
 implementation, and the wrong implementation it targets is named in its
 docstring. A test that passes for the identity function is not a test.
 
@@ -113,7 +113,7 @@ def test_channel_masks_differ_between_samples(activation):
 
 
 def test_droppath_is_all_or_nothing_per_sample(activation):
-    """Fails for the identity, for elementwise dropout, and for a token mask.
+    """Fails for the identity, for elementwise dropout and for a token mask.
 
     The property is that a sample is either untouched or entirely zeroed. The
     older test asserted (fully_zeroed OR not_fully_zeroed), which is a tautology
@@ -246,7 +246,7 @@ def test_the_shape_is_always_preserved(activation):
 class TestMultiProbeInversionFragility:
     """A probe an adaptive attacker has inverted poisons the min-rank union.
 
-    The union exists as defense in depth: evading one probe should not evade the
+    The union exists as defense in depth: evading 1 probe should not evade the
     detector. But the union takes the most extreme evidence across probes, so a
     probe whose ranking has been reversed contributes confident wrong evidence
     rather than merely useless evidence, and the union inherits it.
@@ -254,7 +254,7 @@ class TestMultiProbeInversionFragility:
     Measured on a real evasive checkpoint, the probed position falls to AUROC
     0.023 while an unprobed position still reads 0.913, and the union of the 2
     lands below the unprobed position alone. These tests pin the mechanism on
-    synthetic data so the behaviour is documented rather than rediscovered.
+    synthetic data so the behavior is documented rather than rediscovered.
     """
 
     @staticmethod
@@ -330,7 +330,7 @@ class TestMultiProbeInversionFragility:
 class TestMedianRankUnion:
     """The median reduction, added because the min union adopts an inverted probe.
 
-    Same construction as TestMultiProbeInversionFragility, so the two classes read
+    Same construction as TestMultiProbeInversionFragility, so the 2 classes read
     against each other: those tests pin the failure, these pin the fix and its
     limit.
     """

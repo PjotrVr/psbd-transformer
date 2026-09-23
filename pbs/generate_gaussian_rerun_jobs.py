@@ -118,7 +118,7 @@ def read_metadata(folder):
 def is_viable(metadata, min_asr, include_sam):
     """Whether this checkpoint is worth spending a GPU hour re-measuring.
 
-    Two exclusions, both about not buying certainty on a question whose answer
+    2 exclusions, both about not buying certainty on a question whose answer
     cannot matter.
 
     SAM is excluded by default. Its whole effect on detection is +0.009 mean
@@ -216,7 +216,7 @@ def archive_old_caches(cells, dry_run):
 def pack(cells, target_minutes):
     """Group cells sharing a position and grid, then fill jobs to the time budget.
 
-    Grouped by (position, rates) because one sweep invocation takes a single
+    Grouped by (position, rates) because 1 sweep invocation takes a single
     position and a single rate list, so mixing them would need a command each.
     """
     by_shape = defaultdict(list)
@@ -247,7 +247,7 @@ def pack(cells, target_minutes):
 
 
 def build_commands(job):
-    """One command per (position, rates) group inside this job."""
+    """1 command per (position, rates) group inside this job."""
     by_shape = defaultdict(list)
     for cell in job:
         by_shape[(cell["position"], cell["rates"])].append(cell)

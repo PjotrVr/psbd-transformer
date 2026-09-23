@@ -2,18 +2,18 @@
 
 The pins used to address `placements["pre_residual"]` in a results file that the
 rewrite stopped tracking. Both halves of that failed: the placement vocabulary
-became `<position>_<operator>`, so the key does not exist, and the file is
-gitignored, so on a clean checkout the loader skipped and all three tests passed
+became `<position>_<operator>`, so the key does not exist. The file is
+gitignored, so on a clean checkout the loader skipped and all 3 tests passed
 while checking nothing. A pin that silently skips is worse than no pin.
 
 The fixture under tests/fixtures/ is a trimmed copy of a real analysis output,
 committed so the pins have a versioned data source and never skip. Values are
 verbatim, so a change in how the reader parses them fails here.
 
-What this does NOT do is catch analysis-pipeline drift; a static fixture cannot.
+What this does NOT do is catch analysis-pipeline drift. A static fixture cannot.
 That is scripts/verify_results.py's job, which dumps every AUROC on 2 branches
 and diffs them. What this catches is the schema moving under the readers, which
-is exactly what went unnoticed for the two days these tests were inert.
+is exactly what went unnoticed for the 2 days these tests were inert.
 """
 
 import json
@@ -72,7 +72,7 @@ class TestPSBDMetricsPins:
 
         This is the check the old pins were reaching for. When the placement
         vocabulary changed from the `pre_residual` alias to
-        `<position>_<operator>`, nothing failed; the readers simply started
+        `<position>_<operator>`, nothing failed. The readers started
         raising KeyError much later, in a table generator.
         """
         live = _load_psbd_metrics("vit_cifar10_adaptive_blend_0_1")

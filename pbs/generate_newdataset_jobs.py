@@ -5,7 +5,7 @@ reach is |target class| / |train set|. For a balanced K-class dataset that is
 exactly 1/K, which caps CIFAR-100 at 1% and Tiny at 0.5%. SVHN and EuroSAT are
 the panel's 2 datasets that clear 10%, and this generator trains them.
 
-Three stages, run in order:
+3 stages, run in order:
 
     PYTHONPATH=. python pbs/generate_newdataset_jobs.py --stage benign
     PYTHONPATH=. python pbs/generate_newdataset_jobs.py --stage probe
@@ -153,7 +153,7 @@ def runs_for_stage(stage, datasets, raw_data_dir, seeds=(0,)):
                         )
                     )
 
-            # One dirty-label control, so the new dataset can be compared against
+            # 1 dirty-label control, so the new dataset can be compared against
             # the existing panel rather than only against itself.
             if stage == "probe":
                 runs.append(

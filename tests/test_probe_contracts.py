@@ -151,7 +151,7 @@ PORTED_OPERATORS = sorted(set(new_operators.OPERATORS) - OPERATORS_WITHOUT_AN_OR
 
 
 def test_gaussian_noise_std_is_per_sample():
-    """The confound fix: one sample's noise level must not depend on its batch."""
+    """The confound fix: 1 sample's noise level must not depend on its batch."""
     operator = new_operators.GaussianNoise(0.1)
     operator.train()
 

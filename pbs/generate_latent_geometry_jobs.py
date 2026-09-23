@@ -15,7 +15,7 @@ The work splits cleanly by checkpoint, so it is emitted as several jobs rather
 than 1 long serial one, matching how every other sweep in this project is
 scheduled.
 
-Generated .pbs files are untracked by design; regenerate them from here.
+Generated .pbs files are untracked by design. Regenerate them from here.
 
 Run:
     python pbs/generate_latent_geometry_jobs.py --jobs 6

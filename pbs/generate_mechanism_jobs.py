@@ -1,6 +1,6 @@
 """Run the residual-stream mechanism analyses on GPU, across the trigger taxonomy.
 
-Four measurements per checkpoint, each answering a different part of "why does perturbing
+4 measurements per checkpoint, each answering a different part of "why does perturbing
 here work":
 
     residual_decomposition   which sublayer WRITES the backdoor direction, per layer
@@ -26,7 +26,7 @@ here work":
     identity_attention       the causal test: switch cross-token movement off, one layer at a
                              time, and watch the attack die or not
 
-The checkpoint list is chosen to span the three trigger families the placement results split
+The checkpoint list is chosen to span the 3 trigger families the placement results split
 on, because a mechanism that only explains a patch trigger explains a third of the panel:
 
     local additive     badnet_a2o, tact, lc      1 to 4 of 196 tokens
@@ -59,7 +59,7 @@ SCRIPTS = (
     ("test_time_registers", "--limit 1024 --registers 0 1 4 16 64"),
     ("resolution_sweep", "--limit 512 --resolutions 160 192 224 256 320 448"),
 )
-# One representative cell per (attack, dataset) where the attack implanted, plus benign.
+# 1 representative cell per (attack, dataset) where the attack implanted, plus benign.
 FAMILIES = {
     "local_additive": ("badnet_a2o", "tact", "lc"),
     "global_additive": ("blend", "bpp", "lf", "sig"),

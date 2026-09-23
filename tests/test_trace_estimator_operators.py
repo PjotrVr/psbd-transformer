@@ -37,7 +37,7 @@ def symmetric_matrix(seed: int, dimension: int = PROBE_DIMENSION) -> torch.Tenso
 
 
 def hutchinson_estimates(matrix: torch.Tensor, probes: torch.Tensor) -> torch.Tensor:
-    """One estimate of trace(matrix) per probe row, as z^T A z."""
+    """1 estimate of trace(matrix) per probe row, as z^T A z."""
     estimates = ((probes @ matrix) * probes).sum(dim=1)
     return estimates
 
@@ -71,7 +71,7 @@ def test_the_variance_gap_is_exactly_the_diagonal_energy(diagonal_weight):
 
     Rademacher is smaller by exactly the diagonal energy, which makes it the
     minimum variance probe among distributions with independent entries
-    (Hutchinson 1990; see also Epperly, "Don't use Gaussians in stochastic trace
+    (Hutchinson 1990, see also Epperly, "Don't use Gaussians in stochastic trace
     estimation", 2024).
 
     The size of that advantage is the honest caveat. For a random symmetric

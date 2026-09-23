@@ -2,7 +2,7 @@
 
 Pure string and file generation, no cluster and no GPU, so the whole suite runs
 in milliseconds. Covers the flatten-vs-in-job partition, command substitution,
-the continue-on-error wrapper, filenames, and the input-validation guards.
+the continue-on-error wrapper, filenames and the input-validation guards.
 """
 
 import pytest
@@ -23,8 +23,8 @@ def test_cartesian_product_counts_and_shape():
 
 
 def test_flatten_everything_except_one_matches_the_psbd_shape():
-    # The motivating case: flatten every axis except the rate, so one job sweeps
-    # all rates and there is one job per (checkpoint, position).
+    # The motivating case: flatten every axis except the rate, so 1 job sweeps
+    # all rates and there is 1 job per (checkpoint, position).
     grid = {
         "checkpoint": ["vit_cifar100_wanet_0_01", "vit_cifar100_wanet_0_1"],
         "position": ["before_attention", "before_mlp_residual", "pre_residual"],
@@ -72,7 +72,7 @@ def test_all_flatten_produces_one_job_per_combination():
     jobs = build_pbs_grid("run {a} {b}", {"a": [1, 2], "b": [3, 4]}, keep_in_job=())
     assert len(jobs) == 4
     for _, content in jobs:
-        # One flattened point per file means exactly one command.
+        # 1 flattened point per file means exactly 1 command.
         assert content.count("run ") == 1
 
 

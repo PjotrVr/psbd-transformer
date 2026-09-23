@@ -6,7 +6,7 @@ guard at the order bound the port refuses, the jackknife against a fold refitted
 by hand and the whole pipeline on the synthetic fixture for shape, finiteness
 and determinism. The last test runs the released Feature_Correlations class on
 the same tensors and requires agreement to 1e-5 after the single constant the 2
-normalisations differ by.
+normalizations differ by.
 
 The synthetic fixture's inner ViT is random-init on random-noise images, so its
 class-conditional statistics have little to condition on and 9 of its 10

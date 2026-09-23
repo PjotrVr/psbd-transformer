@@ -92,7 +92,7 @@ def test_a_tie_on_the_extreme_grid_value_zeroes_the_quantile_tpr_but_not_the_roc
 
     The 5% quantile lands exactly on that value, nothing is strictly below it,
     and the rule flags nothing even though every poisoned sample sits there and
-    AUROC is 0.85. That is the artefact the diagnostics exist to expose.
+    AUROC is 0.85. That is the artifact the diagnostics exist to expose.
     """
     validation = torch.cat([torch.zeros(30), torch.ones(70)])
     clean = torch.cat([torch.zeros(15), torch.ones(35)])

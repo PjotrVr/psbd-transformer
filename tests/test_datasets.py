@@ -1,9 +1,9 @@
 """Unit tests for utils.datasets.limit_dataset.
 
-limit_dataset backs the --max-samples smoke-test flag. Two properties matter:
+limit_dataset backs the --max-samples smoke-test flag. 2 properties matter:
 the "no limit" path must return the exact same object so a full run and a
-truncated run share one code path, and the truncated path must be a reproducible
-random subset (not first-N, which would cover only the first class or two of an
+truncated run share 1 code path, and the truncated path must be a reproducible
+random subset (not first-N, which would cover only the first class or 2 of an
 ImageFolder-backed dataset like Tiny ImageNet).
 """
 

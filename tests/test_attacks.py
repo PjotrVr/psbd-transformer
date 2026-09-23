@@ -1,7 +1,7 @@
 """Fast unit tests for the attack implementations and the poisoning pipeline.
 
-These run in milliseconds with no model, no GPU, and no dataset download, so they
-are safe on every change and in continuous integration. They check three things:
+These run in milliseconds with no model, no GPU and no dataset download, so they
+are safe on every change and in continuous integration. They check 3 things:
 that each trigger has the structural property its paper defines, that the label
 and index policy is correct, and that the poisoning datasets relabel and trigger
 the right samples.
@@ -144,7 +144,7 @@ def test_lc_four_corners_clean_label():
     attack = _built("lc")
     assert attack.label_mode == "clean_label"
     image = _gradient()
-    # The eval trigger is the patch alone by definition; apply_trigger additionally
+    # The eval trigger is the patch alone by definition. apply_trigger also
     # substitutes an adversarial base when one was generated, which is covered below.
     poisoned = attack.apply_trigger_eval(image, 0)
     size = default_config("lc").patch_size
@@ -205,7 +205,7 @@ def test_lc_adversarial_base_is_training_only(tmp_path):
 
 
 def test_lc_default_config_is_the_patch_only_variant():
-    """No adversarial_dir means byte-identical behaviour to before the field existed.
+    """No adversarial_dir means byte-identical behavior to before the field existed.
 
     Every checkpoint trained before this change rebuilds through default_config, so a
     drift here would silently re-interpret them.
@@ -235,10 +235,10 @@ def test_adaptive_blend_has_cover_rate():
 
 
 def test_adaptive_blend_trigger_is_asymmetric():
-    """Train plants a per-sample SUBSET of the pattern; eval plants all of it.
+    """Train plants a per-sample SUBSET of the pattern. Eval plants all of it.
 
     This is the mechanism, not an implementation detail: training on a subset forces the
-    model to generalise over the pattern, so the full pattern at test time lands well
+    model to generalize over the pattern, so the full pattern at test time lands well
     inside the learned region. So unlike every other attack here, the training trigger is
     deliberately index-dependent, and only the eval trigger is static.
     """
@@ -403,7 +403,7 @@ def test_every_attack_trigger_is_deterministic_and_bounded(name):
     """The trigger a sample is SCORED with must be static and reproducible.
 
     Read through apply_trigger_eval, because that is what AttackSuccessSet plants and it
-    defaults to apply_trigger for every attack that does not distinguish the two.
+    defaults to apply_trigger for every attack that does not distinguish the 2.
     Adaptive-Blend does distinguish them on purpose: its training trigger is a per-sample
     subset of the pattern, which is the asymmetry the attack depends on, so requiring
     index-independence of apply_trigger would forbid a correct implementation.
@@ -567,7 +567,7 @@ def test_builder_propagates_every_config_field_the_attack_record_also_carries(na
     it still returns a working Attack, and the trigger pixels stay bit-identical,
     so a test comparing only name, label mode, target and pixels passes while ASR
     is quietly measured over every non-target class instead of the source classes.
-    Comparing the fields the two dataclasses share catches the whole family.
+    Comparing the fields the 2 dataclasses share catches the whole family.
     """
     config = default_config(name)
     attack = build_attack(name, config, 32, 0)

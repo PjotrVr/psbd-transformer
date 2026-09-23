@@ -1,8 +1,8 @@
-"""Stealth metrics: agreement with skimage, sanity direction, and cache behaviour.
+"""Stealth metrics: agreement with skimage, sanity direction and cache behavior.
 
 PSNR and SSIM are validated against skimage.metrics (the reference the
 literature reports), the identity trigger pins the "no change at all" corner
-(PSNR infinite, SSIM 1, LPIPS 0), and the cache test confirms a repeated
+(PSNR infinite, SSIM 1, LPIPS 0) and the cache test confirms a repeated
 (dataset, attack) key does not rerun the LPIPS forward pass.
 """
 

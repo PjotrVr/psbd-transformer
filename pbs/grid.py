@@ -1,14 +1,14 @@
 """Fan a parameter grid out into many small PBS jobs.
 
-A grid search over several parameters can run as one enormous job or as many
+A grid search over several parameters can run as 1 enormous job or as many
 small ones. Small ones schedule faster and run in parallel across the cluster,
-one GPU each, which is almost always what you want. This module flattens the
+1 GPU each, which is almost always what you want. This module flattens the
 grid: you choose which parameters are swept inside each job (run in sequence
-within one file, a failure in one continuing to the next) and every other
-parameter is flattened, one job file per combination.
+within 1 file, a failure in 1 continuing to the next) and every other
+parameter is flattened, 1 job file per combination.
 
 Standalone and reusable, tied to no single experiment. Give it a command
-template with {name} placeholders, a grid, and the list of in-job parameters.
+template with {name} placeholders, a grid and the list of in-job parameters.
 
 Example spec (JSON, passed to the CLI):
     {
@@ -17,7 +17,7 @@ Example spec (JSON, passed to the CLI):
       "keep_in_job": ["seed"],
       "output_dir": "pbs/lr_sweep"
     }
-This writes 2 files, one per lr, each running 3 seeds in sequence. If a seed
+This writes 2 files, 1 per lr, each running 3 seeds in sequence. If a seed
 crashes, the job logs it and moves to the next seed.
 """
 
@@ -53,7 +53,7 @@ def cartesian_product(grid: dict[str, list]) -> list[dict]:
     """Every combination of the grid as a list of {param: value} dicts.
 
     An empty grid yields a single empty combination, so a job with no swept
-    parameters still runs its one command.
+    parameters still runs its 1 command.
     """
     if not grid:
         return [{}]
@@ -97,7 +97,7 @@ def _job_stem(prefix: str, flatten_combo: dict) -> str:
 
     Each flattened combination is a distinct point, so the ordered tuple of its
     values is unique across jobs. The collision guard in build_pbs_grid catches
-    the rare case where two different values sanitize to the same token.
+    the rare case where 2 different values sanitize to the same token.
     """
     if not flatten_combo:
         return prefix
@@ -108,7 +108,7 @@ def _job_stem(prefix: str, flatten_combo: dict) -> str:
 def _render_commands(
     command_template: str, flatten_combo: dict, kept_grid: dict[str, list]
 ) -> list[str]:
-    """Every command for one job: the flattened point crossed with all in-job points."""
+    """Every command for 1 job: the flattened point crossed with all in-job points."""
     commands = []
     for kept_combo in cartesian_product(kept_grid):
         params = {**flatten_combo, **kept_combo}
@@ -176,7 +176,7 @@ def build_pbs_grid(
 
     No disk writes, so this is trivially testable. keep_in_job names the
     parameters swept inside each job. Every other grid parameter is flattened,
-    one job per combination.
+    1 job per combination.
     """
     header = header or PbsHeader()
     _validate_grid(grid)

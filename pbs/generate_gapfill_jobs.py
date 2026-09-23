@@ -1,16 +1,16 @@
 """Generate the PBS jobs that fill the token_mask @ before_attention_norm panel.
 
-Two kinds of job.
+2 kinds of job.
 
 The gap-fill jobs sweep the (checkpoint, placement) pairs that were never run.
 Which pairs those are is discovered here rather than hard-coded, by checking for
 the raw cache directory, so re-running the generator after a partial batch emits
 only what is still outstanding.
 
-The sig jobs train one CIFAR-10 SIG model with dense checkpointing and then sweep
+The sig jobs train 1 CIFAR-10 SIG model with dense checkpointing and then sweep
 its snapshots. The sweeps are split across several jobs and submitted with a
 dependency on the training job, so they run in parallel once training finishes
-instead of serialising behind it.
+instead of serializing behind it.
 
     python pbs/generate_gapfill_jobs.py && bash pbs/vit_gapfill/submit_all.sh
 """

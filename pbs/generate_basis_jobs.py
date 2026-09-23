@@ -6,13 +6,13 @@ wherever the last batch stopped.
 
 Batching, which is where the wall-clock goes. run_one_checkpoint loads a model ONCE and
 loops every requested position over it, and --skip-existing short-circuits before the load,
-so the efficient unit of work is one invocation per (operator, block range, rate ladder)
+so the efficient unit of work is 1 invocation per (operator, block range, rate ladder)
 fanned across many positions. Baselines are written to results/<cell>/psbd/baseline_*.pt on
-first use, so keeping all of a cell's work inside one job means its baseline is built once
+first use, so keeping all of a cell's work inside 1 job means its baseline is built once
 instead of once per job.
 
-Two things are deliberately NOT done. Positions from different rate ladders are never
-merged into one invocation: gaussian's rate is a sigma and scale_up's is a multiplier, and
+2 things are deliberately NOT done. Positions from different rate ladders are never
+merged into 1 invocation: gaussian's rate is a sigma and scale_up's is a multiplier, and
 already_complete is all-or-nothing per placement, so a superset ladder silently recomputes
 every finished rate. And nothing here deletes anything: a cell that needs new placements
 added must keep the ones it has.
@@ -76,11 +76,11 @@ def selected_gaps(
 
 
 def invocation_key(gap: dict) -> tuple:
-    """Slots sharing this key can run as one sweep invocation.
+    """Slots sharing this key can run as 1 sweep invocation.
 
-    The key carries the MISSING rates rather than the declared ladder. Four ladders were
+    The key carries the MISSING rates rather than the declared ladder. 4 ladders were
     extended after the shift-reach audit, so a cell holding the old ladder needs only the new
-    rates while a cell holding nothing needs all of them. Merging those two into one call
+    rates while a cell holding nothing needs all of them. Merging those 2 into 1 call
     would recompute the entire old ladder for the first cell, because already_complete is
     all-or-nothing over the rates it is asked for.
     """
@@ -108,7 +108,7 @@ def cell_minutes(groups: dict) -> float:
 def pack_cells(workload: dict, minutes_per_job: float) -> list[list[str]]:
     """Whole cells into jobs, largest first, so a cell's baseline is built once.
 
-    Splitting a cell across jobs would make two jobs each build the same baseline, and if
+    Splitting a cell across jobs would make 2 jobs each build the same baseline, and if
     they run concurrently they race on the same file.
     """
     ordered = sorted(workload, key=lambda cell: -cell_minutes(workload[cell]))
@@ -128,7 +128,7 @@ def pack_cells(workload: dict, minutes_per_job: float) -> list[list[str]]:
 
 
 def invocation_lines(cells: list[str], workload: dict) -> str:
-    """One sweep call per (operator, block range, ladder, position set).
+    """1 sweep call per (operator, block range, ladder, position set).
 
     Cells are merged into a single call only when they need the SAME positions in that
     group. Merging cells with different needs would run the cross product and pay for

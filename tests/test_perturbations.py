@@ -138,7 +138,7 @@ def test_head_mask_granularity_is_the_whole_head():
 
 
 def test_near_total_head_mask_moves_the_output():
-    """Masking essentially every head in every block has to destroy attention.
+    """Masking nearly every head in every block has to destroy attention.
 
     The counterpart to the attach/detach test: that one proves the hook fires,
     this one proves the hook removes something the model was using.
@@ -174,7 +174,7 @@ class TestOperatorPositionValidation:
 
         The token operators read a rank-4 tensor as (batch, height, width,
         channels), so on a raw image token_mask masks image rows independently per
-        colour channel and channel_mask masks image columns. Both run, and both
+        color channel and channel_mask masks image columns. Both run, and both
         perturb an axis other than the one their name claims.
         """
         from defenses.operators import check_operator_position
@@ -192,7 +192,7 @@ class TestOperatorPositionValidation:
         masked = build_operator("token_mask")(0.5).train()(image)
 
         # Read as (batch, height, width, channels), whole "tokens" are zeroed, so
-        # entire colour-channel planes vanish rather than image patches.
+        # entire color-channel planes vanish rather than image patches.
         zeroed_planes = (masked == 0).all(dim=3).any().item()
         assert zeroed_planes, "the misread should zero along the wrong axis"
 

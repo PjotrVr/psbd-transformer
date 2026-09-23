@@ -263,7 +263,7 @@ def load_reference_class():
 def test_mask_norms_match_the_released_class_bit_for_bit():
     """The 1 check that says this is the paper's method rather than a look-alike.
 
-    float32 on the CPU, identity normalisation, the same seed immediately before
+    float32 on the CPU, identity normalization, the same seed immediately before
     each call so the per-step fill sequences coincide. The reference's only
     randomness is that fill, so any residual difference would be an operator or
     an ordering change rather than noise.

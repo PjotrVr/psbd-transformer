@@ -4,8 +4,8 @@ Covers the parts of the checkpoint pipeline that are easy to get subtly wrong
 and hard to notice: a checkpoint that loads but with the wrong weights, or an
 args.json reader that silently accepts a malformed file. normalize_checkpoints.py's
 folder-name parser is tested separately in scratch/test_normalize_checkpoints.py,
-since that script itself lives in scratch/ now (a gitignored, one-off migration
-tool, not part of the tracked package), and a tracked test importing from a
+since that script itself lives in scratch/ now (a gitignored, 1-off migration
+tool, not part of the tracked package). A tracked test importing from a
 gitignored path would fail on a fresh clone.
 """
 

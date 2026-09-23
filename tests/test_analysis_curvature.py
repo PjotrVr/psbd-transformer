@@ -5,7 +5,7 @@ build the full (197, 197) matrix and every estimator is checked against it: the
 product against H v, power iteration against the largest-magnitude eigenvalue,
 the Lanczos quadrature's nodes against the spectrum and its first moment against
 the trace over the parameter count, and the density curve against its own
-normalisation. float64 throughout, so a disagreement is the estimator's and not
+normalization. float64 throughout, so a disagreement is the estimator's and not
 the arithmetic's.
 """
 

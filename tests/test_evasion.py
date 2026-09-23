@@ -127,7 +127,7 @@ def test_optimising_the_penalty_closes_an_active_gap():
     A toy ViT cannot host a realistic backdoor: 300-plus steps on 8 samples
     saturates the softmax and PSU collapses to about 1e-4 for every sample, so any
     hinge built on an "implanted" backdoor here is vacuously zero. What can be
-    tested honestly is the optimisation itself. The group assignment below is
+    tested honestly is the optimization itself. The group assignment below is
     chosen so the hinge is active by construction, which is the condition the real
     attacker faces. Whether a real backdoor produces that condition is a question
     for the GPU run, not for a unit test.

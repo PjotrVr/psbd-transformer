@@ -1,7 +1,7 @@
 """The detector job generator's invariants, checked without a cluster.
 
 The groups must partition the registry, a job name must survive qstat's 10
-character truncation, every emitted flag must be one cli.baselines accepts, and
+character truncation, every emitted flag must be 1 cli.baselines accepts and
 a dry run must write nothing.
 """
 

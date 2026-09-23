@@ -31,7 +31,7 @@ PROJECT_ROOT = "/lustre/home/pstika/projects/PSBD-ViT"
 # Median observed minutes at 15 epochs, from the args.json timestamps.
 TRAIN_MINUTES = {"cifar100": 167, "tiny": 332}
 
-# (dataset, target count, poison rate). Every rate here is one the widened set
+# (dataset, target count, poison rate). Every rate here is a rate the widened set
 # can actually deliver, checked against |target set| / |train set|.
 CELLS = (
     ("cifar100", 2, 0.01),

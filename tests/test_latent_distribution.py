@@ -2,7 +2,7 @@
 
 Every statistic here is a number that will end up in a figure, so each one is
 tested against data constructed to have a specific answer rather than against a
-regression pin. A pin only says the code did not change; these say it is right.
+regression pin. A pin only says the code did not change. These say it is right.
 
 The Swin cases exist because per-layer feature extraction was ViT-only, and its
 token reduction silently returned an image row rather than a class token on
@@ -112,7 +112,7 @@ def test_default_reduction_follows_what_the_head_reads():
 
 
 def test_swin_features_are_extracted_at_every_block(tiny_swin, image_loader):
-    """The extraction that used to raise on Swin now returns one row per block."""
+    """The extraction that used to raise on Swin now returns 1 row per block."""
     features = extract_layer_features(
         tiny_swin, image_loader, torch.device("cpu"), use_bfloat16=False
     )
@@ -188,7 +188,7 @@ def test_separation_auroc_is_reported_unflipped():
 
 
 def test_standardized_shift_recovers_a_known_cohens_d():
-    """Two unit-variance populations 2 apart have d = 2 along their mean difference."""
+    """2 unit-variance populations 2 apart have d = 2 along their mean difference."""
     generator = torch.Generator().manual_seed(3)
     clean = torch.randn(4000, 6, generator=generator)
     backdoor = torch.randn(4000, 6, generator=generator)
@@ -377,7 +377,7 @@ def test_mahalanobis_is_undefined_against_a_reference_with_no_spread():
 
 
 def test_a_constant_layer_produces_a_row_rather_than_an_exception():
-    """A degenerate layer must still yield a row, so one bad layer cannot lose a table."""
+    """A degenerate layer must still yield a row, so 1 bad layer cannot lose a table."""
     constant = torch.ones(40, 4)
     varied = torch.randn(40, 4)
 
@@ -396,7 +396,7 @@ def test_rank_ratio_is_one_when_neither_population_collapses():
 
 
 def test_rank_ratio_falls_when_the_trigger_collapses_the_representation():
-    """A backdoor confined to one direction occupies far fewer than the clean data."""
+    """A backdoor confined to 1 direction occupies far fewer than the clean data."""
     generator = torch.Generator().manual_seed(15)
     clean = torch.randn(2000, 8, generator=generator)
     direction = torch.randn(1, 8, generator=generator)

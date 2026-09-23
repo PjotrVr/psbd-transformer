@@ -1,14 +1,14 @@
-"""Emit PSBD-sweep PBS jobs, one per (checkpoint, position-config).
+"""Emit PSBD-sweep PBS jobs, 1 per (checkpoint, position-config).
 
 The checkpoint list is derived, never hand-typed. Every checkpoint already
 carries a metrics.json with its measured attack success rate, so this reads that
 and drops anything whose backdoor does not actually work. That gate exists
 because the previous generated grid targeted vit_cifar100_wanet at 3 poison
-rates, and WaNet on CIFAR-100 reaches ASR 0.044 at 1% and 0.649 at 5%: there was
+rates, and WaNet on CIFAR-100 reaches ASR 0.044 at 1% and 0.649 at 5%. There was
 no backdoor there to detect, so those jobs could only ever have produced noise.
 
 Run from the repo root with PYTHONPATH=. so the flat root imports resolve.
-Generation only writes files; qsub is a separate manual step.
+Generation only writes files. qsub is a separate manual step.
 
 Example
     python pbs/generate_psbd_jobs.py --phase pre_post
@@ -32,7 +32,7 @@ BASE = "/lustre/home/pstika/projects/PSBD-ViT"
 # CIFAR-10 ViT is the only grid where every candidate attack holds high ASR at
 # every poison rate and every SAM rho, so it is the primary. The 5 attacks span
 # the trigger taxonomy the backdoor-directions paper separates on: static patch
-# (badnet_a2o), global blended (blend), stealthy distributed (bpp, lf), and one
+# (badnet_a2o), global blended (blend), stealthy distributed (bpp, lf) and 1
 # all-to-all probe (badnet_a2a) whose label geometry PSBD's stated mechanism
 # should not survive.
 ATTACKS = ("badnet_a2o", "blend", "bpp", "lf", "badnet_a2a")
@@ -50,7 +50,7 @@ MIN_ASR = 0.8
 # measuring an artifact.
 BENIGN_PROBE_TARGET_LABEL = 0
 
-# One timed job measured 4:00 on an A100 for a full 10000-image CIFAR split
+# 1 timed job measured 4:00 on an A100 for a full 10000-image CIFAR split
 # (9 rates x 3 splits x 3 passes, first job also builds the baseline). 15 minutes
 # is roughly 3.75x that, covering a slower GPU plus I/O variance while staying
 # small enough for fast backfill.
@@ -190,7 +190,7 @@ def write_job(
 
 
 PHASES: dict[str, tuple[tuple[str, ...], bool]] = {
-    # The two placements the study exists to compare, run and analyzed first.
+    # The 2 placements the study exists to compare, run and analyzed first.
     "pre_post": (tuple(DROPOUT_CONFIGS), False),
     # Every atomic position, to localize where inside a block the signal lives.
     "single_positions": (SINGLE_POSITION_NAMES, False),
@@ -200,7 +200,7 @@ PHASES: dict[str, tuple[tuple[str, ...], bool]] = {
     "depth_bands": (("pre_residual",), False),
 }
 
-# ViT-B/16 has 12 blocks. Four contiguous bands, plus the all-blocks reference that
+# ViT-B/16 has 12 blocks. 4 contiguous bands, plus the all-blocks reference that
 # the other phases already produce. The boundaries bracket the measured direction
 # onsets (blend 5, bpp 6, lf 8, badnet_a2o 9), so each attack's onset falls inside a
 # different band and the per-attack prediction is separable.
@@ -253,7 +253,7 @@ def main() -> None:
     rates = FINE_RATES if args.fine_rates else ()
     # A distinct filename, because the fine sweep writes into the same
     # position-config folder as the main grid. That is intentional: the rate tags
-    # do not collide, so stage 2 sees one continuous rate axis per placement.
+    # do not collide, so stage 2 sees 1 continuous rate axis per placement.
     suffix = "_fine" if args.fine_rates else ""
 
     if args.phase == "depth_bands":

@@ -5,8 +5,8 @@ comes back, the purity raster fills rows in proportion, the overlay stays in
 range and save_figure writes both files. The 2 projections upstream calls
 through libraries are checked against those libraries' direct calls with the
 same seed. Then every registered tool runs on a synthetic VisualCase built
-from a tiny ViT and paired loaders, on the CPU, and must leave a PDF, a PNG
-and a sidecar behind with the plotted arrays inside.
+from a tiny ViT and paired loaders, on the CPU. It must leave a PDF, a PNG and
+a sidecar behind with the plotted arrays inside.
 """
 
 import argparse

@@ -3,8 +3,8 @@
 The split's whole point is auditability: the seed recipe must reproduce the
 manifest exactly, heldout and analysis must be disjoint and together complete,
 and the row order a loader serves must match the manifest index for that row. The
-first two need no data; the row-mapping round-trip loads the real cifar100 test
-set and one on-disk checkpoint, so it is skipped when either is absent.
+first 2 need no data. The row-mapping round-trip loads the real cifar100 test
+set and 1 on-disk checkpoint, so it is skipped when either is absent.
 """
 
 import os

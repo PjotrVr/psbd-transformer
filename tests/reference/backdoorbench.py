@@ -2,8 +2,8 @@
 
 BackdoorBench (Wu et al., NeurIPS 2022 Datasets and Benchmarks track,
 https://github.com/SCLBD/BackdoorBench, commit f02e353) is licensed under the
-Creative Commons Attribution-NonCommercial 4.0 International licence. The
-lines below are quoted under that licence as test-only reference material,
+Creative Commons Attribution-NonCommercial 4.0 International license. The
+lines below are quoted under that license as test-only reference material,
 attributed to its authors, and nothing here is imported by analysis/,
 visualization/ or evaluation/, which re-implement the statistics from the
 papers and are compared against these quotations in tests/ alone. Each
