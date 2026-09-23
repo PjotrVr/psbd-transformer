@@ -73,7 +73,7 @@ def has_trigger(images):
 def trigger_presence(images):
     """A differentiable degree of the trigger's presence, 1 exact and 0 at the tolerance.
 
-    has_trigger is a boolean, which has no gradient. A detector that optimises
+    has_trigger is a boolean, which has no gradient. A detector that optimizes
     over the input, such as CD-L's mask, needs the backdoor to respond smoothly to
     how much of the trigger survives, which is what a real backdoor does.
     """
@@ -111,7 +111,7 @@ class BackdooredModel(nn.Module):
     is exact: an intact trigger replaces the logits with BACKDOOR_LOGIT on the target
     class and 0 elsewhere, a partly destroyed trigger blends the 2 in proportion,
     and a clean input is untouched. The gate is differentiable, so a detector that
-    optimises over pixels sees the backdoor as a real backdoor.
+    optimizes over pixels sees the backdoor as a real backdoor.
 
     It is deliberately robust to activation perturbation, since the trigger is
     read from the INPUT rather than from any intermediate feature. That is the

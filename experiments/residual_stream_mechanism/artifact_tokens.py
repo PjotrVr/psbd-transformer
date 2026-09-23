@@ -2,7 +2,7 @@
 
 Large self-supervised ViTs spontaneously produce a small population of high-norm "artifact" or
 register tokens that attract attention and carry global rather than local information (Darcet
-et al., ICLR 2024; Sun et al., arXiv:2402.17762 for the LLM form). That matters here for two
+et al., ICLR 2024. Sun et al., arXiv:2402.17762 for the LLM form). That matters here for 2
 opposite reasons.
 
 If such a population exists NATIVELY it is a confound: a detector that masks tokens at random
@@ -22,7 +22,7 @@ Measured per layer over patch tokens:
     trigger_rank     mean percentile rank of the trigger's tokens by norm, 1.0 = highest
 
 The same quantity is also scored as a DETECTOR, since it needs no perturbation, no trigger
-knowledge and one forward pass. The clean split is paired down to the backdoor split's own
+knowledge and 1 forward pass. The clean split is paired down to the backdoor split's own
 images first, or the comparison partly measures which images each split contains.
 
     PYTHONPATH=. python experiments/residual_stream_mechanism/artifact_tokens.py \

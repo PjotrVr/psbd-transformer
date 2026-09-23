@@ -27,7 +27,7 @@ At a 1% false-positive budget the method misses **more than half** of triggered 
 every poison rate, while its AUROC reads 0.88 to 0.91.
 
 **13 of 56 cells have AUROC >= 0.85 and TPR@1%FPR < 0.05.** That is 23% of the panel
-looking excellent and catching essentially nothing at a deployable threshold:
+looking excellent and catching almost nothing at a deployable threshold:
 
 | cell | AUROC | TPR@1% | TPR@5% |
 |---|---|---|---|
@@ -45,7 +45,7 @@ overlaps. The last does not, and is a genuine failure at any usable budget.
 
 Achieved FPR tracks the nominal quantile closely (0.0113 against 0.01, 0.0524 against
 0.05), so the calibration is right and the clean and backdoor score distributions genuinely
-overlap in the extreme tail. Two candidate fixes were tested and both failed: excluding
+overlap in the extreme tail. 2 candidate fixes were tested and both failed: excluding
 negative-PSU validation samples from the threshold merely moves along the same ROC curve
 at double the FPR, and mapping negative PSU to "definitely clean" changes the ROC but makes
 the mean worse (AUROC 0.908 to 0.749).

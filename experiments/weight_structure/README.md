@@ -5,7 +5,7 @@
 Every other measurement in this project reads activations. If the backdoor is a
 single direction the model learned to write, it should also be visible in the
 weights, and specifically as a low-rank perturbation: subtract a benign model from
-its matched backdoored twin, take the SVD, and the top singular value should carry
+its matched backdoored twin, take the SVD. The top singular value should carry
 most of the variance in the late layers. That would give a detector needing no
 triggered data and no forward pass at all.
 

@@ -1,8 +1,8 @@
 """Does a backdoor trigger ride in an image's STYLE or in its CONTENT?
 
 The hypothesis: a trigger is a texture, and the class evidence is structure. If that is
-right, a style-content decomposition puts the poison entirely on one side of the split, and
-normalising the style is a purification defense.
+right, a style-content decomposition puts the poison entirely on 1 side of the split, and
+normalizing the style is a purification defense.
 
 The instrument is exact and needs no trained network. Fourier PHASE carries structure and
 AMPLITUDE carries texture (Oppenheim and Lim, 1981), so for a suspect image x and a clean
@@ -10,7 +10,7 @@ donor d:
 
     mix(x, d, lam) = IFFT( [(1-lam)|FFT(x)| + lam|FFT(d)|] * exp(i * angle(FFT(x))) )
 
-The suspect's PHASE, hence its structure, is always kept; its AMPLITUDE, hence its texture,
+The suspect's PHASE, hence its structure, is always kept. Its AMPLITUDE, hence its texture,
 is interpolated toward a clean donor's by lam. lam = 0 is the original image and lam = 1 is
 a full texture replacement. Exact, invertible up to the real projection, no learned decoder.
 
@@ -25,7 +25,7 @@ Prediction, per attack, which is the point: this is a taxonomy, not one number.
 | attack | trigger | rides in |
 |---|---|---|
 | badnet | a 3x3 corner patch | structure, so PHASE |
-| blend, sig, lf, bpp | a global pattern, a sinusoid, a low band, a quantisation | texture, so AMPLITUDE |
+| blend, sig, lf, bpp | a global pattern, a sinusoid, a low band, a quantization | texture, so AMPLITUDE |
 | wanet | an elastic warp, which adds no pattern and moves content | NEITHER |
 
 A result splitting the attacks that way is a finding. One that does not is a refutation.

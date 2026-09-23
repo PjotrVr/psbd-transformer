@@ -5,15 +5,15 @@ when dropout destroys the evidence a clean prediction rests on while leaving the
 trigger-to-target path intact. That claim is stated in probability space (PSU), but
 it is really a claim about the residual stream, and this measures it there.
 
-Procedure, for one checkpoint and one placement:
+Procedure, for 1 checkpoint and 1 placement:
 
   1. With no dropout, compute the backdoor direction r at the final layer from
      paired clean and triggered features. This is the reference direction; it is
      never recomputed under perturbation, because the question is how much of
      *this* direction survives.
-  2. For each rate, plug the placement, and project the perturbed final-layer CLS
+  2. For each rate, plug the placement and project the perturbed final-layer CLS
      features onto r for clean and for triggered inputs.
-  3. Report the separation between the two projections, normalized by the
+  3. Report the separation between the 2 projections, normalized by the
      unperturbed separation.
 
 The prediction that distinguishes the placements:
@@ -23,8 +23,8 @@ The prediction that distinguishes the placements:
   a placement PSBD fails at    collapses both, so separation goes to zero and
                                there is nothing left for a threshold to find
 
-Note this measures the same phenomenon as PSU but one step upstream, so agreement
-between the two is evidence the mechanism story is right rather than a restatement
+Note this measures the same phenomenon as PSU but 1 step upstream, so agreement
+between the 2 is evidence the mechanism story is right rather than a restatement
 of it.
 
 **Checked against the LayerNorm artifact that invalidated H16 section 9, and clean.**
@@ -89,7 +89,7 @@ def parse_args() -> argparse.Namespace:
 def final_layer_features(
     model, loader, device, layer: int, seed: int, post_ln: bool = False
 ) -> torch.Tensor:
-    """CLS features at one layer, with the mask sequence pinned by seed.
+    """CLS features at 1 layer, with the mask sequence pinned by seed.
 
     Reseeding immediately before extraction is what makes the clean and triggered
     passes comparable: without it they draw different masks, and the difference
@@ -129,7 +129,7 @@ def separation(
 ) -> float:
     """Standardized mean difference along the direction (Cohen's d).
 
-    A plain mean difference would confound "the two groups moved apart" with "the
+    A plain mean difference would confound "the 2 groups moved apart" with "the
     perturbation inflated everything's variance", and dropout does inflate
     variance. Pooled standard deviation in the denominator separates them.
     """

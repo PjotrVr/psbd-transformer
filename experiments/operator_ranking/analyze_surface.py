@@ -2,7 +2,7 @@
 
 A configuration is (placement, score kind, sigma target). The rate is then chosen
 by the paper's rule shape: smallest rate whose clean-validation sigma reaches the
-target. Nothing here reads a poison label, so every configuration reported is one
+target. Nothing here reads a poison label, so every configuration reported is 1
 a defender could actually deploy.
 
 Scored by mean one-sided AUROC per poison rate, with the benign control and the
@@ -45,7 +45,7 @@ def evaluate(placement, kind, target):
             continue
         if tag == "benign":
             benign = chosen[kind]
-        # all-to-all is a known separate failure (H5); keep it out of the mean
+        # all-to-all is a known separate failure (H5). Keep it out of the mean
         # so it cannot mask or manufacture a low-poison-rate effect.
         elif "badnet_a2a" not in folder:
             by_rate[tag].append((folder, chosen[kind]))

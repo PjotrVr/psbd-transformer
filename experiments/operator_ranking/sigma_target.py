@@ -1,7 +1,7 @@
 """Which clean-validation shift ratio should the rate rule target?
 
 The paper targets sigma >= 0.8. That target is chosen without reference to the
-poison rate, and the question here is whether one target can be safe across
+poison rate, and the question here is whether 1 target can be safe across
 poison rates. Emits (placement, rate, sigma, one-sided AUROC) for every cached
 cell, then scores each candidate target by the AUROC it would have selected.
 

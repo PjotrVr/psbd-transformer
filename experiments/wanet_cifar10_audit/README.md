@@ -6,7 +6,7 @@ On `vit_cifar10_wanet_0_1` (WaNet, CIFAR-10, 10% poisoning, ASR 0.890), PSBD-TM
 (`before_attention_norm_token_mask`) reads AUROC 0.459 at the deployable rate, while
 PSBD-RD (`post_residual` dropout, the published ConvNet placement) reads 0.947 on
 the same checkpoint, and both placements read above 0.94 on GTSRB and Tiny
-ImageNet WaNet at the same 10% rate. Is the 0.459 real, a sweep artefact, or a
+ImageNet WaNet at the same 10% rate. Is the 0.459 real, a sweep artifact or a
 property of this 1 checkpoint, and is the user's recollection of `pre_residual`
 doing well on WaNet consistent with what is on disk.
 
@@ -18,8 +18,8 @@ doing well on WaNet consistent with what is on disk.
    `results/vit_cifar10_wanet_0_1/psbd_metrics.json`.
 2. Recomputed AUROC directly from the stage-1 cache under
    `results/vit_cifar10_wanet_0_1/psbd/before_attention_norm_token_mask/`, checked
-   the split manifest, the baseline clean accuracy and ASR, and the per-pass
-   tensors, with `defenses.scores` and `defenses.decision`.
+   the split manifest, the per-pass tensors and the baseline clean accuracy and ASR,
+   with `defenses.scores` and `defenses.decision`.
 3. Read the same tables for the WaNet models on GTSRB and Tiny ImageNet at 10%,
    for `vit_cifar10_wanet_0_05`, and for the project's own 3 Monte Carlo mask
    seeds already cached for this cell (`_seed1`, `_seed2`).
@@ -49,11 +49,11 @@ ASR 0.8898):
 
 Token masking never separates clean from backdoor on this cell, at any rate on the
 0.05 to 0.9 ladder: AUROC climbs from 0.37 at rate 0.05 to a ceiling of 0.77 at
-rate 0.9, the top of the sweep, and never approaches the dropout placements'
+rate 0.9 (the top of the sweep) and never approaches the dropout placements'
 0.92 to 0.93. The adaptive rule's 0.459 sits inside that flat, low range, not below
 it, so a different rate choice would not have rescued the placement. The user's
 recollection of `pre_residual` doing well on WaNet is confirmed: it reads 0.925 at
-its adaptive rate, essentially tied with `post_residual`'s 0.927, both far above
+its adaptive rate, close to `post_residual`'s 0.927, both far above
 `before_attention_norm` token masking on this checkpoint.
 
 Recomputing rate 0.5's cache directly with `defenses.scores.psu_ratio_from_cache`

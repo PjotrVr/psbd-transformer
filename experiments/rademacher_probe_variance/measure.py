@@ -10,7 +10,7 @@ so a Rademacher probe estimates the same expectation with variance smaller by
 exactly the diagonal energy of H. Both operators are zero mean with the same
 per entry scale, so at a matched rate they differ only as estimators.
 
-Two things are measured, because they can disagree and the distinction matters.
+2 things are measured, because they can disagree and the distinction matters.
 
 1. The estimator claim, directly. Run many independent single pass estimates of
    the same quantity and compare their spread. This tests the theory itself, and
@@ -57,7 +57,7 @@ VARIANCE_REPEATS = 24
 
 
 def probe_context(model, architecture, position, operator, rate):
-    """Attach one probe and return its handles, for use in a try block."""
+    """Attach 1 probe and return its handles, for use in a try block."""
     handles = plug_dropout(
         model, architecture, (position,), {position: build_operator(operator)}, rate
     )
@@ -67,7 +67,7 @@ def probe_context(model, architecture, position, operator, rate):
 def single_pass_estimates(
     model, loader, baseline_labels, baseline_probs, device, repeats
 ):
-    """One PSU vector per repeat, each from an independent single pass, (repeats, N).
+    """1 PSU vector per repeat, each from an independent single pass, (repeats, N).
 
     Each row is an independent 1 probe Hutchinson estimate of the same quantity,
     so the spread across rows is the estimator's variance and nothing else. The
@@ -85,7 +85,7 @@ def single_pass_estimates(
 
 
 def measure_checkpoint(folder, position, samples, checkpoints_dir):
-    """Both comparisons for one checkpoint, as a list of flat rows."""
+    """Both comparisons for 1 checkpoint, as a list of flat rows."""
     checkpoint = os.path.join(checkpoints_dir, folder, "attack_result.pt")
     loaders, _manifest = build_psbd_loaders_from_checkpoint(
         checkpoint, max_samples=samples

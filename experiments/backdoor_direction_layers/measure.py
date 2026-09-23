@@ -1,24 +1,24 @@
 """Where in the ViT stack does each attack write its backdoor direction?
 
-For one checkpoint, extracts the residual stream at every block for paired clean
+For 1 checkpoint, extracts the residual stream at every block for paired clean
 and triggered versions of the same images, then reports per layer:
 
   rel_direction  ||mean(x_trigger - x_clean)|| / mean||x_clean||
   max_tac        the largest per-dimension trigger-activated change
   cka            debiased linear CKA between the clean and triggered features
 
-Three deliberate choices, each of which changes the answer:
+3 deliberate choices, each of which changes the answer:
 
 **fp32, not bfloat16.** The clean and triggered passes are separate forwards, so
 their rounding errors are independent. The direction is a signed mean and averages
-that noise down by sqrt(N); TAC is a mean of absolute differences and does not.
+that noise down by sqrt(N). TAC is a mean of absolute differences and does not.
 bf16 carries ~0.4% relative error, and ViT residual norms grow with depth, so a
 bf16 TAC has a noise floor that rises with depth. That is exactly the shape a real
 finding would have, which makes it the worst possible artifact to leave in.
 
 **Relative direction norm, not raw.** The residual stream's norm grows
 monotonically with depth in a ViT, so an argmax over the raw norm selects a late
-layer for essentially any model, backdoored or benign. Dividing by the mean clean
+layer for almost any model, backdoored or benign. Dividing by the mean clean
 feature norm makes the quantity scale-free and comparable across layers.
 
 **Eligible images only.** Triggering an image whose true class is already the
@@ -27,7 +27,7 @@ class prior. poison.is_eval_poisonable is the same eligibility rule the ASR set
 uses, and for the same reason: the question is whether the trigger moves a
 non-target image.
 
-Run on the login node; one checkpoint at 1000 samples takes about a minute.
+Run on the login node. 1 checkpoint at 1000 samples takes about a minute.
 
 Example
     python experiments/backdoor_direction_layers/measure.py \
@@ -79,7 +79,7 @@ def build_paired_loaders(
 ) -> tuple[DataLoader, DataLoader, list[int]]:
     """Clean and triggered loaders over the same eligible images, row-aligned.
 
-    Both are shuffle=False over one Subset, so row i of each is the same test
+    Both are shuffle=False over 1 Subset, so row i of each is the same test
     image once clean and once triggered. That pairing is what the direction and
     TAC require, and it is asserted downstream rather than assumed.
     """
@@ -116,7 +116,7 @@ def build_paired_loaders(
 
 
 def per_layer_table(clean: dict, backdoor: dict) -> list[dict]:
-    """One row per layer, all quantities scale-free or explicitly normalized."""
+    """1 row per layer, all quantities scale-free or explicitly normalized."""
     rows = []
     for layer in sorted(clean):
         clean_features, backdoor_features = clean[layer], backdoor[layer]
@@ -145,7 +145,7 @@ def onset_layer(rows: list[dict]) -> int:
     """The layer with the largest jump in relative direction norm.
 
     The earliest sharp gain, not the global maximum. The companion paper picks the
-    earliest layer deliberately: a late layer can look strongest simply because the
+    earliest layer deliberately. A late layer can look strongest only because the
     representation is closest to the logits there, which says nothing about where
     the trigger information first became linearly available.
     """

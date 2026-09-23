@@ -5,8 +5,8 @@
 This is the positive control for H6. PSBD gets worse on SAM-trained models, and
 there are 2 very different explanations for that.
 
-Either SAM does amplify the backdoor here, exactly as the SAM paper claims, and the
-benefit simply does not reach a prediction-space detector, which is a finding about
+Either SAM does amplify the backdoor here, exactly as the SAM paper claims, but the
+benefit does not reach a prediction-space detector, which is a finding about
 detector families and the interesting outcome. Or SAM does not amplify the backdoor
 in a ViT at all, so there was never anything for PSBD to miss, and the finding is
 about transformers or AdamW instead and says nothing about detector families.
@@ -43,7 +43,7 @@ The H6 verdict carries a coverage caveat that this control does not remove. The
 naive Adam against SAM aggregate compares 225 checkpoints to 16 and is confounded,
 because the SAM checkpoints were swept over a harder set. Matched on architecture,
 dataset, attack, poison rate and placement, the sign flips to between +0.025 and
-+0.050 in SAM's favour, and 13 of those 18 matched cells are `badnet_a2a`. The
++0.050 in SAM's favor, and 13 of those 18 matched cells are `badnet_a2a`. The
 verdict should be re-decided once matched `badnet_a2o`, `blend`, `bpp` and `lf`
 cells land.
 

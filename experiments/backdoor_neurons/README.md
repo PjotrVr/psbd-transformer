@@ -8,11 +8,11 @@ Written for [H16](../../docs/hypothesis/H16-where-the-backdoor-neurons-are.md).
 **The folder is named for the question, not the answer.** The answer turned out to
 be that there are no backdoor *neurons* on ViT: zeroing the top 300 TAC coordinates
 of 768 leaves ASR at 1.00, while removing 1 linear direction takes it to 0.00. The
-backdoor is real, causal, and rotated off the coordinate basis.
+backdoor is real, causal and rotated off the coordinate basis.
 
 ## The question
 
-Everything before this measured PSBD's *behaviour*. This measures the object PSBD
+Everything before this measured PSBD's *behavior*. This measures the object PSBD
 is supposed to be reacting to. If the backdoor is a linear direction in the
 residual stream, it has an address: a block, and a set of dimensions. Find the
 address, and 3 things become checkable that were previously assertions.
@@ -65,12 +65,12 @@ PYTHONPATH=. python experiments/backdoor_neurons/report.py
 Login node, about 25 minutes for all 18 checkpoints. No PBS job needed.
 
 The benign checkpoint is invoked separately only because it needs `--probe-attack`
-to define a trigger; `resolve_probe_attack` refuses that flag on a backdoored
+to define a trigger. `resolve_probe_attack` refuses that flag on a backdoored
 checkpoint rather than silently measuring a trigger the model never saw.
 
 ## Findings
 
-1. **Late and sharp.** Every attack peaks at block 10 to 12; benign peaks at 8 with
+1. **Late and sharp.** Every attack peaks at block 10 to 12. Benign peaks at 8 with
    a relative direction norm of 0.09 and decays. Between 5 and 17 dimensions out of
    768 are outliers at mean + 3 std.
 2. **Attacks are disjoint.** Cross-attack Jaccard of top-20 TAC dimensions is 0.00
@@ -97,7 +97,7 @@ checkpoint rather than silently measuring a trigger the model never saw.
 7. **SAM decouples the backdoor from the mean shift.** ASR after direction removal
    rises monotonically with rho (`blend` 0.00 to 0.99 to 1.00, `lf` 0.05 to 0.35 to
    0.97). Not a depth artifact: forcing the ablation to block 12, with no block
-   left to recover in, gives the same answer. And not simply "spread over more
+   left to recover in, gives the same answer. And not "spread over more
    directions" either, since rank 2 to 16 subspaces of the difference hold ASR at
    1.00 while dropping clean accuracy to 0.56.
 

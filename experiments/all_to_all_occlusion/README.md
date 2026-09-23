@@ -36,12 +36,12 @@ Found during the 2026-09-08 audit and not yet corrected:
   comparison is 675 rows against 825 non-matching ones. `balance_by_class` emits in class
   order, so that tail is a specific set of high-numbered classes rather than a random
   half.
-- No results file is written; output goes to stdout only.
+- No results file is written. Output goes to stdout only.
 
 ## Why it is kept
 
 It carries its own falsification machinery, which is the part worth preserving: an
-ablation that removes the permutation readout, a clean-validation null permutation, and a
+ablation that removes the permutation readout, a clean-validation null permutation and a
 split-half transfer test. The defects above are in how the splits are built, not in that
 design.
 

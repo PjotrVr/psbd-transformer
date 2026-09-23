@@ -78,7 +78,7 @@ def audit(folder: str, results_dir: str, checkpoints_dir: str) -> dict | None:
         "auroc": float(roc_auc_score(labels, signed)),
         # The rare-positive metric. At 1% poisoning the prevalence a defender faces is
         # far below the 50/50 this paired evaluation uses, so AUPRC here is still
-        # optimistic; it is reported because it is at least sensitive to the tail.
+        # optimistic. It is reported because it is at least sensitive to the tail.
         "auprc": float(average_precision_score(labels, signed)),
     }
     for quantile in QUANTILES:

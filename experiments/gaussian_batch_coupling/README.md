@@ -48,7 +48,7 @@ poisoned, that drags AUROC down.
 
 That looked like the shape of the published failure. `docs/results/negative-results.md`
 section 7 reports gaussian at `before_attention_norm` on CIFAR-100 badnet 1% at
-AUROC 0.168, a "massive inversion", and the checkpoint with the worst coupling in
+AUROC 0.168, a "massive inversion". The checkpoint with the worst coupling in
 the table above is CIFAR-100 badnet at +32.3%. The obvious hypothesis was that the
 inversion was an artifact of the operator rather than a property of gaussian noise
 at that position.

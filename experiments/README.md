@@ -1,11 +1,11 @@
 # Experiments
 
 1 directory per question, each holding its scripts and a `README.md` stating the
-question, how to run it, and what was found. Everything here is tracked, because a
+question, how to run it and what was found. Everything here is tracked, because a
 number in `docs/` that cannot be traced back to a commit is not a result.
 
 Throwaway work goes in `scratch/`, which is gitignored and holds smoke tests, job
-generators, already-run migrations, and regenerable caches. Nothing in `scratch/`
+generators, already-run migrations and regenerable caches. Nothing in `scratch/`
 may be the only source of a published number.
 
 Repo-level tools are not experiments and stay in `scripts/`:

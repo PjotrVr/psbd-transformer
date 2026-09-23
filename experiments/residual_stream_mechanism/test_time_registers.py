@@ -8,11 +8,11 @@ backdoor is exploiting the absence of such a token, spare capacity should weaken
 
 That makes this simultaneously a mechanism test and a candidate defense, which is why it is
 worth running even though the prior is against it: this ViT has no native register population
-(patch norms are unimodal, 0.000% above twice the median), and the trigger's neurons are
+(patch norms are unimodal, 0.000% above twice the median). The trigger's neurons are
 disjoint from the ones driving natural high-norm tokens, so there may be no competition to
 redirect. A null result here is informative and cheap.
 
-Spare tokens are appended to the sequence at the embedding output, initialised to the mean
+Spare tokens are appended to the sequence at the embedding output, initialized to the mean
 patch embedding so they carry no content of their own, and they participate in attention from
 then on. Nothing is trained and no weight changes.
 
@@ -70,7 +70,7 @@ def trigger_tokens(metadata) -> torch.Tensor:
 def attach_registers(core, count):
     """Append `count` spare tokens after the embedding, before the block stack.
 
-    They are initialised to the mean patch embedding so they introduce no content, and are
+    They are initialized to the mean patch embedding so they introduce no content, and are
     dropped again before the readout, which reads token 0 only, so the classifier never sees
     them directly and any effect is through attention alone.
     """

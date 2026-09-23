@@ -65,7 +65,7 @@ def gini(profile):
 
 
 def normalized_entropy(profile):
-    """1 means flat, 0 means all the sensitivity sits on one placement."""
+    """1 means flat, 0 means all the sensitivity sits on 1 placement."""
     p = profile.clamp_min(0) + 1e-9
     p = p / p.sum(dim=1, keepdim=True)
     return -(p * p.log()).sum(dim=1) / np.log(p.shape[1])

@@ -65,7 +65,7 @@ entire 100-to-1000 range, both comfortably inside the draw-to-draw noise at
 figures once the quantile and rate rule are accounted for. The rate rule
 itself is stable too: PSBD-TM's mean selected rate never moves outside
 0.562 to 0.563 and PSBD-RD's stays at 0.080 to 0.082. A defender with 100
-clean images loses essentially nothing over one with 2000, on this panel. The
+clean images loses almost nothing over 1 with 2000, on this panel. The
 gap between PSBD-TM and PSBD-RD (about 0.10 AUROC at every subset size) is
 also unchanged, so the headline placement comparison does not depend on
 holding a large clean set either.
@@ -75,10 +75,9 @@ holding a large clean set either.
 **Question.** `configs/psbd_basis.json`'s `selection_protocol` splits the
 panel the same way the paper's placement choice does: CIFAR-10 and GTSRB
 models select, CIFAR-100 and Tiny ImageNet models report. Does the best
-min-rank probe union (`experiments/probe_union/pair_search.py`), chosen the
-same way on the selection half, generalise to the held-out half, or does its
-apparent gain come from having been picked on the same models it is later
-read on?
+min-rank probe union (`experiments/probe_union/pair_search.py`) chosen the same
+way on the selection half generalize to the held-out half, or does its apparent
+gain come from having been picked on the same models it is later read on?
 
 **Method.** Candidates are the 13 basis placements present on all 69 panel
 models (`experiments.probe_union.measure.basis_ids_present_on_all_models`).
@@ -100,7 +99,7 @@ bootstrapped over those 32 models
 | Paired gain, pair minus PSBD-TM alone, held-out models | 32 | -0.010 [-0.025, +0.003] | -- | -- |
 
 **Answer.** The winning pair on the selection half is PSBD-TM plus PSBD-RD
-itself, the published placement, and it does not generalise. Its bootstrap
+itself, the published placement. It does not generalize, and its bootstrap
 interval for the held-out AUROC gain, [-0.025, +0.003], straddles 0 and its
 mean sits negative, so adding PSBD-RD to PSBD-TM costs AUROC on CIFAR-100 and
 Tiny ImageNet rather than helping. This matches the union result CLAUDE.md
@@ -148,7 +147,7 @@ and `mlp_norm_out_gain_scale` is the placement whose earlier standalone
 `gain_scale` headline this repo already withdrew after audit
 (`docs/audit-2026-09-07.md`), so a pair search on a single selection half
 can still surface a placement that does not hold up, and this pair does not
-generalise either: held-out AUROC drops from 0.944 (PSBD-TM alone) to 0.919,
+generalize either: held-out AUROC drops from 0.944 (PSBD-TM alone) to 0.919,
 and the gain interval [-0.072, +0.008] again straddles 0 while leaning
 negative. PSBD-TM plus the attention branch output, read directly rather
 than because the search chose it, is the more promising pair: held-out AUROC
@@ -157,7 +156,7 @@ rises to 0.951 and TPR at both quantiles rises too (0.878 at 10%, 0.924 at
 leans positive but still touches 0. On this held-out half the deployment
 pair reads better than the pair either search (strict or relaxed coverage)
 actually selects, which argues the mean-TPR-at-10%-on-selection criterion is
-not reliably picking the pair that generalises best, more than it argues the
+not reliably picking the pair that generalizes best, more than it argues the
 attention branch pair is a settled win.
 
 ## Check 3: the mask seed
@@ -189,12 +188,12 @@ canonical cache), 1 and 2 for each model, via
 | vit_tiny_badnet_a2o_0_01 | 0.5 | 0.980 | 0.981 | 0.981 | 0.0005 | 0.989 | 0.993 | 0.994 | 0.0023 |
 | **Mean across models** | | | | | **0.0016** | | | | **0.0069** |
 
-**Answer.** PSBD-TM's numbers are not an artefact of mask seed 0. AUROC moves
-by at most 0.010 across seeds 0, 1 and 2 on any of the 10 models, and the
+**Answer.** PSBD-TM's numbers are not an artifact of mask seed 0. AUROC moves
+by at most 0.010 across seeds 0, 1 and 2 on any of the 10 models. The
 mean standard deviation across models (0.0016) is 2 orders of magnitude
 below the 0.10 gap the paper reports between PSBD-TM and PSBD-RD. The 1
 outlier is TPR at 10% on `vit_cifar100_tact_0_01` (std 0.057), which is a
-poison-rate artefact rather than a mask-seed one: at 1% poisoning the
+poison-rate artifact rather than a mask-seed one: at 1% poisoning the
 eligible TaCT backdoor pool is small, so a handful of samples crossing the
 threshold moves TPR by several points while AUROC on the same model barely
 moves (0.901 to 0.909). Both models CLAUDE.md names as inverted,

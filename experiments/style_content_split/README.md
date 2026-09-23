@@ -3,13 +3,13 @@
 ## The idea
 
 A trigger is a texture and the class evidence is structure, so a style-content
-decomposition should put the poison entirely on one side, and normalising the style is a
+decomposition should put the poison entirely on 1 side, and normalizing the style is a
 purification defense. Instrument: Fourier phase carries structure and amplitude carries
 texture, so the split is exact, invertible and needs no learned decoder.
 
     mix(x, d, lam) = IFFT( [(1-lam)|FFT(x)| + lam|FFT(d)|] * exp(i * angle(FFT(x))) )
 
-The suspect's phase is always kept; its amplitude is pulled toward a clean donor's by lam.
+The suspect's phase is always kept. Its amplitude is pulled toward a clean donor's by lam.
 
 Predicted taxonomy: badnet (a 3x3 corner patch) rides in PHASE, blend/sig/lf/bpp (global
 patterns) in AMPLITUDE, wanet (an elastic warp) in NEITHER.
@@ -48,7 +48,7 @@ phase change is bounded by pi, so the share becomes a monotone readout of trigge
 **contrast**, not trigger **type**.
 
 A high-contrast 3x3 corner patch and a global sinusoid are therefore forced to the same
-place. **Seven of the nine attacks in this panel are additive and so are unattributable by
+place. **7 of the 9 attacks in this panel are additive and so are unattributable by
 construction in this basis.** Only multiplicative operators can be attributed: a
 multiplicative amplitude filter, a warp (a coordinate operator, hence phase to first
 order), and an all-pass phase filter.
@@ -67,7 +67,7 @@ order), and an all-pass phase filter.
 | **REFINE**, ICLR 2025 | fills the transformation-defense slot and names the weakness: such defenses "must modify all features indiscriminately" |
 
 So "the backdoor is a style feature" is a 2021-2022 attack design premise, not an open
-hypothesis. Style normalisation as a defense is unpublished by name and dead in substance.
+hypothesis. Style normalization as a defense is unpublished by name and dead in substance.
 
 ## What survives
 

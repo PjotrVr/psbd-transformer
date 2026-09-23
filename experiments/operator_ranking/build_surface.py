@@ -1,7 +1,7 @@
-"""Compute (folder, placement, rate) -> (sigma, one-sided AUROC) once, cache to JSON.
+"""Compute (folder, placement, rate) to (sigma, one-sided AUROC) once, cache to JSON.
 
 Everything downstream is a slice of this table. sigma is clean-validation only,
-so any rule built on it is defender-legal; AUROC is the outcome, never an input.
+so any rule built on it is defender-legal. AUROC is the outcome, never an input.
 """
 
 import json

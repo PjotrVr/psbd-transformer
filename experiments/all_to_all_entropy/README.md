@@ -38,14 +38,14 @@ shift-invariant, so `log p_1 - log p_2 = z_1 - z_2` identically.
 The 2 statistics are almost perfectly complementary, and the benign control sits at
 chance for both, so neither is an artifact of the pipeline.
 
-Two things follow.
+2 things follow.
 
 **The case PSBD declares uncoverable is not uncoverable.** A single deterministic forward
 pass, using a tensor the sweep already writes to disk, reaches 0.761 mean where PSBD
 reaches 0.411.
 
 **And PSBD is not a margin detector.** On all-to-one the deterministic margin scores 0.375
-against PSU's 0.891, so the two are not measuring the same thing. That is the same
+against PSU's 0.891, so the 2 are not measuring the same thing. That is the same
 conclusion an independent adversarial review reached by a different route, stratifying on
 the top-2 margin and finding PSBD's AUROC barely moves.
 

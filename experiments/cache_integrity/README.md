@@ -4,7 +4,7 @@
 
 Every headline PSBD number is computed by `psbd_analyze.py` from tensors written
 once by `psbd_dropout_sweep.py` and never recomputed. If a cached tensor is
-truncated, misaligned with its manifest, or records a probe that silently never
+truncated, misaligned with its manifest or records a probe that silently never
 fired, stage 2 still produces a complete and plausible-looking result. Nothing in
 the pipeline had ever checked that the 605927 cached files under
 `results/<folder>/psbd/` are internally consistent, so this answers whether the
@@ -24,7 +24,7 @@ is required, because the full pass reads about 73 GB.
 
 The report goes to `results/_experiments/cache_integrity/cache_integrity.json` by default: per-check pass and
 fail counts, the complete failure list grouped by check, and a per-checkpoint
-record of the resolved operator, stored k, and rate coverage for every position
+record of the resolved operator, stored k and rate coverage for every position
 config. Stdout carries the same summary with failing paths capped at
 `--max-shown` (default 50).
 
@@ -104,7 +104,7 @@ Commit `30c5936`, 128 workers, 42 seconds.
     stored k values         {3: 600443, 20: 2292}
 
 0 failures on all 18 checks. Every denominator was full: 798 manifests, 2394
-baseline files, 602735 rate files, 20408 position configs, and 582051 rate files
+baseline files, 602735 rate files, 20408 position configs and 582051 rate files
 eligible for the stochastic-passes check.
 
 The 30 partial rates are each a single rate at the end of a position config,
@@ -114,7 +114,7 @@ the signature of a sweep interrupted mid-rate rather than of damage, and
 
 20684 rate files did have k identical passes. All of them sit under a
 `gain_scale` or `scale_up` folder, where that is the correct and expected
-behaviour. No stochastic operator produced identical passes anywhere in the tree.
+behavior. No stochastic operator produced identical passes anywhere in the tree.
 
 Operator coverage resolved as: token_mask 4683 configs, gaussian 4675,
 channel_mask 4665, dropout 3713, droppath 1341, gain_scale 707, scale_up 177,

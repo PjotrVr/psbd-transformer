@@ -13,7 +13,7 @@ defenses.psbd_metrics.multi_probe_detection returns:
               bound makes it conservative, so its achieved FPR sits under target_fpr.
 
 Both are read from the by_rule dict and printed side by side with the FPR each
-one actually achieves. AUROC is threshold-free and is the same number under
+1 actually achieves. AUROC is threshold-free and is the same number under
 either rule.
 
 Runs entirely on CPU using cached .pt files. No new GPU jobs needed.

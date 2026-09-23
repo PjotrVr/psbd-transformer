@@ -77,12 +77,12 @@ target, including the companion paper's own steering and orthogonalization.
 
 ## Subquestions
 
-1. Does a *per-source-class* direction recover the a2a signal? Ten directions, one
+1. Does a *per-source-class* direction recover the a2a signal? 10 directions, 1
    per class, each a clean mean. Cheap and would confirm the cancellation story.
 2. Does the onset layer predict the best dropout placement quantitatively, or only
    ordinally? The single-position sweep answers this.
 3. Onset is measured at 10% poisoning only. The companion paper reports it as
-   stable across poisoning rates; that is directly checkable here.
+   stable across poisoning rates. That is directly checkable here.
 4. `lf` peaks at layer 10 (2.18) then *falls* to 1.36 at layer 12. Nothing else
    does that. Worth understanding, since it suggests the low-frequency trigger's
    representation is partly consumed rather than accumulated.

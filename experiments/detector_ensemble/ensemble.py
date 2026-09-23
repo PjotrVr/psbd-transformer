@@ -1,8 +1,8 @@
-"""Rank-average PSU across placements, instead of betting on one placement.
+"""Rank-average PSU across placements, instead of betting on 1 placement.
 
 No single placement wins on every attack: the patch trigger wants
 before_attention_norm, wanet and lc want post_residual. A defender cannot know
-which attack they face, so picking one placement is a bet. Averaging per-sample
+which attack they face, so picking 1 placement is a bet. Averaging per-sample
 ranks across placements is the defender-legal alternative.
 
 Each placement contributes at ITS OWN sigma-selected rate, so placements are
@@ -103,7 +103,7 @@ def main():
                 continue
             singles.append(auroc(clean.float().numpy(), backdoor.float().numpy()))
             # Clean validation is the shared fixed reference: it puts placements on
-            # one scale without either scored split contributing to that scale.
+            # 1 scale without either scored split contributing to that scale.
             clean_ranks.append(to_rank(clean, validation))
             backdoor_ranks.append(to_rank(backdoor, validation))
         if len(clean_ranks) < 2:

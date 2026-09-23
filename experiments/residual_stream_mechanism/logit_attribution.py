@@ -6,12 +6,12 @@ writing does to the ANSWER, which is the quantity a detector ultimately reads.
 ViT's readout is `logits = head(ln(h_final)[CLS])`, and h_final is the sum of the embedding
 and every sublayer write. LayerNorm is not linear, so the sum does not pass through it. The
 standard fix (Elhage et al., A Mathematical Framework for Transformer Circuits, 2021) is to
-FREEZE the normalisation: compute the per-token scale on the ACTUAL final residual, then treat
+FREEZE the normalization: compute the per-token scale on the ACTUAL final residual, then treat
 it as a constant. LayerNorm is then affine and attribution is exact and additive:
 
     logit_c - b_c - w_c . beta = sum over components of  w_c . ( (r - mean(r)) / s * gamma )
 
-Freezing matters here beyond bookkeeping. This project has already produced one clean,
+Freezing matters here beyond bookkeeping. This project has already produced 1 clean,
 monotone, benign-controlled and entirely false result by measuring a scale-dependent statistic
 across a LayerNorm, so an attribution that let the scale float would be the same mistake.
 
@@ -80,10 +80,10 @@ def collect_components(model, core, images):
 
 
 def attribute(component, final, layer_norm, weight_row):
-    """Contribution of one residual component to one class logit, at the CLS token.
+    """Contribution of 1 residual component to 1 class logit, at the CLS token.
 
-    The scale is taken from `final`, the actual residual the readout sees, and held fixed, so
-    the components sum to the true logit up to the readout bias.
+    The scale is taken from `final` (the actual residual the readout sees) and held fixed.
+    So the components sum to the true logit up to the readout bias.
     """
     cls_component = component[:, 0, :]
     cls_final = final[:, 0, :]

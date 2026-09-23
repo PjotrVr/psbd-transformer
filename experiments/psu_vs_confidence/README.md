@@ -3,8 +3,8 @@
 ## Question
 
 The skeptical reading of PSBD: a backdoored model is extremely confident on triggered
-inputs; PSU subtracts a dropout-perturbed confidence from the no-dropout one; and a
-sample starting near probability 1 has more room to fall than one starting at 0.6. If
+inputs. PSU subtracts a dropout-perturbed confidence from the no-dropout one. And a
+sample starting near probability 1 has more room to fall than 1 starting at 0.6. If
 that is the whole story, PSU is an elaborate proxy for baseline confidence and a
 defender could skip the `k` stochastic forward passes entirely.
 
@@ -39,14 +39,14 @@ stochastic passes are doing real work.
 
 The decisive column is the third. The **fractional** drop, `1 - mean_dropout / P_c(x)`,
 divides out the starting confidence entirely. If PSU worked only because confident
-samples fall further in absolute terms, normalising by that confidence would destroy
+samples fall further in absolute terms, normalizing by that confidence would destroy
 the signal. It does the opposite: the fractional drop scores **as well or better on
 every checkpoint**. So PSU is measuring how *robust* the prediction is, not how
 confident it started.
 
 ## A free improvement
 
-Mean 0.881 against PSU's 0.877, and better on all four working attacks (blend
+Mean 0.881 against PSU's 0.877, and better on all 4 working attacks (blend
 +0.013, lf +0.012, bpp +0.001, badnet_a2o +0.003). The gain is small but one-sided,
 and it costs nothing: it is the same cached tensors divided by a number already on
 disk.
@@ -67,9 +67,9 @@ exactly where a naive baseline is weakest, which is the right way round.
 ## Subquestions
 
 1. Does the fractional form's advantage hold under the adaptive rate rule as well as
-   the oracle rate, and across poison rates and SAM? If so it should simply replace
+   the oracle rate, and across poison rates and SAM? If so it should replace
    the absolute form in `psu_from_cache`.
 2. Confidence-only scores 0.685 mean. That is a baseline no PSBD paper reports, and
    any detection method should be shown to beat it.
-3. Does combining the two (confidence and PSU as two features) beat either? That
+3. Does combining the 2 (confidence and PSU as 2 features) beat either? That
    would say they carry partly independent information.

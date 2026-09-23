@@ -3,7 +3,7 @@
 The mean AUROC table says a head adjacent probe stops working. This says WHY, by
 reconstructing its output with zero forward passes.
 
-final_norm_out is a post hook on the last LayerNorm, one linear layer from the
+final_norm_out is a post hook on the last LayerNorm, 1 linear layer from the
 logits, and the only operator that runs there is gain_scale, which multiplies
 that output by omega = 1 + rate. With head weight W and bias b,
 

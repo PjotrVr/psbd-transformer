@@ -48,11 +48,11 @@ def is_sam(folder: str) -> bool:
 
 
 def viability_table(rows: list[dict], architecture: str, datasets: list[str]) -> dict:
-    """(attack, dataset) -> {poison_rate: asr}, Adam runs only.
+    """(attack, dataset) to {poison_rate: asr}, Adam runs only.
 
-    Adam is the unmarked baseline, so the viability question is asked there; the
+    Adam is the unmarked baseline, so the viability question is asked there. The
     SAM columns are checked separately because an attack that only survives under
-    one optimizer is not a stable grid member.
+    1 optimizer is not a stable grid member.
     """
     table: dict = collections.defaultdict(dict)
     for row in rows:

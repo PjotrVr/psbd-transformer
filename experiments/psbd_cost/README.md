@@ -14,7 +14,7 @@ worth the extra wall clock, on the hardware this project actually runs on.
 (`swin_cifar100_badnet_a2o_0_1`) through `models.backbones.load_checkpoint`,
 and draws 512 clean CIFAR-100 test images from the standardized PSBD
 validation split (`data.splits.build_psbd_loaders_from_checkpoint`). The
-images are moved to the GPU once, at their native 32x32 resolution, and reused
+images are moved to the GPU once at their native 32x32 resolution, and reused
 unperturbed for every timed configuration, so no data-loading time enters any
 measurement. The model's own `Sequential(Resize(224), network)` wrapper does
 the upscale internally, exactly as every other PSBD forward pass does.
@@ -32,7 +32,7 @@ alone or also by which position and operator is probed.
     PYTHONPATH=. .venv/bin/python experiments/psbd_cost/measure.py
 
 Writes `results/_experiments/psbd_cost/cost.json`. Needs a GPU, ran here on
-the login-node NVIDIA A100-PCIE-40GB, torch 2.6.0+cu124, and finished in under
+the login-node NVIDIA A100-PCIE-40GB with torch 2.6.0+cu124, and finished in under
 7 minutes.
 
 ## Finding

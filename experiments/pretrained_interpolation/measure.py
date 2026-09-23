@@ -3,7 +3,7 @@
 Every operator this project has tried perturbs ACTIVATIONS with unstructured,
 data-independent noise at a chosen position: dropout, channel/token/head masking,
 DropPath, Gaussian, Rademacher, gain scaling. H28 shows PSBD, STRIP, SCALE-UP and
-IBD-PSC are one family in which the operator only chooses which Jacobian is probed, and
+IBD-PSC are 1 family in which the operator only chooses which Jacobian is probed, and
 the measured position variance is 1.43x the operator variance, so the operator axis is
 close to exhausted.
 
@@ -13,7 +13,7 @@ weights, so the defender can compute the finetuning delta with no poison label a
     tau = theta_finetuned - theta_pretrained
     theta(a) = theta_pretrained + a * tau,     a in [0, 1]
 
-a = 1 is the victim; a = 0 is the public pretrained backbone. Sweeping a walks the model
+a = 1 is the victim. A = 0 is the public pretrained backbone. Sweeping a walks the model
 back along the one weight-space direction the defender gets for free.
 
     original form
@@ -31,7 +31,7 @@ HIGHER a than a clean one, i.e. a LARGER collapse value. The reported score is
 
 The competing argument, stated so it is not hidden: a backdoor is a high-margin shortcut
 and might instead be MORE robust to weight shrinkage than delicate clean features, which
-would invert the sign. That is a refutation of the mechanism above, not a licence to flip
+would invert the sign. That is a refutation of the mechanism above, not a license to flip
 the sign, and the benign control decides whether either effect is real at all.
 
 Only the backbone is interpolated. The classification head has no pretrained counterpart
@@ -76,9 +76,9 @@ def interpolated_state(finetuned: dict, pretrained: dict, alpha: float) -> dict:
     """theta_pretrained + alpha * (theta_finetuned - theta_pretrained), backbone only.
 
     The head is held at its finetuned value because the pretrained network has no head
-    for this task; build_vit replaces it with a fresh layer, so interpolating it would
+    for this task. Build_vit replaces it with a fresh layer, so interpolating it would
     blend in a random readout and the probe would measure that rather than the backbone.
-    Integer buffers are left alone: they are counters, not parameters, and averaging them
+    Integer buffers are left alone: they are counters, not parameters. Averaging them
     is meaningless.
     """
     blended = {}

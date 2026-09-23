@@ -1,7 +1,7 @@
 """Causal tracing: which (layer, token) carries the backdoor, measured by patching.
 
 Everything measured so far is correlational. Patching is the causal version: run the model on
-a triggered image, overwrite ONE (layer, token group) with the value it takes on the SAME
+a triggered image, overwrite 1 (layer, token group) with the value it takes on the SAME
 image without the trigger, and see how much of the clean answer comes back.
 
 This setting has an advantage most causal-tracing papers do not. Zhang and Nanda (ICLR 2024)
@@ -10,7 +10,7 @@ activations off distribution and produced qualitatively wrong circuits in their 
 clean and triggered images ARE that counterfactual: same image, minimal edit. The recommended
 baseline comes for free.
 
-Metric is the normalised logit difference used by Wang et al. (Interpretability in the Wild):
+Metric is the normalized logit difference used by Wang et al. (Interpretability in the Wild):
 
     M = logit(target) - logit(true)
     IE = (M_patched - M_triggered) / (M_clean - M_triggered)
@@ -25,7 +25,7 @@ Both directions are run, since they answer different questions and can disagree:
     noise     triggered value patched into a clean run: is it SUFFICIENT to induce
 
 Token groups rather than all 197 positions, so the sweep is affordable and each row means
-something: the CLS token, the trigger's own tokens, the highest-norm non-trigger token, and a
+something: the CLS token, the trigger's own tokens, the highest-norm non-trigger token and a
 random group of the same size as the trigger's for the null.
 
     PYTHONPATH=. python experiments/residual_stream_mechanism/activation_patching.py \
@@ -107,7 +107,7 @@ def cache_stream(model, core, images):
 
 
 def patch_hook(block, site, donor, positions):
-    """Overwrite `positions` of one tensor with the donor's values, for one forward pass."""
+    """Overwrite `positions` of 1 tensor with the donor's values, for 1 forward pass."""
     if site == "resid":
 
         def hook(_m, inputs):
@@ -139,7 +139,7 @@ def sweep(
     groups,
     sites,
 ):
-    """Normalised recovery for every (site, layer, token group)."""
+    """Normalized recovery for every (site, layer, token group)."""
     rows = []
     for site in sites:
         for layer in range(len(core.encoder.layers)):
@@ -157,7 +157,7 @@ def sweep(
                     - logits.gather(1, true_label[:, None])
                 ).squeeze(1)
                 # Aggregate numerator and denominator separately. Per-sample division
-                # explodes whenever one image's clean and triggered metrics happen to be
+                # explodes whenever 1 image's clean and triggered metrics happen to be
                 # close, and the denominator is legitimately negative, so a positive clamp
                 # turns those samples into enormous spurious values.
                 rows.append(

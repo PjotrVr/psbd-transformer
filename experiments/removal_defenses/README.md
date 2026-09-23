@@ -27,7 +27,7 @@ Output goes to `results/direction_erasure.json` and `results/skip_scaling.json`.
 
 Both are partially supported, and they fail on the same attacks for the same reason.
 
-Erasure works on the weaker attacks, `lc` and `adaptive_blend`, and fails completely
+Erasure works on the weaker attacks (`lc` and `adaptive_blend`) and fails completely
 on `badnet` and `blend`. The gap against H16's inference-time direction removal is
 the informative part: removing the direction from the activations works where
 removing it from the weights does not, which means the direction is regenerated

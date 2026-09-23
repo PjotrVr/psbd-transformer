@@ -141,7 +141,7 @@ def orthogonal_capacity(cone_half_angle_rad, dim):
 
 
 def analyze_setting(dataset_name, rate_tag):
-    """Extract all directions and readout weight for one (dataset, rate) pair."""
+    """Extract all directions and readout weight for 1 (dataset, rate) pair."""
     directions = {}
     readout_weight = None
     target_label = 0

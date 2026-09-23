@@ -1,6 +1,6 @@
 # Adaptive defender diagnostics (H42)
 
-Comprehensive diagnostics for evasive models: per-operator validation PSU
+Diagnostics for evasive models: per-operator validation PSU
 stats, sigma-curve suppression, forensic evasion identification, and
 multi-probe recovery.
 

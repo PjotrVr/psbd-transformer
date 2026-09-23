@@ -1,7 +1,7 @@
 """Prediction depth as a backdoor detector, and whether it survives its own controls.
 
 A backdoor is a shortcut. PSBD detects it by perturbing the network and watching how
-far the prediction moves; every method in that family (H28) measures a decision margin
+far the prediction moves. Every method in that family (H28) measures a decision margin
 along the perturbation's Jacobian. This measures something else entirely: not how
 robust the prediction is, but HOW EARLY IN DEPTH it is already decided.
 
@@ -17,13 +17,13 @@ A priori sign, fixed by the mechanism BEFORE any backdoor data is looked at: a t
 is a strong, simple, high-salience feature, so it should be resolved earlier than a
 natural class, giving LOW depth. Low means poisoned, which is the repo-wide one-sided
 convention (H15), so the score is the depth itself and no tail is chosen after the
-fact. If the effect comes out inverted, that is a refutation and not a licence to flip
+fact. If the effect comes out inverted, that is a refutation and not a license to flip
 the sign.
 
 Why this is not a fifth "where the backdoor sits" attempt (H18, H22, H35, H40 all
-REFUTED): those localised the backdoor to a set of units or heads and scored a sample
-by that set's behaviour, which needs the backdoor's location to be both stable and
-findable. This reads only the network's own output head, at every depth, and never
+REFUTED): those localized the backdoor to a set of units or heads and scored a sample
+by that set's behavior, which needs the backdoor's location to be both stable and
+findable. This reads only the network's own output head at every depth and never
 names a unit, a head or a direction. The quantity is a property of the sample's
 trajectory, not of the model's parts.
 
@@ -67,7 +67,7 @@ def logit_lens_statistics(
 ) -> tuple[dict[str, torch.Tensor], int]:
     """Per-sample logit-lens statistics, CLS-only and over all patch tokens.
 
-    One forward pass per sample. The readout reuses the network's own ln and heads,
+    1 forward pass per sample. The readout reuses the network's own ln and heads,
     so nothing is fitted and nothing is calibrated against the split being scored.
 
     The CLS token is what the classifier actually reads, but it is an aggregate, and
@@ -83,7 +83,7 @@ def logit_lens_statistics(
       depth_cls          first block after which the CLS lens never again disagrees
                          with the final answer. A trigger is a strong simple feature,
                          so it should resolve early.
-      depth_token_min    the same, minimised over patch tokens: the earliest depth at
+      depth_token_min    the same, minimized over patch tokens: the earliest depth at
                          which ANY single patch has already locked onto the final
                          answer and never leaves it. A localized trigger should give
                          one token that commits almost immediately.
@@ -202,12 +202,12 @@ def deviation_from_clean(
     other 194 keep voting their own class, so agreement FALLS (cifar10 badnet: clean
     0.429, backdoor 0.064). A global blend paints every patch, so every patch votes
     the target and agreement RISES (cifar100 adaptive_blend: clean 0.019, backdoor
-    0.222). Both are far from clean; they are far in opposite directions.
+    0.222). Both are far from clean. They are far in opposite directions.
 
     This is not the two-sided rule H15 retired. That rule picked which tail to flag
     by reading the AUROC, which needs the poison labels the detector exists to
     predict. This ranks against the clean validation split, which the threat model
-    already grants the defender, and applies one fixed rule to every checkpoint: far
+    already grants the defender, and applies 1 fixed rule to every checkpoint: far
     from clean in either direction is suspicious. The threshold is still a quantile
     of the validation deviation, so the false-positive budget is set exactly as
     before and no poison label is consulted at any point.

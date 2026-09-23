@@ -115,8 +115,8 @@ end to end (`--evade-probes` training, multi-placement sweep, `cli.analyze`,
 `multi_probe_auroc`) runs without further errors once the memory ceiling was
 found. The 5-probe union (0.787) recovers substantially over the 3-attacked
 union (0.014) even though 2 of its own added members individually read badly
-here (`post_residual` 0.013, itself inverted, and the attention-branch token
-mask at 0.287), which is the min-rank mechanism combining anti-correlated
+here: `post_residual` at 0.013 (itself inverted) and the attention-branch token
+mask at 0.287. This is the min-rank mechanism combining anti-correlated
 per-sample errors rather than each probe's own marginal AUROC.
 
 **Does not show:** whether the union defense detects a properly-trained

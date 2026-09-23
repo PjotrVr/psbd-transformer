@@ -15,7 +15,7 @@ Phi^{-1} is strictly monotone, so ranking by radius and ranking by smoothed
 confidence are the same ranking and must give the same AUROC. sigma is a per cell
 constant and drops out of the ranking too, so it is set to 1 here.
 
-Three separate questions hide inside the prediction, and they have different
+3 separate questions hide inside the prediction, and they have different
 answers, so they are measured separately.
 
   a. does Phi^{-1} preserve AUROC?  (radius against smoothed confidence)
@@ -27,7 +27,7 @@ answers, so they are measured separately.
      the half of the prediction that can actually fail.
 
 Detection directions. PSU flags LOW values. Smoothed confidence and radius are
-both large when the prediction is robust, so they flag HIGH values, and their
+both large when the prediction is robust, so they flag HIGH values. Their
 quantile threshold is the upper tail 1 - q of clean validation.
 
 Example
@@ -78,7 +78,7 @@ def parse_args() -> argparse.Namespace:
 def smoothed_confidence(
     psbd_dir: str, placement: str, rate: float, split: str
 ) -> tuple[np.ndarray, np.ndarray]:
-    """(smoothed confidence, PSU) for one split, both (N,) float64."""
+    """(smoothed confidence, PSU) for 1 split, both (N,) float64."""
     probs, labels, _ = load_baseline(baseline_path(psbd_dir, split))
     passes, _ = load_dropout_pass_probs(
         dropout_pass_path(psbd_dir, placement, rate, split)

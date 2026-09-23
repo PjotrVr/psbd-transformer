@@ -1,7 +1,7 @@
 """Does SAM amplify the backdoor in ViT, as it does in the paper's ResNet18?
 
 This is the positive control for H6. If PSBD gets worse on SAM-trained models, there
-are two very different explanations:
+are 2 very different explanations:
 
   (a) SAM does amplify the backdoor here, exactly as the SAM paper claims, but the
       benefit does not reach a prediction-space detector. That is a finding about
@@ -14,7 +14,7 @@ are two very different explanations:
 Only a measurement on our own checkpoints separates them, and it uses the SAM paper's
 own metrics so the comparison is on their terms:
 
-  top2_tac      mean of the two largest per-dimension trigger-activated changes.
+  top2_tac      mean of the 2 largest per-dimension trigger-activated changes.
                 Their "backdoor effect", the quantity they show correlates with
                 detector AUC at r = 0.71.
   silhouette    how separated clean and triggered features are at the penultimate
@@ -23,7 +23,7 @@ own metrics so the comparison is on their terms:
                 scale-free direction magnitude, included so the result ties back to
                 the rest of the ledger.
 
-All three are computed at the final block output, matching their "last convolutional
+All 3 are computed at the final block output, matching their "last convolutional
 layer" choice, in fp32, over eligible paired samples only.
 
 Example

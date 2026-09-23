@@ -1,6 +1,6 @@
-"""Where are the backdoor neurons: which layers, which dimensions, and does SAM move them?
+"""Where are the backdoor neurons: which layers, which dimensions and does SAM move them?
 
-One report per checkpoint, combining every latent tool in `analysis/` so the same
+1 report per checkpoint, combining every latent tool in `analysis/` so the same
 question is asked several independent ways:
 
   per layer      TAC (trigger-activated change), relative backdoor-direction norm,
@@ -113,7 +113,7 @@ def analyse(folder: str, args: argparse.Namespace, device) -> dict | None:
     # A benign checkpoint carries no attack, so it is probed with one. Every number
     # here then reads as the null: whatever TAC, separability and Z a clean model
     # produces when the same trigger is painted on its inputs.
-    # The override is only legal on a benign checkpoint; resolve_probe_attack
+    # The override is only legal on a benign checkpoint. Resolve_probe_attack
     # rejects it on a backdoored one rather than measuring a trigger the model
     # never saw, so it is passed only where it applies.
     benign = metadata["attack"] == "benign"
@@ -135,7 +135,7 @@ def analyse(folder: str, args: argparse.Namespace, device) -> dict | None:
     )
     model = load_checkpoint(metadata["architecture"], path, device)
 
-    # Everything downstream is CPU work (scipy, sklearn, umap), and the per-layer
+    # Everything downstream is CPU work (scipy, sklearn, umap) and the per-layer
     # feature stack is the only thing large enough for the move to matter.
     seed_everything(args.seed)
     clean = {

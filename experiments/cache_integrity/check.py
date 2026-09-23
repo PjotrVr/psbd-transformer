@@ -2,8 +2,8 @@
 
 Every headline number in the paper is computed by psbd_analyze.py from tensors it
 never recomputes, so a silently corrupt cache is indistinguishable from a real
-result. This script re-derives the invariants that stage 1 establishes and stage 2
-assumes, over the whole tree, and writes results/_experiments/cache_integrity/cache_integrity.json.
+result. This script re-derives, over the whole tree, the invariants that stage 1
+establishes and stage 2 assumes, and writes results/_experiments/cache_integrity/cache_integrity.json.
 
 The audit is grouped into 4 scopes, and the check identifiers below match the
 numbering used in the accompanying README:
@@ -214,7 +214,7 @@ def read_dataset_name(
 
 
 def resolve_operator(psbd_dir: str, placement: str) -> tuple[str, str]:
-    """(operator name, how it was resolved) for one position-config folder.
+    """(operator name, how it was resolved) for 1 position-config folder.
 
     The run provenance sidecar records the operator verbatim and is authoritative.
     Caches written before that sidecar existed, and folders renamed by hand after
@@ -235,7 +235,7 @@ def resolve_operator(psbd_dir: str, placement: str) -> tuple[str, str]:
 def audit_manifest(
     psbd_dir: str, manifest: dict, dataset: str | None
 ) -> tuple[list[dict], dict[str, int]]:
-    """Checks 02 to 05 over one parsed manifest, plus the expected rows per split.
+    """Checks 02 to 05 over 1 parsed manifest, plus the expected rows per split.
 
     Returns the failures and the row count each split's tensors must have, which is
     the manifest's whole job: it is the ground-truth row order for every tensor in
@@ -323,7 +323,7 @@ def audit_manifest(
 def audit_one_baseline(
     path: str, split: str, expected_rows: int, num_classes: int | None
 ) -> tuple[list[dict], int | None]:
-    """Checks 06 to 11 over one baseline_<split>.pt, returning its row count.
+    """Checks 06 to 11 over 1 baseline_<split>.pt, returning its row count.
 
     The row count is what every rate tensor under this checkpoint is measured
     against, so a baseline that fails to load takes its whole split with it.
@@ -375,7 +375,7 @@ def audit_one_baseline(
             )
 
         # build_baseline_cache stores labels as probs.argmax(dim=1) of this exact
-        # tensor, so anything but bitwise equality means the two were written by
+        # tensor, so anything but bitwise equality means the 2 were written by
         # different forward passes and PSU is being read off a mismatched class.
         recomputed = probs.argmax(dim=1)  # (N,)
         if not torch.equal(labels, recomputed):
@@ -416,7 +416,7 @@ def audit_one_rate_file(
     num_classes: int | None,
     deterministic: bool,
 ) -> tuple[list[dict], int | None]:
-    """Checks 12 to 16 and 18 over one rate_<tag>_<split>.pt, returning its stored k."""
+    """Checks 12 to 16 and 18 over 1 rate_<tag>_<split>.pt, returning its stored k."""
     failures: list[dict] = []
     try:
         blob = torch.load(path, map_location="cpu", weights_only=True)
@@ -495,7 +495,7 @@ def audit_one_rate_file(
 
 
 def split_rate_filename(name: str) -> tuple[float, str] | None:
-    """("rate_0_05_clean.pt") becomes (0.05, "clean"), or None if it is not one."""
+    """("rate_0_05_clean.pt") becomes (0.05, "clean") or None if it is not one."""
     if not name.startswith("rate_") or not name.endswith(".pt"):
         return None
     tag, split = name[len("rate_") : -len(".pt")].rsplit("_", 1)
@@ -512,7 +512,7 @@ def audit_position_config(
     baseline_rows: dict[str, int | None],
     num_classes: int | None,
 ) -> dict:
-    """Every rate tensor under one position config, plus checks 17 and the coverage.
+    """Every rate tensor under 1 position config, plus checks 17 and the coverage.
 
     Returns a record carrying the resolved operator, the k values actually stored,
     the complete versus partial rate coverage, and the failures found below it.
@@ -596,7 +596,7 @@ def audit_position_config(
 
 
 def audit_one_checkpoint(task: tuple[str, str, str]) -> dict:
-    """Everything under one results/<folder>/psbd/ subtree, as a plain dict.
+    """Everything under 1 results/<folder>/psbd/ subtree, as a plain dict.
 
     Wrapped so a single unreadable subtree is reported rather than killing the pool
     and losing the other 797 results.

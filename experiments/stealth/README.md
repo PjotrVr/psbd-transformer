@@ -4,7 +4,7 @@
 
 Detection numbers are only comparable across attacks if the attacks are comparably
 visible. An attack whose trigger is obvious to a human is solving an easier problem
-than one whose trigger is not, so the panel needs a stealth axis before any ranking
+than 1 whose trigger is not, so the panel needs a stealth axis before any ranking
 over it means anything.
 
 Measured as PSNR and SSIM between clean and poisoned images at native resolution,
@@ -21,9 +21,9 @@ label 0, every attack at its default configuration. Poison rate is not a paramet
 the metrics are computed once per (attack, dataset) pair.
 
 That holds for the EVAL trigger, which is what this measures and what a defender
-faces at inference. It is no longer true of `apply_trigger`. Two attacks now vary
+faces at inference. It is no longer true of `apply_trigger`. 2 attacks now vary
 their training trigger per sample, Adaptive-Blend by planting a subset of its
-pattern so the model must generalise over it, and Label-Consistent by substituting
+pattern so the model must generalize over it, and Label-Consistent by substituting
 an adversarially perturbed base. Measuring those would make the result depend on
 which indices happened to be sampled.
 
@@ -34,4 +34,4 @@ because the published table in `docs/results/stealth-metrics.md` is the record.
 
 The published table is in `docs/results/stealth-metrics.md`. The point it settles
 for the rest of the project is that the panel spans a wide stealth range, so the
-attacks PSBD detects best are not simply the loudest ones.
+attacks PSBD detects best are not the loudest ones.

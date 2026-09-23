@@ -3,7 +3,7 @@
 "Backdoor Directions in Vision Transformers" (Karayalcin, Krcek, Chen and Picek,
 arXiv 2603.10806, Section 4) estimates the backdoor direction at every layer as
 the mean activation difference between triggered and clean copies of the same
-images, picks 1 layer by its Eq. 1, and following Arditi et al. (Section 4.1)
+images, and picks 1 layer by its Eq. 1. Following Arditi et al. (Section 4.1), it
 projects the unit direction out of every matrix that writes to the residual
 stream: the embedding and every attention and MLP output projection. They report
 ASR falling from 97.7 to 6.7 overall. Our earlier erasure (H34) edited only

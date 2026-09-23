@@ -149,7 +149,7 @@ def measure(folder: str, args: argparse.Namespace, device) -> dict | None:
         "mean_abs_delta_target_logit": total_magnitude,
         "residual_share_of_target_push": residual_share,
         # Spread of the per-sample push relative to its mean. A pure common shift
-        # has a small ratio; a per-sample attack has a large one.
+        # has a small ratio. A per-sample attack has a large one.
         "push_dispersion": float(
             delta_logit.std() / max(abs(delta_logit.mean()), 1e-8)
         ),

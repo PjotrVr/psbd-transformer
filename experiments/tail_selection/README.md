@@ -38,7 +38,7 @@ The method was retired anyway, and H15 records why. Inversion is a diagnostic
 symptom of a broken assumption, never a decision rule. A detector that flags the
 opposite tail when its own premise fails has abandoned the premise while keeping the
 name. Every downstream result in this project is therefore one-sided: low PSU means
-poisoned, always, and an AUROC below 0.5 is reported as the method failing on that
+poisoned, always. An AUROC below 0.5 is reported as the method failing on that
 attack rather than recovered into a win. The measurements here stand and are kept as
 a recorded negative result.
 

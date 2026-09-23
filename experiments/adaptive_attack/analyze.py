@@ -4,7 +4,7 @@ For each evasive checkpoint, computes sigma-matched AUROC at 4 operators and
 compares to the matching non-evasive baseline. Reports:
 1. ASR and CA preservation (success criteria: ASR > 0.9, CA within 2 points)
 2. Detection on the probed operator (does AUROC drop toward 0.5?)
-3. Transfer: does evasion against one operator transfer to others?
+3. Transfer: does evasion against 1 operator transfer to others?
 4. Rate adaptation: does the sigma-matched rate shift higher?
 
 Runs entirely on CPU using cached .pt files from the PSBD sweep.

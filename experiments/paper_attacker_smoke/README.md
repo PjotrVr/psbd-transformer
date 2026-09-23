@@ -124,7 +124,7 @@ the undertrained control at either alpha, 0.997 and 0.967 against 0.988,
 because its L_ada term pushes every sample's PSU down together rather than
 closing the clean versus poisoned gap the defense actually reads, and alpha
 0.9 instead destroys the main task, clean accuracy falling from 0.735 to
-0.045 while ASR stays at 1.0, for essentially no evasion benefit. PSBD-RD
+0.045 while ASR stays at 1.0, for almost no evasion benefit. PSBD-RD
 sinks under both alphas (0.240 and 0.081 against a 0.633 control), but it
 already sits well below PSBD-TM on the unattacked model, so this restates
 the placement gap rather than a differential attack effect. Against the 1

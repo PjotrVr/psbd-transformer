@@ -1,9 +1,9 @@
 """What is the trigger's sink MADE of, and can the network do without it?
 
-Two published tests, run together because they share the machinery and answer halves of one
+2 published tests, run together because they share the machinery and answer halves of 1
 question.
 
-VALUE NORM (Fesser, Jacobs, Fel, Keller, Kakade, arXiv:2606.08105). Two mechanisms look
+VALUE NORM (Fesser, Jacobs, Fel, Keller, Kakade, arXiv:2606.08105). 2 mechanisms look
 identical in an attention heatmap and are not the same thing. An "adaptive NOP" sink has
 near-zero value norm: attending to it suppresses the head's contribution, so it is a way of
 doing nothing. A "broadcast" sink has a meaningful value norm and redistributes information.
@@ -136,7 +136,7 @@ def measure(model, core, loader, device, tokens, limit):
             # Concentration, not raw mass: the single most-attended PATCH token's share,
             # before and after the trigger is removed and the row renormalised. Comparing a
             # 4-token sum against a 1-token share would not be a takeover measurement, and
-            # averaging over heads on one side while summing on the other is how the first
+            # averaging over heads on 1 side while summing on the other is how the first
             # version of this produced ratios of 176.
             patch = weights[..., 1:]
             entry["mass_before"] += float(patch.max(dim=-1).values.mean(dim=1).sum())

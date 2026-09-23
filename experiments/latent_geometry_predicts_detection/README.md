@@ -19,7 +19,7 @@ SAM ablations excluded, matching the rest of the project's reporting.
 
 For each, 500 paired samples, the same test images with and without the trigger,
 features read at every block. `best_deployable_auroc` is the best AUROC any
-**deployable** rule reached in the cached sweep; oracle rules are excluded because
+**deployable** rule reached in the cached sweep. Oracle rules are excluded because
 a rule that places its threshold using the labels it is predicting is not a
 detector. Layer 0 is dropped, since on ViT under the cls reduction it is a
 constant.
@@ -47,7 +47,7 @@ separation notebook 02 found by a different route: separability reaches 0.96 eve
 on a benign model, and the collapse measures do not.
 
 Within the high ASR band alone (ASR above 0.9, n = 170) the correlation weakens to
--0.157 (p = 0.042). Real, correctly signed, and modest.
+-0.157 (p = 0.042). Real, correctly signed and modest.
 
 Benign controls behave exactly as a control should:
 

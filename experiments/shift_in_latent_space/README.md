@@ -24,7 +24,7 @@ All at the final block's CLS features, all on the same samples.
 | `displacement_norm` | scale, so the cosines can be read as more than angles |
 
 A benign model probed with the same trigger is measured alongside, because a
-pretrained backbone has its own fallback behaviour under heavy perturbation and that
+pretrained backbone has its own fallback behavior under heavy perturbation and that
 has to be subtracted from any claim about poisoning.
 
 ## Running it

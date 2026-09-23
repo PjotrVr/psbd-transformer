@@ -2,7 +2,7 @@
 
 ## Question
 
-Does training the victim with sharpness-aware minimisation help PSBD detect the
+Does training the victim with sharpness-aware minimization help PSBD detect the
 backdoor on ViT and Swin, and does SAM amplify the backdoor the way its paper
 (`literature/sam-poisoned-detection-zhang-arxiv2024/source/`,
 Zhang et al., arXiv 2411.11525) claims.

@@ -1,4 +1,4 @@
-# Three falsifiable predictions of the curvature framing, tested against cached data
+# 3 falsifiable predictions of the curvature framing, tested against cached data
 
 `docs/theory-perturbation-consistency.md` reframes PSBD as curvature estimation and
 records 3 predictions that follow from the closed form of the logit layer Hessian
@@ -174,7 +174,7 @@ the baseline, it decays **past** it. `gain_scale` amplifies the pre head
 activation, which sharpens the softmax most for the LEAST confident samples, so
 PSU there ranks by low confidence, and "low PSU means poisoned" flags the least
 confident sample while a triggered input is the most confident one. The
-statistic is not degraded, it is inverted, and 0.4436 is exactly the mirror of
+statistic is inverted rather than degraded, and 0.4436 is exactly the mirror of
 0.5580.
 
 **What would have falsified it.** `final_norm_out` scoring in the same band as the
@@ -221,7 +221,7 @@ probabilities and compute an exact decomposition rather than a correlation:
 
 so every clean sample has an exact additive share of the cell's AUROC and the
 question has a numeric answer. Recomputation reproduced the summary AUROC to
-machine precision on **85 of 87** cells; the 2 that did not are both `gaussian`
+machine precision on **85 of 87** cells. The 2 that did not are both `gaussian`
 and are flag 2 below.
 
 **Falsification criteria, fixed before the numbers were read.** The prediction
@@ -292,7 +292,7 @@ radius space must equal AUROC in smoothed confidence space, while a deployable
 threshold is a quantile and `Phi^{-1}` stretches the tails, so the 2 threshold
 rules should differ.
 
-Three questions hide in that, and they have different answers, so they are
+3 questions hide in that, and they have different answers, so they are
 measured separately:
 
   a. does `Phi^{-1}` preserve AUROC,
@@ -307,7 +307,7 @@ measured separately:
 `before_attention_norm_token_mask` adaptive cell (the deployment recommendation)
 plus a random spread over everything else. `sigma` is a per cell constant and drops
 out of every ranking, so it is set to 1. `Phi^{-1}` needs a domain clamp at 1e-6
-because float32 smoothed confidences do reach 0 and 1; how often that binds is
+because float32 smoothed confidences do reach 0 and 1. How often that binds is
 reported rather than hidden.
 
 Directions: PSU flags LOW, smoothed confidence and radius flag HIGH, so their
@@ -346,7 +346,7 @@ a reason that was available a priori.**
 | PSU (deployed) | 0.7080 | 171 of 332 |
 | radius / smoothed confidence | 0.6914 | 161 of 332 |
 
-Mean gap -0.0165 in favour of PSU, identical on 0 cells, max abs gap 0.7034.
+Mean gap -0.0165 in favor of PSU, identical on 0 cells, max abs gap 0.7034.
 
 At matched nominal budget, mean over 332 cells:
 
@@ -358,7 +358,7 @@ At matched nominal budget, mean over 332 cells:
 | 0.25 | 0.2492 | 0.2505 | 0.0104 | 0.0108 | 0.5914 | 0.5906 | -0.0007 | -0.0011 | 0.383 | 3.1e-3 |
 
 Both rules hit their FPR budget equally well, within 0.002 to 0.011 mean absolute
-error, so neither calibrates better. The TPR difference is real and one sided at
+error, so neither calibrates better. The TPR difference is real and 1 sided at
 the low FPR operating points a defender would actually pick, but the **median gap
 is near 0 and the win rate is near 0.52**, so it is carried by a minority of cells
 where the radius rule is much better rather than by a broad shift. That is the
@@ -373,7 +373,7 @@ the quantile threshold rule is invariant to 1e-4 on 1 of 332 cells. The framing
 that survives is different and more useful: what changes anything is dropping
 `g(h)` from the statistic, that is, scoring by the smoothed confidence instead of
 by the drop. That trades -0.017 mean AUROC for +0.06 to +0.09 mean TPR at
-1 to 10 percent FPR, at zero extra cost, and it is worth a proper paired study
+1 to 10 percent FPR at zero extra cost, and it is worth a proper paired study
 that this panel is only a first look at.
 
 ---
@@ -411,7 +411,7 @@ Reported, not fixed, as instructed.
 `E[delta] = rate * x`, not 0. Both are registered as deterministic
 (`psbd/operators.py:536`), so their PSU has no expectation to take at all. The
 derivation's line `docs/theory-perturbation-consistency.md:55`, "assumption 3 kills
-the 1st order term", therefore does not apply to either, and what they measure is a
+the 1st order term", therefore does not apply to either. What they measure is a
 first order directional derivative `-rate * grad_g^T h`, not a curvature.
 
 This is not a code bug, the operator classes say plainly what they do
@@ -424,14 +424,14 @@ tested at.
 
 ### Flag 2. Every plain `gaussian` row in `results/detection_summary.csv` is stale
 
-Two distinct failures, both confined to `gaussian` and to no other operator.
+2 distinct failures, both confined to `gaussian` and to no other operator.
 
 **2a. 735 of 1024 unique plain gaussian cells have no cache in `results/` at all,
 and reproduce bit for bit from the superseded operator's archive.**
 
 Taking `variant.isna()` rows with a rate, deduplicated on (folder, placement,
 rate), and asking whether `results/<folder>/psbd/<placement>/rate_<tag>_clean.pt`
-is present. Counted with one `listdir` per placement directory rather than a
+is present. Counted with 1 `listdir` per placement directory rather than a
 per file `os.path.exists`, because on this Lustre mount a cold per file lookup
 returned a handful of spurious misses that a directory listing then corrected:
 
@@ -453,7 +453,7 @@ vit_cifar100_adaptive_blend_0_01  after_mlp_residual_gaussian  rate 0.5  csv 0.7
 So those rows ARE the batch coupled Gaussian that audit finding A2 superseded, and
 they are presented as plain measurements. The tagging rule that should catch them,
 `scripts/detection_summary.py:79`, matches only the literal suffix
-`_gaussian_batchstd`; these 32 checkpoints kept the bare `_gaussian` key in their
+`_gaussian_batchstd`. These 32 checkpoints kept the bare `_gaussian` key in their
 `psbd_metrics.json`, so nothing tags them. 64 other checkpoints WERE renamed and
 are correctly tagged, and the 2 sets are disjoint.
 
@@ -488,7 +488,7 @@ is the direction that inflates the gaussian operator.
 `docs/hypothesis/H23-gaussian-noise-control.md:15` is `gaussian / before_attention`
 = 0.950 on ViT CIFAR-10 at 10 percent poisoning. Those checkpoints
 (`results/vit_cifar10_*_0_1/`) now have **zero** gaussian keys in their
-`psbd_metrics.json` and **zero** rows in `detection_summary.csv`; their only
+`psbd_metrics.json` and **zero** rows in `detection_summary.csv`. Their only
 gaussian caches are in `archive/gaussian_batchstd/`. Recomputing that exact cell
 from the archive, selecting the smallest rate whose clean validation shift ratio
 reaches 0.6, over the 5 attacks whose archived caches survive:

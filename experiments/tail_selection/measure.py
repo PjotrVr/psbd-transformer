@@ -4,9 +4,9 @@ H15 showed both PSBD and STRIP invert on the attacks their stated mechanism does
 cover, and that allowing the sign to flip recovers up to +0.98 AUROC. But
 max(AUROC, 1-AUROC) reads the labels, so it is an upper bound, not a method.
 
-This tests a rule that reads no labels. The defender holds two things: a clean
+This tests a rule that reads no labels. The defender holds 2 things: a clean
 validation split, and a suspicious pool that is mostly clean with some unknown
-fraction poisoned. Poisoned samples pile up in ONE tail of the score distribution.
+fraction poisoned. Poisoned samples pile up in 1 tail of the score distribution.
 So compare the pool's tails against validation's:
 
     low_deviation  = quantile(validation, q)     - quantile(pool, q)
@@ -18,7 +18,7 @@ score distribution.
 
 The comparison that matters is not the AUROC this achieves. It is whether the selected
 tail AGREES with the tail the labels would have chosen. If agreement is high, the
-two-sided gain is real and deployable; if not, H15 stays an upper bound.
+two-sided gain is real and deployable. If not, H15 stays an upper bound.
 
 Example
     PYTHONPATH=. python experiments/tail_selection/measure.py --detector strip
@@ -122,7 +122,7 @@ def main() -> None:
         clean = pair_clean_to_backdoor(scores["clean"], manifest)
         backdoor = scores["backdoor"]
 
-        # What a defender actually sees: one unlabelled pool.
+        # What a defender actually sees: 1 unlabelled pool.
         pool = torch.cat([clean, backdoor]).numpy()
         chosen = select_tail(scores["validation"].numpy(), pool, args.tail_quantile)
 

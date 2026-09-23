@@ -1,8 +1,8 @@
 """Decision leverage: how much decision a sample buys per unit of representational novelty.
 
 Every detector this project has tried perturbs something and measures how far the
-prediction moves. H28 shows PSBD, STRIP, SCALE-UP and IBD-PSC are one family in which the
-operator only selects which Jacobian is contracted. This has no perturbation at all. One
+prediction moves. H28 shows PSBD, STRIP, SCALE-UP and IBD-PSC are 1 family in which the
+operator only selects which Jacobian is contracted. This has no perturbation at all. 1
 deterministic forward pass, no Monte Carlo, no Jacobian, no backward pass.
 
     SPACE. h(x) in R^768 is the CLS row of encoder.ln's output, so the head is exactly
@@ -58,13 +58,13 @@ This predicts LOW DLR means poisoned, and it predicts more than a sign: the effe
 be STRONGER where the runner-up class varies more, i.e. on datasets with more classes, and
 it should hold for every carrier-independent trigger regardless of attack family.
 
-Because the sign was changed after seeing one cell, H15 forbids reporting the flipped
+Because the sign was changed after seeing 1 cell, H15 forbids reporting the flipped
 number on that cell as a result. The flipped sign is PRE-REGISTERED here and evaluated on
 held-out cells that were not looked at when it was formulated. Only the held-out numbers
 count.
 
 Clean and validation scores are 2-fold cross-fitted, so the covariance is never fitted on
-the samples it scores; otherwise the clean tail is deflated in-sample and the realized FPR
+the samples it scores. Otherwise the clean tail is deflated in-sample and the realized FPR
 is silently inflated.
 
     PYTHONPATH=. python experiments/decision_leverage/measure.py \
@@ -221,7 +221,7 @@ def analyse(folder: str, args) -> dict:
         features[split], predicted[split] = cls_features(model, loader, device)
 
     logits = {split: features[split].numpy() @ weight.T + bias for split in features}
-    # The reference for the analysis splits comes from the whole validation split; the
+    # The reference for the analysis splits comes from the whole validation split. The
     # validation split itself is cross-fitted so its own tail is not fitted in-sample.
     class_means, covariance, precision = fit_reference(
         features["validation"], predicted["validation"], num_classes

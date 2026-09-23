@@ -54,12 +54,12 @@ dataset table).
    `cli.train_benign` at runtime, adding the identical 1-line delegation to
    `models.backbones.build_resnet18` that vit and swin already get. vit and swin
    still resolve through the original function, unchanged.
-   `cli.train_backdoor.main()`; every flag after that point is the unmodified CLI.
+   `cli.train_backdoor.main()`. Every flag after that point is the unmodified CLI.
    The correct long-term fix is a 3-line addition to `training/loop.py`, owned by
    whoever holds that file.
 3. **CIFAR-scale stem, not torchvision's ImageNet stem.** torchvision's
    `resnet18` starts with a 7x7 stride-2 conv and a 3x3 stride-2 maxpool, sized for
-   a 224x224 input; at 32x32 that collapses the feature map to 1x1 by the last
+   a 224x224 input. At 32x32 that collapses the feature map to 1x1 by the last
    residual stage. The paper names only "ResNet-18 [He et al.]" with no stem
    detail, and every CIFAR-scale ResNet-18 in the backdoor-learning literature
    substitutes the standard CIFAR stem instead (3x3 stride-1 first conv, no
@@ -72,7 +72,7 @@ dataset table).
 6. **The smoke run trains on `--max-samples 20000` for at most 15 epochs**, per
    this control's own instructions, not the paper's full dataset and 100 epochs.
    The full-recipe jobs (`pbs/generate_resnet_control_jobs.py`) use the paper's
-   100 epochs and the full training set; see the job generator's own docstring
+   100 epochs and the full training set. See the job generator's own docstring
    for the walltime estimate that assumption drives.
 7. **The evasion-objective names were renamed mid-task**: `psbd_paper` is now
    `psu_mean` and `hinge` is now `psu_gap_hinge` (`attacks/evasion.py`'s
@@ -108,7 +108,7 @@ dataset table).
   pointing at the identical spec, so both the direct name and the
   `DROPOUT_CONFIGS`-mediated path resolve to the same site with no
   resnet18-specific branch anywhere outside `models/positions.py`. The indirect
-  path attaches the wrapper twice per block (once per alias name); the second
+  path attaches the wrapper twice per block (once per alias name). The second
   attach overwrites the first block's `forward`, so exactly 1 probe is ever
   invoked, at the requested rate. `tests/test_resnet.py` exercises both paths.
 - `cli/train_backdoor.py`, `cli/train_benign.py`: `--architecture` gained
@@ -117,7 +117,7 @@ dataset table).
   differ by exactly the evasion flags, nothing else, because
   `DEFAULT_EVADE_PROBE_BY_ARCHITECTURE` resolves the probe from
   `--architecture` when neither `--evade-position` nor `--evade-operator` is
-  given (`before_attention_norm:dropout` for vit/swin, unchanged;
+  given (`before_attention_norm:dropout` for vit/swin, unchanged, and
   `post_residual:dropout` for resnet18). The 3 commands, verbatim:
 
   ```
@@ -133,12 +133,12 @@ dataset table).
   ```
 
 - `tests/test_resnet.py` (new): the model builds and its logits have the right
-  shape; `load_checkpoint`/`detect_architecture` round-trip a resnet18
-  checkpoint; `network_core` returns the bare network; `plug_dropout` attaches
+  shape. `load_checkpoint`/`detect_architecture` round-trip a resnet18
+  checkpoint. `network_core` returns the bare network. `plug_dropout` attaches
   exactly 1 probe per basic block (8, ResNet-18's 4 stages of 2 blocks) and
-  `unplug_dropout` restores the model bit-for-bit; the perturbed output differs
-  from the plain one only when the attached probe's rate is nonzero; the 3
-  `RESNET_POSITIONS` keys alias the same spec; the `DROPOUT_CONFIGS`-mediated
+  `unplug_dropout` restores the model bit-for-bit. The perturbed output differs
+  from the plain one only when the attached probe's rate is nonzero. The 3
+  `RESNET_POSITIONS` keys alias the same spec. The `DROPOUT_CONFIGS`-mediated
   path still perturbs every block despite the double attach.
 
 ## Smoke test (Task 2)
@@ -167,9 +167,9 @@ never reaches 0.6 on an untrained model at this sample size, so
 
 Every rate cli.sweep tried, not only the one `select_rate_adaptively` (the
 0.8 shift-target rule) picks. `adaptive_rate` and `oracle_rate` are analyze's
-own selections; `calibrated` marks the rate the attacker trained against.
+own selections. `calibrated` marks the rate the attacker trained against.
 
-**`resnet18_cifar10_badnet_a2o_0_1_smoke` (unattacked)** — adaptive_rate=0.3, oracle_rate=0.3
+**`resnet18_cifar10_badnet_a2o_0_1_smoke` (unattacked)**: adaptive_rate=0.3, oracle_rate=0.3
 
 | rate | clean shift ratio (validation) | AUROC | TPR @ q0.10 |
 |---|---|---|---|
@@ -190,7 +190,7 @@ own selections; `calibrated` marks the rate the attacker trained against.
 | 0.80 | 0.898 | 0.943 | 0.631 |
 | 0.90 | 0.901 | 0.898 | 0.699 |
 
-**`resnet18_cifar10_badnet_a2o_0_1_evade_smoke` (hinge attacker)** — adaptive_rate=0.4, oracle_rate=0.09, calibrated=0.5
+**`resnet18_cifar10_badnet_a2o_0_1_evade_smoke` (hinge attacker)**: adaptive_rate=0.4, oracle_rate=0.09, calibrated=0.5
 
 | rate | clean shift ratio (validation) | AUROC | TPR @ q0.10 |
 |---|---|---|---|
@@ -248,7 +248,7 @@ estimated GPU time   9.2 hours
 (1 hour of margin under the 12-hour queue cap). The walltime estimate is
 extrapolated from the smoke run's per-sample, per-epoch cost
 (`pbs/generate_resnet_control_jobs.py`'s `run_minutes`), not measured at full
-scale, since no full-recipe run has been launched; treat the 9.2-hour total as
+scale, since no full-recipe run has been launched. Treat the 9.2-hour total as
 approximate. Every training command's own log is piped through `tee` into
 `checkpoints/<folder>/train.log`, and the job script greps that file for the
 `"calibrated probe rate"` line right after training finishes, so the rate an
@@ -260,7 +260,7 @@ The hinge attacker beats PSBD on the paper's own architecture, dataset and
 placement, not only on ViT: the smoke pair's adaptive rule falls from AUROC
 0.959 unattacked to 0.327 under the attack. Detection is not merely weakened
 but inverted in shape, since the unattacked ladder rises to its peak near
-rate 0.3 while the attacked ladder peaks early, at rate 0.09, and then falls,
+rate 0.3 while the attacked ladder peaks early at rate 0.09 and then falls,
 so no fixed rule tuned on the unattacked curve's assumptions can find the 1
 rate (AUROC 0.783) that partially recovers detection. This single
 BadNets/CIFAR-10 pair used `--max-samples 20000` and 15 epochs rather than the
@@ -289,7 +289,7 @@ defender's own `ADAPTIVE_SHIFT_TARGET`), and its candidate ladder is read off
 `configs/psbd_basis.json`'s `post_residual`/`dropout` entry
 (`basis_rate_ladder`) so 0.8 is on the list of rates it can pick. The chosen
 rate per epoch is stored in `checkpoints/<folder>/args.json` under
-`evasion.rate_history`, one entry per epoch.
+`evasion.rate_history`, 1 entry per epoch.
 
 ### Per-epoch calibrated rate, compressed into runs
 
@@ -303,7 +303,7 @@ sharpens and the same dropout rate shifts fewer predictions, ending at 0.6 to
 | `resnet18_gtsrb_badnet_a2o_0_1_evade_hinge_recal` | 0.3 to 0.4 | 0.4 to 0.6 | 0.6 to 0.7 | 0.6 to 0.7 (settles at 0.7) |
 | `resnet18_gtsrb_blend_0_1_evade_hinge_recal` | 0.2 to 0.4 | 0.3 to 0.6 | 0.6 to 0.7 | 0.6 to 0.7 (settles at 0.7) |
 
-### Attack success, clean accuracy, and detection at the deployable rule
+### Attack success, clean accuracy and detection at the deployable rule
 
 `adaptive_rate` is `select_rate_adaptively` at `ADAPTIVE_SHIFT_TARGET` 0.8 on
 each checkpoint's own clean-validation shift curve. `auroc`/`tpr` at q0.10 are
@@ -348,7 +348,7 @@ either, since both the peak (around rate 0.1, AUROC 0.72 to 0.77) and the
 trough the defender's rule now lands in (rate 0.7, AUROC 0.11 to 0.18) sit
 inside the region the attacker actively trained against, unlike the
 old-calibration runs whose adaptive_rate (0.8) sat past their own AUROC peak.
-The paper's own adaptive attacker (`psu_mean`) is left essentially
+The paper's own adaptive attacker (`psu_mean`) is left almost
 undisturbed by this fix (AUROC 0.73 to 0.97 unchanged), which is expected since
 it was never calibrated against a single probe rate in the first place and
 confirms the recalibration only closes the gap this project's own attacker was
@@ -356,4 +356,4 @@ exploiting. Both recalibrated runs settle at rate 0.6 to 0.7 by epoch 100, well
 above the 0.1 the initial-weights calibration chose, so the mismatch this task
 set out to fix (an attacker trained against a probe that barely moves the
 trained model) was real and roughly 6 to 7 times larger than the rate the
-old runs actually optimised against.
+old runs actually optimized against.

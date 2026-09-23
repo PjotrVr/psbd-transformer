@@ -7,7 +7,7 @@ probe site approaches the head, PSU carries no information the no perturbation
 softmax does not already carry, and detection power has to decay toward what a
 max softmax confidence detector gets for free.
 
-Three measurements, in increasing sharpness:
+3 measurements, in increasing sharpness:
 
   1. the free baseline itself: AUROC of max softmax confidence, per checkpoint,
      with no perturbation at all,
@@ -42,7 +42,7 @@ from defenses.decision import pair_clean_to_backdoor
 from experiments._paths import experiment_results_dir
 
 # Forward order through the network. Block scope positions repeat in every block,
-# so their index is a within block phase rather than a depth in the stack; the
+# so their index is a within block phase rather than a depth in the stack. The
 # 3 entries that are genuinely ordered by distance to the head are input_pixels
 # and after_embedding at the bottom and final_norm_out at the top.
 POSITION_DEPTH_ORDER: tuple[str, ...] = (
@@ -64,7 +64,7 @@ POSITION_DEPTH_ORDER: tuple[str, ...] = (
 )
 
 # Positions that sit at one fixed depth rather than once per block. These carry
-# the prediction; everything else spans the stack.
+# the prediction. Everything else spans the stack.
 FIXED_DEPTH_POSITIONS: dict[str, str] = {
     "input_pixels": "before the stack",
     "after_embedding": "before the stack",
@@ -109,7 +109,7 @@ def hessian_trace_statistic(probs: torch.Tensor) -> torch.Tensor:
 
 
 def confidence_baseline_row(psbd_dir: str) -> dict | None:
-    """The no perturbation baselines for one checkpoint, scored as a detector."""
+    """The no perturbation baselines for 1 checkpoint, scored as a detector."""
     clean_file = baseline_path(psbd_dir, "clean")
     backdoor_file = baseline_path(psbd_dir, "backdoor")
     if not (os.path.exists(clean_file) and os.path.exists(backdoor_file)):
@@ -163,10 +163,10 @@ def plain_measurements(summary_path: str) -> pd.DataFrame:
 def position_table(
     measurements: pd.DataFrame, baselines: pd.DataFrame, rule: str
 ) -> pd.DataFrame:
-    """Mean AUROC per position under one rate rule, against the paired baseline.
+    """Mean AUROC per position under 1 rate rule, against the paired baseline.
 
     The baseline is averaged over exactly the checkpoints that contributed to the
-    position, so the gap is not an artefact of 2 different checkpoint sets.
+    position, so the gap is not an artifact of 2 different checkpoint sets.
     """
     selected = measurements[measurements.rule == rule]
     joined = selected.merge(baselines, on="folder", how="inner")

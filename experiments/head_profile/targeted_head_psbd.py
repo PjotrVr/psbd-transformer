@@ -109,7 +109,7 @@ def load_eval_sets(dataset_name, attack_name, target_label):
 def plug_targeted_heads(model, head_set):
     """Install targeted head masking at specified (block, head) pairs.
 
-    Groups heads by block and installs one MultiFixedHeadMask per block.
+    Groups heads by block and installs 1 MultiFixedHeadMask per block.
     Uses masked_attention_forward to intercept the attention computation.
     """
     core = network_core(model)

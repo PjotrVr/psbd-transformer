@@ -5,7 +5,7 @@ backdoor directions. If the cosine similarity between directions from different
 attacks is high (>0.8), the direction is intrinsic to the target class geometry,
 not the trigger.
 
-Tests on CIFAR-100 and Tiny at 10%, 5%, and 1% poison rates.
+Tests on CIFAR-100 and Tiny at 10%, 5% and 1% poison rates.
 """
 
 import json

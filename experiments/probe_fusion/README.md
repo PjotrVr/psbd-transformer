@@ -1,9 +1,9 @@
-# Do two PSBD probes catch different backdoors, or the same one twice?
+# Do 2 PSBD probes catch different backdoors, or the same one twice?
 
 ## Question
 
-Every result in this project reads ONE placement at a time. If two placements fail on
-different attacks, combining them should cover both, and the deployment configuration would
+Every result in this project reads ONE placement at a time. If 2 placements fail on
+different attacks, combining them should cover both. The deployment configuration would
 be a set rather than a single config. That is the question here.
 
 ## Why it is nearly free
@@ -20,14 +20,14 @@ them manufactures a winner out of noise. So:
   mechanism claim written before any fused AUROC was read.
 - **4 of them are negative controls** that should gain little if the claimed mechanism is
   what carries the effect.
-- **One combination is selected on CIFAR-10 and GTSRB and reported on CIFAR-100 and Tiny**,
+- **1 combination is selected on CIFAR-10 and GTSRB and reported on CIFAR-100 and Tiny**,
   which never enter the selection.
 - The comparison is against a **single fixed probe**, `before_attention_norm_token_mask`,
   not against each combination's own best member. A defender cannot know which member is
   best without labels, so "beats its best member" is an oracle question. "Beats the config I
   would have deployed anyway" is the deployable one.
 
-Two combination rules are reported, both label-free:
+2 combination rules are reported, both label-free:
 
 | rule | what it asks | weakness |
 |---|---|---|
@@ -35,7 +35,7 @@ Two combination rules are reported, both label-free:
 | `mean_rank` | what does the average probe think | dilutes a single strong member |
 
 Both are needed. `before_attention_norm_gaussian` reads AUROC **0.191** on
-`vit_cifar100_badnet_a2o_0_01`, an inverted probe, and it takes `c3_ban_cm_gauss` down to
+`vit_cifar100_badnet_a2o_0_01`, which is an inverted probe. It takes `c3_ban_cm_gauss` down to
 0.601 under `min_rank`. Reporting only the flattering rule is how a fusion result stops
 meaning anything.
 
@@ -57,10 +57,10 @@ the fixed single probe `before_attention_norm_token_mask`:
 | cells won | 17 of 33 |
 | verdict | **not supported, the interval spans zero** |
 
-Merging the two best single configurations specifically buys almost nothing, and the reason
+Merging the 2 best single configurations specifically buys almost nothing, and the reason
 is mechanical: `both_sublayer_inputs_token_mask` is token masking at `before_attention_norm`
-AND `before_mlp_norm`, so it already CONTAINS the other. Fusing two probes that share a
-position fuses two correlated views.
+AND `before_mlp_norm`, so it already CONTAINS the other. Fusing 2 probes that share a
+position fuses 2 correlated views.
 
 | configuration | AUROC, all (n=67) | AUROC, hard (n=31) | delta vs the best single |
 |---|---|---|---|
@@ -71,10 +71,10 @@ position fuses two correlated views.
 | all three | 0.940 | 0.897 | +0.018, CI [-0.002, +0.038] |
 
 Spanning position families is still worth more than merging within one, which is the
-direction the pre-registered C2 family predicted. It is simply not worth enough to clear a
+direction the pre-registered C2 family predicted. It is not worth enough to clear a
 confidence interval.
 
-## This verdict replaces TWO earlier ones, and the reason is the same both times
+## This verdict replaces 2 earlier ones, and the reason is the same both times
 
 | when | n usable cells | held-out delta | verdict |
 |---|---|---|---|

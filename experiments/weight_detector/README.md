@@ -31,7 +31,7 @@ supplementary:
 > To detect whether the top class is an outlier, we also evaluate whether its score
 > is an outlier. To do this, we define a Z-score:
 > Z = (s_top - s_second) / max(std(S \ {s_top}), t), where s_top and s_second are the
-> top two scores and S = {s_0, ..., s_n_class}. We take the maximum of this standard
+> top 2 scores and S = {s_0, ..., s_n_class}. We take the maximum of this standard
 > deviation and the threshold for cases where the standard deviation is 0, which
 > occurs when the top class is the only one to ever exceed t. We then define an
 > outlier as Z > 3.
@@ -80,7 +80,7 @@ as quoted above, including the paper's own choice to floor the standard deviatio
 $t$ rather than at a fixed count. A cell is a **hit** when $Z > 3$ and the top class
 equals the checkpoint's `target_label` from `args.json`, a **false alarm** when
 $Z > 3$ and the top class is anyone else, and **no detection** when $Z \le 3$. Every
-number is weights only, CPU, and the 18-checkpoint sweep runs in under a minute.
+number is weights-only and CPU-only work, and the 18-checkpoint sweep completes in under a minute.
 
 Run: `PYTHONPATH=. python experiments/weight_detector/measure.py`. Output:
 `results/_experiments/weight_detector/summary.json`, written through

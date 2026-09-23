@@ -4,7 +4,7 @@ Analyzes evasive checkpoints trained with the hinge penalty from
 `adaptive_evasion.py`. For each evasive checkpoint, computes sigma-matched
 AUROC at 4 perturbation operators and compares to the non-evasive baseline.
 
-Answers: does evasion against one operator transfer to others?
+Answers: does evasion against 1 operator transfer to others?
 
 Result: evasion is probe-specific. The probed operator's AUROC collapses from
 0.952 to 0.322, but transfer operators still detect at mean AUROC 0.887.

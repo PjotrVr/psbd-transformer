@@ -2,13 +2,13 @@
 
 ## Question
 
-Every detector in the PSBD family rests on one asymmetry: under perturbation the backdoor
+Every detector in the PSBD family rests on 1 asymmetry: under perturbation the backdoor
 pathway survives and the clean pathway degrades. H28 shows PSBD, STRIP, SCALE-UP and
-IBD-PSC are one family in which the operator only selects a Jacobian, and this project has
+IBD-PSC are 1 family in which the operator only selects a Jacobian, and this project has
 measured that asymmetry under activation dropout, gradient-guided head-weight ablation,
 weight interpolation toward the pretrained initialization, and prediction depth.
 
-Four probes, all pointing the same way, invites the general claim: **the backdoor is the
+4 probes, all pointing the same way, invites the general claim: **the backdoor is the
 robust path in every modality**. That claim is false, and this measures where it breaks.
 
 ## The common statistic
@@ -49,7 +49,7 @@ the one whose backdoor is the *fragile* path.
 
 Retention above 1 means the attack gets **more** effective as the model is damaged, in 2
 mechanistically unrelated modalities. Adaptive-Blend exists to suppress latent separability
-and it is the hardest attack in this panel for every detector measured here; this says why.
+and it is the hardest attack in this panel for every detector measured here. This says why.
 Damaging the model damages the carrier's own class evidence faster than the trigger's, so
 the trigger wins more often, and a detector that reads "how much did the prediction move"
 is reading a quantity that moves the wrong way.
@@ -57,12 +57,12 @@ is reading a quantity that moves the wrong way.
 ## Consequences
 
 1. A defense built on perturbation consistency is exploiting an asymmetry that exists in
-   one modality. That is not a flaw in itself, but it bounds what the family can do and it
+   1 modality. That is not a flaw in itself, but it bounds what the family can do and it
    predicts the failure on Adaptive-Blend rather than discovering it.
-2. Input-space purification is not simply a weaker version of activation perturbation. The
+2. Input-space purification is a different mechanism from activation perturbation, not a weaker version of it. The
    sign of the asymmetry differs, which is a mechanism for the failure recorded in
    [H45](../style_content_split/README.md).
-3. The generalisation "the backdoor is always the robust path" was proposed by the
+3. The generalization "the backdoor is always the robust path" was proposed by the
    orchestrator and is refuted here by its own measurement. It survives only for
    activation-space probes.
 
@@ -72,7 +72,7 @@ is reading a quantity that moves the wrong way.
   (interpolation toward pretrained, gradient-guided ablation) were measured on single cells
   and are not in the table because they were not swept to matched clean damage.
 - The Fourier column is 5 cells, of which 2 support and 3 do not. It establishes that the
-  asymmetry is not universal; it does not establish its sign in that modality.
+  asymmetry is not universal. It does not establish its sign in that modality.
 
 ## Reproduce
 

@@ -1,7 +1,7 @@
 """Whether SAM training amplifies the trigger's footprint or widens PSBD's margin.
 
 The SAM paper (Zhang et al., arXiv 2411.11525, literature/sam-poisoned-detection-zhang-arxiv2024/source/,
-Section 3) claims sharpness-aware minimisation amplifies backdoor neurons, which
+Section 3) claims sharpness-aware minimization amplifies backdoor neurons, which
 is why poisoned samples separate more cleanly downstream. On our ViT-B/16
 checkpoints PSBD-TM (token_mask at before_attention_norm) gains only +0.02 to
 +0.04 AUROC under SAM and PSBD-RD gets worse. PSBD reads the margin of the
@@ -167,7 +167,7 @@ def direction_profile(cls_clean: torch.Tensor, cls_triggered: torch.Tensor) -> d
         direction = backdoor_direction(clean_layer, triggered_layer)  # (dim,)
         tac = trigger_activated_change(clean_layer, triggered_layer)  # (dim,)
         # Divided by the mean clean norm so growth is not the residual stream
-        # itself growing, the same normalisation run_tac_layers.py uses.
+        # itself growing, the same normalization run_tac_layers.py uses.
         scale = clean_layer.norm(dim=1).mean().clamp_min(DIRECTION_NORM_FLOOR)
         rel_norm.append(float(direction.norm() / scale))
         tac_mean.append(float(tac.mean()))

@@ -6,7 +6,7 @@ of ~770,000 in OpenCLIP ViT-B/16, with outliers emerging right after the layer-6
 backdoor's trigger tokens are driven by the SAME neurons, the attack is hijacking machinery
 the network already had. If by a DISJOINT set, it installed a parallel mechanism.
 
-The two answers imply different defenses, which is why this is worth the measurement: a hijack
+The 2 answers imply different defenses, which is why this is worth the measurement: a hijack
 is mitigable by the register interventions already published, a parallel mechanism is not.
 
 Method, following their Algorithm 1 but with a rank-based definition of "outlier position"
@@ -70,7 +70,7 @@ def trigger_tokens(metadata) -> torch.Tensor:
 def neuron_scores(model, core, loader, device, limit, top_k, fixed_tokens=None):
     """Mean post-GELU activation at selected patch positions minus at the others.
 
-    `fixed_tokens` selects the trigger's positions; when None the positions are chosen per
+    `fixed_tokens` selects the trigger's positions. When None the positions are chosen per
     image as the `top_k` highest-norm patch tokens, which is the register definition.
     """
     n_layers = len(core.encoder.layers)

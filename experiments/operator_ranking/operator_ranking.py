@@ -45,7 +45,7 @@ def split_folder(name: str) -> tuple[str, str, int]:
     """(position, operator, k) from a cache folder name.
 
     Bare names are the paper's dropout at k=3, which is the whole reason the
-    naming keeps them bare; see psbd_dropout_sweep.cache_config_name.
+    naming keeps them bare. See psbd_dropout_sweep.cache_config_name.
     """
     passes = 3
     if "_k" in name:

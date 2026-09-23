@@ -11,7 +11,7 @@ made without labels.
     shift-gap gating                 0.843 against 0.852 for always-PSU
     shift-destination concentration  a2o 0.469, a2a 0.422, benign 0.481, no separation
 
-The regimes differ in SIGN, not magnitude, and the sign is what the mechanism predicts.
+The regimes differ in SIGN, not magnitude. The sign is what the mechanism predicts.
 A defender holds clean validation data and the suspect pool being screened. Write
 
     d = mean PSU over the suspect pool - mean PSU over clean validation
@@ -20,12 +20,12 @@ Under all-to-one the poisoned subpopulation is MORE robust to the probe than cle
 so it drags the pool's mean PSU DOWN and d < 0. Under all-to-all the trigger has to read
 the source class before it can increment, so the backdoor pathway is more fragile than
 the clean one, the poisoned subpopulation is LESS robust, and d > 0. The threshold is
-therefore 0, fixed by the mechanism rather than tuned, and the rule is
+therefore 0, fixed by the mechanism rather than tuned. The rule is
 
     use PSU if d < 0, otherwise use entropy.
 
-Nothing here needs the poison rate, the target class, or any poison label. The suspect
-pool is simply what the defender was handed; the rate below is only used to SIMULATE a
+Nothing here needs the poison rate, the target class or any poison label. The suspect
+pool is what the defender was handed. The rate below is only used to simulate a
 realistic pool from cached splits.
 
     PYTHONPATH=. python experiments/all_to_all_entropy/router.py
@@ -94,7 +94,7 @@ def cell_scores(folder: str, results_dir: str, checkpoints_dir: str) -> dict | N
         }
 
     # The pool a defender actually screens: mostly clean, with the poisoned fraction
-    # mixed in. Only this simulation needs the rate; the statistic itself does not.
+    # mixed in. Only this simulation needs the rate. The statistic itself does not.
     n_poison = int(poison_rate * len(splits["clean"]["psu"]))
     if 0 < n_poison <= len(splits["backdoor"]["psu"]):
         suspect = {

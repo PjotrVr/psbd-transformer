@@ -1,9 +1,9 @@
-"""Does GaussianNoise's batch-wide std put the three splits at different noise levels?
+"""Does GaussianNoise's batch-wide std put the 3 splits at different noise levels?
 
 GaussianNoise scaled its noise by x.std() reduced over batch, tokens and channels
 together, so a sample's perturbation magnitude depended on its batch neighbours.
 The validation, clean and backdoor splits hold different image populations, so
-that coupling could put the three at three different noise levels while every
+that coupling could put the 3 at 3 different noise levels while every
 comparison between them assumes one.
 
 This measures the size of that effect directly, with no perturbation applied. For
@@ -54,11 +54,11 @@ def parse_args():
 
 
 def collect_stds(model, loader, targets, device, max_batches):
-    """Batch-wide and per-sample activation std at one position, over one split.
+    """Batch-wide and per-sample activation std at 1 position, over 1 split.
 
     Returns (batch_stds, per_sample_stds). The first is what the old operator
-    multiplied its noise by, one value per batch. The second is what the fixed
-    operator uses, one value per sample.
+    multiplied its noise by, 1 value per batch. The second is what the fixed
+    operator uses, 1 value per sample.
     """
     batch_stds = []
     per_sample_stds = []

@@ -2,14 +2,14 @@
 
 Dropout is the wrong probe for all-to-all. It degrades the trigger channel and the
 natural-image channel together, so a poisoned sample loses its poison prediction and
-its source-class evidence at the same time and simply drains to whatever class the
+its source-class evidence at the same time and drains to whatever class the
 network collapses onto. Measured on ViT: poisoned samples revert to their source
-class at 0.027, four times BELOW chance, while 0.90 of their shifts land on the same
+class at 0.027, 4 times BELOW chance, while 0.90 of their shifts land on the same
 sink clean data uses.
 
-Occlusion is selective. The trigger occupies specific pixels; the object does not.
+Occlusion is selective. The trigger occupies specific pixels. The object does not.
 Blank the right patch and the trigger channel dies while the natural channel survives,
-so the prediction should fall back from (y + 1) to y. That off-by-one transition is the
+so the prediction should fall back from (y + 1) to y. That off-by-1 transition is the
 attacker's own permutation showing itself, and clean data has no reason to produce it.
 
 The permutation is not assumed. It is estimated from the aggregate transition counts

@@ -18,7 +18,7 @@ attacks read site A well elsewhere: CIFAR-10 WaNet 5% (0.936), GTSRB WaNet 10%
    triggered inputs, and the share of triggered inputs (attack-success captured
    only) whose per-pass argmax ever leaves the baseline class under the
    perturbation, against the same share for clean inputs. Also CPU only,
-   generalising panel_data in scripts/paper/fig_psu_histograms.py to any
+   generalizing panel_data in scripts/paper/fig_psu_histograms.py to any
    placement.
 3. On the GPU, 500 paired clean and triggered images per model
    (experiments.whole_network_erasure.measure.paired_rows): the logit margin of
@@ -201,9 +201,9 @@ def ladder_rows(metrics: dict, placement: str) -> dict:
 def per_image_summary(
     results_dir: str, folder: str, metrics: dict, placement: str
 ) -> dict:
-    """1 placement's per-image PSU and shift behaviour, at its own adaptive rate.
+    """1 placement's per-image PSU and shift behavior, at its own adaptive rate.
 
-    Generalises panel_data in scripts/paper/fig_psu_histograms.py to any
+    Generalizes panel_data in scripts/paper/fig_psu_histograms.py to any
     placement rather than only RECOMMENDED_PLACEMENT, and adds the per-image
     shift share panel_data does not compute.
     """
@@ -467,7 +467,7 @@ def patch_sweep(
     reference: torch.Tensor,
     groups: dict[str, torch.Tensor],
 ) -> list[dict]:
-    """Normalised recovery for every (site, layer, group) in PATCH_SITES x PATCH_LAYERS.
+    """Normalized recovery for every (site, layer, group) in PATCH_SITES x PATCH_LAYERS.
 
     A restricted rerun of activation_patching.sweep, which sweeps every layer.
     Blocks 4, 8 and 12 are the early, middle and late reference points the plan

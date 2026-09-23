@@ -1,4 +1,4 @@
-"""Is PSBD-TM's 0.459 AUROC on vit_cifar10_wanet_0_1 real, an artefact or checkpoint specific?
+"""Is PSBD-TM's 0.459 AUROC on vit_cifar10_wanet_0_1 real, an artifact or checkpoint specific?
 
 See README.md for the question and the answer. This script covers step 4 only: the
 independent check against BackdoorBench's own reference WaNet checkpoint for CIFAR-10

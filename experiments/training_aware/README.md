@@ -164,7 +164,7 @@ python -m cli.train_backdoor \
 ```
 
 Every command above is followed, in its own job, by the 2 headline sweeps
-and `cli.analyze` on the same checkpoint folder (omitted here for length; see
+and `cli.analyze` on the same checkpoint folder (omitted here for length. See
 `pbs/training_aware/{a,b1,b2}/job_*.pbs` for the full rendering).
 
 ## Running the batch
@@ -191,7 +191,7 @@ bash pbs/training_aware/b2/submit_all.sh
 needs the real B1 job ids, which only exist once `bash
 pbs/training_aware/b1/submit_all.sh` has actually been run with `qsub`. The
 `--dry-run --depends-on` form above was used to verify the dependency wiring
-against a synthetic id map before this README was written; see "Dry-run
+against a synthetic id map before this README was written. See "Dry-run
 summary" below for that run's output.
 
 ## Dry-run summary

@@ -18,9 +18,9 @@ behind the fact that `gaussian` scores 0.758 at `before_attention_norm` and 0.89
 against 4 of 67.
 
 Measured here directly on real activations: inject a perturbation of a known relative size,
-then compare the relative change immediately before the next normalisation to the relative
-change immediately after it. A survival ratio of 1 means the normalisation passed the
-perturbation through; below 1 means it renormalised part of it away.
+then compare the relative change immediately before the next normalization to the relative
+change immediately after it. A survival ratio of 1 means the normalization passed the
+perturbation through. Below 1 means it renormalised part of it away.
 
     PYTHONPATH=. python experiments/residual_stream_mechanism/layernorm_absorption.py \
         --checkpoint-folder vit_gtsrb_badnet_a2o_0_1
@@ -37,7 +37,7 @@ from models.backbones import load_checkpoint, network_core
 from data.registry import DATASET_REGISTRY
 
 # Each entry: where the perturbation is injected, and the module that consumes it next.
-# "normalised" says whether a LayerNorm stands between the injection and its use.
+# "normalized" says whether a LayerNorm stands between the injection and its use.
 PROBES = {
     "before_attention_norm": {"tap": "ln_1", "next": "ln_1", "normalised": True},
     "before_attention": {"tap": "self_attention", "next": None, "normalised": False},
@@ -64,7 +64,7 @@ def perturb(x: torch.Tensor, operator: str, target: float, generator) -> torch.T
     """A perturbation of `x` whose relative size is approximately `target`.
 
     Matched on INJECTED size rather than on shift ratio, because the question here is what
-    the normalisation does to a perturbation of a given size, not how far it moves a
+    the normalization does to a perturbation of a given size, not how far it moves a
     prediction. Shift-ratio matching is what the detection sweep does, and it compensates for
     absorption by injecting more, which is the downstream consequence rather than the cause.
     """
@@ -83,7 +83,7 @@ def perturb(x: torch.Tensor, operator: str, target: float, generator) -> torch.T
 
 
 def survival(x, perturbed, normalise) -> tuple[float, float]:
-    """Relative change before and after the normalisation that follows the injection."""
+    """Relative change before and after the normalization that follows the injection."""
     with torch.inference_mode():
         before = ((perturbed - x).norm() / x.norm()).item()
         if normalise is None:

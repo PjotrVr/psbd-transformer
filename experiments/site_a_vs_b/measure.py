@@ -203,7 +203,7 @@ def locality(attack: str) -> str | None:
 def select_models(results_dir: str, site_a: str, site_b: str) -> list[dict]:
     """Clearing cells whose psbd_metrics.json reached an adaptive rate at both sites.
 
-    Generalises experiments.probe_union.measure.select_models, which hardcodes the 2
+    Generalizes experiments.probe_union.measure.select_models, which hardcodes the 2
     headline placements, to any pair.
     """
     coverage = load_coverage(results_dir)
@@ -231,7 +231,7 @@ def read_placement_psu(
 ) -> dict:
     """1 placement's per-image fractional PSU at its own adaptive rate, read from the cache.
 
-    Generalises panel_data in scripts/paper/fig_psu_histograms.py (hardcoded to
+    Generalizes panel_data in scripts/paper/fig_psu_histograms.py (hardcoded to
     RECOMMENDED_PLACEMENT) to any placement id, importing the same cache and decision
     helpers rather than recomputing the statistic.
     """

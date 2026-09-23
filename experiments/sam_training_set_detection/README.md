@@ -23,14 +23,14 @@ poisoned, not which training rows were.
 
 - **Detectors**: Activation Clustering (AC, Chen et al.), Beatrix (Ma et al.),
   SCAn (Tang et al.), Spectral Signature (SS, Tran et al.), SPECTRE (Hayase et
-  al.). Each is a training-set filter, not a test-time input detector, and none
+  al.). Each is a training-set filter, not a test-time input detector. None
   of them exist in this repo's `detectors/` package, which only holds test-time
   input detectors for PSBD's competitor comparison.
 - **Metrics**: TPR, FPR and F1 per detector per attack, each computed against
   the ground-truth poison indices within the target class the detector
   suspects. No fixed removal budget is reported in the main tables. Each
   detector uses its own native decision rule instead (SS flags a multiple of
-  the expected poison count, AC flags the smaller of 2 clusters, and so on).
+  the expected poison count, AC flags the smaller of 2 clusters and so on).
 - **Datasets, architectures, poison rate**: CIFAR-10, Tiny ImageNet and GTSRB
   (Tiny and GTSRB pushed to supplementary material for space), on ResNet18,
   VGG19-BN and DenseNet-161 (again, only ResNet18 in the main tables). The
@@ -47,7 +47,7 @@ poisoned, not which training rows were.
   No epoch count, learning rate or schedule is given in the main text or the
   short supplementary section included in the arXiv source (`sec/X_suppl.tex`
   is 16 lines of LaTeX packaging boilerplate, not a hyperparameter appendix).
-  Stage-3 of the pipeline additionally reweights features with a PCA projection
+  Stage-3 of the pipeline also reweights features with a PCA projection
   and a covariance-normalized "feature-scaling" step before handing them to the
   base detector, to counter the extra clean-sample variance SAM introduces
   (their Figure 4). This experiment tests SAM alone, without that reweighting,
@@ -67,7 +67,7 @@ without SAM enhancement)."
 That average is taken over `tables/cifar10.tex` and `tables/gtsrb.tex`
 together, all 10 attacks, all 5 detectors (Spectre, SCAn, SS, AC, Beatrix), on
 ResNet18 at poison rate 5%. Section 4.2 restates the CIFAR-10 slice of it:
-"For CIFAR-10, we improved the True Positive Rate (TPR) by over 25% for four
+"For CIFAR-10, we improved the True Positive Rate (TPR) by over 25% for 4
 detection methods." The CIFAR-10 table's own Average row, base PSD next to
 "SAM-enhanced PSD" (their name for the full pipeline, base rate first):
 
@@ -82,7 +82,7 @@ detection methods." The CIFAR-10 table's own Average row, base PSD next to
 Per-attack TPR before and after is in `tables/cifar10.tex`. For example
 BadNets under SS reads 70.8% before, 92.3% after. There is no single shared
 FPR or removal budget across the table: each detector keeps its own native
-decision rule (SS's top-`k` by score, AC's smaller cluster, and so on), before
+decision rule (SS's top-`k` by score, AC's smaller cluster and so on), before
 and after SAM, exactly as this experiment does.
 
 **This bundles 2 changes, not 1.** "SAM-enhanced PSD" in the paper's own
@@ -194,10 +194,10 @@ Runs on the login node's A100 in under 2 minutes for all 12 checkpoints (about
 
 At the same native decision rule each detector uses in the paper (SS's
 top-`1.5 * n_poisoned` by score, AC's smaller-cluster rule), does a gain of
-the paper's size (+15 to +58 points, SAM alone, their own ablation, or +25 to
+the paper's size (+15 to +58 points, SAM alone, their own ablation or +25 to
 +85 points for the full SAM+feature-scaling pipeline) appear on ViT at 1% and
 5% poisoning? No. The largest SS TPR movement from SAM alone across the 6
-pairs is +2.0 points (Blend, 1%), and the smallest is -1.0 points (WaNet,
+pairs is +2.0 points (Blend, 1%). The smallest is -1.0 points (WaNet,
 1%), against the paper's own SAM-alone range of +15.2 to +57.7 points on the
 same detector. AC's TPR moves by at most +1.0 points in either direction.
 
@@ -240,7 +240,7 @@ ResNet18/CIFAR-10 were +0.13 for BadNets and +0.26 for SSBA).
 
 ## Why our gain is far smaller
 
-Three reasons, in order of how much evidence this experiment actually has for
+3 reasons, in order of how much evidence this experiment actually has for
 each.
 
 The clearest reason is a ceiling effect: ViT-B/16's target-class features are
@@ -281,7 +281,7 @@ SAM's claimed training-set amplification effect does not reproduce on
 ViT-B/16 penultimate features at 1% and 5% poisoning on CIFAR-100. Spectral
 Signature moves by about 1 point either way at the only rate where its
 removal rule is informative, Activation Clustering's success or failure is
-set entirely by the attack, not the optimizer, and the paper's own
+set entirely by the attack, not the optimizer. The paper's own
 separability diagnostics, silhouette and singular ratio, drift slightly
 negative under SAM on average rather than the positive amplification the
 paper reports on ResNet18. The effect the paper documents is architecture and
@@ -290,5 +290,5 @@ general, at least not at the poison rates and target-class sizes CIFAR-100
 produces. This has no bearing on PSBD's own claims either way: PSBD never
 clusters training-set features and never assumes SAM training, so a null
 result for SAM-enhanced training-set filtering on ViT says nothing about
-whether PSBD's frozen-model, test-time perturbation mechanism works, and the 2
+whether PSBD's frozen-model, test-time perturbation mechanism works. The 2
 should not be read as the same question answered twice.

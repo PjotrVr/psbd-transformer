@@ -7,20 +7,20 @@ rate chosen by the 0.8 clean-shift rule), Swin-S reads 0.982 mean AUROC against
 0.939 for ViT-B/16 on 42 matched settings, and the gap sits entirely in the
 global triggers: WaNet +0.17, LC +0.14, SIG +0.54, while BadNet, LF, BPP and
 Blend are within 0.04. 4 structural candidates: (a) Swin has no class token, so
-masking a token removes its share of the mean-pooled readout directly; (b)
+masking a token removes its share of the mean-pooled readout directly. (b)
 windowed attention keeps a trigger's evidence inside its own window for the
-early stages; (c) 24 blocks against 12, so the same rate masks twice as often;
-(d) Swin simply has a firmer shortcut (ASR 0.992 against 0.978).
+early stages. (c) 24 blocks against 12, so the same rate masks twice as often.
+(d) Swin has a firmer shortcut (ASR 0.992 against 0.978).
 
 ## Method
 
 6 matched (architecture, dataset, attack, rate) pairs: CIFAR-10 WaNet 10%,
-CIFAR-10 SIG 10%, CIFAR-100 WaNet 10%, GTSRB WaNet 10%, and 2 controls where
+CIFAR-10 SIG 10%, CIFAR-100 WaNet 10%, GTSRB WaNet 10% and 2 controls where
 ViT and Swin already agree, CIFAR-100 BadNet 10% and CIFAR-100 Blend 10%. 300
 paired clean and triggered images per checkpoint from the PSBD analysis pool,
 150 used to estimate the backdoor direction and 150 held out for everything
 read against it, the same split `experiments/whole_network_erasure/measure.py`
-uses. `experiments/swin_mechanism/measure.py` runs all 5 measurements; results
+uses. `experiments/swin_mechanism/measure.py` runs all 5 measurements. Results
 are under `results/_experiments/swin_mechanism/<pair>.json`.
 
 ## 1. Logit margin (candidate d)

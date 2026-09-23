@@ -1,7 +1,7 @@
 # Balanced panels
 
-Four conclusions in this project inverted when rebuilt on a common set of
-checkpoints. All four failed identically: a mean was taken over whatever cells
+4 conclusions in this project inverted when rebuilt on a common set of
+checkpoints. All 4 failed identically: a mean was taken over whatever cells
 happened to exist, so the groups being compared had been measured on different
 problems, and the placements with the most coverage looked worst because their extra
 checkpoints were the hard ones.

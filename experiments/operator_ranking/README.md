@@ -4,7 +4,7 @@
 
 The published PSBD configuration is dropout at `pre_residual`, and it collapses at
 1% poisoning. Is that a limit of prediction-shift detection, or a bad operating
-point? The 7 scripts here answer it from one cached surface, so no 2 of them are
+point? The 7 scripts here answer it from 1 cached surface, so no 2 of them are
 allowed to disagree about what a cell means.
 
 Every comparison is at a matched clean-validation shift ratio (sigma) rather than

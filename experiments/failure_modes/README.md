@@ -6,7 +6,7 @@
 WaNet 10% at AUROC 0.459, CIFAR-10 SIG 10% at 0.418 and Tiny ImageNet TaCT 1% at
 0.575, while `before_attention_residual_token_mask` (site B, masking the attention
 branch's own output rather than its input) and dropout on the residual stream
-(`pre_residual`, `post_residual`) read the same 3 models well, and site A itself
+(`pre_residual`, `post_residual`) read the same 3 models well. Site A itself
 reads the same attacks well elsewhere: CIFAR-10 WaNet 5% (0.936), GTSRB WaNet 10%
 (0.948), CIFAR-100 TaCT 1% (0.909). Why does the position of the mask relative to
 attention matter this much for exactly these 3 cells.
@@ -31,7 +31,7 @@ and triggered images per model (`experiments.whole_network_erasure.measure.paire
 3. The logit margin of the predicted class over the runner-up, no perturbation,
    clean and triggered (`experiments.sam_mechanism.measure.predicted_class_margin`).
 4. Activation patching (`experiments.residual_stream_mechanism.activation_patching`)
-   at blocks 4, 8 and 12, `site="resid"` and `site="attn"`: recovery of the clean
+   at blocks 4, 8 and 12 for `site="resid"` and `site="attn"`: recovery of the clean
    answer when the trigger's own token group is patched from the clean run, against
    the CLS token and a random group of the same size. The trigger group is
    attack-specific: for WaNet the 20% of patches (39 of 196) the warp field
@@ -136,7 +136,7 @@ draw):
 | cifar100 tact 1% | control | 22 | 5.48 | 10.44 | +4.96 |
 
 None of the 3 failing models reads as a coin: every triggered margin sits within a
-few logits of its clean counterpart, on the same scale as the controls, and 2 of the
+few logits of its clean counterpart, on the same scale as the controls. 2 of the
 3 (SIG, TaCT) have a LARGER triggered margin than clean, the confident-shortcut
 case rather than the fragile one. The margin statistic rules itself out as the
 explanation for all 3 failures.
@@ -225,7 +225,7 @@ CIFAR-10 SIG 10% fails by the same mechanism taken to its extreme: the sinusoid 
 added to every pixel of the image, so every one of the 196 patches carries some of
 it and there is no small subset for a token mask to ever isolate. The 20% of
 patches nearest the sinusoid's peak amplitude recover only 15.9% of the clean
-margin at block 4, barely above a random group's 9.1%, and by block 12 nearly all
+margin at block 4, barely above a random group's 9.1%. By block 12 nearly all
 of the recoverable signal (73.9%) sits in the CLS token alone, meaning the model
 has already funnelled the trigger's evidence past the point any patch-level mask
 could reach it. The margin reading rules out the coin-flip story even more directly
@@ -242,7 +242,7 @@ Tiny ImageNet TaCT 1% fails for the opposite structural reason: its checkerboard
 patch is the most spatially concentrated trigger of the 3. Patching just the 4 grid
 corners it can fall into after resizing restores 99.9% of the clean margin already
 at block 4, while a random 4-patch group restores nothing (0.0%) at any block, the
-cleanest localisation measured here. `TokenMask` draws each token's survival as an
+cleanest localization measured here. `TokenMask` draws each token's survival as an
 independent coin flip, so a mask at rate 0.5 has roughly a 1 minus 0.5 to the 4th
 power, about 94%, chance of zeroing at least 1 of those 4 corner tokens on a single
 pass, which is exactly why the same site-A placement reads the CIFAR-100 TaCT
@@ -253,7 +253,7 @@ otherwise works: TaCT restricts its eligible evaluation images to the attack's 1
 source class, and at 1% poisoning only 41 triggered images in the whole cache were
 ever captured by the trigger, so the per-image shift shares read as
 `nothing_separates` under both site A (gap -0.024) and `post_residual` (gap +0.024)
-simply because 41 images carry too much sampling noise to resolve a signal the
+because 41 images carry too much sampling noise to resolve a signal the
 patching trace shows is concentrated and easy to ablate. Residual-stream dropout is
 not a working comparator for TaCT at all: `pre_residual` and `post_residual` both
 read near or below chance on Tiny TaCT (0.404, 0.487) and on its CIFAR-100 control

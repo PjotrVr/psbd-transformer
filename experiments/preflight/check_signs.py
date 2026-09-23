@@ -2,7 +2,7 @@
 
 The convention every detector in detectors returns, and which
 defenses.decision.detection_report assumes, is LOW MEANS POISONED. There is
-exactly 1 negation per detector, at the boundary, and each says so in its
+exactly 1 negation per detector, at the boundary. Each says so in its
 docstring. The hazard is that some raw statistics already point the right way
 while others do not, so a reader who negates uniformly gets some wrong and a
 reader who negates none gets the others wrong, and nothing raises either way.

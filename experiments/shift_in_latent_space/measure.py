@@ -1,6 +1,6 @@
 """Where do clean samples MOVE under dropout, in latent space rather than in labels?
 
-H7 currently rests on one measurement: a histogram of which class label shifted clean
+H7 currently rests on 1 measurement: a histogram of which class label shifted clean
 predictions land on, counted from the cached per-pass argmax. That is entirely
 prediction-space. It says the label changed and where it went, and nothing about
 whether the representation moved the way the neuron-bias story requires.
@@ -10,7 +10,7 @@ loses the clean class evidence and falls back on the strongest learned associati
 the trigger-to-target path, so a clean sample should drift toward wherever the target
 class lives. That is directly testable and has not been tested here.
 
-Four measurements, all at the final block's CLS features, all on the same samples:
+4 measurements, all at the final block's CLS features, all on the same samples:
 
   toward_target      cosine between the dropout-induced displacement and the direction
                      from the sample's own class centroid to the TARGET class centroid.
@@ -26,7 +26,7 @@ Four measurements, all at the final block's CLS features, all on the same sample
   displacement_norm  scale, so the cosines can be read as more than angles.
 
 A benign model probed with the same trigger is measured alongside, because a
-pretrained backbone has its own fallback behaviour under heavy perturbation and that
+pretrained backbone has its own fallback behavior under heavy perturbation and that
 has to be subtracted from any claim about poisoning.
 
 Writes results/<folder>/shift_latent.json and, with --umap, a projection coloured by

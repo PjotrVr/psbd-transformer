@@ -3,7 +3,7 @@
 ## Question
 
 The SAM paper (Zhang et al., arXiv 2411.11525, `literature/sam-poisoned-detection-zhang-arxiv2024/source/`,
-Section 3) claims sharpness-aware minimisation amplifies backdoor neurons, using
+Section 3) claims sharpness-aware minimization amplifies backdoor neurons, using
 3 amplification metrics: the per-neuron TAC difference between SAM and vanilla
 training (Fig. 3), the TAC-to-AUC correlation across attacks (Fig. 2, Pearson
 0.71) and the intra-class feature variance under SAM (Fig. 4). On our ViT-B/16
@@ -46,7 +46,7 @@ exactly as `cli/sweep.py` and `cli/analyze.py` do.
     PYTHONPATH=. .venv/bin/python experiments/sam_mechanism/measure.py \
         --checkpoints-dir checkpoints --raw-data-dir raw_data
 
-Writes `results/_experiments/sam_mechanism/<pair>.json`. Needs a GPU, one run
+Writes `results/_experiments/sam_mechanism/<pair>.json`. Needs a GPU, 1 run
 over all 6 pairs took under 5 minutes on an A100.
 
 ## Finding
@@ -77,9 +77,9 @@ Where the footprint grows, the margin gap (triggered margin minus clean margin)
 widens too, from 0.42 to 4.19 on BadNet at 1%, from 5.03 to 5.86 on Blend, from
 -0.34 to 3.27 on BPP and from 3.63 to 5.03 on LF, and PSBD-TM's AUROC rises by
 0.009 to 0.057 on those 5 pairs. But the size of the AUROC gain does not track
-the size of the footprint gain: LF has the largest footprint gain, 41%, and only
-a mid-sized AUROC gain, +0.031, while BPP has a smaller footprint gain, 20%, and
-the largest AUROC gain, +0.057. On WaNet the footprint shrinks, the margin gap
+the size of the footprint gain: LF has the largest footprint gain (41%) and only
+a mid-sized AUROC gain (+0.031), while BPP has a smaller footprint gain (20%) and
+the largest AUROC gain (+0.057). On WaNet the footprint shrinks, the margin gap
 inverts from +0.44 to -2.62, and the AUROC falls from 0.945 to 0.704, so the 1
 pair where the mechanism runs backward is also the 1 pair where detection gets
 worse.

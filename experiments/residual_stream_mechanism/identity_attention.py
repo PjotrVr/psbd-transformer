@@ -1,4 +1,4 @@
-"""The causal test of token mixing: switch attention off, one layer at a time.
+"""The causal test of token mixing: switch attention off, 1 layer at a time.
 
 The descriptive decomposition says the MLP writes more of the backdoor direction than
 attention does, yet the MLP is token-wise and cannot move anything between tokens. If a
@@ -6,7 +6,7 @@ corner-patch trigger has to be ROUTED from its own patches to the CLS token the 
 reads, then attention at the routing depth is the step with no substitute, and removing it
 should destroy the backdoor while leaving clean accuracy comparatively intact.
 
-The intervention is surgical. Attention is replaced by the IDENTITY pattern at one layer:
+The intervention is surgical. Attention is replaced by the IDENTITY pattern at 1 layer:
 every token attends only to itself, so the value and output projections, every MLP, the
 residual stream and every other layer's attention are untouched, and the ONLY thing removed
 is cross-token movement at that layer. Formally the sublayer becomes

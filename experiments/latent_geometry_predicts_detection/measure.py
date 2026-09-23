@@ -14,7 +14,7 @@ which is exactly the regime PSU reads as poisoned.
 
 If that link is real, then rank_ratio predicts PSBD's AUROC across checkpoints,
 and it does so without perturbing the model at all. This script measures both
-quantities on every checkpoint that has a cached detection result and writes one
+quantities on every checkpoint that has a cached detection result and writes 1
 row per checkpoint.
 
 Run:
@@ -62,7 +62,7 @@ def cached_detection_auroc(summary_path):
 
 
 def usable_checkpoints(best, checkpoints_dir):
-    """Rows whose checkpoint is on disk, has metadata, and is in scope."""
+    """Rows whose checkpoint is on disk, has metadata and is in scope."""
     has_metadata = best["folder"].apply(
         lambda folder: os.path.exists(
             os.path.join(checkpoints_dir, folder, "args.json")
@@ -75,7 +75,7 @@ def usable_checkpoints(best, checkpoints_dir):
 
 
 def geometry_for_checkpoint(folder, attack, samples):
-    """Latent geometry summary for one checkpoint, or an error row.
+    """Latent geometry summary for 1 checkpoint, or an error row.
 
     Layer 0 is dropped before summarizing. On ViT under the cls reduction it is a
     learned constant, so its statistics are undefined and would otherwise be the
@@ -148,7 +148,7 @@ def main():
         candidates = candidates.head(arguments.limit)
     if arguments.num_shards > 1:
         # Strided rather than blocked, so each shard gets a mix of architectures
-        # and datasets and one slow shard does not hold up the merge.
+        # and datasets and 1 slow shard does not hold up the merge.
         candidates = candidates.iloc[arguments.shard :: arguments.num_shards]
     print(f"{len(candidates)} checkpoints to measure at {arguments.samples} samples")
 
@@ -160,7 +160,7 @@ def main():
                 folder, record["attack"], arguments.samples
             )
         except Exception as error:
-            # One unreadable checkpoint must not lose the other 281 measurements,
+            # 1 unreadable checkpoint must not lose the other 281 measurements,
             # so the failure is recorded as a row rather than raised.
             print(
                 f"[{position}/{len(candidates)}] {folder}: FAILED {type(error).__name__}: {error}"

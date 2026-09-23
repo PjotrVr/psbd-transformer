@@ -1,6 +1,6 @@
 """Refuse to average over checkpoints that were not all swept the same way.
 
-Three conclusions in this project inverted when they were rebuilt on a common set of
+3 conclusions in this project inverted when they were rebuilt on a common set of
 checkpoints, and all 3 failed the same way: a mean was taken over whatever cells
 happened to exist, so the groups being compared were measured on different problems.
 
@@ -13,7 +13,7 @@ happened to exist, so the groups being compared were measured on different probl
 
 The fix is mechanical, so it belongs in a tool rather than in a resolution to be
 careful. `balanced_panel` finds the largest complete block of (group x unit) cells
-and refuses to report anything outside it; `compare` reports the naive answer next to
+and refuses to report anything outside it. `compare` reports the naive answer next to
 the balanced one and flags when they disagree.
 
 A "unit" is whatever identifies the same problem: normally (architecture, dataset,

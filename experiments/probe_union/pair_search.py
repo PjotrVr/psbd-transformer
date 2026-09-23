@@ -460,7 +460,7 @@ def subset_rule_row(
 ) -> dict:
     """1 model's AUROC and TPR at both target FPRs, for any placement subset under any rule.
 
-    Generalises `union_row` (which reads only `multi_probe_auroc` and
+    Generalizes `union_row` (which reads only `multi_probe_auroc` and
     `multi_probe_detection`'s min reduction) to `combine_scores`'s 3 requested
     rules, min, product and zsum, so the pool search below shares 1 scoring
     path across every subset size.

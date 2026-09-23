@@ -6,7 +6,7 @@ carried the cross-checkpoint records, with no rule saying which experiment had
 written which file, so a reader who found a number in a table could not tell
 which script to rerun. The convention paper/README.md states is that
 per-checkpoint artefacts stay at results/<folder>/... and every cross-checkpoint
-artefact lives under results/_experiments/<slug>/, where <slug> is the
+artifact lives under results/_experiments/<slug>/, where <slug> is the
 experiments/<slug>/ directory that produced it. Every experiment builds its
 output paths through these 2 functions so the slug in the path and the directory
 holding the writer can never drift apart.

@@ -15,7 +15,7 @@ branch or the MLP branch. That is the question a placement study needs answered:
 perturbation should only disrupt the backdoor if it lands where the direction is still being
 written, and it should target the sublayer doing the writing.
 
-The three taps are already named in the position registry, so this measures the same tensors
+The 3 taps are already named in the position registry, so this measures the same tensors
 the perturbation study perturbs:
 
     stream in         block pre-hook                 h^l
@@ -37,7 +37,7 @@ which is why the primary quantity here is the direction's SHARE of the stream an
 
 And a difference of means over finitely many samples is never exactly zero, so every number
 needs its sampling floor. The control is a label SHUFFLE: pool the paired triggered and clean
-samples, split them at random, and take the same difference of means. That null has no
+samples, split them at random and take the same difference of means. That null has no
 backdoor in it by construction, so whatever it reads is what noise alone produces. Reported as
 a mean and a 2-sigma band over several draws, the convention used for difference-of-means
 directions elsewhere (Arditi et al., NeurIPS 2024).

@@ -1,7 +1,7 @@
 """Does the median-rank union survive a real adaptive attacker, or only a synthetic one?
 
 The multi-probe union is this project's answer to an adaptive attacker: evading
-one probe should not evade the detector. Measured on the evasive checkpoints, the
+1 probe should not evade the detector. Measured on the evasive checkpoints, the
 attacker's best move turns out not to be neutralizing the probed position but
 INVERTING it, and a min-rank union takes the most extreme evidence across probes,
 so it adopts the inversion rather than ignoring it.
@@ -97,7 +97,7 @@ def probe_at_matched_shift(psbd_dir, placement):
 
 
 def measure_checkpoint(folder, results_dir):
-    """Single-probe and union results for one checkpoint, or None if unusable."""
+    """Single-probe and union results for 1 checkpoint, or None if unusable."""
     psbd_dir = os.path.join(results_dir, folder, "psbd")
     placements = sorted(
         os.path.basename(p)
@@ -116,7 +116,7 @@ def measure_checkpoint(folder, results_dir):
     # The clean split covers the whole analysis pool and the backdoor split only the
     # eligible subset, so comparing them as served contrasts different populations and
     # measures which classes were dropped as much as it measures the defense. Every
-    # other consumer in the tree pairs by original index; this one did not.
+    # other consumer in the tree pairs by original index. This one did not.
     for probe in probes:
         probe["psu"]["clean"] = pair_clean_to_backdoor(probe["psu"]["clean"], manifest)
 

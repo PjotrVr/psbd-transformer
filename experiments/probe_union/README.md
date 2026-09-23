@@ -5,7 +5,7 @@
 H41 (`docs/hypothesis/H41-multi-probe-defense.md`) built a min-rank union of
 independent probes to defeat an attacker trained against 1 probed operator.
 Nobody trains against a probe on the 65 clearing cells the paper's headline
-reads (`paper/tables/headline.tex`). Does the same union rule help, hurt, or do
+reads (`paper/tables/headline.tex`). Does the same union rule help, hurt or do
 nothing on those ordinary models, and does it specifically rescue the 2
 inverted cells the headline names, cifar10 wanet at 10% (0.459) and cifar10 sig
 at 10% (0.418 here, 0.878 at the matched rule in the headline)?
@@ -110,7 +110,7 @@ clears the panel more cleanly (+0.022, CI entirely positive) without the tact
 cost, because its 2 members are less anti-correlated. The H41 adaptive pool
 transfers well to its own 37-model subset (+0.020 to +0.022) but that subset
 never contains a bpp, tact or wanet cell, so it cannot be read as evidence for
-or against the rescue question; the 15-probe all-basis union gains the least
-per probe added (+0.019, CI barely excludes 0, and both TPR columns fall below
-the 3-probe set), confirming H41's caution that more probes only helps when
-they disagree in the right way, not simply by number.
+or against the rescue question. The 15-probe all-basis union gains the least
+per probe added (+0.019 with a CI that barely excludes 0), and both TPR columns fall
+below the 3-probe set. This confirms H41's caution that more probes only helps when
+they disagree in the right way, not by number alone.

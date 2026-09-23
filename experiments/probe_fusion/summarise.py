@@ -2,12 +2,12 @@
 
 Kept separate from measure.py because the protocol, not the measurement, is what decides
 whether a fusion result means anything. Selecting the best of 20 combinations on the cells
-the headline is read from manufactures a winner out of noise, so one combination is chosen
+the headline is read from manufactures a winner out of noise, so 1 combination is chosen
 on CIFAR-10 and GTSRB and reported on CIFAR-100 and Tiny, which never enter the selection.
 
 The comparison is against a single FIXED probe, not against each combination's own best
 member. A defender cannot know which member is best without labels, so "beats its best
-member" is an oracle question; "beats the one config I would have deployed anyway" is the
+member" is an oracle question. "beats the one config I would have deployed anyway" is the
 deployable one.
 
     PYTHONPATH=. python experiments/probe_fusion/summarise.py

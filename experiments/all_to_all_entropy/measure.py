@@ -3,7 +3,7 @@
 PSBD does not work on all-to-all. H5 and docs/all-to-all-inversion.md establish that on
 both architectures, including ResNet-18 on the original authors' own recipe (TPR 0.210
 against FPR 0.192). The mechanism is structural: PSBD needs the trigger to be a
-CONSTANT, content-independent shortcut, and (y + 1) mod K forces the model to read the
+CONSTANT, content-independent shortcut. The (y + 1) mod K rule forces the model to read the
 source class before it can increment, so the backdoor pathway inherits and then exceeds
 the clean pathway's fragility.
 

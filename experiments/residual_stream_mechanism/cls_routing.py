@@ -7,11 +7,11 @@ the classifier reads. So the routing step is the one with no substitute, and it 
 visible as CLS attention mass landing on the trigger's tokens.
 
 That is also the prediction that separates the trigger families. A distributed trigger is
-already present in every token, so it needs no routing and reaches CLS early; a patch trigger
+already present in every token, so it needs no routing and reaches CLS early. A patch trigger
 must be routed and arrives late. This project's own onset measurements agree (blend 5, bpp 6,
-lf 8, badnet 9), and the token-mask advantage tracks that ordering at r = +0.94.
+lf 8, badnet 9). The token-mask advantage tracks that ordering at r = +0.94.
 
-Two things measured here, per layer:
+2 things measured here, per layer:
 
     cls_to_trigger    CLS attention mass on the trigger's tokens, triggered minus the same
                       clean images. Attention mass is a WEIGHT, and a weight alone is not an
@@ -121,7 +121,7 @@ def run_split(model, core, loader, device, tokens, limit, keep_rows=None):
                 vn = value_norm[index]
                 weighted = w * vn
                 weighted = weighted / weighted.sum(dim=-1, keepdim=True).clamp(min=1e-9)
-                # token 0 is CLS; the trigger set indexes patches, so shift by one
+                # token 0 is CLS. The trigger set indexes patches, so shift by 1
                 keys = tokens + 1
                 entry = totals.setdefault(layer, {"w": 0.0, "vw": 0.0, "ent": 0.0})
                 entry["w"] += float(w[..., keys].sum(dim=-1).mean(dim=-1).sum())

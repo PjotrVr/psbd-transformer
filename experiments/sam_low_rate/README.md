@@ -4,15 +4,15 @@
 
 experiments/sam_reading pooled every poison rate together and found a small
 token-mask (PSBD-TM, `before_attention_norm_token_mask`) gain from training the
-victim with sharpness-aware minimisation and a loss for the placement the
+victim with sharpness-aware minimization and a loss for the placement the
 original PSBD paper published (PSBD-RD, `post_residual`). That pooled number
 cannot say whether the gain is real at the poison rates an attacker would
-actually use, whether it is separation or an artefact of the adaptive rule
+actually use, whether it is separation or an artifact of the adaptive rule
 picking a different dropout rate on the SAM side, or whether it holds across
 the whole disturbance ladder or only at 1 rung of it. `measure.py` re-slices
 the same matched Adam-versus-SAM cells by poison rate to answer those 3
 questions, plus a fourth: whether the gain concentrates in the attacks whose
-trigger is diffuse (BPP, WaNet) rather than firm and localised (BadNets, Blend,
+trigger is diffuse (BPP, WaNet) rather than firm and localized (BadNets, Blend,
 LF), which is what the SAM paper's own backdoor-neuron-amplification account
 would predict.
 
@@ -89,7 +89,7 @@ poisoning, rho 0.2: Adam 0.550 against SAM 0.690, and at 1% poisoning, rho
 the same nominal token-mask disturbance, so the rule reaches for more dropout
 to hit the same 0.8 shift
 target on clean validation data. That alone would explain a spurious "gain" if
-AUROC simply rose with rate everywhere, but the rate ladder (part 3) shows
+AUROC rose with rate everywhere regardless, but the rate ladder (part 3) shows
 SAM's curve already sits above Adam's at matched shift ratio, so the
 calibration shift is real but is not the whole story behind the AUROC delta.
 For residual dropout the calibration gap is much smaller (10%, rho 0.2: Adam
@@ -107,7 +107,7 @@ Token mask, mean AUROC by shift-ratio bin (Adam / SAM): 0.0-0.1: 0.734 / 0.828,
 0.961 / 0.989, 0.8-0.9: 0.867 / 0.927, 0.9-1.0: 0.905 / 0.924. SAM's curve sits
 above Adam's at every bin with more than a handful of points, including the
 0.8-0.9 and 0.9-1.0 bins where the adaptive rule (target 0.8) actually lands.
-This is a real separation gain, not only a calibration artefact, since it
+This is a real separation gain, not only a calibration artifact, since it
 holds at matched disturbance and not just at matched nominal rate.
 
 Residual dropout tells a different story: 0.0-0.1: 0.608 / 0.783, 0.1-0.2:
@@ -137,7 +137,7 @@ shortcut is:
 BadNets, Blend and LF, the firm local or global triggers, all sit within
 [-0.06, +0.04] of 0 with intervals that straddle it at every rho except
 BadNets rho 0.1 (a barely positive +0.006 to +0.009). BPP, the diffuse
-image-quantisation trigger, gains at every rho and its interval excludes 0 at
+image-quantization trigger, gains at every rho and its interval excludes 0 at
 rho 0.1 and 0.15. WaNet gains the most by far, but only 1 or 2 matched cells
 back every rho (GTSRB and Tiny WaNet cells have not reached both placements on
 both sides yet), so its size cannot be trusted the way BPP's can. Both

@@ -25,9 +25,9 @@ Both extract attention weights through forward hooks and want a GPU. Output goes
 
 ## Finding
 
-H31 is supported. Layer 5 head 0, layer 6 head 3, and layer 5 head 10 show elevated
+H31 is supported. Layer 5 head 0, layer 6 head 3 and layer 5 head 10 show elevated
 divergence between clean and triggered attention across every tested attack and
-dataset. BadNet additionally recruits layer 9 head 7 and layer 10 head 9, which are
+dataset. BadNet also recruits layer 9 head 7 and layer 10 head 9, which are
 specific to localized triggers and match the late routing that
 `backdoor_direction_layers` measured for patch triggers.
 

@@ -1,11 +1,11 @@
 """H34: backdoor erasure via direction orthogonalization.
 
 Tests whether the backdoor can be removed by orthogonalizing the MLP output
-weights against the backdoor direction. Two modes:
+weights against the backdoor direction. 2 modes:
   Stage 1 (known direction): uses the true direction from paired features.
   Stage 2 (blind direction): uses the target class's readout weight as a proxy.
 
-Reports baseline ASR/CA, erased ASR/CA, and random-direction control.
+Reports baseline ASR/CA, erased ASR/CA and random-direction control.
 """
 
 import json

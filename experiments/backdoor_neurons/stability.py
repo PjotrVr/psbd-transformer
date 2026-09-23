@@ -14,7 +14,7 @@ the same trigger, the same layer, differing only in which images were used.
     chance              two independent k-of-768 draws, measured not assumed
 
 A cross-model Jaccard is only interpretable BETWEEN those 2 numbers. Near the
-split-half value means the dimensions were preserved; near chance means they moved.
+split-half value means the dimensions were preserved. Near chance means they moved.
 
 Example
     PYTHONPATH=. python experiments/backdoor_neurons/stability.py --attack badnet_a2o blend

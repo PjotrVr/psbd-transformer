@@ -1,7 +1,7 @@
 """Prediction 2: inversions concentrate on low confidence clean samples.
 
 The logit layer trace 2 p_c (||p||^2 - p_c) is NON MONOTONE in confidence. In the
-2 class case it is 2p(2p-1)(p-1), zero at p = 0.5, zero at p = 1, and largest in
+2 class case it is 2p(2p-1)(p-1), zero at p = 0.5, zero at p = 1 and largest in
 magnitude near p = 0.789. So a sample sitting ON the decision boundary has near
 zero curvature just like a saturated one does, and "low PSU means large margin"
 stops holding at the low confidence end. The prediction that follows is that a
@@ -18,7 +18,7 @@ as the positive class and low PSU as the poisoned direction is
         auroc = mean over clean samples of
                 (fraction of backdoor samples whose PSU is lower)
 
-so every clean sample has an exact, additive contribution in [0, 1], and the
+so every clean sample has an exact, additive contribution in [0, 1]. The
 question "which clean samples cause the inversion" has a numeric answer rather
 than an interpretive one. A cell is inverted when that mean is below 0.5.
 
@@ -72,7 +72,7 @@ def parse_args() -> argparse.Namespace:
 def load_cell(
     results_dir: str, folder: str, placement: str, rate: float
 ) -> dict | None:
-    """PSU and baseline confidence for the clean and backdoor splits of one cell."""
+    """PSU and baseline confidence for the clean and backdoor splits of 1 cell."""
     psbd_dir = os.path.join(results_dir, folder, "psbd")
     files = {
         split: dropout_pass_path(psbd_dir, placement, rate, split)
@@ -191,7 +191,7 @@ def curve_shape(psu_by_bin: np.ndarray) -> dict:
 def select_cells(summary: pd.DataFrame, count: int, seed: int) -> pd.DataFrame:
     """Inverted and working cells, spread over checkpoints rather than clustered.
 
-    One cell per (folder, placement) at most, because the 6 rate rules of a single
+    1 cell per (folder, placement) at most, because the 6 rate rules of a single
     placement often select the SAME rate and would otherwise be counted 6 times.
     """
     plain = summary[summary.variant.isna()].copy()

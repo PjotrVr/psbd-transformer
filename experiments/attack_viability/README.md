@@ -9,7 +9,7 @@ PSU on a model with no backdoor measures nothing. Before any detection sweep, wh
 
 The previously generated PSBD grid targeted `vit_cifar100_wanet` at 3 poison rates.
 WaNet on CIFAR-100 reaches **ASR 0.044 at 1%** and 0.649 at 5%. Those 60 jobs would
-have run to completion, written well-formed output, and measured noise. Nothing in
+have run to completion, written well-formed output and measured noise. Nothing in
 the pipeline would have flagged it.
 
 Every checkpoint already carries a `metrics.json` with its measured ASR, so this
@@ -39,8 +39,8 @@ CIFAR-100 is worse across the board and is not the primary grid.
 For **clean-label** attacks (`sig`, `lc`) the poison rate is silently capped.
 `poison.choose_poison_indices` clamps the count to the number of eligible samples,
 and clean-label eligibility is the target class only. On CIFAR-100 that is 500
-images, so 1%, 5% and 10% all resolve to the same 500 poisoned samples: three
-folders, one experiment. `args.json` records the *requested* rate with no warning.
+images, so 1%, 5% and 10% all resolve to the same 500 poisoned samples: 3
+folders, 1 experiment. `args.json` records the *requested* rate with no warning.
 
 Confirmed by ASR: `vit_cifar100_sig_0_01` 0.250 vs `_0_05` 0.252.
 

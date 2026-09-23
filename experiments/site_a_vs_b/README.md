@@ -14,7 +14,7 @@ poisoned images for different physical reasons.
 ## Method
 
 Per-image fractional PSU is read from the stage-1 caches at each site's own
-`adaptive_rate` (`results/<folder>/psbd_metrics.json`), generalising `panel_data` in
+`adaptive_rate` (`results/<folder>/psbd_metrics.json`), generalizing `panel_data` in
 `scripts/paper/fig_psu_histograms.py` to any placement id
 (`experiments/site_a_vs_b/measure.py:read_placement_psu`, importing `defenses.cache`,
 `defenses.decision` and `defenses.scores` rather than recomputing the statistic). Models
@@ -186,7 +186,7 @@ disturbing a large causally concentrated write the way site A's mask does.
 
 Site A and site B are 2 complementary probes, not the same placement seen twice. The panel
 mean agrees only because equal and opposite per-model gaps cancel: B beats A by up to 0.52
-on SIG and WaNet at 10%, A beats B by up to 0.39 on WaNet at 5%, and on every 1 of those
+on SIG and WaNet at 10%, A beats B by up to 0.39 on WaNet at 5% and on every 1 of those
 rows 43 to 84% of triggered images are caught by exactly 1 site. The physical reason is
 forced by where each site sits in the block: site B's mask lands after attention has
 already written this block's class-token value and before anything mixes across tokens
@@ -207,7 +207,7 @@ and worth distrusting a naive combination of when they disagree sharply, as wane
 ## Files
 
 - `experiments/site_a_vs_b/measure.py`: parts 1 to 4, `compare_sites(results_dir, site_a,
-  site_b, ...)` generalised to any 2 placement ids.
+  site_b, ...)` generalized to any 2 placement ids.
 - `results/_experiments/site_a_vs_b/site_a_vs_b.json`: every per-model row, the grouped
   summaries, the matched-shift ladder, the mechanism measurements and the activation
   patching re-read.

@@ -1,6 +1,6 @@
 """What does every accumulated change buy at 1% poisoning and 5% FPR?
 
-Reports two numbers per configuration, because they answer different questions:
+Reports 2 numbers per configuration, because they answer different questions:
 
   deployable   threshold = 5th percentile of CLEAN VALIDATION score, which is what
                a defender can actually compute. The FPR it achieves on the clean
@@ -39,7 +39,7 @@ from defenses.scores import psu_from_cache, psu_ratio_from_cache, shift_ratio, t
 
 TARGET_FPR = 0.05
 
-# (label, cache folder, score kind, sigma target). Each row adds one accumulated
+# (label, cache folder, score kind, sigma target). Each row adds 1 accumulated
 # change to the row above it, so the deltas read as the value of that change.
 STACK = [
     ("published (post_residual, absolute, s>=0.8)", "post_residual", "absolute", 0.8),

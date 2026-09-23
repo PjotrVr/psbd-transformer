@@ -6,12 +6,12 @@ appears. That is correlational. It does not establish that the model reads them,
 a large activation change in a dimension the classifier ignores would look identical.
 
 The causal test is to delete them. Zero the named dimensions in the residual stream
-at the peak layer, on every input, and re-measure:
+at the peak layer, on every input and re-measure:
 
     asr           should collapse, if the backdoor is routed through them
     clean_accuracy should barely move, since k is at most 20 of 768
 
-Two controls, both necessary:
+2 controls, both necessary:
 
   random_k      the same NUMBER of dimensions, drawn at random from the same layer.
                 Separates "these dimensions" from "removing any k dimensions at this
@@ -76,7 +76,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--layer", type=int, default=None)
     # Remove the direction AFTER the final LayerNorm instead of at a block output.
     # LN renormalizes to unit variance, so a component deleted before it is partly
-    # restored by the rescaling of whatever survives; deleting after it is what the
+    # restored by the rescaling of whatever survives. Deleting after it is what the
     # head actually sees.
     parser.add_argument("--post-ln", action="store_true")
     parser.add_argument("--batch-size", type=int, default=64)
@@ -91,7 +91,7 @@ def make_ablation_hook(dimensions: torch.Tensor):
     """Zero the named residual-stream dimensions on a block's output.
 
     Applied to every token, because the CLS token reads from the others through
-    attention in later blocks; zeroing CLS alone would leave the information intact
+    attention in later blocks. Zeroing CLS alone would leave the information intact
     for a downstream block to re-read.
     """
 
@@ -113,7 +113,7 @@ def make_subspace_hook(basis: torch.Tensor):
         x_ablated = x - Q (Q^T x),  Q an orthonormal basis of the subspace
 
     The basis is orthonormalized first, because the leading difference directions
-    are not orthogonal and subtracting them one by one would over-subtract their
+    are not orthogonal and subtracting them 1 by one would over-subtract their
     shared component.
     """
     orthonormal, _ = torch.linalg.qr(basis.T)

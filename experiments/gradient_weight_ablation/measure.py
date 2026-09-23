@@ -1,7 +1,7 @@
 """Disable the weights that matter for THIS prediction, and see whether it survives.
 
 Every operator in this project perturbs ACTIVATIONS with unstructured, data-independent
-noise: dropout, masks, DropPath, Gaussian, gain scaling. H28 shows they are one family in
+noise: dropout, masks, DropPath, Gaussian, gain scaling. H28 shows they are 1 family in
 which the operator only chooses a Jacobian. This probes a different object entirely, on 2
 axes at once. The perturbation is applied to WEIGHTS rather than activations, and it is
 DIRECTED by the sample's own gradient rather than drawn at random.
@@ -38,7 +38,7 @@ prediction RESTS on few head weights: the head reads that direction through many
 coordinates, so ablating the largest ones individually leaves enough of the projection
 intact. The observed direction is in fact the field-standard one, that the backdoor path
 is the robust path, which is exactly PSBD's own premise. Testing THAT is a separate
-pre-registered experiment; flipping the sign here would be the move H15 retired, and the
+pre-registered experiment. Flipping the sign here would be the move H15 retired, and the
 flipped value (0.733) is far below PSBD's 0.999 on the same cell in any case.
 
 Cost. For a linear layer the per-sample gradient factorizes, so no per-sample backward
@@ -123,7 +123,7 @@ def _embed(model: torch.nn.Module, images: torch.Tensor) -> torch.Tensor:
     """The CLS feature the head consumes, i.e. the network up to the final LayerNorm.
 
     The checkpoint is nn.Sequential(Resize(224), VisionTransformer), so the resize has to
-    run first; the ViT asserts on a 32-pixel input otherwise.
+    run first. The ViT asserts on a 32-pixel input otherwise.
     """
     vit = vision_transformer(model)
     if isinstance(model, torch.nn.Sequential):

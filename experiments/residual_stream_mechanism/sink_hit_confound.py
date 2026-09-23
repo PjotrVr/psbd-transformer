@@ -8,7 +8,7 @@ The sign is predicted BEFORE measuring, because guessing it afterwards is not a 
 Kang et al. (ICLR 2025, arXiv:2503.03321) find that masking visual sink tokens costs little
 while masking the same number of ORDINARY tokens costs much more: sink attention is a
 recyclable budget. So a draw that hits a high-norm token should produce a SMALLER prediction
-shift, not a larger one, and the contamination is downward variance on clean images.
+shift, not a larger one. The contamination is downward variance on clean images.
 
 Sun et al. (arXiv:2402.17762) separately show the difference between zeroing an outlier, which
 is catastrophic, and replacing it with its mean, which is free. Both are measured here, since

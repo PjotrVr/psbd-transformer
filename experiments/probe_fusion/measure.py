@@ -1,4 +1,4 @@
-"""Do two PSBD probes catch different backdoors, or the same one twice?
+"""Do 2 PSBD probes catch different backdoors, or the same one twice?
 
 The cache stores per_pass_probs of shape (k, N), the baseline-predicted class's probability
 on each perturbed pass. That is exactly PSU's input, so combining placements at the SCORE
@@ -7,7 +7,7 @@ level costs no GPU at all: every combination below is computed from tensors alre
 That cheapness is a trap. C(18,2) + C(18,3) is 969 combinations, and reporting the best of
 them is an oracle number of the kind this ledger has already been burned by. So the
 combinations are pre-registered in configs/psbd_basis.json, each carrying a mechanism claim
-written before any fused AUROC was read, and four of them are NEGATIVE controls that should
+written before any fused AUROC was read, and 4 of them are NEGATIVE controls that should
 gain little if the claimed mechanism is what carries the effect.
 
 Fusion is min-rank against the clean-validation reference (multi_probe_score), with the
@@ -63,7 +63,7 @@ def load_declaration(path: str) -> dict:
 def probe_at_matched_shift(
     psbd_dir: str, placement: str, baselines: dict, manifest: dict, target: float
 ) -> dict | None:
-    """One probe's fractional PSU on all three splits, at its own shift-matched rate.
+    """1 probe's fractional PSU on all 3 splits, at its own shift-matched rate.
 
     Returns None when the placement has no usable cache. The fractional variant is used
     because it is what every published table in this project reports.
@@ -114,8 +114,8 @@ def mean_rank_detection(
     Minimum rank asks whether ANY probe finds a sample suspicious, so a single probe that
     is INVERTED on a cell (backdoor samples scoring higher than clean ones, which happens:
     before_attention_norm_gaussian reads AUROC 0.191 on cifar100 badnet at 1 percent) drags
-    the whole combination down with it. Averaging the ranks cannot be captured by one bad
-    member, at the cost of diluting one strong member. Neither rule reads a label, so both
+    the whole combination down with it. Averaging the ranks cannot be captured by 1 bad
+    member, at the cost of diluting 1 strong member. Neither rule reads a label, so both
     stay defender-legal, and reporting only the flattering one is how a fusion result stops
     meaning anything.
 
@@ -134,7 +134,7 @@ def mean_rank_detection(
 
 
 def single_probe_row(probe: dict) -> dict:
-    """Detection for one probe alone, the baseline every combination must beat."""
+    """Detection for 1 probe alone, the baseline every combination must beat."""
     row = {
         "rate": probe["rate"],
         "achieved_shift": probe["achieved_shift"],

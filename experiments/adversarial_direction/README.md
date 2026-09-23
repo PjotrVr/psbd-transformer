@@ -25,7 +25,7 @@ similarity to the backdoor direction, and states that the CLS token is used
 because the all-token vector is too high dimensional to analyze this way.
 Neither the step size nor whether PGD starts at the clean image or at a random
 point in its epsilon ball is stated. We use step size epsilon / 4 and start
-exactly at the clean or triggered image, the two choices this leaves open.
+exactly at the clean or triggered image, the 2 choices this leaves open.
 Untargeted means maximizing cross entropy against the label the starting image
 currently carries: the true label from a clean start, the trigger-induced
 target label from a triggered start, since that is the only way "reverts to the
@@ -149,7 +149,7 @@ not WaNet, rather than tracking stealth in general.
 original class.** Reproduced for BPP (48.5% and 53.4%) and LF (25.9%), exceeded
 by WaNet (75.4%) and the benign reference (79.4%, where "reversion" has no
 attack to undo and just reflects how often 15 untargeted PGD steps flip a
-correctly classified image), undershot by BadNet (11.4% to 15.3%), and absent
+correctly classified image), undershot by BadNet (11.4% to 15.3%) and absent
 for Blend (0.0%). Blend's 0 reversion is not an isolated anomaly here: their
 own Section 4.2 flags CIFAR-100 Blend as "the only attack where [weight
 orthogonalization] does not" reduce ASR, so a CIFAR-100 Blend checkpoint being
@@ -174,6 +174,6 @@ WaNet's sign flip in the mid layers, could shrink or reverse with a seed
 replicate. The paper's step size is not stated and this experiment used
 epsilon / 4 with no random start, both explicit choices rather than a value we
 could confirm against their setup. No SSBA or TrojanNN checkpoints exist in
-this repository's attack registry, so the paper's two consistently strong
+this repository's attack registry, so the paper's 2 consistently strong
 target-class-capture rows have no analogue here. Only CIFAR-100 was run, since
 that is what Table 2 reports.

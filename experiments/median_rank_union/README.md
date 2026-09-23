@@ -40,7 +40,7 @@ detection difference and not a calibration artifact.
 
 ## Why the synthetic result did not transfer
 
-The synthetic inverted probe was built symmetrically, clean shifted one way and
+The synthetic inverted probe was built symmetrically, clean shifted 1 way and
 backdoor the other, which makes it assign aggressively low ranks to **clean**
 samples. A min rule takes the most extreme evidence, so it inherits those as false
 positives, and a median averages them away.
@@ -63,7 +63,7 @@ claimed as an AUROC improvement, and it is not one here.
 `reduction="median"` stays in `psbd.scores.multi_probe_score` as a documented
 option with this result attached. It is not the default and it should not be
 recommended. The synthetic tests in `tests/test_operator_semantics.py` are correct
-about the mechanism they construct and are labelled as constructions, not as
+about the mechanism they construct and are labeled as constructions, not as
 evidence the defense works.
 
 ## Reproduce

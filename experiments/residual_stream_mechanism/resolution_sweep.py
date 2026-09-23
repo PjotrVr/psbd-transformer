@@ -2,7 +2,7 @@
 
 Every attention number reported for this model is at 224 pixels, so 196 patch tokens. That is
 the low end of the range where sinks have been studied: CLIP ViT-L/14 runs at 257 tokens,
-DINOv2 at 257 or 1370, LLMs at thousands. The softmax-normalisation account of why sinks form
+DINOv2 at 257 or 1370, LLMs at thousands. The softmax-normalization account of why sinks form
 says a query must place its probability mass somewhere, which makes sink strength a function of
 how many candidates there are. If so, "the CLS token spends 93% of its attention on 4 tokens"
 is partly a statement about sequence length and not only about the backdoor.
@@ -73,7 +73,7 @@ def trigger_tokens(metadata, model_input: int) -> torch.Tensor:
 def rebuild_at(model, num_classes, model_input, device):
     """The same weights, serving a different input resolution.
 
-    Only the positional embedding changes, by torchvision's own interpolation, and the Resize
+    Only the positional embedding changes, by torchvision's own interpolation. The Resize
     in front of the network is retargeted. Everything else is the trained checkpoint.
     """
     core = network_core(model)

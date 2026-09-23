@@ -4,11 +4,11 @@
 
 Every detector in the PSBD family perturbs the network and measures how far the
 prediction moves (H28). This asks something algebraically different: not how robust the
-prediction is, but **at what depth, and from which patches, it was already decided**.
+prediction is, but **at what depth and from which patches, it was already decided**.
 
 A ViT hands over a per-token latent state for free, and H32 already showed that per-token
 direction norms localize a trigger (BadNet's top token sits at (13,13), the trigger's own
-position). PSBD reads none of that: it collapses everything to one scalar from the CLS
+position). PSBD reads none of that: it collapses everything to 1 scalar from the CLS
 prediction. The question is whether the discarded structure carries detection signal.
 
 ## Method
@@ -24,7 +24,7 @@ intermediate activations with a scale-sensitive statistic is failure mode 3 in t
 ledger, and it once produced a clean, monotone, benign-controlled and entirely false
 result that survived 2 rounds of follow-up.
 
-Four raw statistics per sample, one forward pass, no fitting and no calibration against
+4 raw statistics per sample, 1 forward pass, no fitting and no calibration against
 the split being scored:
 
 | statistic | reads | a priori direction |
@@ -73,7 +73,7 @@ deviation, so the false-positive budget is set exactly as before.
 ## The headline: same AUROC, but it works at a budget PSBD cannot
 
 Judged the way it should be judged. BadNet and Blend excluded, because BadNet implants at
-ASR 0.997 to 1.000 everywhere and the ledger already records that "its detection behaviour
+ASR 0.997 to 1.000 everywhere and the ledger already records that "its detection behavior
 is least like the others". Poison rates 1% and 5% only. Attacks that actually implanted
 (ASR >= 0.5) only. Paired against PSBD on the same cells, same splits, same pairing.
 
@@ -85,7 +85,7 @@ is least like the others". Poison rates 1% and 5% only. Attacks that actually im
 | PSBD | 0.821 | **0.428** | 30 |
 | delta | +0.011, CI [-0.028, +0.044] | **+0.248, CI [+0.090, +0.402]**, wins 24/32 | |
 
-(An earlier read on 31 of these cells gave +0.284; the full panel gives +0.248. The
+(An earlier read on 31 of these cells gave +0.284. The full panel gives +0.248. The
 conclusion is unchanged and the interval still excludes zero.)
 
 **AUROC is a tie and the confidence interval says so.** The result is entirely at the
@@ -109,7 +109,7 @@ By attack, TPR at 1% FPR:
 
 **It LOSES on adaptive_blend and on SIG**, which are the 2 hardest cases in the panel and
 the ones a defense most needs to win. On the full panel adaptive_blend flips from a tie to
-a loss. The wins are WaNet, Bpp and LF, and they are large. So the honest reading is that
+a loss. The wins on WaNet, Bpp and LF are large, so the honest reading is that
 this buys a large low-FPR gain on the mid-difficulty attacks and nothing on the hardest.
 
 **Benign controls, all 4 datasets:** 0.481, 0.481, 0.501, 0.498, mean **0.491**, with TPR
@@ -129,7 +129,7 @@ artifact of applying a trigger.
 ## The earlier verdict, retained: on AUROC alone it loses
 
 BadNet is the wrong thing to judge this on. It implants at ASR 0.997 to 1.000 everywhere
-and the ledger already records that "its detection behaviour is least like the others".
+and the ledger already records that "its detection behavior is least like the others".
 Restricted to the attacks that are actually hard (adaptive_blend, WaNet, LC, SIG, LF, Bpp,
 TaCT), over 41 cells at every poison rate:
 
@@ -179,7 +179,7 @@ predicts for that class count:
 | benign control | 1 | **0.503** | 0.500 |
 
 Per cell on the dirty-label group: blend 0.987, bpp 0.983, adaptive_blend 0.975, lf 0.956,
-wanet 0.947, badnet 0.838. Real signal, clean benign control, and still **below PSBD**,
+wanet 0.947, badnet 0.838. Real signal, clean benign control and still **below PSBD**,
 whose TPR at 1% FPR on those same cells is 0.966 to 1.000.
 
 It also fails exactly where PSBD fails: the 2 clean-label attacks and all-to-all. A

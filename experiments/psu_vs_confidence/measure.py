@@ -13,12 +13,12 @@ This runs the comparison, from the cached tensors only, no GPU:
   psu_ratio       1 - mean_dropout / P_c(x), i.e. the FRACTIONAL drop
 
 The third is the interesting one. If PSU only works because confident samples fall
-further in absolute terms, normalising by the starting confidence should destroy it.
+further in absolute terms, normalizing by the starting confidence should destroy it.
 If the fractional drop separates just as well, then PSU is measuring robustness and
 the confidence story is wrong.
 
 AUROC is computed with backdoor as the positive class. PSU and the fractional drop
-are negated (low means poisoned); confidence is NOT negated, because the claim there
+are negated (low means poisoned). Confidence is NOT negated, because the claim there
 is that backdoor samples are MORE confident.
 
 Example

@@ -4,13 +4,13 @@ Measures trigger imperceptibility at native resolution (before the 224x224
 upscale the model sees). Poison rate does not affect the trigger itself, so
 metrics are computed once per (attack, dataset) pair.
 
-That holds because this measures the EVAL trigger. Two attacks now vary their
+That holds because this measures the EVAL trigger. 2 attacks now vary their
 training trigger per sample, Adaptive-Blend by planting a subset of its pattern
 and Label-Consistent by substituting an adversarial base, so measuring
 apply_trigger would make the result depend on which indices were sampled.
 
 This duplicates psbd/stealth.py's PSNR and SSIM rather than calling it, which is
-worth consolidating; the two are not folded together here because the library
+worth consolidating. The 2 are not folded together here because the library
 also computes LPIPS and samples differently, so switching would move these
 numbers for reasons unrelated to the trigger.
 """
@@ -59,7 +59,7 @@ def gaussian_kernel(size: int = 11, sigma: float = 1.5) -> torch.Tensor:
 
 
 def compute_psnr(clean: torch.Tensor, poisoned: torch.Tensor) -> float:
-    """PSNR between two [0,1] CHW images.
+    """PSNR between 2 [0,1] CHW images.
 
     original: PSNR = 10 * log10(MAX^2 / MSE)
     simplified (MAX=1): PSNR = 10 * log10(1 / MSE)
@@ -73,7 +73,7 @@ def compute_psnr(clean: torch.Tensor, poisoned: torch.Tensor) -> float:
 def compute_ssim(
     img1: torch.Tensor, img2: torch.Tensor, window_size: int = 11, sigma: float = 1.5
 ) -> float:
-    """SSIM (Wang et al. 2004) between two [0,1] CHW images.
+    """SSIM (Wang et al. 2004) between 2 [0,1] CHW images.
 
     original:
         SSIM(x,y) = (2*mu_x*mu_y + C1)(2*sigma_xy + C2)
@@ -153,7 +153,7 @@ def sample_indices(dataset_size: int, n: int, seed: int) -> list[int]:
 def measure_attack(
     attack_name: str, dataset_name: str, dataset, image_size: int, indices: list[int]
 ) -> dict:
-    """Compute PSNR and SSIM for one (attack, dataset) pair."""
+    """Compute PSNR and SSIM for 1 (attack, dataset) pair."""
     config = default_config(attack_name)
     attack = build_attack(attack_name, config, image_size, TARGET_LABEL)
 
