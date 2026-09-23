@@ -4,8 +4,8 @@
 A backdoored classifier behaves normally on clean inputs and predicts an
 attacker's class whenever a trigger appears in the input
 \cite{li2022backdoorsurvey}. The attacker plants the behavior by poisoning a
-small share of the training data, often 1\% or less, and the defender receives
-the trained model without ever seeing that data. Input-level detection asks the
+small share of the training data, often 1\% or less. The defender receives the
+trained model without ever seeing that data. Input-level detection asks the
 most practical question in this setting. Given the deployed model and 1 incoming
 input, is that input carrying a trigger? A detector that answers well runs in
 front of the model in production, needs no retraining and can be paired with a
@@ -56,8 +56,9 @@ attention block, which we call PSBD-TM, reaches a mean AUROC of
 original placement, which we call PSBD-RD. The 2 axes separate because the same
 operator moves by \AttentionInputMinusMlpInputTokenMask between the attention
 input and the MLP input, while at the attention input alone the operator moves the
-score by \GaussianMinusTokenMaskAttentionNorm, and that operator effect reverses
-sign at the MLP input. The mechanism is that a backdoor in a ViT is 1 direction in
+score by \GaussianMinusTokenMaskAttentionNorm, and what decides the operator is not the
+site but the side of the LayerNorm the perturbation lands on. Holding that side
+fixed leaves no interaction between the 2 axes that we can separate from 0. The mechanism is that a backdoor in a ViT is 1 direction in
 the residual stream, written in the last third of the network and routed through
 attention from the trigger's patch tokens to the class token.
 
@@ -66,7 +67,7 @@ each of them is.
 
 \begin{enumerate}
   \item A systematic result. Over \PanelCellsCached backdoored ViT-B/16 models on
-    \PanelDatasets datasets, PSBD-TM beats PSBD-RD by
+    \PanelDatasetsCached datasets, PSBD-TM beats PSBD-RD by
     \HeadlineGainAdaptiveAuroc [\HeadlineGainAdaptiveAurocLow,
     \HeadlineGainAdaptiveAurocHigh], with its largest advantage at 1\% poisoning
     and \SwinGainRecommendedMinusPreResidual on Swin-S

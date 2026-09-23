@@ -34,7 +34,7 @@ Masking whole tokens is the best of the 4 perturbations at that site. It reaches
 
 The site and the perturbation interact rather than add. At the attention input, noise loses 0.139 to token masking. At the MLP input the same comparison reverses, and noise at 0.868 beats token masking at 0.821. An account that ranks perturbations once for all sites cannot produce a reversal, and neither can one that ranks sites once for all perturbations. \Cref{sec:mechanism:layernorm} traces the reversal to the LayerNorm behind the attention input, which absorbs additive noise but not masking.
 
-Why should whole tokens beat coordinates? Dropout zeroes individual coordinates of the perturbed tensor, and a coordinate is 1 of the 768 numbers describing a token. It is renormalised by the next LayerNorm and averaged by the next attention, so dropping 30\% of coordinates leaves every token present with a slightly noisier description. A token is the unit that attention routes, so masking it removes that token from every attention pattern of the block. \Cref{sec:mechanism} shows that a backdoor is carried by the trigger's own tokens for most of the network and that its direction is not aligned with any coordinate axis, so a coordinate-level perturbation cannot remove the shortcut while a token-level one can. Channel masking, which removes whole coordinates, trails token masking by 0.055 at the same site, and on Swin dropout at the attention input scores 0.862 against 0.968 for token masking (\cref{sec:swin}).
+Why should whole tokens beat coordinates? Dropout zeroes individual coordinates of the perturbed tensor, and a coordinate is 1 of the 768 numbers describing a token. It is renormalized by the next LayerNorm and averaged by the next attention, so dropping 30\% of coordinates leaves every token present with a slightly noisier description. A token is the unit that attention routes, so masking it removes that token from every attention pattern of the block. \Cref{sec:mechanism} shows that a backdoor is carried by the trigger's own tokens for most of the network and that its direction is not aligned with any coordinate axis, so a coordinate-level perturbation cannot remove the shortcut while a token-level one can. Channel masking, which removes whole coordinates, trails token masking by 0.055 at the same site, and on Swin dropout at the attention input scores 0.862 against 0.968 for token masking (\cref{sec:swin}).
 
 \subsection{Every block, not a band}
 \label{sec:results:depth}
@@ -48,7 +48,7 @@ Restricting the mask to blocks 5 to 8 costs 0.063 and to blocks 9 to 12 costs 0.
 \subsection{PSBD-TM across attacks, poison rates and datasets}
 \label{sec:results:headline}
 
-\Cref{tab:results-rate-1,tab:results-rate-5,tab:results-rate-10} in \cref{app:results} give PSBD-TM and PSBD-RD on every model at 1\%, 5\% and 10\% poisoning, with ASR, clean accuracy, AUROC and TPR@FPR at 10\% and 20\%. \Cref{tab:gains} summarises the paired gain of PSBD-TM over PSBD-RD by poison rate and dataset.
+\Cref{tab:results-rate-1,tab:results-rate-5,tab:results-rate-10} in \cref{app:results} give PSBD-TM and PSBD-RD on every model at 1\%, 5\% and 10\% poisoning, with ASR, clean accuracy, AUROC and TPR@FPR at 10\% and 20\%. \Cref{tab:gains} summarizes the paired gain of PSBD-TM over PSBD-RD by poison rate and dataset.
 
 \begin{table}[t]
 \centering\small

@@ -54,7 +54,10 @@ NUMBER_IDIOMS = re.compile(
     r"this one|that one|other one|any one|a single one|clean one|confident one|"
     r"same one|first one|last one|wrong one|right one|new one|old one|one-|two-|"
     r"three-|one\'s|someone|anyone|everyone|none|all-to-one|to-one\b|one-sided|"
-    r"one another)",
+    r"one another|"
+    # "one" as a pronoun standing in for a noun already named, as in "the
+    # BadNets one" or "a token-level one". A count would name its unit.
+    r"(?:the|a|an|that|this|next|another)\s+[\w-]*\s*one\b|one that\b)",
     re.IGNORECASE,
 )
 # British spellings and their American forms. The project writes American English,

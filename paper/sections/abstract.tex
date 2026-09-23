@@ -6,20 +6,20 @@ perturbation, and a transformer block offers many places and several kinds of
 perturbation. We show that this choice, rather than the method, decides whether
 the detector works. Masking whole tokens at the input of every attention block
 reaches a mean AUROC of \HeadlineAurocAdaptive over \PanelCellsCached backdoored
-ViT-B/16 models spanning \PanelDatasets datasets and poison rates from 1\% to
+ViT-B/16 models spanning \PanelDatasetsCached datasets and poison rates from 1\% to
 10\%, against \PublishedAurocAdaptive for the placement the original work used.
 The paired gain is \HeadlineGainAdaptiveAuroc
 [\HeadlineGainAdaptiveAurocLow, \HeadlineGainAdaptiveAurocHigh] and it grows to
 \HardGainAdaptiveAuroc on the attacks that resist detection. Where the
-perturbation goes and what it injects are separate axes. Replacing token masking
-with Gaussian noise costs \GaussianMinusTokenMaskAttentionNorm AUROC at the
-attention input and gains \GaussianMinusTokenMaskMlp at the MLP input, a reversal
-of sign between 2 adjacent sites that no ranking of operators explains. We
-explain it by locating the backdoor, which is 1 direction in the residual stream,
-written in the last third of the network and routed through attention from the
-trigger's own tokens to the class token. Removing whole tokens before attention
-removes that route, while noise at the same site is absorbed by the LayerNorm
-behind it. We also report the limits. An attacker who trains against 1 probe
+perturbation goes and what it injects are separate axes, and what decides the
+operator is the side of the LayerNorm the perturbation lands on. Injected before
+a LayerNorm, Gaussian noise costs \GaussianMinusTokenMaskAttentionNorm AUROC
+against token masking at the attention input. Injected after a LayerNorm, the 2 operators
+tie. We explain that by locating the backdoor, which is 1 direction in the
+residual stream, written in the last third of the network and routed through
+attention from the trigger's own tokens to the class token. Removing whole tokens
+before attention removes that route, while noise at the same site is
+renormalized away by the LayerNorm behind it. We also report the limits. An attacker who trains against 1 probe
 defeats it, a union of probes restores detection and all-to-all attacks remain
 open.
 \end{abstract}

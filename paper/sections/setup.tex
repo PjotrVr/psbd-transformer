@@ -2,7 +2,7 @@
 \label{sec:setup}
 
 \paragraph{Models and training.}
-Every model is a torchvision \cite{paszke2019pytorch} ViT-B/16 or Swin-S with ImageNet weights, fine-tuned for 15 epochs with Adam \cite{kingma2015adam} at a constant learning rate of $10^{-4}$ and weight decay $10^{-4}$, batch size 128, no dropout and no augmentation beyond the dataset's normalisation. Training a backdoored model takes 45 to 170 minutes on 1 A100 depending on the dataset.
+Every model is a torchvision \cite{paszke2019pytorch} ViT-B/16 or Swin-S with ImageNet weights, fine-tuned for 15 epochs with Adam \cite{kingma2015adam} at a constant learning rate of $10^{-4}$ and weight decay $10^{-4}$, batch size 128, no dropout and no augmentation beyond the dataset's normalization. Training a backdoored model takes 45 to 170 minutes on 1 A100 depending on the dataset.
 
 \paragraph{Datasets and attacks.}
 The datasets are CIFAR-10, CIFAR-100 \cite{krizhevsky2009cifar}, GTSRB \cite{stallkamp2012gtsrb} and Tiny ImageNet \cite{le2015tiny}, with SVHN \cite{netzer2011svhn} and EuroSAT \cite{helber2019eurosat} added for the clean-label attacks that the other datasets cannot carry. The attacks are BadNets \cite{gu2017badnets}, Blend \cite{chen2017targeted}, WaNet \cite{nguyen2021wanet}, BPP \cite{wang2022bpp}, the low-frequency attack LF \cite{zeng2021lf}, TaCT \cite{tang2021demon}, SIG \cite{barni2019sig}, Label-Consistent \cite{turner2019label} and Adaptive-Blend \cite{qi2023adaptive}, each at poison rates of 1\%, 5\% and 10\% of the training set. \Cref{app:attacks} describes every attack and the exact trigger and parameters we used.

@@ -60,3 +60,42 @@ divergence is still carried as a hole in the panel rather than repaired.
 | Q16 | 18 placements compared with no multiplicity control | 1 confirmatory comparison should be declared and the rest marked exploratory |
 | Q17 | The headline operating point is TPR at 10% FPR | A detector that rejects 1 clean input in 10 is not deployable. The security literature asks for 1% or below |
 | Q18 | `gain_scale` at `mlp_norm_out` is recommended as probe 3 of the union while its own headline stands withdrawn | A reader is told to deploy a placement whose result was retracted, with no pointer to the retraction |
+
+## Methodology defects found by audit on 2026-09-23
+
+A statistical audit re-derived the headline numbers from `results/` and checked the
+method against the code. The most important check passes. The paired bootstrap is
+correct, the paired difference is the mean of per-cell differences rather than a
+difference of means, and the +0.103 gain survives every re-derivation, reading
++0.104 on the 69 cells available now and +0.086 under a comparison that is
+properly matched on disturbance. What follows is what did not pass.
+
+### Claims not licensed as written
+
+| # | Claim | Defect | Fix, and whether it needs compute |
+|---|---|---|---|
+| Q19 | The operator effect reverses sign between the attention input and the MLP input, so the axes separate | The 2 legs are not the same comparison. Leg 1 is token masking against Gaussian noise both injected before a LayerNorm. Leg 2 is token masking before a LayerNorm against Gaussian noise after one. Held on the same side, the operator effect is the same sign at both sites and the site by operator interaction is +0.042 [-0.031, +0.112], which contains 0. What reverses is the side of the LayerNorm, not the site | `before_mlp_norm_gaussian` is already cached on 417 result folders. Swap it into leg 2 and restate the finding as a LayerNorm-side effect. No compute |
+| Q20 | PSBD-TM is the placement the declared protocol selects | `configs/psbd_basis.json` declares selection on CIFAR-10 and GTSRB and reporting on CIFAR-100 and Tiny. Against its twin at the attention branch output, PSBD-TM reads -0.029 [-0.074, +0.009] on the selection half and +0.028 [+0.001, +0.062] on the reporting half. Applied literally the protocol selects the twin, and the pooled near-tie averages a loss against a win across exactly the declared split | The Swin data that would license the choice on selection-half cells is already in `results/`, where PSBD-TM beats the twin by +0.166 on the selection half. Add a twin row to the Swin table. No compute |
+| Q21 | The lead is not a product of the selection, because PSBD-TM reads 0.944 on the held-out half against 0.935 overall | Selection optimism concerns the ranking rather than the winner's absolute level, and reading higher on the reporting half is the signature of the problem rather than evidence against it | Replace with the re-selection experiment: rank on the selection half, take that winner, report what it gives up on the reporting half. No compute |
+| Q22 | Every detector reads chance on the benign model, which checks its sign convention | A benign model reads about 0.5 under either sign, so the test cannot detect the failure it claims to catch | Drop the claim or replace it with the backdoored-model reading |
+| Q23 | SentiNet's transplant carries nothing and reads 0.107 | A statistic that carries nothing reads 0.5. Two independent below-chance readings in the same direction are an informative statistic with the wrong sign, and the port has exactly 1 negation, so the stated explanation cannot produce the number | Investigate the envelope extrapolation in `boundary_residual`, or report the reading as unexplained |
+
+### Reporting that is narrower than stated
+
+| # | Issue | Detail |
+|---|---|---|
+| Q24 | The panel spans 4 datasets, not 6 | The 65 clearing cells with a landed sweep are CIFAR-10 18, CIFAR-100 15, GTSRB 15 and Tiny 17, with 0 SVHN and 0 EuroSAT. `paper/headline.tex` already defines `\PanelDatasetsCached` at 4 beside `\PanelDatasets` at 6, and the abstract and introduction used the wrong one. Fixed |
+| Q25 | The matched rule is not matched for the placement it compares against | `select_rate_at_matched_shift` returns the nearest rate and never refuses a cell. At the matched rung the recommended placement achieves a clean-validation shift ratio of 0.597 on average, while the published placement achieves 0.625 and is off target by more than 0.10 in 34 of 71 cells, because its ladder jumps from 0.377 to 0.842 between 2 adjacent rates. The gain is overstated by 0.008. `interpolate_at_target_shift` exists for exactly this and has no consumer outside the tests |
+| Q26 | A band table's AUROC column cannot be differenced | In `paper/tables/staircase_bands.tex` the n and AUROC columns are over each placement's own coverage while the gain column is over the intersection. A reader differencing the AUROC column gets -0.052 against a true paired -0.063. The pending blocks 1 to 4 row will understate its cost 16-fold, because the 12 cells it covers are ones where the all-blocks placement reads 0.977 against a panel mean of 0.928. The prose is correct, the table is not |
+| Q27 | TPR at a fixed FPR averages TPRs measured at different FPRs | The threshold is a quantile of 2000 validation scores and the FPR is realized on a different sample, so it is a random variable. The median tracks the nominal rate, but the realized FPR at the headline quantile spans 0.009 to 0.333, a 38-fold range. `threshold_diagnostics` returns `tie_share_at_threshold` and `tpr_interpolated` and is called for the competitor detectors but never for PSBD itself |
+| Q28 | The deployable rule selects no rate at all on 2 of 71 clearing cells | On `eurosat sig 5%` and `svhn sig 10%` the recommended placement's ladder never reaches the 0.8 target, so `select_rate_adaptively` correctly returns nothing. That is a deployability finding and the paper does not report it |
+| Q29 | The headline macros no longer reproduce from the current results tree | Recomputed over all clearing cells with all 3 configurations present, the mean AUROC is 0.928 rather than 0.935 and the gain is +0.104 rather than +0.103. Restricting to the 4 datasets reproduces the published values exactly, so the generator is deterministic and the only change is 4 newly available SVHN and EuroSAT cells |
+| Q30 | No multiplicity control over a family of 27 placements | The headline comparison is pre-declared and owes no correction. The ranking of 27 is exploratory and is not labeled as such. The winner's margin over the runner-up is +0.002 [-0.027, +0.028], already indistinguishable from 0, so a correction would change no conclusion and only the honesty of the ranking table |
+| Q31 | Every bootstrap interval reuses seed 0 | Each interval is individually valid, and because the resample indices depend only on the seed and the sample size, all comparisons at the same n share identical resamples. Monte Carlo noise is therefore common-mode across the paper and 2 intervals are not independent evidence |
+
+### Missing from the paper
+
+| # | Item |
+|---|---|
+| Q32 | The headline statistic has no equation. `background.tex` writes the absolute PSU and `method.tex` describes the fractional form in prose, so the symbol denotes the absolute drop where it is defined and the fractional quantity everywhere it is used. The implementation in `defences/scores.py` is correct and the fractional form is this project's own contribution rather than the source paper's, which makes writing it down more important rather than less |
+| Q33 | A dead guard states a failure that cannot occur. `defences/scores.py` clamps the tracked probability at 1e-6, but the tracked class is the argmax so its probability is at least 1 over the label size, which is 0.005 on the largest panel dataset |
