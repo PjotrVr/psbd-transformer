@@ -34,36 +34,20 @@ normalization that follow.
 
 \paragraph{Research questions.} Adapting PSBD to a Vision Transformer (ViT)
 \cite{dosovitskiy2021an} is therefore a design problem on 2 axes, where to
-perturb and what to inject, and we ask 3 questions about it.
+perturb and what to inject. We ask whether the choice matters, whether the 2
+axes act separately, and why the winning placement wins, since a ranking no
+mechanism explains predicts nothing about the next architecture.
 
-\begin{enumerate}
-  \item \textbf{Does the choice matter?} If every site and operator scored alike,
-    the original placement would transfer and there would be nothing to study. We
-    measure the whole design space on 1 fixed set of backdoored models under 1
-    decision rule.
-  \item \textbf{Do the 2 axes separate?} A ranking of placements is only a search
-    result. It becomes a finding when the site and the operator can be shown to
-    act independently, so that neither collapses into the other.
-  \item \textbf{Why does the winner win?} A ranking that no mechanism explains
-    predicts nothing about the next architecture or the next attack. We ask what
-    a ViT backdoor is, and whether knowing that predicts the ranking we measured.
-\end{enumerate}
-
-The answers are that the choice decides the outcome, that the axes separate, and
-that 1 mechanism predicts both. Masking whole tokens at the input of every
+The choice decides the outcome. Masking whole tokens at the input of every
 attention block, which we call PSBD-TM, reaches a mean AUROC of
-\HeadlineAurocAdaptive against \PublishedAurocAdaptive for our reading of the
-original placement, which we call PSBD-RD. The 2 axes separate because the same
-operator moves by \AttentionInputMinusMlpInputTokenMask between the attention
-input and the MLP input, while at the attention input alone the operator moves the
-score by \StaircaseOperatorsBeforeAttentionNormGaussianGain{}. What decides the operator
-is not the site but the side of the LayerNorm the perturbation lands on. Holding that side
-fixed leaves no interaction between the 2 axes that we can separate from 0. The mechanism is that a backdoor in a ViT is 1 direction in
-the residual stream, written in the last third of the network and routed through
-attention from the trigger's patch tokens to the class token.
+\HeadlineAurocAdaptive{} against \PublishedAurocAdaptive{} for our reading of the
+original placement, which we call PSBD-RD. Site and operator both move the score,
+and what decides the operator is the side of the LayerNorm the perturbation lands
+on rather than the site. The mechanism is that a backdoor in a ViT is 1 direction
+in the residual stream, written in the last third of the network and routed
+through attention from the trigger's patch tokens to the class token.
 
-\paragraph{Contributions.} We make 3 claims and we name the kind of claim that
-each of them is.
+\paragraph{Contributions.} We make 3 claims of different kinds.
 
 \begin{enumerate}
   \item A systematic result. Over \PanelCellsCached{} backdoored ViT-B/16 models on
@@ -86,11 +70,9 @@ each of them is.
     reverses to \FamilyGapDropoutMatched{} [\FamilyGapDropoutMatchedLow{},
     \FamilyGapDropoutMatchedHigh{}]. A split whose sign follows the operator is
     not a fact about sites (\cref{sec:results:family}).
-  \item A mechanistic account, tested on the same models and hedged to the
-    regimes where we tested it. It explains the winning site, the choice of whole
-    tokens over coordinates and the reversal through LayerNorm absorption, and it
-    predicts which attacks show the shift toward the target class that the
-    original work describes (\cref{sec:mechanism}).
+  \item A mechanistic account, tested on the same models. It explains the winning
+    site, the choice of whole tokens over coordinates and the reversal through
+    LayerNorm absorption (\cref{sec:mechanism}).
 \end{enumerate}
 
 Every measurement in this paper is produced by a script from a coverage ledger
