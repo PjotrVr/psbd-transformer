@@ -4,7 +4,7 @@
 We keep PSBD's decision rule fixed and vary only what is injected and where. This keeps every placement comparable and keeps the method faithful to the original in everything that is not architecture-specific.
 
 \paragraph{Sites and perturbations.}
-A placement is a site paired with a perturbation. A site is a named tensor boundary inside every block, reached through forward hooks so that the model's own dropout modules stay off and no trained weight is touched. The basis holds 9 single sites (the attention input before and after its LayerNorm, the MLP input before and after its LayerNorm, the 2 branch outputs before their residual adds, the 2 residual streams after the adds, and the embedding), 2 structured sites (the attention heads and the MLP hidden units), and 4 sites ported from other detectors (the input pixels and the LayerNorm outputs). \Cref{app:basis} lists them all.
+A placement is a site paired with a perturbation. A site is a named tensor boundary inside every block, reached through forward hooks so that the model's own dropout modules stay off and no trained weight is touched. The basis holds 9 single sites (the attention input before and after its LayerNorm, the MLP input before and after its LayerNorm, the 2 branch outputs before their residual adds, the 2 residual streams after the adds and the embedding), 2 structured sites (the attention heads and the MLP hidden units) and 4 sites ported from other detectors (the input pixels and the LayerNorm outputs). \Cref{app:basis} lists them all.
 
 A perturbation is what the hook does to the tensor. We use dropout as in the original, token masking (zero whole tokens with the class token protected, then rescale), channel masking (zero whole channels), isotropic Gaussian noise scaled to the tensor's standard deviation, and gain scaling of a LayerNorm output. Every perturbation takes 1 rate $p$, and every placement is swept over a ladder of rates from 0.05 to 0.9, in every block unless a band of blocks is stated.
 
@@ -12,10 +12,34 @@ A perturbation is what the hook does to the tensor. We use dropout as in the ori
 A sweep runs 1 placement on 1 backdoored model over its rate ladder and stores the per-pass predictions, so that every rule and metric below is read from the same stored passes. A probe is a placement together with the rate the rule assigns it on a given model, the unit a defender deploys. The basis is the declared list of placements swept on every model, listed in \cref{app:basis}. A band restricts a placement to a range of blocks, and a placement without a band acts in every block. The benign reference of a dataset is a model trained with the same recipe and no poisoning, probed with the same triggers, which every mechanism experiment uses as its control.
 
 \paragraph{The 2 placements we name.}
-The ResNet placement of the original work has no literal counterpart in a ViT block, which has 2 residual adds and no activation after them. We read it as dropout on the residual stream after both adds, site C in \cref{fig:vit-block}, and call PSBD with that placement PSBD-RD. The placement this paper arrives at masks whole tokens at the attention input, site A, and we call it PSBD-TM.
+The ResNet placement of the original work has no literal counterpart in a ViT block, which has 2 residual adds and no activation after them. We read it as dropout on the residual stream after both adds, which is site C in \cref{fig:vit-block}. We call PSBD with that placement PSBD-RD. The placement this paper arrives at masks whole tokens at the attention input, which is site A. We call it PSBD-TM.
 
 \paragraph{The statistic.}
-The detection statistic is the prediction shift uncertainty (PSU) of \cref{sec:background}, in its fractional form, the drop in the predicted class's probability under the perturbation divided by that probability without it, so that a confident and an unconfident clean prediction that lose the same share of their probability score alike. We write PSU for this quantity throughout. The decision is one-sided, low PSU means poisoned, exactly as in the original.
+The detection statistic is the prediction shift uncertainty (PSU) of
+\cref{sec:background} in its fractional form, which is the absolute drop divided
+by the unperturbed probability of the same class,
+\begin{equation}
+  \psu^{\mathrm{frac}}(x)
+    = 1 - \frac{1}{k}\sum_{i=1}^{k}
+      \frac{P(\hat y \mid x;\theta'_i)}{P(\hat y \mid x;\theta)}
+    = \frac{\psu(x)}{P(\hat y \mid x;\theta)},
+  \qquad
+  \hat y = \arg\max_{y} P(y \mid x;\theta),
+  \label{eq:psu-fractional}
+\end{equation}
+where $\hat y$ is the class the unperturbed model predicts and is held fixed
+across all $k$ passes, so the same coordinate is tracked throughout. The
+division is always defined because $\hat y$ is the argmax, so
+$P(\hat y \mid x;\theta)$ is at least $1/|\mathcal{C}|$ for a label set
+$\mathcal{C}$. The 2 forms are equal because $P(\hat y \mid x;\theta)$ does
+not depend on $i$.
+
+We report the fractional form because a confident and an unconfident clean
+prediction that lose the same absolute probability are not equally disturbed, and
+the absolute form scores them alike. Dividing through removes the scale of the
+unperturbed confidence. The absolute form of \cref{sec:background} is the one
+the original work defines and we report it beside the fractional form throughout.
+The decision is one-sided in both: a low value means poisoned.
 
 \paragraph{The rate.}
 We follow the original rule and read every placement at the smallest rate at which the perturbation changes 80\% of the clean validation predictions. Because the same nominal rate is a very different disturbance at different sites, this rule is also what makes placements comparable. Each placement is read at the disturbance the rule assigns it, and \cref{app:rate} checks that 0.8 is a good target on our models.
