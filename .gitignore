@@ -95,3 +95,18 @@ experiments/stealth/stealth_metrics_results.json
 
 # Reference implementations cloned for reading and porting, never tracked.
 third_party/
+
+# Paper build artifacts. tectonic rebuilds main.pdf from main.tex in seconds, and a
+# 370 KB binary that changes on every compile is noise in every diff.
+paper/main.pdf
+paper/main.log
+paper/main.blg
+paper/main.aux
+paper/main.bbl
+paper/main.out
+
+# Score tensors under the experiment tree. The negation above deliberately tracks
+# results/_experiments/** so an experiment's JSON record is versioned, but the raw
+# per-pass probability tensors beside it are regenerable by cli.sweep and run to
+# hundreds of megabytes.
+results/_experiments/**/*.pt
