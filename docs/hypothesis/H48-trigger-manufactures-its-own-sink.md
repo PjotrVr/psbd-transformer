@@ -1,4 +1,4 @@
-# H48: The trigger manufactures an attention sink this ViT does not natively have, and does not hijack one
+# H48: The trigger manufactures an attention sink this ViT does not natively have, and does not hijack 1
 
 **Status: SUPPORTED on 3 independent measurements. The candidate defense that follows from
 the alternative hypothesis FAILS, as predicted.**

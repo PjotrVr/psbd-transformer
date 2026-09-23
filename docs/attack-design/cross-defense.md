@@ -1,13 +1,13 @@
-# Can one adaptive attack break a whole family of defenses?
+# Can 1 adaptive attack break a whole family of defenses?
 
 A red-team analysis, written against our own defense. The question is not whether
 some attacker somewhere can evade PSBD. H25 already settled that. The question is
-whether there exists **one training-time objective** that defeats many defenses at
+whether there exists **1 training-time objective** that defeats many defenses at
 once, because that is the limitation a security venue will ask us to report about
 ourselves, and it is better reported by us than discovered by a reviewer.
 
 Scope note. This is an analysis document. No attack was implemented and none was run.
-It states attack objectives in the abstract, as any threat analysis must, and contains
+It states attack objectives in the abstract (as any threat analysis must) and contains
 no runnable attack code. Every number attributed to this project is traceable to a hypothesis
 file or a results file named inline. Every number attributed to the literature is
 attributed to the paper that reports it. The one construction original to this
@@ -23,12 +23,12 @@ full in section 3 so it can be rerun without trusting this page.
 | **H-C** | A reliable trigger-to-target mapping necessarily collapses dimensionality | **REFUTED, and we should retract the security framing of the rank result before a reviewer does.** There is an exact counterexample: rank ratio is movable to 1.000 with the logit vector held constant to 2.5e-14 |
 | **H-D** | A universal attack is affordable | **Mostly no, with 2 exceptions, and both are aimed at us.** The published attacks that break a *wide* family cost between 3 and 40 points of clean accuracy, and the widest input-space one (TeCo's) costs 40 points and 21 points of ASR, which is a broken model rather than a threat. The 2 that are genuinely cheap are margin suppression and all-to-all, and neither shows up as a clean-accuracy cost at all. Their price is paid in **channel robustness** and in **attacker utility** respectively, which are the 2 axes nobody in this literature measures |
 
-**Two cross-family attacks came out of this, and neither is the one the brief
+**2 cross-family attacks came out of this, and neither is the one the brief
 expected.**
 
 1. **Margin suppression** (section 6). An existing preprint, LSBA (arXiv:2202.11203),
    caps the victim's posterior on triggered inputs near 0.6 at roughly 0 clean-accuracy
-   cost. Our own H28 says PSBD, STRIP, SCALE-UP and IBD-PSC are 4 estimators of one
+   cost. Our own H28 says PSBD, STRIP, SCALE-UP and IBD-PSC are 4 estimators of 1
    margin-like quantity, and MM-BD's own theorem lower-bounds its statistic by twice
    the training margin. **So our own theory is the argument for why a margin attack
    defeats all of them at once, and probe diversity cannot help, because nothing about
@@ -37,10 +37,10 @@ expected.**
    `A5-low-confidence-backdoor.md`**, written in parallel with this page, which
    concludes a low-confidence backdoor provably cannot beat PSU. A5's proof covers the
    wrong point on the curve. Resolved in closed form in section 2.4, in the attacker's
-   favour.
+   favor.
 2. **All-to-all** (section 7.2). A different label map, nothing else. It defeats
-   MM-BD, Neural Cleanse, Model X-ray and PSBD, and degrades TeCo by roughly 20
-   points. Zero cost, decades old, and **we have already published that it breaks
+   MM-BD, Neural Cleanse, Model X-ray and PSBD. It degrades TeCo by roughly 20
+   points. Zero cost, decades old and **we have already published that it breaks
    us** (H5) without noticing it breaks the field.
 
 ## 1. What each defense actually computes
@@ -63,14 +63,14 @@ Write `p(x; theta)` for the softmax vector, `C(x) = argmax p(x; theta)`.
 Repo ports: `psbd/detectors/{strip,scale_up,ibd_psc,teco,confidence}.py`, plus the
 older `defenses/baselines.py` that every already-recorded STRIP number came from.
 
-Two facts about this table matter more than the formulas.
+2 facts about this table matter more than the formulas.
 
 **IBD-PSC is not a ViT method.** It is defined only on BatchNorm affine parameters.
 Its Theorem 3.1 is stated over "the beta and gamma parameters of the l-th BN layer"
 and models the feature distribution as a mixture of Gaussians over **batch**
 statistics. Every architecture it evaluates is a BatchNorm network. LayerNorm has
 mechanically scalable `weight` and `bias`, so a port runs, but it normalizes per
-token over channels, no batch statistics enter, and the paper's argument does not
+token over channels, no batch statistics enter and the paper's argument does not
 carry. Our LayerNorm version is a **new method that resembles IBD-PSC**, and the
 paper must say so rather than claim a reproduction. To its credit
 `psbd/detectors/ibd_psc.py` already records this deviation at length in its module
@@ -94,7 +94,7 @@ related work as orthogonal, never in a table of things a single attack could bre
 | **COLLIDER** (Dolatabadi et al., ACCV 2022) | LID MLE `-[ (1/k) sum_i log(r_i/r_k) ]^{-1}` on `k` nearest neighbours in feature space, inside a coreset selection loop | local neighbourhood geometry, **not a mean shift** | control of the training loop |
 | **ours: effective-rank collapse** | `rank_ratio = PR(triggered) / PR(clean)` at a layer, `PR = (sum lambda)^2 / sum lambda^2` | **the whole covariance spectrum**, not a mean shift | paired clean and triggered test inputs |
 
-The first 4 are one detector with 4 different metrics. All 4 are monotone in the
+The first 4 are 1 detector with 4 different metrics. All 4 are monotone in the
 **class-conditional mean shift** of the poison subpopulation, and all 4 fall to the
 same single move, which is to drive that shift to 0. That is precisely what Qi et
 al.'s cover samples do, using only a capability every one of those 4 papers already
@@ -138,7 +138,7 @@ So the family is unified, and H-A is right that it is unified. It is wrong about
 **what** unifies it. Each statistic is a functional of the restriction of `p` to the
 **orbit** of `(x, theta)` under `D`. It is not a functional of `p(x)`.
 
-`p(x)` enters in exactly one of two ways, and neither is one an attacker can exploit
+`p(x)` enters in exactly one of 2 ways, and neither is one an attacker can exploit
 by matching a distribution:
 
 - as the **reference index** `c = C(x)` (PSBD, SCALE-UP, IBD-PSC, TeCo). This is an
@@ -152,25 +152,25 @@ by matching a distribution:
 | defense | is the statistic a function of `p(x)`? | does confidence matching defeat it? | why |
 |---|---|---|---|
 | PSBD | no. `P_c(x)` appears, but only as the base of a difference whose second term is free | **no, partial at most** | Matching `P_c(x)` leaves `E[P_c(x; dropout)]` unconstrained, and that term is where the whole signal lives. H12 measured this directly and refuted the "PSU is just confidence" hypothesis |
-| STRIP | **no, and it does not evaluate `p(x)` at all** | **no** | The statistic lives entirely on `x + x_n`. This is the case H-A flagged as interesting and the flag was correct: STRIP's statistic is the model's behaviour on image sums, which are far off the data manifold and are constrained by nothing an attacker regularizes on natural inputs |
+| STRIP | **no, and it does not evaluate `p(x)` at all** | **no** | The statistic lives entirely on `x + x_n`. This is the case H-A flagged as interesting and the flag was correct: STRIP's statistic is the model's behavior on image sums, which are far off the data manifold and are constrained by nothing an attacker regularizes on natural inputs |
 | SCALE-UP | no. Hard labels only. The paper is explicit: "we only assume to have the predicted label instead of the predicted probability vector" | **no** | Confidence is not in the statistic. Reshaping it changes nothing until the argmax moves, at which point ASR is what moved |
-| IBD-PSC | no. Reads `p_{y'}` under `n` **modified models** | **no** | The attacker would have to control the model's behaviour under parameter-space amplification, which is not a function of any output distribution on unmodified inputs |
+| IBD-PSC | no. Reads `p_{y'}` under `n` **modified models** | **no** | The attacker would have to control the model's behavior under parameter-space amplification, which is not a function of any output distribution on unmodified inputs |
 | TeCo | no. Hard labels only, and the aggregator is a standard deviation across corruption types, so even the mean level cancels | **no** | Same as SCALE-UP, and worse for the attacker: TeCo's statistic is a **dispersion**, so uniformly shifting every corruption's hardness leaves it exactly unchanged |
 | Frequency | no. Does not query the model | **no** | Different object entirely |
 
-Confidence matching does defeat exactly one thing in our comparison set, and it is
+Confidence matching does defeat exactly 1 thing in our comparison set, and it is
 the null model: `defenses/baselines.py:confidence_scores`, max softmax probability.
 Worth stating, because an adversarial review of this project already found that the
 null model beats PSBD on the benign control, so an attacker who defeats the null
 model has removed a baseline we currently rely on.
 
-### 2.3 The corrected claim, which is true, is dangerous, and is already published
+### 2.3 The corrected claim, which is true, is dangerous and is already published
 
 Matching the **confidence** is the wrong target. Matching the **margin** is the right
 one, and an attack that does it defeats the whole family at once, including ours.
 
 The reason is our own H28 and our own theory document. If PSBD, STRIP, SCALE-UP and
-IBD-PSC are 4 estimators of one quantity, differing only in `Sigma` and in where they
+IBD-PSC are 4 estimators of 1 quantity, differing only in `Sigma` and in where they
 evaluate `H`, then an attacker who moves **the estimand** rather than any one
 estimator defeats all 4 simultaneously. Probe diversity protects against an attacker
 who games an estimator. It cannot protect against an attacker who moves the thing
@@ -195,8 +195,8 @@ backdoor is deliberately **under-confident**, which is to say deliberately
 **low-margin**. Their stated design intent is verbatim to escape STRIP.
 
 Measured by its authors. STRIP false acceptance at 1% FRR, without and with the rule:
-MNIST BadNet 0.0 to 99.60, SIG 0.0 to 100, WaNet 1.80 to 100; GTSRB BadNet 0.2 to
-98.85; CelebA BadNet 0.0 to 98.80, WaNet 27.75 to 100. It also breaks the latent
+MNIST BadNet 0.0 to 99.60, SIG 0.0 to 100 and WaNet 1.80 to 100. GTSRB BadNet 0.2 to
+98.85. CelebA BadNet 0.0 to 98.80, WaNet 27.75 to 100. It also breaks the latent
 family on MNIST: SPECTRE elimination 99.34 to 22.71, Spectral Signatures 100 to
 49.01. Cost: roughly 0 clean accuracy, and ASR 99.92 to 98.79 on CIFAR-10 BadNet,
 99.96 to 94.32 on CIFAR-10 SIG.
@@ -214,7 +214,7 @@ same idea reached by poison **selection** rather than by relabelling probability
 theory predicts".
 
 So H-A's instinct was right and its target was wrong. There is a
-single quantity that unifies the family, an attacker can move it with one cheap
+single quantity that unifies the family, an attacker can move it with 1 cheap
 mechanism, and it is neither the confidence nor anything a probe-diversity argument
 protects.
 
@@ -229,12 +229,12 @@ first experiment in section 6.2.
 `docs/attack-design/A5-low-confidence-backdoor.md`, written in parallel with this one,
 concludes the opposite: "the low confidence backdoor, and the proof that it cannot beat
 PSU", "**no for PSBD, proved below**". The contradiction has to be resolved before
-either page is used, and it resolves cleanly in favour of the attacker.
+either page is used, and it resolves cleanly in favor of the attacker.
 
 A5's argument is that the logit-layer statistic
 `phi = sigma^2 * p_c * (p_c - ||p||_2^2)` has **2 zeros**, at `p_c = 1` and at the
 uniform point `p_c = 1/K`, so an attacker who moves the backdoor from the saturated
-zero to the boundary zero moves it from one flagged region to another. That is
+zero to the boundary zero moves it from 1 flagged region to another. That is
 correct, and it is not what a competent attacker does. **The attacker's optimum is
 neither zero. It is the peak between them**, because the peak is where the statistic
 best imitates clean data.
@@ -267,15 +267,15 @@ the ordering **inverts**: the LSBA backdoor looks cleaner than clean data, and A
 should fall **below** 0.5 rather than toward it. This project already knows what an
 inverted detector does to the multi-probe union, from
 `docs/theory-perturbation-consistency.md`: an inverted probe contributes confident
-wrong evidence, the min-rank union adopts it, and the calibrated threshold reaches FPR
+wrong evidence, the min-rank union adopts it and the calibrated threshold reaches FPR
 0.825 against a 0.25 target because the inversion corrupts the clean-validation
 reference. Median-rank was the fix, and it holds only while the attacker controls a
 minority of probes. **A margin attack moves every probe at once, so it is exactly the
 majority case where median-rank stops working.**
 
-Two things stop this from being a clean win for the attacker, and they are the real
+2 things stop this from being a clean win for the attacker, and they are the real
 open questions. The closed form above is the **logit-layer** statistic, where the
-network curvature term vanishes; our recommended probe is at `before_attention_norm`,
+network curvature term vanishes. Our recommended probe is at `before_attention_norm`,
 where it does not, and A5's sibling README derives that decomposition. And an attacker
 holding `p_c` near 0.6 on every triggered input has a backdoor with a thin margin, which
 section 2.6 prices. Whether the inversion survives to an internal probe site is a
@@ -347,7 +347,7 @@ Predicted, and testable on the checkpoints we would train anyway: an LSBA-style
 backdoor should lose far more ASR under JPEG, resize and Gaussian noise than a
 vanilla one, and the size of that gap is the honest price of evading the family.
 
-One caveat against our own argument. The proposition assumes the attacker needs
+1 caveat against our own argument. The proposition assumes the attacker needs
 `D_dep` robustness at all. A digital-only attacker who controls the exact bytes
 reaching the model does not, and for that threat model even TeCo evasion is
 affordable. The proposition constrains physical and pipeline-mediated attackers
@@ -365,7 +365,7 @@ result ourselves.
 
 ### 3.1 The naive argument does not work, and it is important to say why
 
-The brief's suggested argument is that "a mapping that sends many inputs to one
+The brief's suggested argument is that "a mapping that sends many inputs to 1
 class region is a contraction". That is false. Under a linear head, membership in the
 target class region is the polyhedral cone
 
@@ -529,10 +529,10 @@ That is inside our reported backdoored band of 0.199 to 0.632.
 So a triggered population that is perfectly and legitimately indistinguishable from
 clean target-class data would already read as strongly collapsed, because the
 denominator is the all-class population. The measure is substantially detecting
-"these inputs were all assigned to one class", which is a real backdoor signal but a
+"these inputs were all assigned to 1 class", which is a real backdoor signal but a
 much more mundane one than "the trigger induces an exotic low-dimensional geometry".
 
-Two consequences.
+2 consequences.
 
 - Every published latent-matching attack matches **within the target class** (Tan and
   Shokri, MMD regularization, Qi et al.'s cover samples). By the number above, that
@@ -541,7 +541,7 @@ Two consequences.
   real, and it is an accident of the denominator rather than a property of the
   statistic. We should say so.
 - The class-conditional version of the measure, `PR(triggered) / PR(clean predicted
-  as t)`, is the version a reviewer will ask for, and it is not obvious it retains
+  as t)`, is the version a reviewer will ask for. It is not obvious it retains
   any signal. **This is a cheap and decisive experiment we have not run.**
 
 ### 3.7 And the confound changes sign with the number of classes
@@ -565,7 +565,7 @@ between them sweeps across 2 orders of magnitude as the class count goes from 10
 200.
 
 The consequence for us is not subtle. **A rank ratio of 0.4 does not mean the same
-thing on CIFAR-10, CIFAR-100 and Tiny ImageNet**, and there is no single collapse
+thing on CIFAR-10, CIFAR-100 and Tiny ImageNet**. There is no single collapse
 threshold that is valid across our 4 datasets. On a 10-class problem a perfectly
 class-matched triggered population would read **above 1**, which is the opposite sign
 from the effect we report. On Tiny ImageNet's 200 classes it would read 0.085 to
@@ -688,7 +688,7 @@ have not asked. Given that part 3 is trigger **diversity**, and our statistic
 measures exactly how many directions the triggered population occupies, part 3 is the
 part most likely to move it, and it is the part we left out.
 
-### 4.4 Two literature results that bear on this and cut in opposite directions
+### 4.4 2 literature results that bear on this and cut in opposite directions
 
 **Against us.** "Trojan Cleansing with Neural Collapse" (Gu, Fields, Jandali, Javidi,
 Koushanfar, arXiv:2411.12914) reports that trojans **disrupt** neural-collapse
@@ -705,7 +705,7 @@ Adap-Patch's latent inseparability **vanishes under a class-conditional Mahalano
 transform** of the latent space (their Figs. 5 and 6), and argue the apparent
 inseparability is an artifact of PCA and t-SNE operating on the raw penultimate
 space. The general lesson is that matching a distribution in the raw latent space is
-a claim about **one metric**. SPECTRE's whitening, SCAn's `S_V^{-1}`, Beatrix's Gram
+a claim about **1 metric**. SPECTRE's whitening, SCAn's `S_V^{-1}`, Beatrix's Gram
 matrices (Ma et al., NDSS 2023) and TED's topological trajectories (Mo et al., IEEE
 S&P 2024, with TED-LaST extended specifically against Adap-Blend and Adap-Patch) are
 4 more instances of the same move.
@@ -716,7 +716,7 @@ raw-space version inherits exactly the weakness Xian et al. identify.
 
 ### 4.5 What would actually flatten it
 
-Three things, in increasing order of how much they should worry us.
+3 things, in increasing order of how much they should worry us.
 
 1. **Not** any published latent-matching attack, for the denominator reason in
    section 3.6. They all match within the target class, which reads as 0.27.
@@ -747,7 +747,7 @@ Every number below is from the paper that reports it, or from H25 for ours.
 
 The reading of this table:
 
-**Two attacks pay almost nothing, and both are near the bottom of the table because
+**2 attacks pay almost nothing, and both are near the bottom of the table because
 nobody has been looking there.** Margin suppression and all-to-all cost roughly 0
 clean accuracy and 0 to 5 points of ASR, and between them they cover every detector in
 this document except the frequency one. Neither is a distribution-matching attack,
@@ -788,7 +788,7 @@ the one that should worry us most.
 
 1. **It attacks the estimand, not an estimator.** H28 and
    `docs/theory-perturbation-consistency.md` both claim PSBD, STRIP, SCALE-UP and
-   IBD-PSC are 4 estimators of one margin-like quantity. If that claim is true, an
+   IBD-PSC are 4 estimators of 1 margin-like quantity. If that claim is true, an
    attack on the margin defeats all 4 at once, and **our own theory is the argument
    for why we lose.**
 2. **It is cheap.** No loss term, no extra forward passes, no bilevel optimization.
@@ -890,7 +890,7 @@ That reading is wrong in 2 places, and both matter.
 |---|---|---|---|
 | **MM-BD** (Wang, Xiang, Miller, Kesidis, IEEE S&P 2024) | `r_c = max_x [ g_c(x) - max_{k != c} g_k(x) ]` by projected gradient ascent from 30 random starts, then `pv = 1 - H_0(r_max)^(K-1)` against a Gamma null fitted to the other classes, detect if `pv < 0.05` | **raw logits at synthetic optima**. Natural data never enters | **none** |
 | **Neural Cleanse** (Wang et al., IEEE S&P 2019) | per-label reverse-engineered trigger, `min_{m,Delta} CE(y_t, f(A(x,m,Delta))) + lambda*\|m\|_1`, then MAD anomaly index `\|L_i - median\|/(1.4826*MAD)`, flag above 2 at the **small** end | the **L1 norm of a mask**, a geometric quantity, not a probability | roughly 1000 clean images per label |
-| **Model X-ray** (Su, Zhang, Xu, Zhang, Zhang, Yu, ACM MM 2024, arXiv:2402.17465) | 20 random 2D planes through input space, each expanded 5x beyond the convex hull of 3 anchor images, 100x100 hard-label grid, then Renyi entropy at `alpha = 10` or "areas dominated by triple samples" | **hard labels only** on a synthetic grid | 60 images, plus a **labelled reference population of known-clean and known-backdoored models** to calibrate the threshold |
+| **Model X-ray** (Su, Zhang, Xu, Zhang, Zhang, Yu, ACM MM 2024, arXiv:2402.17465) | 20 random 2D planes through input space, each expanded 5x beyond the convex hull of 3 anchor images, 100x100 hard-label grid, then Renyi entropy at `alpha = 10` or "areas dominated by triple samples" | **hard labels only** on a synthetic grid | 60 images, plus a **labeled reference population of known-clean and known-backdoored models** to calibrate the threshold |
 
 ### 7.1 MM-BD is not out of scope. The margin attack hits it too.
 
@@ -938,10 +938,10 @@ Independently of everything above, there is a second common denominator across t
 So a plain all-to-all label map defeats MM-BD, Neural Cleanse, Model X-ray and PSBD,
 and materially degrades TeCo. It requires no training-loop control, no surrogate
 model, no extra loss term and no clean-accuracy sacrifice. **It is the cheapest
-cross-family attack in this entire document, it is decades old, and we have already
+cross-family attack in this entire document, it is decades old and we have already
 published that it breaks us.**
 
-Two honest qualifications, and they are the reason this is a limitation to report
+2 honest qualifications, and they are the reason this is a limitation to report
 rather than a crisis. All-to-all is a **less useful** attack: the adversary gets an
 arbitrary misclassification rather than a chosen target, which is worth much less in
 most threat models. And our H5 records that the signal is present with the **sign
@@ -953,7 +953,7 @@ of the whole detector family**, with these citations, rather than as a quirk of 
 Presented that way it is a field-level open problem we identified, which is a better
 paper than a limitations bullet.
 
-### 7.3 Two smaller notes worth carrying
+### 7.3 2 smaller notes worth carrying
 
 **Model X-ray has a published ViT number and we do not.** ViT-B/16 on ImageNet-10,
 AUROC 0.879 for the entropy variant and 0.944 for the area variant. It is the only one
@@ -983,7 +983,7 @@ and the 2 papers that come closest do so partly by accident.**
 | **DEFEAT**, Zhao et al., CVPR 2022 | multi-layer latent constraint via auxiliary linear probes, bilevel with an L2-bounded universal additive trigger | **STRIP**, Neural Cleanse, Fine-Pruning, NAD | ASR 98.76% or above |
 | **Adap-Blend / Adap-Patch**, Qi et al., ICLR 2023, arXiv:2205.13613 | no loss term. A poisoning recipe: cover samples, opacity asymmetry, trigger diversity | SS 13.3/10.0, AC 0.0/0.0, **SCAn 0.0/0.0, SPECTRE 6.9/0.0** elimination, against 96 to 100% for baselines | Adap-Blend ASR 76.5 against Blend's 89.0. A real ASR cost |
 
-**Two admissions in this literature are worth quoting at ourselves.** ML-MMDR's own
+**2 admissions in this literature are worth quoting at ourselves.** ML-MMDR's own
 limitations section says "**Constructing an attack that can bypass defense methods
 with different principles requires further research**", which is the exact question
 this document asks and confirms nobody has answered it. And Qi et al.'s Appendix D
@@ -994,7 +994,7 @@ version to defenses other than latent-space ones**", with NAD driving Adap-Blend
 ### 8.2 Confidence and margin matching is nearly empty, and the one entry is the dangerous one
 
 **LSBA** (arXiv:2202.11203) is covered in section 2.3. It is the closest existing work
-to a joint objective, it does both halves, and it is an unpublished preprint with
+to a joint objective, it does both halves and it is an unpublished preprint with
 roughly 4 citations that nobody has followed up. **If we do not cite it, a reviewer
 who knows it will conclude we did not look.**
 
@@ -1022,14 +1022,14 @@ somebody does.
 ### 8.4 Multi-defense evasion that already works, by other means
 
 The strongest multi-family results in the literature come from **trigger and threat
-model design**, not distribution matching, and they should be in our related work
+model design**, not distribution matching. They should be in our related work
 because they are the actual state of the art in evasion:
 
 - **HCB**, Ma et al., ACM CCS 2024, arXiv:2310.00542. The trigger fires only when
   co-occurring with an innocuous class-independent feature. **11 defenses, none
   robust**, including STRIP, SCAn, Beatrix and MM-BD. STRIP FAR 100%.
 - **BELT**, Qiu et al., IEEE S&P 2024, arXiv:2312.04902. Cover samples with fuzzy
-  triggers plus a momentum centre loss. Defeats STRIP, NC, ABS, MNTD, MOTH, SentiNet
+  triggers plus a momentum center loss. Defeats STRIP, NC, ABS, MNTD, MOTH, SentiNet
   at roughly 0 cost.
 - **WaveAttack**, Xia et al., NeurIPS 2024. Loss is only `L_c + ||g(HH)||_inf`, with
   **no matching term of any kind**, and it still evades STRIP, Spectral Signatures,
@@ -1040,7 +1040,7 @@ because they are the actual state of the art in evasion:
 
 WaveAttack is the uncomfortable one for the framing of this whole document. It
 defeats both families with **no matching objective at all**, which means the design
-space of "one attack, many defenses" is not exhausted by the matching-objective
+space of "1 attack, many defenses" is not exhausted by the matching-objective
 framing this analysis has used throughout.
 
 ### 8.5 The negative results, and what they do and do not license
@@ -1083,11 +1083,11 @@ to us.
   **model-level undetectability**: the returned model is computationally
   indistinguishable from an honestly trained one. The backdoor is **keyed**,
   activation requires a secret, and the backdoored inputs have **vanishing density**.
-  The black-box result is general; the white-box result covers only Random Fourier
+  The black-box result is general. The white-box result covers only Random Fourier
   Features and single-hidden-layer random ReLU networks, with the adversary tampering
   only with the random coins, and it is that branch that provably defeats Spectral
   Signatures and SPECTRE. **It says nothing about input-level detection of a poisoned
-  sample at inference**, which is our problem, and their own section 7 proposes
+  sample at inference**, which is our problem. Their own section 7 proposes
   **randomized smoothing** as an evaluation-time defense, which is the same object our
   theory document builds its Cohen-style bridge on. Anyone citing this as "backdoors
   are undetectable, so your defense is pointless" is over-reading it, and we should
@@ -1107,10 +1107,10 @@ Blunt, as requested.
 
 ### 9.1 The internal inconsistency to resolve first
 
-Two of our own results cannot both be load-bearing in their current form.
+2 of our own results cannot both be load-bearing in their current form.
 
 - **H28 and `docs/theory-perturbation-consistency.md`:** PSBD, STRIP, SCALE-UP and
-  IBD-PSC are 4 estimators of **one quantity**, differing only in `Sigma` and where
+  IBD-PSC are 4 estimators of **1 quantity**, differing only in `Sigma` and where
   they evaluate `H`. Position variance 1.43x operator variance, Kendall tau 0.700.
 - **H41:** probe diversity is defense in depth, because an attacker who constrains 1
   probe leaves the others free.
@@ -1123,7 +1123,7 @@ what H25's attacker did, and nothing at all against an attacker who moves the
 
 Both results are correct as measured. The problem is the **scope of the H41 claim**,
 which is currently written as though it covers adaptive attackers in general. It
-covers exactly one kind, and the paper has to say which. Stage 1 of section 6.2
+covers exactly 1 kind, and the paper has to say which. Stage 1 of section 6.2
 decides whether the other kind is a real threat or a theoretical one.
 
 This is not a small edit. Defense in depth is currently one of the 5 things the theory
@@ -1138,7 +1138,7 @@ document lists as genuinely new, at number 3.
 | Structured, unit-aligned masking is a dead end (H18, H22, H26, H35) | 4 negative results plus a causal ablation |
 | PSBD's published neuron-bias mechanism is refuted, 0.0000 against 0.0100 (H7) | A negative result about a published **explanation**, not a robustness claim |
 | The rate rule overshoots on ViT, 12 of 12 (H11) | Tuning, not security |
-| The +0.166 matched-shift-ratio gain at 1% on CIFAR-100 (H17) | Holds against the non-adaptive attacks it was measured on, and must be labelled that way. The ledger has withdrawn the +0.258 figure as unmatched, and **`.claude/CLAUDE.md` still quotes +0.258**, which should be fixed before anything is submitted |
+| The +0.166 matched-shift-ratio gain at 1% on CIFAR-100 (H17) | Holds against the non-adaptive attacks it was measured on, and must be labeled that way. The ledger has withdrawn the +0.258 figure as unmatched, and **`.claude/CLAUDE.md` still quotes +0.258**, which should be fixed before anything is submitted |
 
 ### 9.3 Does not survive
 
@@ -1186,7 +1186,7 @@ Recorded so nobody over-reads it.
   **unmeasured and is the single largest uncertainty here**.
 - **The toy calibrations in sections 3.6 and 3.7** use random class means and
   isotropic within-class noise. The sign flip with class count is robust to that
-  modelling choice. The specific values are not.
+  modeling choice. The specific values are not.
 - **The prediction that LSBA defeats PSBD is a prediction**, derived from our own
   framework plus LSBA's reported STRIP numbers. It is not a measurement, and LSBA is
   an unreviewed preprint whose latent-family results are MNIST only.

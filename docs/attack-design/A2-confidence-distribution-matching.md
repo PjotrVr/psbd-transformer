@@ -4,7 +4,7 @@
 document, objection 3. It is cheaper than the attacker we published, it needs no
 knowledge of the probe registry, and it defeats a whole family of baselines at
 once. It also, provably, cannot defeat the configuration we recommend, and that
-is the most valuable thing in this file.
+is the most valuable claim in this document.
 
 ## The lever
 
@@ -111,7 +111,7 @@ AUROC, and residualising gives most of it back.
 - **Clean accuracy: 0.5 to 2 points.** The term does not fight cross entropy on
   the arg max, only on the shape of $p$. It is a calibration constraint. Compare
   H25's measured 4.8 point mean tax, which came from retaining $k+1$ graphs and
-  optimising against a noisy $k = 3$ estimate.
+  optimizing against a noisy $k = 3$ estimate.
 - **ASR: 2 to 8 points on CIFAR-100, less on CIFAR-10.** Matching the clean
   distribution means reproducing its left tail, so a fraction of poisoned samples
   must sit at $p_c$ near the clean 5th percentile. On 100 classes a triggered
@@ -136,7 +136,7 @@ AUROC, and residualising gives most of it back.
    have identical marginals of $p_c$ while $p_c$ is predictable from the image.
    A defender who conditions on anything else, including a cheap image statistic,
    recovers separation.
-4. **The optimiser has an easier move available.** The cheapest way to equalise 2
+4. **The optimizer has an easier move available.** The cheapest way to equalise 2
    distributions is to move the larger population, and the clean population is
    99 percent of the batch, so gradient mass concentrates there. The result would
    be a model whose clean confidence has been dragged toward the poisoned

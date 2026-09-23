@@ -1,6 +1,6 @@
 # TeCo, test-time corruption robustness consistency
 
-TeCo corrupts each input at every severity of a fixed suite of image corruptions and records, for every corruption type, the lowest severity at which the prediction first stops agreeing with the uncorrupted prediction. The spread of those breaking points across corruption types is the score. An ordinary input's class evidence erodes at roughly the same rate under any of the corruptions, so its breaking points cluster and the spread is small, while a trigger survives some corruption types and not others, blur can destroy a patch while brightness leaves it intact, so a triggered input's breaking points scatter and the spread is large. The method is black-box, needs only predicted labels, and costs $K \times N + 1$ forward passes per input, the most expensive detector in the registry apart from CD-L. This page records what the paper defines, what the released code does, what the port under `detectors/teco.py` runs on ViT and Swin and where they diverge.
+TeCo corrupts each input at every severity of a fixed suite of image corruptions and records, for every corruption type, the lowest severity at which the prediction first stops agreeing with the uncorrupted prediction. The spread of those breaking points across corruption types is the score. An ordinary input's class evidence erodes at roughly the same rate under any of the corruptions, so its breaking points cluster and the spread is small, while a trigger survives some corruption types and not others, blur can destroy a patch while brightness leaves it intact, so a triggered input's breaking points scatter and the spread is large. The method is black-box, needs only predicted labels and costs $K \times N + 1$ forward passes per input, the most expensive detector in the registry apart from CD-L. This page records what the paper defines, what the released code does, what the port under `detectors/teco.py` runs on ViT and Swin and where they diverge.
 
 ## Citation
 
@@ -16,18 +16,20 @@ The score itself needs no clean data at all, since it compares an input's own co
 
 ## Mechanism
 
-    original form, Algorithm 1
-        P_org <- C_theta(x)
-        for k = 1..K:
-            l <- N + 1
-            for n = 1..N:
-                if C_theta( D_k^n(x) ) != P_org:
-                    l <- n
-                    break
-            L <- L union {l}
-        TeCo(x) = Dev(L)
+```
+original form, Algorithm 1
+    P_org <- C_theta(x)
+    for k = 1..K:
+        l <- N + 1
+        for n = 1..N:
+            if C_theta( D_k^n(x) ) != P_org:
+                l <- n
+                break
+        L <- L union {l}
+    TeCo(x) = Dev(L)
 
-        Gamma( TeCo(x) ) = 1 if TeCo(x) > gamma else 0              Eq. (4)
+    Gamma( TeCo(x) ) = 1 if TeCo(x) > gamma else 0              Eq. (4)
+```
 
 | Symbol | Meaning |
 |---|---|
@@ -57,7 +59,7 @@ Every corruption in the suite, noise, blur, weather, compression, erodes ordinar
 
 ## What the released code does
 
-The reference computes the prediction on the uncorrupted poisoned image once, then loops over the corruption suite and, for each type, over severities 1 to 5. At each step it mutates the same underlying image list, `x = images_poison` followed by `x[i] = self.dg(x[i], args)`, and never restores it, so severity 2 of a corruption type is applied to the output of severity 1 rather than to the pristine image, and the first severity of the second corruption type is applied to an image that has already been through all 5 severities of the first. By the last of the 15 corruption types in the loop, each image has accumulated 70 sequential operations rather than 1. The threshold search then computes, for each image, the lowest severity at which each corruption type's prediction first disagrees with the original, collects those breaking points across the 15 types into `indexs`, and takes `mad = np.std(indexs)`, the population standard deviation despite the variable's name. It fits a decision threshold with `sklearn.metrics.roc_curve` against those values and flags an image when its statistic exceeds the chosen cut, matching Eq. (4)'s "greater than gamma" direction.
+The reference computes the prediction on the uncorrupted poisoned image once, then loops over the corruption suite and, for each type, over severities 1 to 5. At each step it mutates the same underlying image list (`x = images_poison` followed by `x[i] = self.dg(x[i], args)`) and never restores it, so severity 2 of a corruption type is applied to the output of severity 1 rather than to the pristine image, and the first severity of the second corruption type is applied to an image that has already been through all 5 severities of the first. By the last of the 15 corruption types in the loop, each image has accumulated 70 sequential operations rather than 1. The threshold search then computes, for each image, the lowest severity at which each corruption type's prediction first disagrees with the original, collects those breaking points across the 15 types into `indexs`, and takes `mad = np.std(indexs)`, the population standard deviation despite the variable's name. It fits a decision threshold with `sklearn.metrics.roc_curve` against those values and flags an image when its statistic exceeds the chosen cut, matching Eq. (4)'s "greater than gamma" direction.
 
 ## What this port does on ViT
 
@@ -111,7 +113,7 @@ The panel runs through its own `teco` job group of `pbs/generate_detector_jobs.p
 
 A low spread says the input's prediction broke at roughly the same severity under every corruption type, which is the clean signature, and it is also what a uniformly thin decision margin produces, since a margin close to the boundary breaks early under any corruption regardless of what that corruption actually is. `python -m experiments.preflight.check_signs` reads TeCo at AUROC 0.9017 on the synthetic fixture, using the reduced 4-corruption set `CHEAP_CORRUPTIONS`, below confidence's or IBD-PSC's 1.0000 on the same unmissable backdoor, consistent with TeCo measuring a dispersion pattern rather than a single clean signal.
 
-The paper's own adaptive section is the strongest evidence of a real weakness, and it is the costliest attack in this project's whole cross-defense comparison. A corruption-matching training term pushes TeCo's AUROC from 0.911 down to 0.576 (Liu et al., Eq. 8), but the reported cost is 40 points of clean accuracy, 0.9153 to 0.5105, and 21 points of attack success rate, 0.9502 to 0.7386. The project's own reading of that trade in `docs/attack-design/cross-defense.md` is that this is a broken model rather than a deployable threat, the only detector in its adaptive-attack comparison whose evasion is a deployment channel the paper's authors already targeted on purpose, since the corruption suite is exactly the transform family a real deployment channel also applies.
+The paper's own adaptive section is the strongest evidence of a real weakness, and it is the costliest attack in this project's whole cross-defense comparison. A corruption-matching training term pushes TeCo's AUROC from 0.911 down to 0.576 (Liu et al., Eq. 8), but the reported cost is 40 points of clean accuracy (0.9153 to 0.5105) and 21 points of attack success rate (0.9502 to 0.7386). The project's own reading of that trade in `docs/attack-design/cross-defense.md` is that this is a broken model rather than a deployable threat, the only detector in its adaptive-attack comparison whose evasion is a deployment channel the paper's authors already targeted on purpose, since the corruption suite is exactly the transform family a real deployment channel also applies.
 
 A cheaper and more concerning weakness is the all-to-all label mapping, which costs the attacker nothing extra to train. The project's own review reports TeCo's AUROC falling to 0.7749 on an all-to-all attack, taken from the paper's own Table 20, a family-wide limitation it shares with several training-set detectors (`docs/attack-design/cross-defense.md`, Section 5). Since the attack pays no clean-accuracy or ASR cost to achieve this, an all-to-all checkpoint is the harder case for TeCo to clear, not the corruption-matching one.
 

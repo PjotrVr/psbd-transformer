@@ -11,9 +11,9 @@ shift ratio lands nearest **0.6**, so everything below is measured at
 matched disturbance rather than at a shared nominal rate.
 
 Columns: **ASR** attack success rate and **CA** clean accuracy of the poisoned model,
-both from the checkpoint's own provenance; **CA benign** the same-dataset benign ViT and
-**dCA** the difference, so an attack that buys success by wrecking the model is visible;
-**AUROC**; and **TPR** at the 10% and 20% false-positive operating points.
+both from the checkpoint's own provenance. **CA benign** the same-dataset benign ViT and
+**dCA** the difference, so an attack that buys success by wrecking the model is visible.
+**AUROC** and **TPR** at the 10% and 20% false-positive operating points.
 
 Only cells whose attack actually implanted (ASR >= 0.85) appear. A `--` is an unmeasured
 cell, never a failure.

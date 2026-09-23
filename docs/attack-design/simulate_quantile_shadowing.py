@@ -1,6 +1,6 @@
 """Simulate A1 on cached PSU, with no training and no GPU.
 
-Two halves of the attack are applied to the cached scores of a real checkpoint:
+2 halves of the attack are applied to the cached scores of a real checkpoint:
 
   sharpening  a fraction of the clean population, selected by an input-side
               predicate the defender's validation images share, is driven to
@@ -105,8 +105,8 @@ def main():
     )
     row("centring only", val_psu, clean_psu, centred)
 
-    # One floor shared by both splits, because the sharpened samples are the same
-    # behaviour of the same model and must not sit at 2 different levels.
+    # 1 floor shared by both splits, because the sharpened samples are the same
+    # behavior of the same model and must not sit at 2 different levels.
     floor = min(float(val_psu.min()), float(clean_psu.min()))
     for share in (0.02, 0.05, 0.08, 0.12, 0.20, 0.30):
         v2 = sharpen(val_psu, val_probs, share, generator, floor)

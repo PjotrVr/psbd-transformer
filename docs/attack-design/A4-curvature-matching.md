@@ -1,4 +1,4 @@
-# A4. Position randomised curvature matching
+# A4. Position randomized curvature matching
 
 **Rank 4.** The correct strengthening of the attacker we already published. H25's
 attacker moves along the operator axis of a single position. This one moves along
@@ -7,8 +7,8 @@ a lower cost.
 
 ## What is wrong with the attacker we have
 
-`psbd.evasion.psu_for_batch` plugs 1 named probe, runs $k$ one sided perturbed
-passes, and hinges on the difference of 2 group means. Three weaknesses, all of
+`psbd.evasion.psu_for_batch` plugs 1 named probe, runs $k$ 1 sided perturbed
+passes, and hinges on the difference of 2 group means. 3 weaknesses, all of
 them ours to report before a reviewer does.
 
 1. **It attacks 1 position.** The paper's own headline is that position carries
@@ -37,8 +37,8 @@ them ours to report before a reviewer does.
                                       - mean_{x in P} phi_hat_l(x) )
 
     descriptive form
-        each step, pick one probe site at random from the whole position registry
-        and one sign vector, estimate the prediction shift with an ANTITHETIC
+        each step, pick 1 probe site at random from the whole position registry
+        and 1 sign vector, estimate the prediction shift with an ANTITHETIC
         pair of perturbed passes, and hinge on the clean-median minus
         poisoned-mean gap at that site
 
@@ -63,12 +63,12 @@ Why this is stronger than H25 along the axis that matters:
 - **The antithetic pair cancels the first order term exactly**, so the gradient
   signal is the second order term rather than the gradient noise it was buried
   in. At the same 2 pass budget the attacker gets a far less noisy penalty than
-  H25's $k = 3$ one sided estimator.
+  H25's $k = 3$ 1 sided estimator.
 - **It is cheaper.** 2 retained graphs instead of $k + 1 = 4$.
 
 ## Is it stronger or weaker than confidence matching?
 
-**More targeted, more expensive, and it needs a guess the other attack does not.**
+**More targeted, more expensive and it needs a guess the other attack does not.**
 
 | | A2 confidence matching | A4 curvature matching |
 |---|---|---|
@@ -123,19 +123,19 @@ Neyman-Pearson argument proves it tight. $R$ is strictly decreasing in $\phi$.
 
 So an attacker who succeeds at A4 has, by construction, made the poisoned
 population's certified radius at site $\ell$ **equal in distribution to the clean
-population's**. There is no way to have one without the other, because they are
+population's**. There is no way to have 1 without the other, because they are
 the same number under a monotone map. Therefore:
 
 > **A successful curvature matching attacker has capped the trigger's robustness
 > at the level of an ordinary clean class decision, in activation space at the
 > probed site.**
 
-That is exact, needs no Taylor expansion, and it is a no free lunch statement
+That is exact, needs no Taylor expansion and it is a no free lunch statement
 about the entire family: evasion of a perturbation consistency detector is not a
 free property added on top of a backdoor, it is the removal of the backdoor's
 robustness margin.
 
-Two caveats have to travel with it or a reviewer will supply them.
+2 caveats have to travel with it or a reviewer will supply them.
 
 1. **The radius is in activation space at the probe site.** Converting to input
    space needs the local Lipschitz constant of $x \mapsto h_\ell$. An attacker
@@ -153,7 +153,7 @@ Two caveats have to travel with it or a reviewer will supply them.
 trigger's robustness, then averaging the prediction over a small set of ordinary
 input transformations (a random resized crop, a mild blur, a JPEG round trip)
 should cost clean accuracy almost nothing and cost ASR a great deal. It is
-inference only, it needs no clean validation data, and it is orthogonal to every
+inference only, it needs no clean validation data and it is orthogonal to every
 probe in the registry.
 
 This is testable **right now on checkpoints we already have** and it needs no new
@@ -196,7 +196,7 @@ pairs, Rademacher probes.
 
 | quantity | H25 evasive (measured) | prediction under A4 | refutes if |
 |---|---:|---:|---|
-| AUROC at the 4 H41 pool probes, mean | 0.927 combined | **below 0.65** | above 0.85, which would mean position randomisation does not generalise across sites |
+| AUROC at the 4 H41 pool probes, mean | 0.927 combined | **below 0.65** | above 0.85, which would mean position randomization does not generalize across sites |
 | AUROC at `gain_scale` on `mlp_norm_out` | 0.955 (strongest transfer) | **above 0.85 still** | falls below 0.6, which would refute the $\Sigma$ cone argument |
 | multi probe median rank AUROC | not yet measured | **below 0.70** | above 0.85 |
 | clean accuracy tax | 4.8 points | 3 to 6 points | below 2, which would be surprising and worth chasing |
@@ -206,5 +206,5 @@ pairs, Rademacher probes.
 The pair of rows 2 and 6 is the whole experiment. Row 2 says the attack has a
 named blind spot that the theory predicted in advance. Row 6 says the attack
 bought its success with trigger fragility, which is what the certificate
-requires. Either one holding is a paper result. Both holding is the adaptive
+requires. Either 1 holding is a paper result. Both holding is the adaptive
 attack section written.

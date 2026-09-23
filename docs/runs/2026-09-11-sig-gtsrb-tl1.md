@@ -2,9 +2,9 @@
 
 ## Question
 
-The GTSRB SIG cells trained at target class 0 never cleared the ASR bar, and `docs/clean-label-rate-caps.md` traced part of that failure to the poison-rate cap. Class 0 is the smallest class in the training set, so every requested rate above its share trained the identical index set, and the cells labelled 1%, 5% and 10% were 3 replicates of 1 configuration.
+The GTSRB SIG cells trained at target class 0 never cleared the ASR bar, and `docs/clean-label-rate-caps.md` traced part of that failure to the poison-rate cap. Class 0 is the smallest class in the training set, so every requested rate above its share trained the identical index set, and the cells labeled 1%, 5% and 10% were 3 replicates of 1 configuration.
 
-The hypothesis under test here is that the failure was a rate-cap artefact. It predicts that SIG implants once the target moves to class 1, whose share of the training set is large enough to deliver the 0.5%, 1% and 5% rates without clamping, so the question splits into 2 parts: whether the realized rate now equals the requested rate and whether the attack clears the bar once it does.
+The hypothesis under test here is that the failure was a rate-cap artifact. It predicts that SIG implants once the target moves to class 1, whose share of the training set is large enough to deliver the 0.5%, 1% and 5% rates without clamping, so the question splits into 2 parts: whether the realized rate now equals the requested rate and whether the attack clears the bar once it does.
 
 The data are the 15 `_tl1` folders trained from the full stage of `pbs/generate_cleanlabel_jobs.py`, 3 rates at seeds 0 to 4, read from each folder's `args.json`. The bar and the benign reference come from `configs/psbd_basis.json`, and a run counts as usable when its clean accuracy is at least half the benign reference, which excludes the collapsed runs from every mean while keeping them on the record.
 
@@ -50,7 +50,7 @@ The 3 unusable runs collapsed late in training, after the loss had already reach
 | `vit_gtsrb_badnet_a2o_0_05_tl1` | 11 | 0.0007 | 0.9907 | 12 | 0.7635 | 0.0570 | 0.5733 | 0.0856 | no, control | `logs/vit_cleanlabel_sig_gtsrb/vit_cleanlabel_sig_gtsrb_4.log` |
 | `vit_gtsrb_blend_0_05_tl1` | 12 | 0.0009 | 0.9927 | 13 | 0.5884 | 0.0570 | 0.9508 | 0.0797 | no, control | `logs/vit_cleanlabel_sig_gtsrb/vit_cleanlabel_sig_gtsrb_5.log` |
 
-One trap in the logs is worth recording, because a reader grepping for the cap will find it. The 0.5% and 1% runs print the line "capped by the eligible pool" even though none of the 3 counts reaches the class 1 pool, while the 5% runs, whose count comes closest to it, print nothing. The message in `cli/train_backdoor.py` fires whenever the realized rate differs from the requested rate by any amount, and rounding the requested count to a whole image is enough to trigger it at 0.5% and 1%, where the requested count is fractional, but not at 5%, where it is already whole. The `_tl1` sidecars also carry no `poison_rate_capped` key at all, unlike the older folders where audit A8 backfilled the key, so a script reading that key would treat these runs as unknown rather than uncapped.
+1 trap in the logs is worth recording, because a reader grepping for the cap will find it. The 0.5% and 1% runs print the line "capped by the eligible pool" even though none of the 3 counts reaches the class 1 pool, while the 5% runs, whose count comes closest to it, print nothing. The message in `cli/train_backdoor.py` fires whenever the realized rate differs from the requested rate by any amount, and rounding the requested count to a whole image is enough to trigger it at 0.5% and 1%, where the requested count is fractional, but not at 5%, where it is already whole. The `_tl1` sidecars also carry no `poison_rate_capped` key at all, unlike the older folders where audit A8 backfilled the key, so a script reading that key would treat these runs as unknown rather than uncapped.
 
 | requested rate | requested count, rate times train size | whole-image count | realized rate | cap line printed | source |
 |---:|---:|---:|---:|---|---|
@@ -107,7 +107,7 @@ The clearing seed reached the same loss floor 3 epochs earlier and then spiked o
 
 ## The class 0 runs it replaces
 
-Every earlier GTSRB SIG folder targets class 0, and every folder requesting more than the class 0 share carries the same capped configuration, so the folders labelled 1%, 5% and 10% differ only in training noise, since they share the poisoned index set. The 0.5% class 0 folder is the 1 uncapped run in the set, and it is the natural like-for-like partner of the 0.5% `_tl1` cell, since the 2 poisoned counts differ by a handful of images.
+Every earlier GTSRB SIG folder targets class 0, and every folder requesting more than the class 0 share carries the same capped configuration, so the folders labeled 1%, 5% and 10% differ only in training noise, since they share the poisoned index set. The 0.5% class 0 folder is the 1 uncapped run in the set, and it is the natural like-for-like partner of the 0.5% `_tl1` cell, since the 2 poisoned counts differ by a handful of images.
 
 | folder | optimizer | requested rate | realized rate | capped flag | poisoned images | ASR | clean accuracy | ASR source key | source |
 |---|---|---:|---:|---|---:|---:|---:|---|---|
@@ -154,9 +154,9 @@ The like-for-like comparison supports the same reading. The 0.5% `_tl1` cell and
 
 ## Proposed ledger edit
 
-The `_tl1` folders should own the GTSRB SIG slots, even though none of them clears the bar. They are the only GTSRB SIG runs trained at the rate their folder name claims, and a clean-label cell that fails at its true rate is an honest below-bar row, whereas the class 0 folders at 1%, 5% and 10% are 1 configuration read under 3 rate labels. The panel reads seed 0 only, since `seed_` is an excluded token, and the seed 0 value at 5% and the 5-seed mean agree on the verdict, so the choice of owner does not change the row's class.
+The `_tl1` folders should own the GTSRB SIG slots, even though none of them clears the bar. They are the only GTSRB SIG runs trained at the rate their folder name claims, and a clean-label cell that fails at its true rate is an honest below-bar row, whereas the class 0 folders at 1%, 5% and 10% are 1 configuration read under 3 rate labels. The panel reads seed 0 only, since `seed_` is an excluded token. The seed 0 value at 5% and the 5-seed mean agree on the verdict, so the choice of owner does not change the row's class.
 
-The ledger cannot make that choice today, because both variants pass `is_panel_folder` and `resolve_one_per_attack` prefers a clearing cell only when exactly 1 exists. I simulated the ledger's own functions in memory rather than running its `main()`, which writes 3 artifacts, and the 1% and 5% slots both raise.
+The ledger cannot make that choice today, because both variants pass `is_panel_folder` and `resolve_one_per_attack` prefers a clearing cell only when exactly 1 exists. I simulated the ledger's own functions in memory rather than running its `main()`, which writes 3 artifacts and the 1% and 5% slots both raise.
 
 | panel rate | candidate folders sharing the slot | clearing | ledger outcome | source |
 |---:|---|---:|---|---|

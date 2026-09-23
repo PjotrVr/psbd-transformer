@@ -1,10 +1,10 @@
 # Multi-target clean-label SIG on CIFAR-100 and Tiny ImageNet
 
-This note reads the multi-target SIG probe from its training sidecars and job logs, without running anything. It answers whether widening the clean-label target set lets SIG implant on both primary datasets where the single-target run does not, and it states the ASR definition those sidecars carry, since a set-widened success criterion is not the panel's criterion and the two must not be read as one column. Every path below is relative to the refactor worktree unless it is absolute, and `checkpoints/` and `logs/` there are symlinks into the main checkout.
+This note reads the multi-target SIG probe from its training sidecars and job logs, without running anything. It answers whether widening the clean-label target set lets SIG implant on both primary datasets where the single-target run does not, and it states the ASR definition those sidecars carry, since a set-widened success criterion is not the panel's criterion and the 2 must not be read as 1 column. Every path below is relative to the refactor worktree unless it is absolute, and `checkpoints/` and `logs/` there are symlinks into the main checkout.
 
 ## Question
 
-A clean-label attack keeps every label, so it can only poison images that already belong to a target class, and its poison rate is capped at the target set's share of the training set. With a single target that cap is exactly the requested panel rate on CIFAR-100 and half of it on Tiny, and single-target SIG fails to implant on both. Widening the set to consecutive classes multiplies the cap by the set size, and the probe asks whether that widening makes SIG clear the panel's ASR bar, and whether the wider of the two sets beats the narrower.
+A clean-label attack keeps every label, so it can only poison images that already belong to a target class, and its poison rate is capped at the target set's share of the training set. With a single target that cap is exactly the requested panel rate on CIFAR-100 and half of it on Tiny, and single-target SIG fails to implant on both. Widening the set to consecutive classes multiplies the cap by the set size, and the probe asks whether that widening makes SIG clear the panel's ASR bar, and whether the wider of the 2 sets beats the narrower.
 
 | quantity | cifar100 | tiny | source |
 |---|---|---|---|
@@ -30,7 +30,7 @@ A clean-label attack keeps every label, so it can only poison images that alread
 
 On the training side `attacks/poisoning.py::is_poisonable` admits an image when its label is in the set and `poisoned_label` returns the label unchanged, which is what keeps the attack clean-label however wide the set is, and `tests/test_attacks.py` pins both. `choose_poison_indices` then draws the requested count, the rate times the training set size, from that union pool and caps at the pool, so the requested rate is realized whenever the pool is large enough and silently clamped otherwise.
 
-On the evaluation side `is_eval_poisonable` flips to the complement, so every test image whose true class lies outside the set receives the sinusoid, and `attack_success_label` hands the dataset the primary target as its label. The number recorded in `args.json` did not come from that label alone. The runs were launched from the main checkout, where `train_backdoor.py` imports `evaluate.evaluate_attack`, and that function builds `success_labels` from `clean_label_target_set` whenever the mode is `clean_label_multi` and passes it to `defenses/detection.py::attack_success_rate`, which counts a hit when `torch.isin` finds the predicted class anywhere in the set. The recorded ASR is therefore the fraction of triggered test images from outside the set whose prediction lands on any member of the set. It is neither the primary target alone nor a per-source mapped target, since this mode has no mapping, and its chance floor is the set's share of the classes rather than a single class's share.
+On the evaluation side `is_eval_poisonable` flips to the complement, so every test image whose true class lies outside the set receives the sinusoid, and `attack_success_label` hands the dataset the primary target as its label. The number recorded in `args.json` did not come from that label alone. The runs were launched from the main checkout, where `train_backdoor.py` imports `evaluate.evaluate_attack`. That function builds `success_labels` from `clean_label_target_set` whenever the mode is `clean_label_multi` and passes it to `defenses/detection.py::attack_success_rate`, which counts a hit when `torch.isin` finds the predicted class anywhere in the set. The recorded ASR is therefore the fraction of triggered test images from outside the set whose prediction lands on any member of the set. It is neither the primary target alone nor a per-source mapped target, since this mode has no mapping and its chance floor is the set's share of the classes rather than a single class's share.
 
 ```
 original form, evaluate.evaluate_attack with defenses.detection.attack_success_rate
@@ -51,7 +51,7 @@ symbol table
     1[.]   the indicator
 ```
 
-Two things follow for anyone re-reading these numbers. The refactor worktree's `evaluation/metrics.py::evaluate_attack` calls `attack_success_rate` without `success_labels`, so re-evaluating these checkpoints through the worktree would score the primary target alone and land below the sidecar, which is a reproduction hazard in the refactor rather than a fault in the recorded numbers. The eligible set shrinks by the set's test images, and the sidecar ASRs reconstruct integer hit counts under exactly those denominators, which is the consistency check that the definition above is the one that ran.
+2 things follow for anyone re-reading these numbers. The refactor worktree's `evaluation/metrics.py::evaluate_attack` calls `attack_success_rate` without `success_labels`, so re-evaluating these checkpoints through the worktree would score the primary target alone and land below the sidecar, which is a reproduction hazard in the refactor rather than a fault in the recorded numbers. The eligible set shrinks by the set's test images, and the sidecar ASRs reconstruct integer hit counts under exactly those denominators, which is the consistency check that the definition above is the one that ran.
 
 | dataset | test images | test images per class | source |
 |---|---|---|---|
@@ -75,7 +75,7 @@ Two things follow for anyone re-reading these numbers. The refactor worktree's `
 
 ## The runs
 
-Every multi-target folder comes from the same generator and the same command shape, differing only in dataset, set size and seed, and every one of them records the same commit. The single-target references and the benign references predate the provenance convention, so their seed and commit are null and their sidecar ASR and clean accuracy were backfilled from the PSBD baseline cache, with the full-test value in `metrics.json` beside them. The worktree copy of the generator is the pre-replicate version that runs `python -m cli.train_backdoor` at a fixed seed, while the main checkout's copy that produced both batches takes a `--seeds` list and runs `python train_backdoor.py`.
+Every multi-target folder comes from the same generator and the same command shape, differing only in dataset, set size and seed and every one of them records the same commit. The single-target references and the benign references predate the provenance convention, so their seed and commit are null and their sidecar ASR and clean accuracy were backfilled from the PSBD baseline cache, with the full-test value in `metrics.json` beside them. The worktree copy of the generator is the pre-replicate version that runs `python -m cli.train_backdoor` at a fixed seed, while the main checkout's copy that produced both batches takes a `--seeds` list and runs `python train_backdoor.py`.
 
 | batch | generator | job files | logs | folders | commit in args.json | source |
 |---|---|---|---|---|---|---|
@@ -104,7 +104,7 @@ The dirty flag on the commit cannot be attributed to any file on the ASR path, s
 | vit_cifar100_benign | none | null | 0.0 | 0.0 | 0 | 0.0001 | 0.8105 | 0 | `checkpoints/vit_cifar100_benign/args.json` |
 | vit_tiny_benign | none | null | 0.0 | 0.0 | 0 | 0.0003 | 0.7549 | 0 | `checkpoints/vit_tiny_benign/args.json` |
 
-The realized rate is the sidecar's `realized_poison_rate` in every row, and the poisoned count is that rate times the training set size, which the single-target sidecars also carry directly as `n_poisoned`. dCA subtracts the benign `args.json` clean accuracy, because `scripts/coverage_ledger.py::clean_accuracy_of` reads `args.json` first and that is the convention every panel dCA follows, and the table below shows that the choice between the two benign sources moves nothing.
+The realized rate is the sidecar's `realized_poison_rate` in every row, and the poisoned count is that rate times the training set size, which the single-target sidecars also carry directly as `n_poisoned`. dCA subtracts the benign `args.json` clean accuracy, because `scripts/coverage_ledger.py::clean_accuracy_of` reads `args.json` first and that is the convention every panel dCA follows, and the table below shows that the choice between the 2 benign sources moves nothing.
 
 | folder | field | args.json value | how args.json got it | metrics.json value | metrics.json path |
 |---|---|---|---|---|---|
@@ -173,7 +173,7 @@ The multi-target set implants partially and nowhere fully. Every cell mean lies 
 | tiny | m2 | below_bar | below | below | m3 below m2 by -0.0972, with overlapping seed ranges | `checkpoints/vit_tiny_sig_0_01_m[23]*/args.json`, `configs/psbd_basis.json` asr_bar |
 | tiny | m3 | below_bar | below | below | as above | as above |
 
-The wider set beats the narrower on CIFAR-100 and loses on Tiny, so the datasets disagree, and the poison-pool table offers the plainest reading. On Tiny the m2 cell poisons every image of both target classes while the m3 cell spreads the same count over a third class, and the saturated cell scores higher, though its ranges overlap the m3 ranges so the ordering is not seed-robust. On CIFAR-100 both widened cells are unsaturated at a fixed count. The m3 minimum clears the m2 maximum there, and the m2 cell is the one whose seeds straddle the single-target reference.
+The wider set beats the narrower on CIFAR-100 and loses on Tiny, so the datasets disagree and the poison-pool table offers the plainest reading. On Tiny the m2 cell poisons every image of both target classes while the m3 cell spreads the same count over a third class, and the saturated cell scores higher, though its ranges overlap the m3 ranges so the ordering is not seed-robust. On CIFAR-100 both widened cells are unsaturated at a fixed count. The m3 minimum clears the m2 maximum there, and the m2 cell is the one whose seeds straddle the single-target reference.
 
 The arm that would test the lifted ceiling was never run. A request at the widened cap, which the caps table puts at the m2 and m3 caps for CIFAR-100 and at the m3 cap for Tiny, would raise the poisoned count rather than spread it, and that is the run the founding idea of this probe actually calls for. Until it exists, the probe shows that set widening at a fixed count is not enough, and it does not show that the lifted ceiling is useless.
 

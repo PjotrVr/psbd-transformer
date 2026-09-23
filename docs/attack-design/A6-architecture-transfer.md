@@ -1,6 +1,6 @@
 # A6. Does an attack designed against ViT transfer to a ConvNet
 
-**Rank 6 by damage, rank 1 by value.** This is the file to read if only one gets
+**Rank 6 by damage, rank 1 by value.** This is the file to read if only 1 gets
 read. The answer is not a hedge: **confidence matching is architecture
 independent and curvature matching is architecture specific**, and the reason is
 a single term in the master equation that a ReLU ConvNet does not have.
@@ -33,7 +33,7 @@ it is where the architectures separate.
 ### A ReLU ConvNet has no $T_2$
 
 Take a ConvNet built from convolutions, ReLU, average or max pooling, batch
-normalisation in eval mode, and a linear head. Every one of those is **piecewise
+normalization in eval mode, and a linear head. Every one of those is **piecewise
 linear** in its input, and a composition of piecewise linear maps is piecewise
 linear. So $z(h)$ is piecewise linear in $h$ and
 
@@ -57,8 +57,8 @@ gives a contribution of order $\sigma^2 \rho(0)$. So the ConvNet does have an
 effective curvature at finite $\sigma$, but it is **a boundary density statistic**:
 it counts how many pre-activations sit within $O(\sigma)$ of their kink. The ViT's
 $T_2$ is a smooth second derivative that is nonzero at every activation, from
-GELU, from LayerNorm's $x/\|x\|$ normalisation, and from the attention softmax.
-These are different functionals of $x$, and a regulariser that flattens one does
+GELU, from LayerNorm's $x/\|x\|$ normalization, and from the attention softmax.
+These are different functionals of $x$, and a regularizer that flattens one does
 not flatten the other. Max pooling adds kinks and behaves like ReLU here. Average
 pooling is linear and adds nothing.
 
@@ -119,7 +119,7 @@ substantially smaller.
 
 If that holds it is the strongest possible answer to "why port PSBD to ViT at
 all", and it is an answer nobody has given. The `final_norm_out` row should be
-near 1 on **both** architectures, because $T_2 = 0$ there for everyone, and that
+near 1 on **both** architectures, because $T_2 = 0$ there for everyone. That
 row is the control that makes the comparison meaningful.
 
 ## Consequence 2: curvature matching is architecture specific
@@ -173,7 +173,7 @@ being contradicted by it, which is a stronger position.
 
 ## The experiment
 
-One new checkpoint decides both predictions, and it is small.
+1 new checkpoint decides both predictions, and it is small.
 
 **Design.** Train a ResNet-18 on CIFAR-100 with `badnet_a2o` at poison rate 0.01
 for the standard 15 epochs, at the same seed, using the existing training path

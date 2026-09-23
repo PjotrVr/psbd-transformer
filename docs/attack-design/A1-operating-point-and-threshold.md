@@ -30,7 +30,7 @@ ranking and a dead operating point, and the paper currently reports the ranking.
 ## Objective
 
 The attacker needs a rule that selects part of the clean population by a property
-of the **input**, so that it generalises from its own training data to the
+of the **input**, so that it generalizes from its own training data to the
 defender's held out validation images, which it never sees. Any deterministic
 input space predicate works. Write it as $\pi(x) \in \{0,1\}$.
 
@@ -55,13 +55,13 @@ input space predicate works. Write it as $\pi(x) \in \{0,1\}$.
 | $P$, $C$ | poisoned and clean samples in the batch |
 | $\lambda_{\text{mid}}$ | weight on the centring term |
 
-The two halves do different jobs. The sharpening term manufactures a low PSU mode
+The 2 halves do different jobs. The sharpening term manufactures a low PSU mode
 in the clean population, which drags the $q$ quantile down. The centring term
 parks the poisoned mass at the clean **median**, which is far above the sunk
-threshold. Neither term needs a probe, a position, or an operator.
+threshold. Neither term needs a probe, a position or an operator.
 
-The predicate $\pi$ is the mechanism that makes this generalise. A random subset
-of training indices would not, because the learned behaviour would not attach to
+The predicate $\pi$ is the mechanism that makes this generalize. A random subset
+of training indices would not, because the learned behavior would not attach to
 anything the defender's validation images share. A predicate computable from
 pixels does, because the defender's validation images satisfy it at the same rate
 the training images do.
@@ -76,7 +76,7 @@ the training images do.
 | multi probe median rank | **yes** | same reason. The median fixes the inverted probe problem, not the corrupted reference problem. They are different failures with the same symptom. |
 | STRIP | **yes, partly** | its rule is also a percentile of clean entropy at a target false rejection rate. Sharpening confidence lowers clean entropy on the selected slice and moves the same threshold. |
 | SCALE-UP data free | **no** | Eq. (2) is a label consistency count with a fixed threshold $T$ and no clean quantile. |
-| SCALE-UP data limited | **yes, partly** | Eq. (3) standardises against per class clean mean and standard deviation, so inflating the clean spread inflates $\sigma_i$ and compresses NSPC. |
+| SCALE-UP data limited | **yes, partly** | Eq. (3) standardizes against per class clean mean and standard deviation, so inflating the clean spread inflates $\sigma_i$ and compresses NSPC. |
 | IBD-PSC | **yes, partly** | Algorithm 1 picks $k$ from the clean top-1 error rate crossing $\xi$. Sharpening clean confidence raises the amplification needed to break the prediction, which pushes $k$ up and weakens the ensemble. |
 | TeCo | **no** | its statistic is a spread over corruption types and uses no clean reference at all. |
 | the confidence null | **no, and it gets better** | the sharpened slice is clean data at high confidence, which the null already mis-ranks. This is a real tell, see below. |
@@ -93,13 +93,13 @@ the training images do.
 
 ## The cheapest defense that catches it
 
-Three lines of CPU code, in order of cost.
+3 lines of CPU code, in order of cost.
 
 1. **Report TPR at 0.01 and 0.05 FPR beside every AUROC, everywhere.** This does
-   not stop the attack, it stops the attack from being invisible, and it removes
+   not stop the attack, it stops the attack from being invisible and it removes
    the easiest criticism of the current draft.
 2. **Test the clean validation PSU distribution for bimodality before trusting
-   the threshold.** A dip test, or simply the ratio of the 0.25 quantile to the
+   the threshold.** A dip test, or the ratio of the 0.25 quantile to the
    median. On a healthy model that ratio sits in a narrow band. Under quantile
    shadowing it collapses. This is defender legal because it reads clean
    validation only.
@@ -151,7 +151,7 @@ quantile the attacker needs to sharpen a fraction of order $q$. So the paper's
 headline $q = 0.25$ needs 25 percent of clean data sharpened and costs the
 attacker 0.27 AUROC, while the deployable $q = 0.05$ needs 5 percent and costs
 0.04. **We report the one operating point this attack cannot reach cheaply and
-omit the two it kills for free.**
+omit the 2 it kills for free.**
 
 The centring row is worth its own sentence. Aiming the H25 style penalty at the
 clean **median** rather than the clean **mean** takes TPR at $q = 0.25$ to 0.080

@@ -152,7 +152,7 @@ regularization are `NOT STATED` (see "Not stated"). `paper`
 | Attack configs | "default settings provided by BackdoorBench" | Sec. 4.1 | paper |
 | BadNets-A2A target rule | `y_t = (y + 1) mod K` | Sec. 4.1 | paper |
 | Clean reference set | 250 samples per class, from the **test** set | Sec. 4.1 | paper |
-| Feature layer used | Penultimate feature extractor `φ`; the neuron-level analyses use the **last convolutional layer of ResNet18** (512 neurons, confirmed by the x-axis range in `figs/fig3_diff_tac.png`) | Sec. 3.4, Sec. 4.4 | paper |
+| Feature layer used | Penultimate feature extractor `φ`; the neuron-level analyzes use the **last convolutional layer of ResNet18** (512 neurons, confirmed by the x-axis range in `figs/fig3_diff_tac.png`) | Sec. 3.4, Sec. 4.4 | paper |
 | PCA rank for `P` | `NOT STATED` | Sec. 3.4 is the only description | paper |
 | Seeds / repetitions | `NOT STATED` (no seed count, no error bars anywhere) | all tables and figures | paper |
 | Silhouette-coefficient values quoted | BadNets 0.19 (vanilla) -> 0.32 (SAM); SSBA 0.28 -> 0.54 | Sec. 4.4 | paper |
@@ -327,7 +327,7 @@ the paper source instead:
 6. Sec. 4.1 lists BadNets "in its class-specific (BadNets-A2O) and universal forms (BadNets-A2A)".
    The A2O/A2A naming is inverted relative to normal usage (A2O = all-to-one is the universal
    trigger. A2A = all-to-all is the label-shifting variant). Terminology slip only. `paper`
-7. Sec. 4.2 says "For CIFAR-10, we improved the TPR by over 25% for four detection methods".
+7. Sec. 4.2 says "For CIFAR-10, we improved the TPR by over 25% for 4 detection methods".
    Table 1 shows 4 columns above +24 (Spectre +29.8, SS +24.2, AC +29.2, Beatrix +85.5), so SS
    at +24.2 is under the stated 25 threshold. Minor overclaim. `paper`
 

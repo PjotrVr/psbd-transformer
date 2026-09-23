@@ -139,7 +139,7 @@ The job scripts and the trainer both report success on a wrecked run. The traine
 
 ## The schedule they share
 
-Every run in this document was launched by a PBS script that calls the root `train_backdoor.py` of the main checkout, which delegates to `train_classifier` in the root `train.py`. The worktree carries the same loop as `training/loop.py` behind `cli/train_backdoor.py` with identical optimizer construction, so the fix locations later in this file are given for both trees. Nothing in either tree builds a learning-rate scheduler, a warmup, gradient clipping or mixed precision for the training step, and a grep for those terms across the training package, the cli package and the root entrypoints returns only the constructor arguments and their defaults.
+Every run in this document was launched by a PBS script that calls the root `train_backdoor.py` of the main checkout, which delegates to `train_classifier` in the root `train.py`. The worktree carries the same loop as `training/loop.py` behind `cli/train_backdoor.py` with identical optimizer construction, so the fix locations further below are given for both trees. Nothing in either tree builds a learning-rate scheduler, a warmup, gradient clipping or mixed precision for the training step, and a grep for those terms across the training package, the cli package and the root entrypoints returns only the constructor arguments and their defaults.
 
 | setting | value | where |
 |---|---|---|
@@ -306,7 +306,7 @@ In `train_classifier`, keep the best validation accuracy seen across epochs and,
 | threshold | final below 0.5 times best | this file |
 | `best_validation_accuracy` and `final_validation_accuracy` keys | training/loop.py `checkpoint_metadata` lines 168 to 225 | this file |
 | calls the exception prevents | cli/train_backdoor.py lines 531 (`evaluate_attack`) and 584 (`save_checkpoint`) | cli/train_backdoor.py |
-| generator behaviour that requeues a missing checkpoint | pbs/generate_trigger_sweep_jobs.py line 176 reports skipped existing runs | pbs/generate_trigger_sweep_jobs.py |
+| generator behavior that requeues a missing checkpoint | pbs/generate_trigger_sweep_jobs.py line 176 reports skipped existing runs | pbs/generate_trigger_sweep_jobs.py |
 
 In the ledger, add `classify_divergence` beside `classify_by_asr` and call it from `build_ledger` right after the clean-accuracy drop is computed, storing the flag on the cell and overriding `asr_class` so a diverged run can never clear the bar. `resolve_one_per_attack` must drop diverged candidates before it looks for a single clearing cell, because today the diverged blend control clears the ASR bar and makes the GTSRB slot at its rate ambiguous, so the ledger cannot be regenerated at all. `render_markdown` prints `DIVERGED` as the verdict and a count in the summary bullets, and `main` prints the list beside the malformed-checkpoints error so it is the last thing on screen.
 

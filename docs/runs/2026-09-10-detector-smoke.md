@@ -75,7 +75,7 @@ Beatrix and IBD-PSC are rerun on the full 2000-image validation split before
 being judged, since both fit per-class statistics. Beatrix goes from 0.453 at 500
 images to 1.000 at 2000, so its chance reading was the truncation (43 classes
 share 500 images, under 12 per class for a Gram-matrix band) and not the port.
-IBD-PSC does not move, which makes it a failure and not a truncation artefact.
+IBD-PSC does not move, which makes it a failure and not a truncation artifact.
 
 ## The 2 failures
 
@@ -124,14 +124,14 @@ Class saliency on this model never points at the 3 by 3 patch, so the transplant
 carries no trigger and the fooled share stays at the benign level. The port
 stays faithful to the paper (Grad-CAM at the input of the last block, mask at
 0.85 of the normalized map, 100 overlays and 100 inert-noise controls, a fitted
-decision boundary on the clean split), the record keeps this diagnostic, and an
+decision boundary on the clean split), the record keeps this diagnostic and an
 attention-rollout mask is listed as an optional variant in
 `docs/detectors/sentinet.md` rather than built now.
 
 ## Cost per input for the job generator
 
 The measured scoring seconds per input at batch 64 in bfloat16, over the
-validation, clean and backdoor rows together, and the fit seconds per validation
+validation, clean and backdoor rows together and the fit seconds per validation
 image, go into `pbs/generate_detector_jobs.py` as the cost model in place of the
 forward-count estimate it had before the smoke.
 

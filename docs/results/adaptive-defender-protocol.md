@@ -18,7 +18,7 @@ samples' PSU onto the clean distribution under one specific perturbation
 operator. This collapses that operator's AUROC from 0.952 to 0.322 while
 preserving ASR (mean delta -0.004) at a cost of 4.8 points CA.
 
-The evasion is probe-specific: the penalty optimises against one Jacobian, and
+The evasion is probe-specific: the penalty optimizes against one Jacobian, and
 a different operator produces a different Jacobian. Transfer operators the
 attacker never saw still detect at mean AUROC 0.887.
 
@@ -51,7 +51,7 @@ need to identify which operator was evaded.
 ### Detection at target FPR 0.25
 
 Two thresholding rules are reported, both defender-legal because both read
-clean validation data only. Each number is labelled with the rule that
+clean validation data only. Each number is labeled with the rule that
 produced it.
 
 | Pool | Rule | Threshold | TPR | FPR |

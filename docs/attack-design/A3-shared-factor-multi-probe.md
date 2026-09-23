@@ -1,4 +1,4 @@
-# A3. Shared factor evasion: one objective that moves every probe at once
+# A3. Shared factor evasion: 1 objective that moves every probe at once
 
 **Rank 3.** This is the attack against H41, and H41 is the paper's flagship
 security contribution. It targets the assumption the multi probe defense rests
@@ -7,9 +7,9 @@ separately.
 
 ## The assumption being attacked
 
-The theory document's prediction 4 says an attacker minimising the gap for a
+The theory document's prediction 4 says an attacker minimizing the gap for a
 probe with covariance $\Sigma_1$ can only constrain $H$'s projection onto
-$\Sigma_1$'s eigenbasis, that $H$ has $d^2$ degrees of freedom, and that a second
+$\Sigma_1$'s eigenbasis, that $H$ has $d^2$ degrees of freedom and that a second
 probe reads a projection the attacker never constrained. H25 measured exactly
 that: probed AUROC 0.322, transfer AUROC 0.887.
 
@@ -59,7 +59,7 @@ Two details are deliberate and each is a correction to what we published.
 **The clean side is read at the median.** H25's `evasion_penalty` uses
 `psu[~poisoned].mean()`. The detector's decision rule is
 `psu(x) < quantile(validation_psu, 0.25)`. An attacker who matches the mean when
-the decision reads a quantile is optimising the wrong functional, and the clean
+the decision reads a quantile is optimizing the wrong functional, and the clean
 PSU distribution has a long left tail that drags the mean below the median, so
 the mean matching attacker systematically **undershoots**. Measured in
 [A1](A1-operating-point-and-threshold.md): parking the poisoned mass at the clean
@@ -133,7 +133,7 @@ $R^2$ is measured on clean validation data alone.
 - **Clean accuracy: 1 to 3 points**, less than H25's measured 4.8, because the
   term is 1 scalar per sample from an existing forward pass rather than a
   penalty computed through $k$ retained activation graphs.
-- **ASR: within 2 points.** $\tilde\phi$ is maximised at an interior confidence
+- **ASR: within 2 points.** $\tilde\phi$ is maximized at an interior confidence
   and the arg max is unaffected across most of the range.
 - **Wallclock: 1x**, against H25's 4x. This matters for the threat model, because
   an attack that costs 4x training is a real deterrent and one that costs nothing

@@ -1,9 +1,9 @@
 # Adaptive attacks and dropout interaction: design
 
-Three experiments that the perturbation study opens but does not answer. Written
+3 experiments that the perturbation study opens but does not answer. Written
 before implementation so the evaluation contract is fixed in advance.
 
-All three obey the project's standing rules: one-sided scoring (low PSU means
+All 3 obey the project's standing rules: one-sided scoring (low PSU means
 poisoned, a value below 0.5 is a failure and is never re-signed), comparison at
 matched clean-validation shift ratio rather than matched rate, and a benign
 control in every table.
@@ -18,7 +18,7 @@ varies 11x across operators at a shared p = 0.5, and that `channel_mask` on
 residual-stream positions saturates below p = 0.1. The fine grid for those
 positions is submitted (`Efine_001`).
 
-**Remaining.** Two operators still have unbracketed ends:
+**Remaining.** 2 operators still have unbracketed ends:
 
 - `head_mask` reaches only sigma 0.762 at p = 0.6 and the grid stops at 0.9.
   If p = 0.9 does not reach sigma 0.8, head masking **cannot** be compared to
@@ -27,7 +27,7 @@ positions is submitted (`Efine_001`).
 - `gaussian` jumps from sigma 0.072 at rate 0.2 to 0.749 at 0.3 on
   `post_residual`. Add 0.22, 0.25, 0.27 so the interesting region has resolution.
 
-Cheap: 2 operators x a few rates, well under one job.
+Cheap: 2 operators x a few rates, well under 1 job.
 
 ---
 
@@ -66,7 +66,7 @@ injected probe, and measure detection as a function of the model's rate.
 
 Effective removal compounds, so a probe rate p_probe on top of p_model leaves
 `(1 - p_model)(1 - p_probe)` alive. This must be reported as measured sigma, not
-as the nominal probe rate, or the two knobs are confounded. That is exactly the
+as the nominal probe rate, or the 2 knobs are confounded. That is exactly the
 compounding bug `sweep_rates`' `try/finally` exists to prevent, appearing here
 deliberately rather than accidentally.
 
@@ -104,13 +104,13 @@ ViT and the method is measuring prediction margin.
 
 **Also worth recording.** Whether training dropout changes ASR or clean accuracy
 at all. If it suppresses the backdoor itself, that is a (weak, expensive)
-*defense* rather than a detection result, and the two must not be confused.
+*defense* rather than a detection result, and the 2 must not be confused.
 
 ---
 
 ## E3. An adaptive attacker that trains against PSBD
 
-The most important of the three, and the one a reviewer will ask for.
+The most important of the 3, and the one a reviewer will ask for.
 
 ### Threat model
 
@@ -121,9 +121,9 @@ an adversary who knows it. Stated assumptions:
 - The attacker knows PSBD's statistic (PSU) and its decision direction.
 - **White-box variant:** the attacker also knows the defender's exact placement
   and rate. This is the strongest attack and gives the upper bound on evasion.
-- **Transfer variant:** the attacker optimizes against one (placement, operator)
+- **Transfer variant:** the attacker optimizes against 1 (placement, operator)
   and the defender probes with a different one. This is the realistic case and the
-  one the operator study is built to inform.
+  1 the operator study is built to inform.
 
 The attacker does *not* control the defender's clean validation set or threshold.
 
@@ -189,10 +189,10 @@ worse here because it would silently corrupt the trained weights.
 
 ### Cost
 
-`k + 1` forward passes and one backward through the perturbed graph, so roughly
+`k + 1` forward passes and 1 backward through the perturbed graph, so roughly
 **4x a normal training step** at k = 3. A 15-epoch ViT-B/16 CIFAR-10 run becomes
 roughly 4 times its current wallclock. Sizing the first matrix at 6 checkpoints
-keeps this to a handful of jobs; it is not cheap but it is not prohibitive.
+keeps this to a handful of jobs. It is not cheap but it is not prohibitive.
 
 ### First matrix
 
@@ -207,7 +207,7 @@ some way other than the penalty, and nothing else in the experiment is trustwort
 
 ### What counts as a successful attack
 
-All three must hold together:
+All 3 must hold together:
 
 | quantity | requirement |
 |---|---|
@@ -220,7 +220,7 @@ removed the backdoor, and reporting it as evasion would be wrong.
 
 ### The transfer test, which is the actual point
 
-Having trained against one probe, evaluate detection under **every** operator and
+Having trained against 1 probe, evaluate detection under **every** operator and
 position in the study.
 
 - If evasion transfers everywhere, PSBD is broken by an adaptive attacker and the
@@ -234,7 +234,7 @@ That second outcome is the one worth designing the paper around, and it is
 falsifiable. [H16](../hypothesis/H16-where-the-backdoor-neurons-are.md)'s finding
 that different attacks use disjoint dimensions is weak prior evidence for it:
 if the backdoor's location is that plastic, an attacker suppressing one probe's
-view may simply relocate into another's.
+view may relocate into another's.
 
 ### Failure modes to watch
 

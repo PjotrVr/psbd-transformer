@@ -39,7 +39,7 @@ A clean-label attack may only poison images that already carry the target label,
 
 ## The adversarial bases
 
-Each base set is a single untargeted PGD pass over the target class of the ViT benign surrogate, at the dataset's native resolution, and its manifest records the surrogate's accuracy on that class before and after the perturbation. An attacked accuracy that collapses means the natural features stopped supporting the label, which is the whole point of Turner's step, and every set reaches it except GTSRB at the smallest budget. There the smallest epsilon leaves about a third of the class still recognisable, so that base set is weaker by construction and its pilot is not the same attack at a smaller epsilon.
+Each base set is a single untargeted PGD pass over the target class of the ViT benign surrogate, at the dataset's native resolution and its manifest records the surrogate's accuracy on that class before and after the perturbation. An attacked accuracy that collapses means the natural features stopped supporting the label, which is the whole point of Turner's step, and every set reaches it except GTSRB at the smallest budget. There the smallest epsilon leaves about a third of the class still recognizable, so that base set is weaker by construction and its pilot is not the same attack at a smaller epsilon.
 
 | dataset | target | epsilon over 255 | epsilon | steps | step size | images | surrogate accuracy on target class | attacked accuracy on target class | manifest |
 |---|---|---|---|---|---|---|---|---|---|
@@ -83,7 +83,7 @@ The training loop prints loss and validation accuracy after every epoch and ASR 
 | `vit_gtsrb_lc_0_05_tl1_adv16_pilot` | 0.0192 | 0.9857 | 0.0120 | 0.9873 | 0.0026 | 0.9895 | 0.9374 | 0.9895 | `logs/vit_cleanlabel_pilot/vit_cleanlabel_pilot_4.log` |
 | `vit_gtsrb_lc_0_05_tl1_adv32_pilot` | 0.0005 | 0.9905 | 0.3395 | 0.0515 | 3.4632 | 0.0807 | 0.3210 | 0.0807 | `logs/vit_cleanlabel_pilot/vit_cleanlabel_pilot_4.log` |
 
-The same signature runs through the SIG batch trained at the same target class on the same day, and it is confined to GTSRB. Over every training log under `logs/` that carries a final line, no run on any other dataset diverged, while the GTSRB runs at the switched target class lost roughly a third of their number, including both dirty-label controls. The recipe has nothing that would catch it: a fixed Adam step, no schedule and no gradient clipping, on a dataset whose loss reaches a floor small enough for the second-moment estimate to decay to near nothing, which is the setting in which a single larger gradient produces a step of the wrong magnitude. I read that as a training-recipe hazard rather than anything the attack does, though the pilot cannot separate the two on its own.
+The same signature runs through the SIG batch trained at the same target class on the same day, and it is confined to GTSRB. Over every training log under `logs/` that carries a final line, no run on any other dataset diverged, while the GTSRB runs at the switched target class lost roughly a third of their number, including both dirty-label controls. The recipe has nothing that would catch it: a fixed Adam step, no schedule and no gradient clipping, on a dataset whose loss reaches a floor small enough for the second-moment estimate to decay to near nothing, which is the setting in which a single larger gradient produces a step of the wrong magnitude. I read that as a training-recipe hazard rather than anything the attack does, though the pilot cannot separate the 2 on its own.
 
 | log batch | GTSRB runs | diverged | source |
 |---|---|---|---|
@@ -115,7 +115,7 @@ The same signature runs through the SIG batch trained at the same target class o
 | autocast | bfloat16 | `/lustre/home/pstika/projects/PSBD-ViT/train.py` `use_bfloat16` |
 | epochs | 15 | `/lustre/home/pstika/projects/PSBD-ViT/train.py` and `.claude/CLAUDE.md` |
 
-The CIFAR-10 logs carry a different fact. The clean-accuracy deficit against the benign reference is there from the first epoch and never closes, which is what one expects if part of the test set is unlearnable from the training data the model saw rather than something training slowly erodes.
+The CIFAR-10 logs carry a different fact. The clean-accuracy deficit against the benign reference is there from the first epoch and never closes, which is what 1 expects if part of the test set is unlearnable from the training data the model saw rather than something training slowly erodes.
 
 | run | epoch 1 val acc | epoch 15 val acc | benign CA | source |
 |---|---|---|---|---|
@@ -123,7 +123,7 @@ The CIFAR-10 logs carry a different fact. The clean-accuracy deficit against the
 | `vit_cifar10_lc_0_1_adv16_pilot` | 0.8639 | 0.8557 | 0.9526 | `logs/vit_cleanlabel_pilot/vit_cleanlabel_pilot_1.log` |
 | `vit_cifar10_lc_0_1_adv32_pilot` | 0.8666 | 0.8562 | 0.9526 | `logs/vit_cleanlabel_pilot/vit_cleanlabel_pilot_2.log` |
 
-A per-class evaluation of the pilot checkpoints on the CIFAR-10 test set, run on CPU from the session scratchpad with the main checkout's loader and normalisation, makes that explicit. Its overall accuracy reproduces the sidecar, and the entire deficit is the target class. At the cap rate the whole target class is replaced by adversarial bases, so the model never sees a natural training image of the target class and learns the class as its patch alone. The script is not tracked, so these numbers are a diagnostic rather than a result, and the tracked path that reproduces them is `metrics.py` in the main checkout, which writes `clean_accuracy_by_class` into each checkpoint's `metrics.json` through `evaluate.py`. The evaluation was stopped after the epsilons that clear the ASR bar because it was loading the shared login node, so the patch-only checkpoint at the same rate was not read per class, and that read would only have shown whether the patch alone empties the target class the way the bases do.
+A per-class evaluation of the pilot checkpoints on the CIFAR-10 test set, run on CPU from the session scratchpad with the main checkout's loader and normalization, makes that explicit. Its overall accuracy reproduces the sidecar, and the entire deficit is the target class. At the cap rate the whole target class is replaced by adversarial bases, so the model never sees a natural training image of the target class and learns the class as its patch alone. The script is not tracked, so these numbers are a diagnostic rather than a result, and the tracked path that reproduces them is `metrics.py` in the main checkout, which writes `clean_accuracy_by_class` into each checkpoint's `metrics.json` through `evaluate.py`. The evaluation was stopped after the epsilons that clear the ASR bar because it was loading the shared login node, so the patch-only checkpoint at the same rate was not read per class, and that read would only have shown whether the patch alone empties the target class the way the bases do.
 
 | checkpoint | overall CA | class 0 CA | mean CA of the other 9 classes | benign class 0 CA | source |
 |---|---|---|---|---|---|
@@ -141,7 +141,7 @@ Applied cell by cell, the rule gives an answer on a single dataset and refuses o
 | gtsrb | 0.05 | 16 | the only usable run, clears both bars | none needed | `checkpoints/vit_gtsrb_lc_0_05_tl1_adv16_pilot/args.json` |
 | tiny | 0.005 | none satisfies both bars | dCA clears at every epsilon, ASR never does | epsilon 8, ASR 0.6140 against a bar of 0.85 | `checkpoints/vit_tiny_lc_0_005_adv8_pilot/args.json`, `configs/psbd_basis.json` |
 
-The GTSRB verdict rests on a single seed that happened not to diverge, and the full stage should expect the same fraction of its runs to blow up under the current recipe. A diverged seed there is unusable, the same way the diverged pilot runs are, and must not be read as an attack that failed to implant. Whether to add a guard such as clipping or a best-validation checkpoint is a recipe change that would break comparability with every run on disk, so it is a separate decision and not part of this one.
+The GTSRB verdict rests on a single seed that happened not to diverge, and the full stage should expect the same fraction of its runs to blow up under the current recipe. A diverged seed there is unusable, the same way the diverged pilot runs are and must not be read as an attack that failed to implant. Whether to add a guard such as clipping or a best-validation checkpoint is a recipe change that would break comparability with every run on disk, so it is a separate decision and not part of this one.
 
 ## The CIFAR-10 decision
 
@@ -183,7 +183,7 @@ I would take the second option. The per-class collapse shows the drop is the pri
 
 ## CIFAR-100 and Tiny
 
-Neither dataset reaches the ASR bar at any epsilon, and their clean accuracy is untouched, so the bar that fails is the one the epsilon was meant to fix. The rate ceiling is the class size on both, and both are class-uniform, so no choice of target class lifts it. The bases are already as adversarial as they can be, with the surrogate unable to recognise the target class at every budget, so a larger epsilon or more PGD steps has nothing left to remove, and the ASR curve falls at the largest budget on both datasets rather than rising. What remains is the number of poisoned images, and that number is the class size.
+Neither dataset reaches the ASR bar at any epsilon, and their clean accuracy is untouched, so the bar that fails is the one the epsilon was meant to fix. The rate ceiling is the class size on both, and both are class-uniform, so no choice of target class lifts it. The bases are already as adversarial as they can be, with the surrogate unable to recognize the target class at every budget, so a larger epsilon or more PGD steps has nothing left to remove, and the ASR curve falls at the largest budget on both datasets rather than rising. What remains is the number of poisoned images, and that number is the class size.
 
 | checkpoint | variant | nominal rate | realised rate | ASR | CA | source |
 |---|---|---|---|---|---|---|
@@ -202,7 +202,7 @@ Neither dataset reaches the ASR bar at any epsilon, and their clean accuracy is 
 | `vit_tiny_lc_0_05` | patch only, clamped | 0.05 | 0.005 | 0.7059 | 0.7564 | `checkpoints/vit_tiny_lc_0_05/args.json` |
 | `vit_tiny_lc_0_1` | patch only, clamped | 0.1 | 0.005 | 0.6228 | 0.7525 | `checkpoints/vit_tiny_lc_0_1/args.json` |
 
-The patch-only replicates on CIFAR-100 all train the identical index set, and their spread is the honest error bar on a single run at this pool size. The adversarial runs sit inside that spread, so at a pool of a few hundred images the bases changed nothing the pilot can see, and a single patch-only replicate above the bar is what a wide spread produces rather than a working attack. The ceiling therefore leaves no option inside Label-Consistent itself, and the choices are the ones that change the pool. One is the multi-target clean-label variant, which poisons several target classes at once and already has runs on both datasets, and those are the relevant fallback for this slot, analysed in another entry. The other is the pair of datasets added for their class count, SVHN and EuroSAT, whose probes live under `logs/vit_newdata_probe/`. Dropping Label-Consistent outright costs the panel only the CIFAR-100 cell at its cap, since Tiny has no Label-Consistent panel cell at any rate.
+The patch-only replicates on CIFAR-100 all train the identical index set, and their spread is the honest error bar on a single run at this pool size. The adversarial runs sit inside that spread, so at a pool of a few 100 images the bases changed nothing the pilot can see, and a single patch-only replicate above the bar is what a wide spread produces rather than a working attack. The ceiling therefore leaves no option inside Label-Consistent itself, and the choices are the ones that change the pool. One is the multi-target clean-label variant, which poisons several target classes at once and already has runs on both datasets, and those are the relevant fallback for this slot, analyzed in another entry. The other is the pair of datasets added for their class count, SVHN and EuroSAT, whose probes live under `logs/vit_newdata_probe/`. Dropping Label-Consistent outright costs the panel only the CIFAR-100 cell at its cap, since Tiny has no Label-Consistent panel cell at any rate.
 
 | multi-target run | targets | ASR | CA | source |
 |---|---|---|---|---|
@@ -229,7 +229,7 @@ source .venv/bin/activate
 python pbs/generate_cleanlabel_jobs.py --stage full --datasets gtsrb --epsilon gtsrb=16 --attacks lc --no-controls --batch vit_cleanlabel_full_gtsrb_lc
 ```
 
-The generator has no dry-run flag. Generation itself writes the job files and the log directory and submits nothing, so it is the dry run, and submission is the separate `bash pbs/vit_cleanlabel_full_gtsrb_lc/submit_all.sh` step. The `--batch` name keeps this batch clear of the default `vit_cleanlabel_full`, which a later CIFAR-10 batch would otherwise overwrite job by job. I ran the exact command from the session scratchpad with the main checkout on the import path, which produced the jobs below and wrote nothing into either checkout.
+The generator has no dry-run flag. Generation itself writes the job files and the log directory and submits nothing, so it is the dry run and submission is the separate `bash pbs/vit_cleanlabel_full_gtsrb_lc/submit_all.sh` step. The `--batch` name keeps this batch clear of the default `vit_cleanlabel_full`, which a later CIFAR-10 batch would otherwise overwrite job by job. I ran the exact command from the session scratchpad with the main checkout on the import path, which produced the jobs below and wrote nothing into either checkout.
 
 | dry-run output | value | source |
 |---|---|---|
@@ -271,6 +271,6 @@ The generator has no dry-run flag. Generation itself writes the job files and th
 | `/lustre/home/pstika/projects/PSBD-ViT/checkpoints/vit_gtsrb_{badnet_a2o,blend}_0_05_tl1/args.json` | the diverged controls |
 | `/lustre/home/pstika/projects/PSBD-ViT/results/coverage/COVERAGE.md` | the panel cell count and the SIG cell already flagged on the drop bar |
 | `/lustre/home/pstika/projects/PSBD-ViT/train.py` | the optimizer, learning rate, absence of a schedule and of clipping, the checkpoint writer |
-| `/lustre/home/pstika/projects/PSBD-ViT/models.py`, `utils/config.py`, `utils/datasets.py`, `evaluate.py`, `metrics.py` | the loader and normalisation the per-class evaluation reused, and the tracked tool that reproduces it |
+| `/lustre/home/pstika/projects/PSBD-ViT/models.py`, `utils/config.py`, `utils/datasets.py`, `evaluate.py`, `metrics.py` | the loader and normalization the per-class evaluation reused, and the tracked tool that reproduces it |
 | `/lustre/home/pstika/projects/PSBD-ViT-refactor/scripts/coverage_ledger.py` | how dCA and the verdict string are computed |
 | `/lustre/home/pstika/projects/PSBD-ViT-refactor/.claude/styles/writing-style.md` | the format this entry follows |

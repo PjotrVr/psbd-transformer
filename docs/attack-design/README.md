@@ -57,12 +57,12 @@ $$\boxed{\;\phi_\ell(x) \;\approx\;
 | $T_2$ | the part that comes from curvature of the sub network between $h$ and $z$ |
 
 Sanity check against the project's own closed form. Probe at the logits, so
-$J = I$, $\Sigma_z = \sigma^2 I$, and $T_2 = 0$ because the identity map has no
+$J = I$, $\Sigma_z = \sigma^2 I$ and $T_2 = 0$ because the identity map has no
 curvature. Then $u^\top u = 1 - 2p_c + \|p\|^2$ and $\operatorname{tr}(A) = 1 - \|p\|^2$,
 so $\phi = \sigma^2 p_c\big(p_c - \|p\|^2\big) \ge 0$, which is exactly
 $-\tfrac{1}{2}\sigma^2 \operatorname{tr}\nabla_z^2 p_c = -\sigma^2 p_c(\|p\|^2 - p_c)$
 from `docs/theory-perturbation-consistency.md` objection 3. The decomposition
-above is that closed form with the two things it hides put back in.
+above is that closed form with the 2 things it hides put back in.
 
 Camuto et al. (NeurIPS 2020, arXiv:2007.07368) Theorem 1 is the published form of
 $T_1$ alone, $\mathbb{E}[\Delta L] = \mathbb{E}[\tfrac{1}{2}\sum_k \sigma_k^2 \operatorname{tr}(J_k^\top H_L J_k)]$.
@@ -175,7 +175,7 @@ Three things follow and all 3 belong in the paper.
 | 1 | **Quantile shadowing.** Sharpen confidence on an input-space-predicated slice of clean data so the clean validation PSU distribution grows a low tail and the 0.25 quantile threshold sinks below the poisoned mass. **Already confirmed in simulation on our own cached scores:** sharpening 5 percent of clean takes AUROC 0.960 to 0.918 and TPR at a 5 percent FPR budget from 0.761 to **0.000**, with achieved FPR still on target. | approximately 0 ASR, under 1 point CA, no probe gradients, no extra forward passes | the deployable operating point, while AUROC barely moves. Our headline metric is blind to it. | [A1](A1-operating-point-and-threshold.md) |
 | 2 | **Confidence distribution matching.** Match the poisoned softmax distribution to the clean one in $p_c$, entropy and $\|p\|_2$. | 1 forward pass per step, roughly 4x cheaper than H25's attacker, no probe knowledge at all | the entire confidence family baseline table, every head adjacent probe, and the claim that H25 is our strongest attacker. Our own evasive checkpoints still read 0.970 on the free max softmax null. | [A2](A2-confidence-distribution-matching.md) |
 | 3 | **Shared factor multi probe evasion.** One probe free objective on the closed form $p_c(p_c - \|p\|^2)$ moves every probe's $T_1$ in the same direction at once, which is the majority attack the median rank rule fears. | 1 forward pass, no probe registry knowledge | H41, the paper's flagship security contribution, whose threat model assumes probes are independently constrained. | [A3](A3-shared-factor-multi-probe.md) |
-| 4 | **Position randomised curvature matching.** Antithetic Hutchinson estimate of $\operatorname{tr}(H_\ell \Sigma)$ at a position sampled per step, hinged on the clean minus poisoned gap. | 2 perturbed passes per step, cheaper and lower variance than H25's k=3 one sided estimator | H25's "evasion must be probe specific" claim, which was measured against an attacker that only ever attacked 1 position. | [A4](A4-curvature-matching.md) |
+| 4 | **Position randomized curvature matching.** Antithetic Hutchinson estimate of $\operatorname{tr}(H_\ell \Sigma)$ at a position sampled per step, hinged on the clean minus poisoned gap. | 2 perturbed passes per step, cheaper and lower variance than H25's k=3 one sided estimator | H25's "evasion must be probe specific" claim, which was measured against an attacker that only ever attacked 1 position. | [A4](A4-curvature-matching.md) |
 | 5 | **The low confidence backdoor.** Put triggered inputs near the decision boundary instead of far from it, exploiting the fact that curvature vanishes at both ends of the confidence range. | real ASR fragility, a few points | the confidence, SCALE-UP and IBD-PSC comparison rows, and TPR at 0.01 and 0.05 FPR. It does **not** beat PSU, and we can prove that. | [A5](A5-low-confidence-backdoor.md) |
 | 6 | **Architecture transfer.** Whether an evasion recipe designed on ViT works on a ConvNet and back. | none, it is an analysis | the generality claim. Also the place where H22, H26 and H35's "structured masking is a dead end" needs an explicit scope limit. | [A6](A6-architecture-transfer.md) |
 
@@ -207,7 +207,7 @@ limitations.
    hinges on the clean **mean**, while `psbd.decision.threshold_at_quantile` reads
    a clean **quantile**. Aiming the identical penalty at the clean median instead
    takes TPR at $q = 0.25$ from 0.999 to 0.080 in simulation. Our published
-   adaptive attacker is optimising the wrong functional, and fixing it makes it
+   adaptive attacker is optimizing the wrong functional, and fixing it makes it
    strictly stronger at no cost.
 
 ## Defenses that fall out of this document

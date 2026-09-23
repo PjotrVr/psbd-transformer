@@ -20,7 +20,7 @@ is wrong: the run-to-run spread of AUROC across 6 disjoint triples from the same
 **0.0009**, so k=3 is a precise estimate, not a noise floor.
 
 **AUROC hides the failure that matters.** Non-SAM ViT at 1%, ASR >= 0.5, n=19: mean AUROC
-0.908 but mean TPR at 1% FPR **0.464**. Six cells have AUROC >= 0.85 with TPR@1%FPR < 0.05,
+0.908 but mean TPR at 1% FPR **0.464**. 6 cells have AUROC >= 0.85 with TPR@1%FPR < 0.05,
 worst 0.960 / 0.000. Achieved FPR tracks nominal, so it is a genuine tail overlap. AUPRC and
 partial AUROC are computed nowhere in the repo.
 
@@ -34,7 +34,7 @@ including the one proposed at the start of the session.
 chance, from the deterministic softmax the sweep already caches and discards.
 
 **A label-free sign rule selects between them** (H43). `d` = suspect-pool mean PSU minus
-clean-validation mean PSU; use PSU if `d < 0`, else entropy. Threshold 0 is fixed by the
+clean-validation mean PSU. Use PSU if `d < 0`, else entropy. Threshold 0 is fixed by the
 mechanism. Over 64 cells: 0.819 to **0.865**, CI [+0.017, +0.079], **98% of oracle-max**,
 hurting **0** cells, and +0.044 to +0.059 at all 4 placements including the published one.
 
@@ -43,12 +43,12 @@ hurting **0** cells, and +0.044 to +0.059 at all 4 placements including the publ
 A logit lens reads every encoder block through the network's OWN final LayerNorm and head,
 so a per-sample statistic can ask WHEN the answer was decided rather than how far it moves
 under perturbation. That is algebraically independent of the whole PSBD family, which H28
-shows all read one magnitude.
+shows all read 1 magnitude.
 
 `depth_cls` takes 12 integer values, and that alone was hiding the result. A
 clean-validation quantile lands on a tie and the strict `<` test drops every sample sitting
 exactly on it. On `vit_gtsrb_badnet_a2o_0_1` that was the entire backdoor population: mean
-depth **exactly 5.000** against clean 7.292, AUROC 0.994, and TPR at 1% FPR reading
+depth **exactly 5.000** against clean 7.292, AUROC 0.994 and TPR at 1% FPR reading
 **0.000** because the threshold IS 5.0. The same score gives TPR 1.000 at 5% FPR with an
 achieved FPR of 0.011.
 
@@ -61,7 +61,7 @@ mechanism made continuous:
 | gtsrb wanet | 0.933, TPR@1% 0.000 | 0.946, TPR@1% **0.839** |
 | gtsrb benign | 0.499 | **0.501** |
 
-One forward pass against PSBD's 30, which on that badnet cell reads 0.999 AUROC and 0.981
+1 forward pass against PSBD's 30, which on that badnet cell reads 0.999 AUROC and 0.981
 TPR at 1% FPR. Across the GTSRB dirty-label group `depth_cls` alone means **0.983** against
 PSBD's 0.974.
 
@@ -77,7 +77,7 @@ A logit lens reading every block through the network's own final LayerNorm and h
 gives AUROC **0.982** and TPR@1%FPR **0.287** from **1** forward pass, against PSBD's 0.961
 and 0.000 from 30. CLS alone gives 0.826.
 
-**And it does not generalise as stated.** The sign depends on the trigger's spatial extent
+**And it does not generalize as stated.** The sign depends on the trigger's spatial extent
 AND on the class count:
 
 | cell | raw AUROC | clean -> backdoor agreement |
@@ -95,7 +95,7 @@ and the confident trigger patches raise it. The sign router recovers 7 of 9 cell
 **Consequence for methodology: pilot on GTSRB, not CIFAR-10.** CIFAR-10's 10 classes made a
 class-count-sensitive statistic look far stronger than it is.
 
-## Two probes outside the activation-noise family
+## 2 probes outside the activation-noise family
 
 The user asked for a genuinely new perturbation paradigm rather than another operator.
 
@@ -115,9 +115,9 @@ knowledge, partly inherited, survives.
 
 ## The content-dependence law, first data point
 
-`vit_gtsrb_badnet_a2m2_0_1`: **ASR 0.989, CA 0.992**. So m = 2 costs essentially no attack
+`vit_gtsrb_badnet_a2m2_0_1`: **ASR 0.989, CA 0.992**. So m = 2 costs almost no attack
 success, against all-to-all's 0.947 on the same dataset. The ASR side of the law behaves as
-predicted; 33 more cells are training.
+predicted. 33 more cells are training.
 
 ## Built
 

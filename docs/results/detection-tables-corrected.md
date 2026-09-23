@@ -9,7 +9,7 @@ version of these tables, both in `docs/audit-2026-09-07.md`:
 
 1. TPR is reported at a **deployable** threshold, the target-FPR quantile of the
    clean validation score, alongside the **oracle** threshold read off the
-   labelled ROC curve. The previous tables reported only the oracle value under a
+   labeled ROC curve. The previous tables reported only the oracle value under a
    plain `TPR@x%` heading. The bracketed number is the FPR the deployable
    threshold actually achieved on the analysis pool, which is what makes an
    overspent budget visible.
@@ -30,7 +30,7 @@ coverage: 48/48 required cells
   per dataset: cifar10=12/12  cifar100=14/14  gtsrb=10/10  tiny=12/12
   4 cells NOT strength-matched: achieved sigma is further than 0.1 from 0.6, marked '*' in the tables
 
-depl = deployable: threshold at the target-FPR quantile of clean validation score, needing no poisoned data, with the FPR it actually achieved on the paired clean pool in brackets. oracle = the same target read off the labelled ROC curve, an upper bound no defender can reach. Deployable can exceed oracle only by overspending the clean budget, which the bracketed FPR makes visible.
+depl = deployable: threshold at the target-FPR quantile of clean validation score, needing no poisoned data, with the FPR it actually achieved on the paired clean pool in brackets. oracle = the same target read off the labeled ROC curve, an upper bound no defender can reach. Deployable can exceed oracle only by overspending the clean budget, which the bracketed FPR makes visible.
 
 ### cifar10   (one-sided, fractional PSU, sigma~0.6)
 

@@ -86,7 +86,7 @@ Two-part, and the second is the interesting one:
 
 1. `token_mask` gives its **best relative performance on `badnet_a2o` and
    `badnet_a2a`** and its worst on `blend` and `wanet`, i.e. the opposite ranking
-   to every other operator in the study, which favours distributed triggers.
+   to every other operator in the study, which favors distributed triggers.
 2. On patch triggers, `token_mask` AUROC **falls with rate** and may cross 0.5 at
    high p, as masking shifts from perturbing the trigger to deleting it.
 

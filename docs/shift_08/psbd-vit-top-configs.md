@@ -1,4 +1,4 @@
-# PART 4 — the top 3 configurations, on the equal-coverage panel
+# PART 4: the top 3 configurations, on the equal-coverage panel
 
 > **Superseded.** Written against the 48-cell panel. The current numbers are in
 > `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
@@ -10,7 +10,7 @@ shift ratio lands nearest 0.6, so all comparisons are at matched disturbance rat
 at a shared nominal rate. Deltas are paired within cell with 5000-resample bootstrap CIs.
 
 **Selection rule, fixed before the ranking was read.** Primary key is the *worst* rank a
-placement takes across the three poison rates **on hard attacks**. A defender can guess
+placement takes across the 3 poison rates **on hard attacks**. A defender can guess
 the attack but can never know the poison rate, so the deployable configuration is the one
 that is never bad, not the one that is sometimes best. Ties break on hard-attack AUROC.
 A placement reaching matched strength on under 80% of cells is excluded from
@@ -19,11 +19,11 @@ the headline, because it is not being asked the same question as its rivals.
 Hard attacks are wanet, tact, bpp, adaptive_blend, lc, sig. BadNet, Blend and LF are reported separately
 as the easy set and never drive a conclusion.
 
-## The three
+## The 3
 
-1. **`before_attention_norm_token_mask`** — ranks #2/#1/#1 at 1%/5%/10% on hard attacks
-2. **`before_attention_residual_token_mask`** — ranks #1/#3/#5 at 1%/5%/10% on hard attacks
-3. **`both_sublayer_inputs_token_mask`** — ranks #3/#6/#2 at 1%/5%/10% on hard attacks
+1. **`before_attention_norm_token_mask`**: ranks #2/#1/#1 at 1%/5%/10% on hard attacks
+2. **`before_attention_residual_token_mask`**: ranks #1/#3/#5 at 1%/5%/10% on hard attacks
+3. **`both_sublayer_inputs_token_mask`**: ranks #3/#6/#2 at 1%/5%/10% on hard attacks
 
 ### Head to head
 
@@ -93,7 +93,7 @@ as the easy set and never drive a conclusion.
 
 ### On the primary datasets
 
-CIFAR-100 and Tiny are this project's primary test beds; CIFAR-10 and GTSRB are for
+CIFAR-100 and Tiny are this project's primary test beds. CIFAR-10 and GTSRB are for
 completeness. A defender knows their own dataset, so dataset dependence is legitimate in a
 way poison-rate dependence is not, and the split is worth reading separately.
 
@@ -117,19 +117,19 @@ the strength their rivals were held to.
 
 ### What to deploy
 
-The three are **one tier, not an ordering**: every pairwise CI above spans zero, so no
+The 3 are **1 tier, not an ordering**: every pairwise CI above spans zero, so no
 one of them is shown to beat another on this panel. What separates them is *where* they
 are strong, and that is stable enough to choose on.
 
 - **`before_attention_norm_token_mask`** is the hard-attack instrument. It is #1 at 5% and 10% and #4 at 1%, the
   only placement top-4 at every rate on hard attacks, with zero inverted cells. It is also
   the strongest on the primary datasets. It is comparatively weak on BadNet, which does
-  not matter, since BadNet is the attack this project deliberately does not optimise for.
+  not matter, since BadNet is the attack this project deliberately does not optimize for.
 - **`before_attention_residual_token_mask`** is the all-round choice and carries the highest worst-case floor, so it
-  is the safest single config when nothing is known about the attack. It perturbs two
+  is the safest single config when nothing is known about the attack. It perturbs 2
   positions at once, which is the same mechanism the fused combination exploits.
 - **`both_sublayer_inputs_token_mask`** is the published recommendation. It is the best on easy attacks and the
-  most broadly measured, but it is the weakest of the three on hard attacks and at the
+  most broadly measured, but it is the weakest of the 3 on hard attacks and at the
   10% FPR operating point.
 
 None of the three needs to change with poison rate, which is the constraint that

@@ -12,7 +12,7 @@ The released code is `third_party/BackdoorBox/core/defenses/IBD_PSC.py`, read at
 
 The adversary poisons the training data and the defender controls inference, with no knowledge of the trigger, the target class or the poisoning rate. The defender needs white-box access to the deployed model's normalization layers, since Algorithm 1 and the score both require rewriting a layer's scale and shift and rerunning a forward pass through the modified network.
 
-Layer selection needs a labelled clean set, since Eq. (3) is a top-1 error against ground truth, and the paper states a budget of 100 benign samples. The score itself, Eq. (4), needs none, since it only compares each amplified model's output against the unamplified model's own prediction. The port gives layer selection the shared 2000-sample clean validation split with labels, so `DATA_REQUIREMENT` records the split as labelled even though the per-input score is data-free once the layer count is fixed.
+Layer selection needs a labeled clean set, since Eq. (3) is a top-1 error against ground truth, and the paper states a budget of 100 benign samples. The score itself, Eq. (4), needs none, since it only compares each amplified model's output against the unamplified model's own prediction. The port gives layer selection the shared 2000-sample clean validation split with labels, so `DATA_REQUIREMENT` records the split as labeled even though the per-input score is data-free once the layer count is fixed.
 
 ## Mechanism
 
@@ -33,7 +33,7 @@ $$
 | $L$ | the number of amplifiable normalization layers |
 | $\hat{F}^{\omega}_k$ | the model with the last $k$ normalization layers amplified by $\omega$ |
 | $\gamma, \beta$ | a normalization layer's learned scale and shift |
-| $D_r$ | the defender's labelled clean reference set |
+| $D_r$ | the defender's labeled clean reference set |
 | $\eta$ | Eq. (3)'s top-1 error of the amplified model on $D_r$ |
 | $\xi$ | the error-rate threshold Algorithm 1 stops at |
 | $k$ | the smallest amplified-layer count whose error crosses $\xi$ |
@@ -60,7 +60,7 @@ A normalization layer's affine parameters set the scale of the features that rea
 
 ## What this port does on ViT
 
-**Amplifying LayerNorm instead of BatchNorm is the substantive deviation.** The paper scales BatchNorm2d and only BatchNorm2d, and the released code matches, filtering on `isinstance(module, torch.nn.BatchNorm2d)`. Neither ViT nor Swin contains a single BatchNorm layer, so `count_BN_layers` returns 0, `sorted_indices` is empty, Algorithm 1's loop runs over `range(1, 0)`, and `start_index` comes back `None`. IBD-PSC as published is not runnable on either architecture this project trains.
+**Amplifying LayerNorm instead of BatchNorm is the substantive deviation.** The paper scales BatchNorm2d and only BatchNorm2d, and the released code matches, filtering on `isinstance(module, torch.nn.BatchNorm2d)`. Neither ViT nor Swin contains a single BatchNorm layer, so `count_BN_layers` returns 0, `sorted_indices` is empty, Algorithm 1's loop runs over `range(1, 0)` and `start_index` comes back `None`. IBD-PSC as published is not runnable on either architecture this project trains.
 
 The port amplifies `nn.LayerNorm` instead, through `amplifiable_norm_layers` in `detectors/ibd_psc.py`. The substitution is exact at the level of what Eq. (2) does to a single layer's output, since both normalize first and apply the affine map second:
 
@@ -79,7 +79,7 @@ Further deviations, each smaller than the substitution above:
 
 `amplifiable_norm_layers` reverses definition order, matching the released code's `list(reversed(range(layer_num)))`, so element 0 is the layer nearest the head. Definition order equals execution order for torchvision's ViT-B/16 and Swin-S, so the reversal really is depth ordering here. That would not hold for an architecture that declares its modules out of forward order, which is a latent assumption the released code shares and the port inherits rather than fixes.
 
-**The calibrated variant.** The smoke of 2026-09-10 (`docs/runs/2026-09-10-detector-smoke.md`) showed the substitution above is not enough on its own. At the paper's $\omega = 1.5$ a 99%-accurate GTSRB ViT keeps its predictions through every amplified LayerNorm, Algorithm 1 never crosses $\xi$, $k$ falls back to $L$, and every input, clean or poisoned, retains its label at probability 1, so the AUROC is 0.506 with 31% of the validation scores tied at the threshold. `ibd_psc_calibrated` runs Algorithm 1 at each $\omega$ in `CALIBRATION_FACTORS`, 1.5, 2, 3, 5 and 8, and scores at the first $\omega$ whose trace crosses $\xi$, recording the chosen $\omega$ and $k$ in the run's `hyperparameters` under `scaling_factor` and `start_layer_count`. A model the paper's setting already breaks is scored exactly as `ibd_psc` scores it, since 1.5 is tried first. Both names run on the panel, the faithful port so the paper's own setting is on record and the calibrated one so the method gets the amplification its mechanism needs on this architecture.
+**The calibrated variant.** The smoke of 2026-09-10 (`docs/runs/2026-09-10-detector-smoke.md`) showed the substitution above is not enough on its own. At the paper's $\omega = 1.5$ a 99%-accurate GTSRB ViT keeps its predictions through every amplified LayerNorm, Algorithm 1 never crosses $\xi$, $k$ falls back to $L$ and every input, clean or poisoned, retains its label at probability 1, so the AUROC is 0.506 with 31% of the validation scores tied at the threshold. `ibd_psc_calibrated` runs Algorithm 1 at each $\omega$ in `CALIBRATION_FACTORS`, 1.5, 2, 3, 5 and 8 and scores at the first $\omega$ whose trace crosses $\xi$, recording the chosen $\omega$ and $k$ in the run's `hyperparameters` under `scaling_factor` and `start_layer_count`. A model the paper's setting already breaks is scored exactly as `ibd_psc` scores it, since 1.5 is tried first. Both names run on the panel, the faithful port so the paper's own setting is on record and the calibrated one so the method gets the amplification its mechanism needs on this architecture.
 
 ## Hyperparameters
 

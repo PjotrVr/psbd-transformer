@@ -13,7 +13,7 @@
 **Rank 5.** The prompt asks whether the single peakedness of the closed form
 gives the attacker a second way to look benign, by placing poisoned samples at
 the low confidence end rather than the saturated one. The answer is **no for
-PSBD, proved below, and yes for every other detector in our comparison table**.
+PSBD (proved below) and yes for every other detector in our comparison table**.
 That asymmetry is a result and it should be in the paper.
 
 ## The shape of the statistic
@@ -106,7 +106,7 @@ triggered inputs at a mid range target probability. ASR is an arg max question,
 so on CIFAR-100 a triggered sample at $p_{\text{target}} = 0.3$ against a runner
 up at 0.05 is a success.
 
-## Objective, for the version that is optimised rather than scheduled
+## Objective, for the version that is optimized rather than scheduled
 
     original form
         L = L_CE(f(x), y)

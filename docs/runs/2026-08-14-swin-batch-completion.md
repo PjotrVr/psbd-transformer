@@ -30,7 +30,7 @@ The remaining 28 were verified before submission rather than trusted:
 
 ## What it unblocks
 
-Three questions that current Swin data cannot answer at all:
+3 questions that current Swin data cannot answer at all:
 
 1. **[H20](../hypothesis/H20-input-side-beats-residual-adjacent.md)'s family effect on
    Swin.** Only 1 of the 3 placements swept so far is input-side, so the input-side

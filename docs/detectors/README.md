@@ -2,7 +2,7 @@
 
 `detectors/` holds the published input-level backdoor detectors PSBD is compared against, every 1 of them solving the same problem PSBD solves, given a suspicious input and a deployed model, decide whether the input carries a trigger, at the same test-time threat model. Methods that score a whole poisoned training set by clustering its representations, Spectral Signatures, Activation Clustering, SCAn, are out of scope entirely, since they need the training pool and produce a partition of it rather than a per-input decision.
 
-This page is the entry point into the registry, `detectors/__init__.py`'s own docstring, and the shared rules that make a comparison across them meaningful. `docs/detector-ports.md` used to hold the full deviation record for STRIP, SCALE-UP, IBD-PSC and TeCo in 1 file, and that record now lives 1 paper per file under this directory, `strip.md`, `scale_up.md`, `ibd_psc.md`, `teco.md`, alongside the already-finished `cd_l.md` and `beatrix.md`.
+This page is the entry point into the registry, `detectors/__init__.py`'s own docstring and the shared rules that make a comparison across them meaningful. `docs/detector-ports.md` used to hold the full deviation record for STRIP, SCALE-UP, IBD-PSC and TeCo in 1 file and that record now lives 1 paper per file under this directory, `strip.md`, `scale_up.md`, `ibd_psc.md`, `teco.md`, alongside the already-finished `cd_l.md` and `beatrix.md`.
 
 ## Shared rules
 
@@ -23,13 +23,13 @@ This page is the entry point into the registry, `detectors/__init__.py`'s own do
 | `confidence` | none, the null model | max softmax | none | 1 | autocast | cheap |
 | `strip` | Gao et al., ACSAC 2019 | entropy under superimposition | 8 images, unlabelled, from the shared split | 8 | autocast | cheap |
 | `scale_up` | Guo et al., ICLR 2023 | label consistency under pixel amplification | none | 6 | autocast | cheap |
-| `scale_up_data_limited` | Guo et al., ICLR 2023 | the same, standardized per predicted class | the shared split, labelled | 6 | autocast | cheap |
-| `ibd_psc` | Hou et al., ICML 2024 | retained confidence under parameter amplification | the shared split, labelled | 6 | autocast | cheap |
-| `ibd_psc_calibrated` | Hou et al., ICML 2024, omega searched upward | the same at the smallest omega whose Algorithm 1 crosses xi | the shared split, labelled | 6 | autocast | cheap |
+| `scale_up_data_limited` | Guo et al., ICLR 2023 | the same, standardized per predicted class | the shared split, labeled | 6 | autocast | cheap |
+| `ibd_psc` | Hou et al., ICML 2024 | retained confidence under parameter amplification | the shared split, labeled | 6 | autocast | cheap |
+| `ibd_psc_calibrated` | Hou et al., ICML 2024, omega searched upward | the same at the smallest omega whose Algorithm 1 crosses xi | the shared split, labeled | 6 | autocast | cheap |
 | `teco` | Liu et al., CVPR 2023 | spread of corruption hardness thresholds | none | 71 | autocast | teco |
 | `cd_l` | Huang et al., ICLR 2023 | L1 norm of the distilled input mask | none | 251 | autocast, bfloat16 forward and backward with the mask, Adam state and objective in float32, contingent on a smoke pair against float32 | cd_l |
 | `beatrix` | Ma et al., NDSS 2023 | Gram-matrix deviation from class bands | the shared split, unlabelled | 1 | autocast | cheap |
-| `ted` | Mo et al., IEEE S&P 2024 | outlier rank trajectory over depth | the shared split, labelled | 1 | autocast | cheap |
+| `ted` | Mo et al., IEEE S&P 2024 | outlier rank trajectory over depth | the shared split, labeled | 1 | autocast | cheap |
 | `sentinet` | Chou et al., S&P Workshops 2020 | residual above the clean (avgConf, fooled) envelope | 100 images plus the split | 202 | autocast | sentinet |
 
 This is `DETECTOR_NAMES` as `detectors/__init__.py` declares it, 11 entries. `ibd_psc_calibrated` is the 1 registered variant of a faithful port, added after the smoke of 2026-09-10 showed the paper's amplification factor leaves a ViT's predictions intact (`ibd_psc.md`). `bad_expert` is registered under `EXPERIMENTAL_DETECTOR_NAMES` once its smoke run has fixed its settings and never joins a default run or a job until then.
@@ -81,4 +81,4 @@ CIFAR-100 and Tiny ImageNet are the primary datasets this project reports on, an
 | `sentinet.md` | Chou et al., IEEE S&P Workshops (DLS) 2020 | ported, `detectors/sentinet.py` exists, pending `DETECTOR_NAMES` registration |
 | `bad_expert.md` | Xie et al., ICLR 2024, arXiv:2308.12439 | pending, no module and no doc yet |
 
-BaDExpert is the 1 entry here with nothing behind it yet. `docs/paper-proposals.md` names it as the strongest baseline this project does not currently have, the 1 method in the test-time input-detection literature already shown to cover ViT-B/16, and porting it would follow the same pattern as the 8 detectors above, a module under `detectors/`, a registration in `DETECTOR_NAMES`, and a doc under this directory matching the skeleton `cd_l.md` and `beatrix.md` set.
+BaDExpert is the 1 entry here with nothing behind it yet. `docs/paper-proposals.md` names it as the strongest baseline this project does not currently have, the 1 method in the test-time input-detection literature already shown to cover ViT-B/16, and porting it would follow the same pattern as the 8 detectors above: a module under `detectors/`, a registration in `DETECTOR_NAMES` and a doc under this directory matching the skeleton `cd_l.md` and `beatrix.md` set.

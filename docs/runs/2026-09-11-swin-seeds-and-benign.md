@@ -2,7 +2,7 @@
 
 ## Question
 
-The Swin panel gained 3 benign references and 44 training-seed replicates on the night of September 10, and this note asks what those runs say about seed-to-seed spread and which cells can no longer be reported from seed 0 alone. Every number below is read from an `args.json`, a training log or a PBS script, and the path sits beside it in the same table row.
+The Swin panel gained 3 benign references and 44 training-seed replicates on the night of September 10, and this note asks what those runs say about seed-to-seed spread and which cells can no longer be reported from seed 0 alone. Every number below is read from an `args.json`, a training log or a PBS script and the path sits beside it in the same table row.
 
 The bars come from the basis config, and the flag threshold on ASR range was set by the question that commissioned this note. Both are listed here so the verdict columns further down can be checked against their source.
 
@@ -28,7 +28,7 @@ The replicates were trained by the `pbs/swin_trainseed` batch, which is ignored 
 
 ## Benign references
 
-The 3 new Swin references landed in 1 job on September 10, after a first attempt on September 9 died at argparse in every run because the script passed `--output`, which `train_benign.py` does not take (`logs/swin_benign/benign_failed_2026-09-09.log`), and the rerun in `logs/swin_benign/benign.log` trained all 3 in sequence. The ViT references have no seed, commit or date in their sidecars because their `args.json` was backfilled from the PSBD baseline cache, so the ViT column of the difference table carries less provenance than the Swin column.
+The 3 new Swin references landed in 1 job on September 10. A first attempt on September 9 died at argparse in every run because the script passed `--output`, which `train_benign.py` does not take (`logs/swin_benign/benign_failed_2026-09-09.log`), and the rerun in `logs/swin_benign/benign.log` trained all 3 in sequence. The ViT references have no seed, commit or date in their sidecars because their `args.json` was backfilled from the PSBD baseline cache, so the ViT column of the difference table carries less provenance than the Swin column.
 
 | architecture | dataset | clean accuracy | asr field | seed | git commit | trained | source |
 |---|---|---|---|---|---|---|---|
@@ -41,7 +41,7 @@ The 3 new Swin references landed in 1 job on September 10, after a first attempt
 | vit | gtsrb | 0.9913 | 0.0001 | null | null | null | `checkpoints/vit_gtsrb_benign/args.json` |
 | vit | tiny | 0.7549 | 0.0003 | null | null | null | `checkpoints/vit_tiny_benign/args.json` |
 
-Swin is the stronger clean model on 3 of the 4 datasets and the gap widens with class count, while GTSRB is the 1 dataset where ViT is ahead. The difference column is Swin minus ViT, so a positive value favours Swin.
+Swin is the stronger clean model on 3 of the 4 datasets and the gap widens with class count, while GTSRB is the 1 dataset where ViT is ahead. The difference column is Swin minus ViT, so a positive value favors Swin.
 
 | dataset | vit clean accuracy | swin clean accuracy | swin minus vit | source |
 |---|---|---|---|---|
@@ -129,7 +129,7 @@ The seed 0 folders are older than their replicates by the gap in the table below
 | ASR source | PSBD baseline cache re-evaluation | training-time evaluation | `checkpoints/<cell>[_seed_k]/args.json` key `asr_source` |
 | the 2 runs at `b551d5c` | | `swin_gtsrb_adaptive_blend_0_1_seed_1`, `swin_gtsrb_blend_0_1_seed_1` | `checkpoints/swin_gtsrb_*_0_1_seed_1/args.json` |
 
-The new benign references also make the clean accuracy drop bar computable on Swin for the first time, and the breaching cells are listed first in the table below. Both are the CIFAR-10 clean-label cells at the rate that poisons the whole target class, and their drop is about the share of a single class in that dataset, which is what a model that has stopped recognising clean images of the target class would show.
+The new benign references also make the clean accuracy drop bar computable on Swin for the first time, and the breaching cells are listed first in the table below. Both are the CIFAR-10 clean-label cells at the rate that poisons the whole target class, and their drop is about the share of a single class in that dataset, which is what a model that has stopped recognizing clean images of the target class would show.
 
 | cell | swin benign clean accuracy | worst clean accuracy over seeds | worst drop | breaches the drop bar | source |
 |---|---|---|---|---|---|
@@ -162,7 +162,7 @@ The claim that variance concentrates in adaptive_blend and the clean-label attac
 | wanet | 3 | 1 | 0 | spread table above |
 | badnet_a2o, blend, bpp, lf | 12 | 0 | 0 | spread table above |
 
-The `swin_gtsrb_lc_0_1` cell is the clearest case of a single-seed number that must not be cited. Its folder name promises a 10 percent poison rate, but class 0 of the GTSRB training split holds too few images for that and the selection clamps to the whole class, so all 3 seeds trained on the same 150 poisoned images and differ only in initialisation and batch order.
+The `swin_gtsrb_lc_0_1` cell is the clearest case of a single-seed number that must not be cited. Its folder name promises a 10 percent poison rate, but class 0 of the GTSRB training split holds too few images for that and the selection clamps to the whole class, so all 3 seeds trained on the same 150 poisoned images and differ only in initialization and batch order.
 
 | seed | ASR | clean accuracy | requested rate | realized rate | poisoned images | training pool | source |
 |---|---|---|---|---|---|---|---|
@@ -175,7 +175,7 @@ Any claim that Label-Consistent implants on Swin GTSRB rests, at seed 0, on an u
 
 ## Seed replicates on ViT
 
-The ViT panel does carry seed replicates, from 4 training batches, and the table lists every cell that has at least 1 `_seed_k` folder with the batch that trained it. The GTSRB SIG `_tl1` cells and the SVHN and EuroSAT probes are listed for completeness only, since other notes analyse them, and the ASR per seed is given to 3 decimals with the range to 4 so a value near the flag threshold can be placed on the correct side.
+The ViT panel does carry seed replicates, from 4 training batches and the table lists every cell that has at least 1 `_seed_k` folder with the batch that trained it. The GTSRB SIG `_tl1` cells and the SVHN and EuroSAT probes are listed for completeness only, since other notes analyze them and the ASR per seed is given to 3 decimals with the range to 4 so a value near the flag threshold can be placed on the correct side.
 
 | batch | cells | replicate folders | seeds added | source |
 |---|---|---|---|---|

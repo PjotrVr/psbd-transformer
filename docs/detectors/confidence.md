@@ -1,6 +1,6 @@
 # Confidence, the max-softmax null model
 
-Confidence is the maximum softmax probability the model assigns to any class, negated so low means poisoned. There is no paper behind it and no released code to port. It exists as the floor every other detector in this registry has to clear, because a method that cannot separate itself from a single forward pass and a max is reading calibration rather than detecting backdoors. This page records the statistic, why it earns a place in the registry despite citing nothing, what the port under `detectors/confidence.py` does, and where it currently stands.
+Confidence is the maximum softmax probability the model assigns to any class, negated so low means poisoned. There is no paper behind it and no released code to port. It exists as the floor every other detector in this registry has to clear, because a method that cannot separate itself from a single forward pass and a max is reading calibration rather than detecting backdoors. This page records the statistic, why it earns a place in the registry despite citing nothing, what the port under `detectors/confidence.py` does and where it currently stands.
 
 ## Why the null model
 

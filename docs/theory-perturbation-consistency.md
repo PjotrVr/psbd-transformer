@@ -397,7 +397,7 @@ learned. That is a checkable claim, and this project checked it head on rather
 than inheriting it.
 
 Measured on `vit_cifar100_badnet_a2o_0_01` at the adaptively selected rate
-(`notebooks/06-psbd-end-to-end.ipynb`), over shifted clean predictions:
+(`notebooks/psbd-end-to-end.ipynb`), over shifted clean predictions:
 
 | quantity | value |
 |---|---:|

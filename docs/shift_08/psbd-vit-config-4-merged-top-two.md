@@ -1,4 +1,4 @@
-# PSBD-ViT: merged top two at sigma 0.8 (before_attention_norm_token_mask + before_attention_residual_token_mask)
+# PSBD-ViT: merged top 2 at sigma 0.8 (before_attention_norm_token_mask + before_attention_residual_token_mask)
 
 > **Superseded.** Written against the 48-cell panel. The current numbers are in
 > `paper/` and the panel accounting is in `results/coverage/COVERAGE.md`. Retained
@@ -7,7 +7,7 @@
 A **fused** configuration. Its members are swept separately and combined at the score
 level with the min-rank rule against the clean-validation reference, so a sample is
 flagged when ANY member finds it suspicious. This needs no extra training and no extra
-checkpoint, only one more perturbation sweep per member at inference time.
+checkpoint, only 1 more perturbation sweep per member at inference time.
 
 Members:
 
@@ -19,9 +19,9 @@ shift ratio lands nearest **0.8**, so everything below is measured at
 matched disturbance rather than at a shared nominal rate.
 
 Columns: **ASR** attack success rate and **CA** clean accuracy of the poisoned model,
-both from the checkpoint's own provenance; **CA benign** the same-dataset benign ViT and
-**dCA** the difference, so an attack that buys success by wrecking the model is visible;
-**AUROC**; and **TPR** at the 10% and 20% false-positive operating points.
+both from the checkpoint's own provenance. **CA benign** the same-dataset benign ViT and
+**dCA** the difference, so an attack that buys success by wrecking the model is visible.
+**AUROC** and **TPR** at the 10% and 20% false-positive operating points.
 
 Only cells whose attack actually implanted (ASR >= 0.85) appear. A `--` is an unmeasured
 cell, never a failure.

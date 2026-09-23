@@ -1,7 +1,7 @@
 # Out-of-sample test of the inverted H10 rule
 
 Registered at commit `4662187af48745e2f48e9a0362c82825f5f464f7`, **before any band job for these
-two checkpoints was submitted**.
+2 checkpoints was submitted**.
 
 ## The rule under test
 
@@ -28,7 +28,7 @@ derivation set, so the rule extrapolates rather than interpolates.
 
 ## Falsification
 
-The rule is refuted if the predicted band is not the best of the three for either
+The rule is refuted if the predicted band is not the best of the 3 for either
 checkpoint. A weaker pass would be the predicted band merely beating all-blocks.
 
 ## Result

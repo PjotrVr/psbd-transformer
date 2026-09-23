@@ -8,7 +8,7 @@ PSBD's premise is that a trigger is a **constant, content-independent shortcut**
 perturbed prediction stays pinned because the shortcut never has to read the image,
 while clean predictions lose their features and drift. all_to_one satisfies that
 premise exactly. all_to_all violates it exactly: `(y + 1) mod K` forces the model to
-recognise the source class before it can increment, so the backdoor pathway inherits
+recognize the source class before it can increment, so the backdoor pathway inherits
 and then exceeds the clean pathway's fragility and the detector inverts.
 
 That is already established on both architectures. `docs/all-to-all-inversion.md`
@@ -55,7 +55,7 @@ rather than about how much the map must read.
 | gtsrb | 43 | 2, 4, 8, 16, 32 | 10% | 5 |
 
 34 new cells in 9 jobs, ViT-B/16, 15 epochs, seed 0, target 0. CIFAR-100 and Tiny
-carry both rates because they are the primary panel; CIFAR-10 and GTSRB are completion
+carry both rates because they are the primary panel. CIFAR-10 and GTSRB are completion
 only and get the rate at which both poles reliably implant.
 
 Each job trains and then sweeps each of its cells in the same job, so no cell is ever
@@ -68,5 +68,5 @@ anywhere: every cell here is a new checkpoint, so there is nothing legitimate to
 ASR gates the whole thing. all_to_all already costs ASR (0.842 against 1.000 for
 all_to_one on CIFAR-10) because a rotation contests the margin, so ASR is expected to
 fall with m. A cell whose attack did not implant is reported as **attack failed to
-implant**, never as a detection result, and the AUROC curve is only read over cells
+implant**, never as a detection result. The AUROC curve is only read over cells
 that cleared ASR 0.5.
