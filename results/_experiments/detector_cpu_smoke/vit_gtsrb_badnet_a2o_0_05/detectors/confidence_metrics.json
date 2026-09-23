@@ -1,0 +1,133 @@
+{
+  "detector": "confidence",
+  "status": "scored",
+  "folder_name": "vit_gtsrb_badnet_a2o_0_05",
+  "dataset": "gtsrb",
+  "attack": "badnet_a2o",
+  "poison_rate": 0.05,
+  "architecture": "vit",
+  "probe_attack": "badnet_a2o",
+  "probe_target_label": 0,
+  "label_mode": "all_to_one",
+  "headline_quantile": 0.25,
+  "detection": {
+    "q0.01": {
+      "quantile": 0.01,
+      "threshold": -0.9998098015785217,
+      "tpr": 0.0,
+      "fpr": 0.007751937955617905,
+      "auroc": 0.718932901760919,
+      "auroc_two_sided": 0.718932901760919,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0024999999441206455,
+      "tpr_interpolated": 0.0
+    },
+    "q0.05": {
+      "quantile": 0.05,
+      "threshold": -0.9997559189796448,
+      "tpr": 0.0,
+      "fpr": 0.050198525190353394,
+      "auroc": 0.718932901760919,
+      "auroc_two_sided": 0.718932901760919,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0020000000949949026,
+      "tpr_interpolated": 0.0
+    },
+    "q0.10": {
+      "quantile": 0.1,
+      "threshold": -0.9997010827064514,
+      "tpr": 0.0,
+      "fpr": 0.08772925287485123,
+      "auroc": 0.718932901760919,
+      "auroc_two_sided": 0.718932901760919,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.003000000026077032,
+      "tpr_interpolated": 0.0
+    },
+    "q0.15": {
+      "quantile": 0.15,
+      "threshold": -0.9996047616004944,
+      "tpr": 9.45358260651119e-05,
+      "fpr": 0.14256003499031067,
+      "auroc": 0.718932901760919,
+      "auroc_two_sided": 0.718932901760919,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.001500000013038516,
+      "tpr_interpolated": 0.00018907165815844205
+    },
+    "q0.20": {
+      "quantile": 0.2,
+      "threshold": -0.9995092153549194,
+      "tpr": 0.05662696063518524,
+      "fpr": 0.20032142102718353,
+      "auroc": 0.718932901760919,
+      "auroc_two_sided": 0.718932901760919,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.0005000000237487257,
+      "tpr_interpolated": 0.05498203819247497
+    },
+    "q0.25": {
+      "quantile": 0.25,
+      "threshold": -0.9994237422943115,
+      "tpr": 0.4531102180480957,
+      "fpr": 0.25553035736083984,
+      "auroc": 0.718932901760919,
+      "auroc_two_sided": 0.718932901760919,
+      "direction": "as_expected",
+      "tie_share_at_threshold": 0.001500000013038516,
+      "tpr_interpolated": 0.4186991869918698
+    }
+  },
+  "detection_captured_only": null,
+  "provenance": {
+    "git_commit": "039fc6fea9212f8f6d49218ed14b336aa8f6a0d3-dirty",
+    "scored_at": "2026-09-23T13:27:47.895057+00:00",
+    "device": "cpu",
+    "precision": "float32",
+    "batch_size": 64,
+    "max_samples": null,
+    "forward_passes_per_input": 1,
+    "data_requirement": "none",
+    "needs_fitting": false,
+    "cross_fitted": false,
+    "hyperparameters": {},
+    "runtime_seconds": {
+      "fit": 4.258006811141968e-06,
+      "validation": 116.25365263409913,
+      "clean": 676.1272297482938,
+      "backdoor": 664.7315158136189
+    },
+    "split": {
+      "seed": 0,
+      "n_validation": 2000,
+      "n_clean": 10630,
+      "n_backdoor": 10578,
+      "n_backdoor_captured": null,
+      "manifest_sha256": "e5884244adccc40ab7ff667418783a20509d4094f33dc07cb216b5c957ccba26",
+      "manifest_matches_psbd_cache": null
+    },
+    "score_summary": {
+      "validation": {
+        "n": 2000,
+        "mean": -0.9847391247749329,
+        "std": 0.07213331758975983,
+        "min": -0.9998503923416138,
+        "max": -0.21646367013454437
+      },
+      "clean": {
+        "n": 10630,
+        "mean": -0.9853456616401672,
+        "std": 0.06984879076480865,
+        "min": -0.9998574256896973,
+        "max": -0.21193569898605347
+      },
+      "backdoor": {
+        "n": 10578,
+        "mean": -0.9993919134140015,
+        "std": 0.00010884072980843484,
+        "min": -0.9996143579483032,
+        "max": -0.9979339838027954
+      }
+    }
+  }
+}
