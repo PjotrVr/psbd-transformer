@@ -1,13 +1,64 @@
 # PSBD-ViT
 
-Prediction Shift Backdoor Detection adapted from ConvNets to Vision
-Transformers (ViT-B/16 and Swin-S). Evaluated on CIFAR-10, CIFAR-100,
-GTSRB, and Tiny ImageNet against 10 backdoor attacks, including an
-adaptive attacker that knows the defence.
+Prediction Shift Backdoor Detection (PSBD) adapted from ConvNets to Vision
+Transformers. The method flags a poisoned input by how little its prediction moves
+when the network is perturbed at inference. It was designed for ResNets, where the
+residual stream is the one obvious place to put that perturbation. A transformer
+block offers many places and many kinds of perturbation, and this project measures
+which choice works.
 
-## Key findings
+Models are ViT-B/16 and Swin-S. The panel covers CIFAR-10, CIFAR-100, GTSRB, Tiny
+ImageNet, SVHN and EuroSAT against 10 backdoor attacks, including an adaptive
+attacker trained against the defense.
 
-Research project adapting Prediction Shift Backdoor Detection (PSBD) from ConvNets to Vision Transformers (ViT-B/16 and Swin-S). The project's founding claim, that dropout placed **before** the residual add beats placing it after, is **refuted** ([H1](docs/hypothesis/H1-pre-beats-post.md)): measured at matched shift ratio, the pre-versus-post gap is **+0.002**, indistinguishable from noise ([H20](docs/hypothesis/H20-input-side-beats-residual-adjacent.md)). What the evidence supports instead is a search result. Where the perturbation is injected dominates what is injected (position variance 1.43x operator variance), and the split that carries the effect is input-side against residual-adjacent, **+0.054** mean AUROC with bootstrap CI [+0.031, +0.080], with both pre-residual and post-residual sitting in the losing family. The recommended deployment configuration is `token_mask` at `before_attention_norm`, which gains **+0.089** mean AUROC over the published ConvNet placement at matched clean-validation shift ratio 0.6 across the full 48-cell panel, stable at +0.081 to +0.103 across shift ratios 0.2 to 0.8, and on CIFAR-100 at 1% poisoning specifically **+0.166** (n=4). Its absolute numbers are mean AUROC 0.911, worst-case floor 0.632, 0 inversions over 48/48 cells. An earlier headline of +0.258 for `gain_scale` at `mlp_norm_out` is **withdrawn**: it read the winner at shift ratio 0.95 to 0.98 and the baseline at 0.65 to 0.76, a disturbance gap the same size as the reported effect, and at matched shift ratio over the full panel that arm beats the published placement by **-0.007** ([the audit](docs/audit-2026-09-07.md)). The mechanism underneath is decision-margin estimation. The direct evidence is that no shifted clean prediction lands on the attacker's target class, against a uniform expectation of 1%, so the neuron-bias account in the original PSBD paper is not what carries the method on ViT. H23's supporting claim is restated after the batch-coupled Gaussian was corrected and its cells re-swept: gaussian at `before_attention` scores **0.897**, not the withdrawn 0.950, which places it 6th rather than 1st but still within 0.002 of `channel_mask` and above `dropout` at `pre_residual` ([audit A19](docs/audit-2026-09-07.md)). An operator removing no capacity remains competitive with ones that do, which is the claim that refutes the capacity-removal account. Validated on CIFAR-10, CIFAR-100, GTSRB and Tiny ImageNet. Full numbers in `docs/results-report.md`, verdicts in `docs/hypothesis/README.md`.
+**The paper is the record.** `paper/` holds the draft, its generated tables and its
+figures, all built from `results/` by `scripts/paper/`. No number in it is typed by
+hand. `docs/open-questions.md` lists what the evidence does not yet support.
+
+## The result
+
+Where the perturbation goes decides whether the method works at all. Masking whole
+tokens at the input of every attention block reaches a mean AUROC of **0.935**
+against **0.832** for the placement the original paper used, dropout on the residual
+stream after the add. That is a paired gain of **+0.103** with a 95% bootstrap
+interval of [+0.048, +0.160] over the models that carry the full basis, and the gain
+grows as poisoning falls, which is the regime a defender cares about most.
+
+Position and operator both matter and neither reduces to the other. Holding the site
+fixed and swapping token masking for Gaussian noise costs **0.206**. Holding the
+operator fixed and moving from the attention input to the MLP input costs **0.109**.
+The project's founding claim, that dropout before the residual add beats dropout
+after it, is **refuted** at matched shift ratio
+([H1](docs/hypothesis/H1-pre-beats-post.md)).
+
+The reason is mechanical. A backdoor in a ViT is 1 direction in the residual stream,
+written in the last third of the network and routed through attention from the
+trigger's own tokens to the class token. Removing whole tokens before attention
+removes that route. Noise at the same site is absorbed by the LayerNorm behind it.
+
+The original paper's account, that perturbation shifts clean predictions toward the
+attacker's target class, holds on ViT only for local triggers on datasets with few
+classes. It is absent for global triggers such as Blend and TaCT, while detection
+works in both cases, so that account is attack dependent on ViT rather than the
+mechanism. An earlier headline of +0.258 for `gain_scale` at `mlp_norm_out` stays
+**withdrawn** ([the audit](docs/audit-2026-09-07.md)).
+
+### The panel, and what it excludes
+
+Read from `results/coverage/COVERAGE.md`, the tracked view of the coverage ledger.
+
+| | cells |
+|---|---:|
+| trained | 105 |
+| diverged, clean accuracy below half the benign reference | 3 |
+| below the attack success bar of 0.85 | 31 |
+| clearing the bar | 71 |
+| of those, carrying 18 or more basis placements | 65 |
+
+The headline reads on those 65. 2 of them invert, both on CIFAR-10 at 10% poisoning.
+Adaptive-Blend never clears the attack success bar at any rate, so no Adaptive-Blend
+model enters the detection numbers despite being the 1 attack in the set built to
+evade this kind of detector.
 
 ## Installation
 
@@ -127,17 +178,30 @@ and `check_prose_only.py`.
 
 ## Competitor detectors
 
-`python -m cli.baselines` scores STRIP, SCALE-UP, IBD-PSC, TeCo, CD-L,
-Beatrix, TED and SentiNet on exactly the PSBD splits and quantiles.
-`python -m cli.compare_detectors` reads those records beside PSBD's own and
-writes the like-for-like comparison table. See `docs/detectors/README.md`
-for the registry, the on-disk layout and each port's cross-check against its
+`python -m cli.baselines` scores 11 registered detectors on exactly the PSBD
+splits and quantiles: `confidence`, `strip`, `scale_up`,
+`scale_up_data_limited`, `ibd_psc`, `ibd_psc_calibrated`, `teco`, `cd_l`,
+`beatrix`, `ted` and `sentinet`. Every one returns low for poisoned, with at
+most 1 negation at its own scoring boundary. The 3 that fit per-sample
+statistics on the validation split return out-of-fit scores for it and are
+listed in `detectors.CROSS_FITTED`.
+
+`python -m cli.compare detectors` reads those records beside PSBD's own and
+writes the like-for-like comparison table. `docs/detectors/README.md` holds the
+registry, the on-disk layout and each port's numerical cross-check against its
 reference implementation.
 
 ## Attacks
 
-BadNet (all-to-one and all-to-all), Blend, SIG, WaNet, LF, LC, BPP,
-Adaptive-Blend, TaCT. All implementations in `attacks/`.
+10 attacks, all implemented in `attacks/` behind 1 registry
+(`ATTACK_NAMES`, `build_attack`, `default_config`): BadNet in both label modes
+(all-to-one and all-to-all), Blend, SIG, WaNet, LF, Label-Consistent, BPP,
+Adaptive-Blend and TaCT.
+
+SIG and Label-Consistent are clean label, so they can only poison the target
+class and their reachable poison rate is that class's share of the training set.
+`docs/clean-label-rate-caps.md` records the cap per dataset and why GTSRB
+clean-label runs use target class 1.
 
 ## Reproducing results
 
@@ -147,7 +211,7 @@ produce per-checkpoint job scripts. The two-stage pipeline:
 1. `python -m cli.sweep` runs on GPU, writes raw per-pass probabilities
 2. `python -m cli.analyze` runs on CPU, reads cached data, writes psbd_metrics.json
 
-The compact, versioned record is `results/detection_summary.csv.gz`, one row
+The compact, versioned record is `results/detection_summary.csv.gz`, 1 row
 per (checkpoint, placement, rate rule), regenerated with `python -m cli.summary`.
 Each checkpoint's own `results/<checkpoint>/psbd_metrics.json` is regenerable
 from the stage-1 cache and is not versioned.
@@ -156,7 +220,7 @@ For the adaptive attacker experiments, `python -m cli.train_backdoor --evade-psb
 trains evasive models, with `--evade-position`, `--evade-operator` and
 `--evade-weight` selecting the probe it trains against. Analysis scripts in
 `experiments/adaptive_attack/`, `experiments/multi_probe/`, and
-`experiments/adaptive_defender/` produce the transfer, multi-probe, and forensic
+`experiments/adaptive_defender/` produce the transfer, multi-probe and forensic
 identification results.
 
 ## Hypothesis register
@@ -178,8 +242,54 @@ Every hypothesis is pre-registered in `docs/hypothesis/` with predictions,
 methodology, and verdicts. See `docs/hypothesis/README.md` for the full index
 and reporting standards.
 
-## Results
+## The paper
 
-Full detection tables, operating point analysis, and the adaptive defender
-protocol are in `docs/results/`. The top-level report is
-`docs/results-report.md`.
+`paper/` is the record. Everything in it is generated from `results/` by the
+generators under `scripts/paper/`, and `paper/headline.tex` holds every headline
+number as a macro with its own provenance comment.
+
+```bash
+cd paper
+make tables     # rerun every generator, fold the macro sidecars into headline.tex
+make            # compile main.pdf with tectonic
+```
+
+`make tables` refuses to finish when a section types a digit outside a macro, a
+citation, a reference, an input path or a year. That guard is what keeps the
+compiled paper and the results tree from drifting apart.
+
+tectonic is the only TeX on this cluster and it lives at
+`~/.local/bin/tectonic`, fetching its packages through the proxy on first use.
+There is no system LaTeX, so `pdflatex` and `latexmk` will not work.
+
+## Checks
+
+```bash
+.venv/bin/python -m pytest tests -q          # the suite
+.venv/bin/ruff format <files> && .venv/bin/ruff check <files>
+.venv/bin/python scripts/prose_audit.py <paths>        # the style rules
+.venv/bin/python scripts/prose_audit.py --gate <paths> # exit 1 on any hit
+```
+
+`prose_audit.py` reads Python comments and docstrings, markdown bodies and LaTeX
+sections, and checks the rules in `.claude/styles/`: no semicolons, no em dashes,
+no arrows, no Oxford comma, digits rather than number words and American English
+spelling.
+
+## Notebooks
+
+`notebooks/` is the guided tour and is committed with its outputs. It follows the
+paper rather than the package layout. Start at `00-start-here.ipynb`. Run them
+from the repository root so the packages import:
+
+```bash
+PYTHONPATH=. .venv/bin/jupyter lab
+```
+
+## Older reports
+
+`docs/` holds the working record: `docs/hypothesis/` has every pre-registered
+hypothesis with its verdict, `docs/runs/` has the training and sweep logs and
+`docs/detectors/` documents each port. Several documents under `docs/results/`
+predate the current panel and still quote the retired 48-cell numbers, so treat
+`paper/` as authoritative wherever the 2 disagree.

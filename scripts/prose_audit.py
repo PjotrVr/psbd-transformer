@@ -53,7 +53,8 @@ NUMBER_IDIOMS = re.compile(
     r"\b(one another|no one|one of\b|every one|not one|the one\b|each one|which one|"
     r"this one|that one|other one|any one|a single one|clean one|confident one|"
     r"same one|first one|last one|wrong one|right one|new one|old one|one-|two-|"
-    r"three-|one\'s|someone|anyone|everyone|none)",
+    r"three-|one\'s|someone|anyone|everyone|none|all-to-one|to-one\b|one-sided|"
+    r"one another)",
     re.IGNORECASE,
 )
 # British spellings and their American forms. The project writes American English,
