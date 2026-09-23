@@ -1,0 +1,2 @@
+- [Non-adaptive attack request](project_nonadaptive_attack_request.md) — mentor wants a non-adaptive attack that breaks PSBD; adaptive-loss attacks are out of scope
+- [literature/ folder layout](reference_literature_folder.md) — gitignored PDF library, annotated README, no pdftotext on the cluster

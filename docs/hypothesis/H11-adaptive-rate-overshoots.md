@@ -1,6 +1,6 @@
-# H11 — PSBD's adaptive dropout-rate rule overshoots on ViT
+# H11: PSBD's adaptive dropout-rate rule overshoots on ViT
 
-**Status: SUPPORTED.** 12 of 12 checkpoints, for the placements that matter, and the
+**Status: SUPPORTED.** 12 of 12 checkpoints (for the placements that matter), and the
 fix is free.
 
 ## Claim
@@ -15,7 +15,7 @@ table.
 
 Mean AUROC over the 12 backdoored CIFAR-10 checkpoints with a working attack
 (`badnet_a2a` excluded, it fails at every placement), at the 25th-percentile
-threshold. "Adaptive" is the rate the paper's rule selects; "oracle" is the best rate
+threshold. "Adaptive" is the rate the paper's rule selects. "oracle" is the best rate
 in hindsight, an upper bound that reads the poison labels and is reported only as a
 ceiling.
 
@@ -29,7 +29,7 @@ ceiling.
 | `after_mlp_residual` | 0.826 | 0.856 | 0.030 | 6 / 12 |
 
 The direction is one-sided: where the rule misses, it almost always picks a rate
-**larger** than the optimum, never smaller. For the two best-known placements it
+**larger** than the optimum, never smaller. For the 2 best-known placements it
 overshoots on every single checkpoint.
 
 Measuring where the optimum actually sits: across the 12 checkpoints, the oracle rate
@@ -44,7 +44,7 @@ as defender-legal as the original, and recovers roughly 0.09 AUROC on the placem
 where the loss is largest.
 
 It also explains a pattern visible throughout this study: the adaptive and oracle
-rates differ by consistently one step of the rate grid (`pre_residual` adaptive 0.5
+rates differ by consistently 1 step of the rate grid (`pre_residual` adaptive 0.5
 against oracle 0.4, over and over). That is not noise in rate selection, it is a
 mistuned constant.
 
@@ -52,8 +52,8 @@ mistuned constant.
 
 The shift ratio is a measure of how much the perturbation disturbed the model, and
 how much a given `p` disturbs a network depends on its depth. ResNet-18 has 8 residual
-adds; ViT-B/16 has 24. A target calibrated so that "the model is disturbed enough but
-not destroyed" on one architecture will sit on the far side of that balance on a
+adds. ViT-B/16 has 24. A target calibrated so that "the model is disturbed enough but
+not destroyed" on 1 architecture will sit on the far side of that balance on a
 deeper one. This is the same depth argument that put `post_residual`'s whole operating
 window an order of magnitude below the inherited rate grid
 ([H9](H9-strength-not-position.md)).
@@ -74,7 +74,7 @@ oracle rate.
 
 ## Subquestions
 
-1. Fit the target on two attacks, test on the other two. Does a single retuned
+1. Fit the target on 2 attacks, test on the other 2. Does a single retuned
    constant generalize, or is the optimal sigma attack-dependent?
 2. Does the optimal sigma scale with depth in the way the argument predicts? Swin has
    24 blocks against ViT's 12, so it should sit lower still. That is the cleanest

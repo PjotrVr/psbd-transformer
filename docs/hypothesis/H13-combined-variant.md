@@ -1,7 +1,7 @@
-# H13 — The accumulated changes combine into a materially better defence
+# H13: The accumulated changes combine into a materially better defense
 
 **Status: SUPPORTED, and confirmed out of sample.** +0.110 mean AUROC on the
-derivation set (14/15), and **+0.151 on two held-out attacks (2/2)**.
+derivation set (14/15), and **+0.151 on 2 held-out attacks (2/2)**.
 
 > **Verified against the coverage confound, and clean.** H13 is a *paired*
 > comparison: 2 configurations scored on the same 15 checkpoints, reported as
@@ -19,7 +19,7 @@ derivation set (14/15), and **+0.151 on two held-out attacks (2/2)**.
 >
 > | placement | delta vs `psbd_paper` | wins | paired vs H13 default |
 > |---|---|---|---|
-> | `pre_residual_blocks_5_8` (H13) | **+0.110** | 14/15 | -- |
+> | `pre_residual_blocks_5_8` (H13) | **+0.110** | 14/15 | n/a |
 > | `before_attention_norm` | +0.128 | 15/15 | +0.017, **1.1 SE**, better on 7/15 |
 > | `before_attention` | +0.081 | 13/15 | -0.029, 1.4 SE |
 > | `after_embedding` | +0.055 | 11/15 | -0.055, 2.3 SE |
@@ -28,11 +28,11 @@ derivation set (14/15), and **+0.151 on two held-out attacks (2/2)**.
 > held-out pair the H13 default is clearly better (+0.151 against +0.081).
 >
 > **A cheaper estimate of this said the opposite and was wrong.** Comparing the same
-> placements on the cached `adaptive` block gave +0.055 at 3.2 SE in favour of the
-> swap. That block uses absolute PSU, shift target 0.8 and a one-sided rule; H13's
-> variant changes all 3. A paired comparison under one configuration does not predict
+> placements on the cached `adaptive` block gave +0.055 at 3.2 SE in favor of the
+> swap. That block uses absolute PSU, shift target 0.8 and a one-sided rule. H13's
+> variant changes all 3. A paired comparison under 1 configuration does not predict
 > another, and the only way to settle it was to run the variant. Recorded because the
-> estimate was cheap, confident, and misleading.
+> estimate was cheap, confident and misleading.
 
 > **Generalizes to 3 new datasets.** H13 was derived entirely on CIFAR-10. The sweep
 > has since produced 33 backdoored checkpoints on other datasets, which are pure
@@ -43,7 +43,7 @@ derivation set (14/15), and **+0.151 on two held-out attacks (2/2)**.
 > | CIFAR-10 (derivation) | 35 | +0.054 | 25/35 | -0.210 | +0.396 |
 > | **CIFAR-100** | 21 | **+0.206** | **21/21** | +0.043 | +0.687 |
 > | Tiny ImageNet | 11 | +0.042 | 10/11 | -0.031 | +0.140 |
-> | GTSRB | 1 | -0.028 | 0/1 | -- | -- |
+> | GTSRB | 1 | -0.028 | 0/1 | n/a | n/a |
 > | **all non-CIFAR-10** | **33** | **+0.145** | **31/33** | | |
 >
 > **Matched on attack strength, the pattern holds and explains itself.** The datasets
@@ -57,7 +57,7 @@ derivation set (14/15), and **+0.151 on two held-out attacks (2/2)**.
 > | Tiny ImageNet | 11 | **0.929** | 0.972 | +0.043 | 10/11 |
 >
 > The gain tracks the **headroom**, not the dataset: where the published method is
-> weakest (CIFAR-100, 0.731) the variant gains most, and where it is already strong
+> weakest (CIFAR-100 at 0.731) the variant gains most, and where it is already strong
 > (Tiny ImageNet, 0.929) there is little left to win. The baseline does not collapse
 > anywhere, so this is the variant improving rather than the comparison flattering it.
 > The matched CIFAR-10 figure, +0.119, also lands close to the originally published
@@ -66,14 +66,14 @@ derivation set (14/15), and **+0.151 on two held-out attacks (2/2)**.
 > CIFAR-100 is a clean sweep, 21 of 21, at nearly double the derivation-set effect.
 > GTSRB has 1 checkpoint and decides nothing. Note the CIFAR-10 figure has fallen from
 > +0.110 on the original 15 to +0.054 on 35, because the sweep has since added harder
-> CIFAR-10 checkpoints (low poison rates, weak attacks); the variant still wins 25 of
+> CIFAR-10 checkpoints (low poison rates, weak attacks). The variant still wins 25 of
 > them, and the 2 numbers are not comparable to each other for the coverage reason
 > [H19](H19-placement-ranking-is-rate-selection.md) describes.
 
 ## Claim
 
-Each earlier hypothesis moved one knob in isolation. Assembled into a single
-runnable defence, and scored **without ever looking at a poison label**, they should
+Each earlier hypothesis moved 1 knob in isolation. Assembled into a single
+runnable defense, and scored **without ever looking at a poison label**, they should
 beat PSBD as published.
 
 | | `psbd_paper` | `psbd_vit` | from |
@@ -129,7 +129,7 @@ Almost entirely from the cases the published method handles worst. On `blend` an
 `badnet_a2o` at 1% poisoning it is +0.344, taking the method from **worse than
 chance** (0.297) to usable.
 
-Four of the fifteen rows show `psbd_paper` scoring **below 0.5**, i.e. the published
+4 of the fifteen rows show `psbd_paper` scoring **below 0.5**, i.e. the published
 one-sided rule actively anti-correlates on all-to-all and on low-poison-rate patch
 triggers. That is what the two-sided rule fixes.
 
@@ -148,7 +148,7 @@ alone would not have surfaced it.
 ## Held-out confirmation
 
 `sig` and `lc` at 10% poisoning. Neither was used to choose the band, the shift
-target, or anything else; both were excluded from every earlier grid for failing at
+target, or anything else. Both were excluded from every earlier grid for failing at
 lower poison rates.
 
 | checkpoint | ASR | paper AUROC | paper TPR | vit AUROC | vit TPR | delta |
@@ -158,15 +158,15 @@ lower poison rates.
 | **mean** | | 0.708 | | **0.859** | | **+0.151** |
 
 **2 of 2, and the mean gain is larger than on the derivation set** (+0.151 against
-+0.110). `lc` is the striking one: the published configuration sits at 0.515, i.e.
++0.110). `lc` is the striking 1: the published configuration sits at 0.515, i.e.
 chance, and the adapted one reaches 0.786.
 
-So the two fitted choices are not overfitted. The improvement transfers to attacks
+So the 2 fitted choices are not overfitted. The improvement transfers to attacks
 that had no influence on them.
 
 ## Honest limitations
 
-- **Two of the four changes were fitted on the derivation set.** The blocks 5-8 band
+- **2 of the 4 changes were fitted on the derivation set.** The blocks 5-8 band
   and the 0.7 shift target were chosen after seeing those results, which is why the
   held-out column above exists and is the one to quote.
 - `psbd_paper` is given the *extended* rate grid (down to 0.005), which the published
@@ -185,8 +185,8 @@ python psbd_variants.py --held-out vit_cifar10_sig_0_1 vit_cifar10_lc_0_1
 
 ## Subquestions
 
-1. Ablate the four changes one at a time to see how much each contributes to the
+1. Ablate the 4 changes 1 at a time to see how much each contributes to the
    +0.110. The band and the two-sided rule are the likely carriers.
 2. Does the advantage survive on SAM-trained models, and on Swin?
-3. What is the clean-accuracy cost of perturbing blocks 5-8 at p=0.8? A defence is
+3. What is the clean-accuracy cost of perturbing blocks 5-8 at p=0.8? A defense is
    only usable if that cost is bounded, and it has not been measured.

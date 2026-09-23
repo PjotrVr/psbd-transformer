@@ -1,0 +1,2 @@
+- [Multi-agent concurrent repo](project_multi_agent_concurrent_repo.md) — freeze files with git show before testing; expect slow/contended pytest runs from other sessions
+- [Paper build gate and prose_audit gaps](project_paper_build_gate_and_prose_audit_gaps.md) — scripts/paper/build_all.py and scripts/prose_audit.py have zero test coverage; verify by running, not reading

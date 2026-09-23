@@ -1,4 +1,4 @@
-# H2 — PSBD works on ViT at all, and gives chance-level results on benign models
+# H2: PSBD works on ViT at all, and gives chance-level results on benign models
 
 **Status: SUPPORTED**
 
@@ -37,7 +37,7 @@ wearing a backdoor-detector costume.
 
 *Backdoored, best placement, AUROC at the 25th-percentile threshold:* `blend`
 0.978 to 0.986, `bpp` 0.964 to 0.995, `lf` 0.887 to 0.947, `badnet_a2o` 0.686 to
-0.889. Well above chance on all four.
+0.889. Well above chance on all 4.
 
 *Benign control:* `vit_cifar10_benign` probed with the same BadNet trigger scores
 **0.506** (post-residual) and **0.503** (pre-residual). Chance, to within noise.
@@ -50,7 +50,7 @@ benign model's relative backdoor-direction norm peaks at 0.089 and *decays* with
 depth, against 1.0 to 2.2 growing monotonically for every backdoored model, and its
 clean-vs-triggered CKA at layer 12 is 0.998 against 0.118 to 0.419.
 
-One attack is the exception and it is not a failure of this hypothesis:
+1 attack is the exception and it is not a failure of this hypothesis:
 `badnet_a2a` scores 0.51 to 0.60 despite ASR 0.94 to 0.96. See
 [H5](H5-all-to-all-breaks-psbd.md).
 
@@ -64,8 +64,8 @@ python psbd_analyze.py --checkpoint-folder vit_cifar10_benign
 
 ## Subquestions
 
-1. The floor came out at 0.506, so essentially nothing needs subtracting. But it
-   was measured with one trigger on one benign model; a patch trigger is a larger
+1. The floor came out at 0.506, so almost nothing needs subtracting. But it
+   was measured with 1 trigger on 1 benign model. A patch trigger is a larger
    input perturbation than BPP's quantization, so the floor could differ by trigger
    and each should get its own.
 2. Does the benign floor differ by trigger? A patch trigger is a larger input

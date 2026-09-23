@@ -1,4 +1,4 @@
-# H42 -- The evaded operator can be identified without poison labels
+# H42: The evaded operator can be identified without poison labels
 
 **Status: REFUTED.**
 
@@ -22,7 +22,7 @@ identify which perturbation operator the attacker evaded using only clean
 validation data (no poison labels, no baseline model for comparison). The
 evaded operator should show a more compressed validation PSU distribution
 (lower std and IQR at sigma-matched rates) because the evasion penalty
-specifically optimises PSU to be similar across clean and poisoned populations.
+specifically optimizes PSU to be similar across clean and poisoned populations.
 
 ## Why it should work
 
@@ -57,7 +57,7 @@ achieves 52.4% accuracy.
 
 ## What this means for the adaptive defender
 
-Identification is not needed. The multi-probe defence (H41) works without
+Identification is not needed. The multi-probe defense (H41) works without
 knowing which operator was evaded:
 
 | Protocol | AUROC |

@@ -1,4 +1,4 @@
-# H37 -- Token concentration ratio as attack family classifier
+# H37: Token concentration ratio as attack family classifier
 
 **Status: REFUTED.** Concentration ratio does not cleanly separate localized
 from global attacks. 62.5% accuracy at the best threshold, with a negative
@@ -49,7 +49,7 @@ Optimal threshold: 2.84 (still cannot separate cleanly).
 
 ### Why the classifier fails
 
-Two global attacks have unexpectedly high concentration ratios:
+2 global attacks have unexpectedly high concentration ratios:
 
 1. **adaptive_blend (3.10):** Adaptive blend uses a blending trigger with a
    learned, spatially non-uniform opacity mask. Although the trigger is

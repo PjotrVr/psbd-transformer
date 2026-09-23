@@ -1,6 +1,6 @@
-# H48 — The trigger manufactures an attention sink this ViT does not natively have, and does not hijack one
+# H48: The trigger manufactures an attention sink this ViT does not natively have, and does not hijack one
 
-**Status: SUPPORTED on three independent measurements. The candidate defence that follows from
+**Status: SUPPORTED on 3 independent measurements. The candidate defense that follows from
 the alternative hypothesis FAILS, as predicted.**
 
 ## Context
@@ -9,7 +9,7 @@ Large self-supervised ViTs spontaneously produce high-norm "artifact" or registe
 attract CLS attention (Darcet et al., ICLR 2024; Sun et al., arXiv:2402.17762). If such a
 population exists here it is a confound: a detector that masks tokens at random might be
 measuring whether the draw hit an artifact token. If it does not exist but the trigger creates
-one, that is a mechanism.
+1, that is a mechanism.
 
 ## This model has no native sink structure
 
@@ -20,12 +20,12 @@ one, that is a mechanism.
 
 Layer-12 patch-norm quantiles on the benign model: 29.0 / 33.5 / 37.6 / 39.6 / 41.0. The
 registers reported in CLIP and DINOv2 are absent. **To our knowledge supervised ImageNet
-ViT-B/16 has not been characterised before; prior work covers CLIP, DINOv2, DeiT-III and MAE.**
+ViT-B/16 has not been characterized before. Prior work covers CLIP, DINOv2, DeiT-III and MAE.**
 
 That settles the confound. A masking detector cannot be reading an artifact-token population
 because there is not one.
 
-## The trigger creates one, and it is not the existing machinery
+## The trigger creates 1, and it is not the existing machinery
 
 | measurement | result |
 |---|---|
@@ -34,13 +34,13 @@ because there is not one.
 | highest-norm patch token is a trigger token, layers 2 to 10 | **100%**, against 0% by layer 7 on the benign model |
 | trigger-token norm rank | **0.97** at layer 2 decaying to **0.43** at layer 12 |
 
-The sink is built early, read by attention at layers 5 to 8, and discarded.
+The sink is built early, read by attention at layers 5 to 8 and discarded.
 
-**It is a parallel mechanism, not a hijack.** Three measurements agree:
+**It is a parallel mechanism, not a hijack.** 3 measurements agree:
 
 1. **Register neurons are disjoint.** Following Jiang et al. (arXiv:2506.08010), the neurons
    driving the trigger's tokens share **0 of the top 10** and **0 of the top 50** with those
-   driving naturally high-norm tokens; 4 of 200 against 1.09 expected. The clean set peaks at
+   driving naturally high-norm tokens. 4 of 200 against 1.09 expected. The clean set peaks at
    layer 11, the trigger's at layer 5.
 2. **The role is not replaceable.** Lu et al. (arXiv:2507.16018) show a natural sink hands off
    to a dormant token when masked. Here the concentration is restored at layers 1 to 4
@@ -48,7 +48,7 @@ The sink is built early, read by attention at layers 5 to 8, and discarded.
 3. **Spare capacity is ignored.** Appending up to 64 test-time register tokens leaves ASR at
    **1.000**, clean accuracy at 0.973 and CLS attention on the trigger at 0.370 against 0.373.
 
-Measurement 3 is a candidate defence and it **fails**, which is the null the mechanism
+Measurement 3 is a candidate defense and it **fails**, which is the null the mechanism
 predicts: there is no sink competition to redirect.
 
 ## What the trigger token is made of
@@ -77,7 +77,7 @@ The detector claim (max over median patch norm, one forward pass, no trigger kno
 measured on single cells and is under audit. Layers 1 and 2 must be excluded: the benign
 control reads 0.69 to 0.76 there because the patch is visible in raw pixels before the network
 does anything with it. 197 tokens is the low end of the range where sinks have been studied, so
-the attention shares may be sequence-length dependent; unmeasured.
+the attention shares may be sequence-length dependent. Unmeasured.
 
 `experiments/residual_stream_mechanism/`: `artifact_tokens.py`, `register_neurons.py`,
 `sink_anatomy.py`, `test_time_registers.py`.

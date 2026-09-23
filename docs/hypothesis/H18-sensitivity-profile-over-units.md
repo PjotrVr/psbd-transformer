@@ -1,4 +1,4 @@
-# H18 — Stop looking for the backdoor units; use the shape of the per-unit sensitivity profile
+# H18: Stop looking for the backdoor units. Use the shape of the per-unit sensitivity profile
 
 **Status: REFUTED outright by the real measurement.** The 144-head leave-one-out
 profile was run on 7 checkpoints and carries no detection signal under any
@@ -7,7 +7,7 @@ beats the mean) still stands, but it was never a test of this file's claim.
 
 ## The real measurement
 
-`psbd_head_profile.py`, all 144 heads ablated one at a time, deterministic mask so
+`psbd_head_profile.py`, all 144 heads ablated 1 at a time, deterministic mask so
 no Monte Carlo averaging is needed. One-sided AUROC, direction fixed a priori per
 statistic:
 
@@ -30,22 +30,22 @@ the board.
 
 [H16](H16-where-the-backdoor-neurons-are.md) has since been corrected in a way
 that explains this cleanly rather than merely agreeing with it. The backdoor is
-**one linear direction in the residual stream, and it is not axis-aligned**:
+**1 linear direction in the residual stream, and it is not axis-aligned**:
 zeroing even the top 300 of 768 coordinates leaves ASR at 1.00, while removing the
 single direction takes ASR to 0.00. So there are no "backdoor units" to find. A
 head, a neuron and a coordinate are all axis-aligned objects, and no ranking over
 them can name a direction that lies across the axes.
 
 That is now the third and most decisive failure of the where-to-mask programme,
-after H16's own two refuted data-free localizers. It also predicts
+after H16's own 2 refuted data-free localizers. It also predicts
 [H22](H22-head-mask-attention-units.md)'s failure and is consistent with
 [H23](H23-gaussian-noise-control.md): isotropic noise is indifferent to axis
 alignment, and so is the backdoor.
 
 ## An architectural finding that came out of it
 
-In every profile one head dominates. On `badnet_a2o` at 1%, ablating block 1
-head 6 costs a mean **0.506** of confidence; the next-largest head costs 0.033, a
+In every profile 1 head dominates. On `badnet_a2o` at 1%, ablating block 1
+head 6 costs a mean **0.506** of confidence. The next-largest head costs 0.033, a
 15x gap:
 
     block  1 head  6   0.5057
@@ -69,7 +69,7 @@ produced a better statistic than the one it was testing.** Backdoored profiles t
 *flatter* than clean ones, not more peaked. Separately, the simplest reduction of
 the profile, its **minimum**, beats PSBD's mean on the low-poison-rate case by
 +0.12 while keeping PSBD's direction unchanged. Per-unit masking machinery is
-implemented and tested (`defences/perturbations.py`); the per-unit measurement
+implemented and tested (`defences/perturbations.py`). The per-unit measurement
 itself has not been run.
 
 ## Result of the cheap test (H18 step 1, run before any GPU time)
@@ -90,7 +90,7 @@ Robust to the matching target: `min` gives 0.906 / 0.935 / 0.932 mean and
 0.825 / 0.867 / 0.871 on `badnet_a2o` 1% at sigma 0.4 / 0.6 / 0.7, with the
 benign control at 0.483 to 0.490 throughout.
 
-**Two things follow, and the first one contradicts this file's claim.**
+**2 things follow, and the first one contradicts this file's claim.**
 
 *Concentration runs the other way, and is not pursued.* Gini at 0.058 means
 backdoored samples have **lower** concentration than clean ones, so their profiles
@@ -112,7 +112,7 @@ published), and has a plain reading: **different attacks are carried by differen
 structures ([H16](H16-where-the-backdoor-neurons-are.md) shows the dimensions are
 disjoint across attacks), so the placement that exposes a given backdoor differs
 by attack. Taking the per-sample minimum lets each sample be judged by whichever
-placement it is most sensitive to, instead of committing to one placement in
+placement it is most sensitive to, instead of committing to 1 placement in
 advance.**
 
 That is a unified answer to "where to perturb" that requires no localization: do
@@ -132,7 +132,7 @@ and are the out-of-sample test.
 
 ## Why this hypothesis exists
 
-Three results in this ledger box in the problem from three sides, and together
+3 results in this ledger box in the problem from 3 sides, and together
 they say the obvious approach cannot work:
 
 - [H16](H16-where-the-backdoor-neurons-are.md): the backdoor occupies 5 to 17 of
@@ -161,7 +161,7 @@ localization from clean data, which has now failed twice.
 to a unit is itself a per-sample statistic, and the backdoor's signature is the
 *concentration* of that sensitivity, not its location.**
 
-Perturb one unit at a time across all of them and record, per sample, how much
+Perturb 1 unit at a time across all of them and record, per sample, how much
 the prediction moves. That yields a sensitivity profile per sample, a vector over
 units rather than a single number:
 
@@ -171,11 +171,11 @@ units rather than a single number:
 
     restated
         for every unit u, mask that one unit and record how far the confidence in
-        the sample's own unperturbed predicted class falls. The result is one
+        the sample's own unperturbed predicted class falls. The result is 1
         number per unit per sample, so a sample becomes a profile over units
         instead of a scalar.
 
-PSBD's PSU is one summary of that profile, its mean under a random subset. The
+PSBD's PSU is 1 summary of that profile, its mean under a random subset. The
 claim is that the mean is the wrong summary:
 
 - A **clean** prediction is supported redundantly across many units, so its
@@ -185,9 +185,9 @@ claim is that the mean is the wrong summary:
   other costs nothing.
 
 Concentration is measurable without knowing *which* units are the peaked ones,
-which is exactly what the two refuted localizers were trying and failing to
-recover. Gini coefficient, normalized entropy, top-k mass, or kurtosis of the
-profile are all label-free, trigger-free, and attack-agnostic.
+which is exactly what the 2 refuted localizers were trying and failing to
+recover. Gini coefficient, normalized entropy, top-k mass or kurtosis of the
+profile are all label-free, trigger-free and attack-agnostic.
 
 This is also why disjointness across attacks stops being fatal. The profile of
 `badnet_a2o` peaks on a different unit set than `blend`, and the concentration
@@ -197,7 +197,7 @@ statistic does not care, because it never reads which index peaked.
 
 It dissolves the question. Instead of choosing a placement, the profile perturbs
 every unit in turn and lets the sample's own response say which units mattered to
-it. Depth, position, and unit identity all become axes of the profile rather than
+it. Depth, position and unit identity all become axes of the profile rather than
 hyperparameters someone has to fit.
 
 It also predicts [H17](H17-low-poison-rate-is-a-placement-artifact.md)'s result as
@@ -219,14 +219,14 @@ all sharing nn.Dropout's interface so they plug at any registry position:
 | `gaussian` | nothing, adds scaled noise | the control for whether removal is needed at all |
 | `dropout` | the paper's element-wise Bernoulli | baseline |
 
-Two new registry positions expose the units:
+2 new registry positions expose the units:
 `attention_heads` and `mlp_neurons` (`defences/dropout.py`).
 
 `attention_heads` needed a forward wrapper, not a hook.
 `nn.MultiheadAttention` runs `F.multi_head_attention_forward`, which reads
 `out_proj.weight` directly and never calls `out_proj` as a module, so a hook on
 it never fires and the model output came back bit-identical. The wrapper
-recomputes attention and exposes the head axis; at rate 0 it reproduces
+recomputes attention and exposes the head axis. At rate 0 it reproduces
 PyTorch's own output to 3.6e-07 on logits of scale 0.79, which is float32
 associativity and not a semantic difference.
 
@@ -243,7 +243,7 @@ addressable and `--skip-existing` still finds it.
    per-pass tracked-class probabilities are already stored. If concentration over
    3 random subsets already beats the mean, the claim has support before any GPU
    time is spent.
-2. **Head profile, one checkpoint.** 144 leave-one-head-out passes on
+2. **Head profile, 1 checkpoint.** 144 leave-one-head-out passes on
    `vit_cifar10_badnet_a2o_0_01`, the checkpoint where the published
    configuration reads 0.297. Compare Gini and entropy of the profile against
    PSU's mean. Restrict to the 2000-sample validation split plus the paired
@@ -255,7 +255,7 @@ addressable and `--skip-existing` still finds it.
    still matters and this hypothesis is weaker than it looks.
 4. **Granularity.** Heads (144) against MLP neurons (36864, so grouped) against
    channels. H16 puts the backdoor in the residual stream, which argues for
-   channels; heads are cheaper and more interpretable. Measure both.
+   channels. Heads are cheaper and more interpretable. Measure both.
 5. **Benign control throughout.** A clean model's profile must be flat. If
    concentration separates on a benign checkpoint, it is measuring something
    about prediction confidence rather than about a backdoor, and the same trap

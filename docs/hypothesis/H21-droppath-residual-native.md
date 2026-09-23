@@ -1,4 +1,4 @@
-# H21 — DropPath is the residual-native perturbation and should beat activation noise
+# H21: DropPath is the residual-native perturbation and should beat activation noise
 
 **Status: CONFIRMED, including the part that predicted it would lose.**
 
@@ -23,7 +23,7 @@ branches deletes the backdoor's contribution and the clean signal together,
 because they share the branches, so the ratio PSU measures does not move.
 
 The follow-up the pre-registration named, restricting droppath to H16's peak
-layers with `--block-range`, is still worth one cheap run before the operator is
+layers with `--block-range`, is still worth 1 cheap run before the operator is
 set aside.
 
 ---
@@ -39,7 +39,7 @@ function. Every other operator leaves the branch running and damages what it
 produces.
 
 This is also the noise ViT is actually built with. Stochastic depth is standard
-ViT regularization; Bernoulli dropout on activations is not, and torchvision's
+ViT regularization. Bernoulli dropout on activations is not, and torchvision's
 ViT-B/16 ships with attention dropout at 0.0.
 
 ## Why it might work
@@ -61,7 +61,7 @@ degrade gracefully. That asymmetry is exactly what PSU measures.
 - **Only 24 units exist** (12 blocks x 2 branches), so the granularity is coarse
   and the disturbance is lumpy. At p = 0.1 an average sample loses 2.4 branches,
   and which 2 dominates the outcome, so between-pass variance is large at k = 3.
-- Removing a branch is **not** removing a feature. If the backdoor is one
+- Removing a branch is **not** removing a feature. If the backdoor is 1
   direction among 768 written by a block that also writes everything else,
   droppath deletes the backdoor and the clean signal together, and the ratio PSU
   measures does not move.
@@ -98,4 +98,4 @@ say the unit that matters is the feature, not the computation.
     python psbd_analyze.py --all
 
 Folder `pre_residual_droppath`, which applies droppath at both
-`before_attention_residual` and `before_mlp_residual`, the two branch outputs.
+`before_attention_residual` and `before_mlp_residual`, the 2 branch outputs.

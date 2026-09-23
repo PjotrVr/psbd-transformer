@@ -12,9 +12,9 @@ table reads see `.claude/CLAUDE.md`.
 Owns the 10 trigger implementations and everything that decides which images
 a poisoning run touches. `attacks/__init__.py` is the only package that
 re-exports its submodules, since it is a registry: `ATTACK_NAMES` lists every
-attack, `build_attack` constructs one from a name and a config, and
+attack, `build_attack` constructs an attack from a name and a config, and
 `default_config` gives that attack's published hyperparameters. The eligibility
-and labelling logic that every other package trusts lives in `poisoning.py`:
+and labeling logic that every other package trusts lives in `poisoning.py`:
 `AttackSuccessSet` builds the evaluation set a checkpoint's success rate is
 measured on, `is_eval_poisonable` and `attack_success_label` decide which
 images belong in it, and `choose_poison_indices` selects the training-time
@@ -27,7 +27,7 @@ that trains against a named probe.
 
 Owns dataset identity and the 2 ways a checkpoint's evaluation data gets
 rebuilt. `registry.py` is the single source of a dataset's class count,
-normalisation statistics and folder-name parsing (`DATASET_REGISTRY`,
+normalization statistics and folder-name parsing (`DATASET_REGISTRY`,
 `label_mode_from_folder`). `loading.py` turns that registry entry into
 loadable tensors (`load_clean_datasets`). `splits.py` holds the 2000-image
 PSBD validation split (`psbd_split_permutation`) and `read_checkpoint_metadata`,
@@ -51,11 +51,11 @@ to study what that conflates with the probe.
 
 ### training
 
-Owns the training loop and its 2 optimisers. `loop.py` holds `train_classifier`,
+Owns the training loop and its 2 optimizers. `loop.py` holds `train_classifier`,
 the full 15-epoch run, `save_checkpoint`, which writes the `args.json`
 provenance sidecar next to `attack_result.pt`, and `check_not_diverged`, which
 refuses to save a run whose final validation accuracy collapsed against its
-own best epoch. `sam.py` holds `SAM`, the 2-pass sharpness-aware optimiser
+own best epoch. `sam.py` holds `SAM`, the 2-pass sharpness-aware optimizer
 that wraps the same Adam every run uses.
 
 ### defences
@@ -179,7 +179,7 @@ and `python -m cli.compare <subcommand> --help` lists every flag.
    every detector's report into the comparison tables described above.
 7. `scripts/coverage_ledger.py` reads `configs/psbd_basis.json`, the
    declared basis of placements every dataset and attack combination should
-   carry, against what actually exists under `results/`, and writes
+   carry, against what actually exists under `results/` and writes
    `results/coverage/coverage.json` and `results/coverage/gaps.json`. This is
    the file the job generators in `pbs/` read to decide what still needs
    running.
@@ -237,7 +237,7 @@ to `paper/main.pdf`.
 Job generators, not job scripts. Each `pbs/generate_*.py` is a Python module
 that derives its checkpoint or configuration list from something already on
 disk (a folder's `args.json`, the coverage ledger, an earlier run's
-`metrics.json`), rather than a hand-typed list, and writes 1 `.pbs` file per
+`metrics.json`), rather than a hand-typed list and writes 1 `.pbs` file per
 job into a same-named subdirectory (`pbs/vit_basis/`, `pbs/psbd_seed_2026_09_11/`
 and the rest). `grid.py` is the reusable core behind several generators: it
 flattens a parameter grid into many small job files, 1 GPU each, given a

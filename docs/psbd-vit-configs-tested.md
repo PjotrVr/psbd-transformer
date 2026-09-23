@@ -17,7 +17,7 @@ Do not edit by hand.
 | total (cell, placement, rate) sweeps on disk | 34005 |
 | pre-registered combinations of basis placements | 24 explicit + 8 derived |
 
-A configuration is a **position**, an **operator** and a **block range**. The three are
+A configuration is a **position**, an **operator** and a **block range**. The 3 are
 independent, so the count that matters is the basis: the fixed set measured on EVERY
 cell, which is what makes cells comparable. Before that basis existed, no placement was
 cached on all cells and rankings were computed over whichever cells happened to carry a
@@ -38,7 +38,7 @@ placement, which ranks the cells rather than the placements.
 
 **67 of 67** cells whose attack implanted carry the complete basis.
 The cells below the basis are the ones whose attack did not implant, which are being
-retrained; sweeping a checkpoint that is about to be replaced throws the work away.
+retrained. Sweeping a checkpoint that is about to be replaced throws the work away.
 
 ## The 18 basis configurations
 

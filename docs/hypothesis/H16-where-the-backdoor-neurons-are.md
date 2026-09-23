@@ -1,4 +1,4 @@
-# H16 — The backdoor is one late-layer linear direction, not a set of neurons
+# H16: The backdoor is 1 late-layer linear direction, not a set of neurons
 
 **Status: SUPPORTED for layers and for the direction. The "neurons" framing is
 REFUTED by its own causal test**, as are both data-free localizers (Lipschitz
@@ -6,13 +6,13 @@ channel ranking and the head-alignment Z rule). **The SAM sub-claim is REFUTED**
 the apparent effect was a LayerNorm artifact of the ablation, not a property of the
 model.
 
-> **Two headline corrections. Both were caught by a control, and both were wrong in
+> **2 headline corrections. Both were caught by a control, and both were wrong in
 > the direction of a more exciting result, which is the pattern to watch for here.**
 >
 > 1. This file originally read the top-20 TAC dimensions as "the backdoor neurons".
 >    They are not: zeroing even the top 300 of 768 coordinates leaves ASR at 1.00,
 >    while removing the single backdoor *direction* takes ASR to 0.00 (section 8).
->    The direction is real and causal; it is simply not axis-aligned, so no
+>    The direction is real and causal. It is just not axis-aligned, so no
 >    coordinate ranking can name it. Sections 2 and 4 describe where that
 >    direction's energy lands in the standard basis, not a set of neurons.
 > 2. It then reported that SAM makes the backdoor un-removable, twice, with
@@ -23,15 +23,15 @@ model.
 
 ## Claim
 
-Three separable claims, tested together because they need the same measurement:
+3 separable claims, tested together because they need the same measurement:
 
 1. **Localization.** For each attack there is a specific block and a small set of
    residual-stream dimensions carrying the trigger, not a diffuse effect.
-2. **Disjointness.** Different attacks use different dimensions, so a defence tuned
+2. **Disjointness.** Different attacks use different dimensions, so a defense tuned
    to 1 attack's neurons does not transfer.
 3. **SAM.** Sharpness-aware training moves the backdoor earlier in depth and onto a
    different set of coordinates, without reducing attack success. (It does NOT make
-   the backdoor harder to remove; that reading was an artifact, see section 9.)
+   the backdoor harder to remove. That reading was an artifact, see section 9.)
 
 ## Method
 
@@ -65,8 +65,8 @@ Relative backdoor-direction norm per block, Adam:
 
 CKA between clean and triggered features tells the same story from the other side
 (1.00 means the trigger is invisible at that layer): `badnet_a2o` holds 1.00 through
-layer 5 then falls to 0.41; `blend` and `bpp` break at layer 6 and end near 0.11 to
-0.18; `benign` stays at 1.00 at every single layer.
+layer 5 then falls to 0.41. `blend` and `bpp` break at layer 6 and end near 0.11 to
+0.18. `benign` stays at 1.00 at every single layer.
 
 The benign row is the control that makes the rest readable. Probed with the same
 `badnet_a2o` trigger, a clean model's relative direction peaks at 0.09 and *decays*
@@ -90,7 +90,7 @@ At each attack's own peak layer, the CLP outlier rule (mean + 3 std) flags:
 Between 5 and 17 dimensions out of 768, so under 2.2% of the residual width. The
 benign model flags a comparable *count*, which is expected because the rule is a
 relative one, but at an absolute scale 16x smaller: benign tac_max is 0.215 against
-3.26 to 3.89 for every backdoored model. The count does not separate; the magnitude
+3.26 to 3.89 for every backdoored model. The count does not separate. The magnitude
 does.
 
 ### 3. The 2 numbers that make Jaccard mean anything
@@ -102,8 +102,8 @@ Every overlap claim below sits between a measured floor and a measured ceiling:
   ranking dimensions on 2 disjoint interleaved halves of the same 600 samples,
   same model, same trigger, same layer.
 
-The ceiling is the important one and it was not obvious in advance. It says the
-top-20 TAC set is a reproducible property of the model, not an artefact of which
+The ceiling is the important 1 and it was not obvious in advance. It says the
+top-20 TAC set is a reproducible property of the model, not an artifact of which
 600 images were drawn. Without it, every low Jaccard below would be explainable as
 noise and the SAM claim would be vacuous.
 
@@ -121,7 +121,7 @@ Jaccard of top-20 TAC dimensions at each attack's peak layer, Adam:
 | `lf` | 0.00 | 0.03 | 0.03 | 0.05 | 0.05 | 1.00 |
 
 Every off-diagonal entry is 0.00 to 0.08, against a chance floor of 0.014 and a p95
-of 0.053. The largest, 0.08, is 3 shared dimensions out of 20; the common 0.03 is 1.
+of 0.053. The largest, 0.08, is 3 shared dimensions out of 20. The common 0.03 is 1.
 Against a ceiling of 0.87, this is **indistinguishable from disjoint**.
 
 Note `badnet_a2o` and `badnet_a2a` share the identical trigger pattern and overlap
@@ -139,7 +139,7 @@ the label mapping the model learned from it.
 | `badnet_a2a` | 11 | 11 | 8 | 0.18 | 0.05 | 0.959 / 0.962 / 0.957 |
 | `benign` | 8 | 8 | 8 | **0.29** | **0.25** | n/a |
 
-Two effects, both clean:
+2 effects, both clean:
 
 **Depth.** The peak layer moves earlier, monotonically in rho, for all 5 attacks
 (12 to 10, 12 to 9, 12 to 10, 10 to 9, 11 to 8). The benign control does not move at
@@ -151,7 +151,7 @@ backdoored model, at or barely above the chance floor of 0.014, against a
 reproducibility ceiling of 0.87. The benign control sits at 0.25 to 0.29, above
 every backdoored value at either rho. A clean model's most trigger-sensitive
 dimensions are a generic, weight-driven property that partly survives an optimizer
-change; a backdoor's are not.
+change. A backdoor's are not.
 
 **And ASR is untouched**, 0.96 to 1.00 in every cell, with clean accuracy actually
 2 points *higher* under SAM (0.939 to 0.963 for `badnet_a2o`). SAM does not damage
@@ -162,7 +162,7 @@ the backdoor. It re-implements it somewhere else.
 **Lipschitz vs TAC.** The rank correlation between each block's per-channel MLP
 output-projection Lipschitz constant and the measured TAC looks encouraging at
 first: Spearman 0.21 to 0.67 at the peak layer, mean 0.59 to 0.65 averaged over all
-12 layers, positive on all 18 checkpoints. Two checks kill it.
+12 layers, positive on all 18 checkpoints. 2 checks kill it.
 
 *It is not specific to the backdoor.* The benign model scores **0.660**, the
 highest of all 18. If a clean model probed with a trigger it never learned ranks
@@ -186,7 +186,7 @@ channels the trigger actually uses.
 checkpoints, and they are the wrong 2:
 
 - `bpp` Adam, Z = 4.93, names the **wrong** target class.
-- `vit_cifar10_benign_sam_rho_0_2`, Z = 4.93, a **clean model**, and it "names" the
+- `vit_cifar10_benign_sam_rho_0_2`, Z = 4.93, a **clean model** and it "names" the
   right class only because target 0 is the probe's arbitrary choice.
 
 Every genuinely backdoored checkpoint except `bpp` scores Z between 0.39 and 2.89,
@@ -214,7 +214,7 @@ distribution, which keeps it data-free while making it scale-free. It still fail
 | `benign` | 0.455 | 0.454 |
 
 For 4 of 5 attacks a 2-component **PCA** already separates clean from triggered
-essentially perfectly, and UMAP adds nothing. That is the sharpest confirmation
+nearly perfectly, and UMAP adds nothing. That is the sharpest confirmation
 available that the backdoor is a *linear* direction in the residual stream: a linear
 projection into 2 dimensions cannot manufacture structure that is not already
 linearly present.
@@ -252,11 +252,11 @@ Removing the rank-1 backdoor direction
     x_ablated = x - (x . unit_direction) * unit_direction
 
 destroys the backdoor on all 4 single-target attacks, at a clean-accuracy cost of
-0.078, 0.041, 0.033, and **-0.004** (`lf` gets slightly *better*). Deleting
-coordinates does essentially nothing, including 300 of 768, which is 39% of the
+0.078, 0.041, 0.033 and **-0.004** (`lf` gets slightly *better*). Deleting
+coordinates does almost nothing, including 300 of 768, which is 39% of the
 residual width.
 
-Three controls, all passing:
+3 controls, all passing:
 
 - **Random rank-1 directions** (2 per checkpoint, plus 3 extra seeds and the mean
   clean feature direction checked separately on `badnet_a2o`) leave ASR at 1.00 and
@@ -284,7 +284,7 @@ behind its PCA 0.756 versus UMAP 1.000 and behind [H5](H5-all-to-all-breaks-psbd
 ### 9. SAM does NOT resist direction ablation. The apparent effect was a LayerNorm artifact
 
 **This section has been wrong twice, and the corrections are the useful part.** The
-final answer is in section 10; what follows is the record of how the artifact
+final answer is in section 10. What follows is the record of how the artifact
 produced 2 confident and incorrect readings.
 
 **First reading (wrong).** Removing the mean clean-to-triggered direction at the
@@ -300,7 +300,7 @@ peak layer kills the backdoor under Adam and fails under SAM, monotonically in r
 Read as "SAM makes the backdoor less rank-1".
 
 **Second reading (also wrong).** Rank 2, 4, 8 and 16 subspaces of the difference do
-not recover the kill; they destroy clean accuracy (down to 0.556) while ASR stays
+not recover the kill. They destroy clean accuracy (down to 0.556) while ASR stays
 1.00, and the matched random-subspace control is unaffected. Forcing the ablation to
 block 12 reproduces the failure, so it is not that later blocks rewrite the
 direction. Read as "SAM decouples the difference direction from the decision
@@ -355,7 +355,7 @@ A note on the metric, because the obvious version of it is vacuous: the residual
 `delta - (delta . d)d` has exactly zero mean by construction, so its share of the
 *mean* target-logit push is identically 0 and a ratio-of-means "explained fraction"
 returns 1.000 for every model including benign. The reported share is a ratio of
-mean magnitudes, which is not structurally fixed; on synthetic data it reads 0.006
+mean magnitudes, which is not structurally fixed. On synthetic data it reads 0.006
 for a pure common shift and 0.997 for a per-sample one.
 
 
@@ -388,7 +388,7 @@ better ablation.
 geometry (TAC, direction norm, CKA, separability), which is an honest statement
 about that layer whatever the next LayerNorm does. The 1 script whose conclusion
 genuinely depended on crossing the LayerNorm is
-`experiments/dropout_kills_direction/`, which claims to measure PSU's mechanism "one
+`experiments/dropout_kills_direction/`, which claims to measure PSU's mechanism "1
 step upstream". Re-run with `--post-ln`, its numbers are unchanged: pre_residual
 0.696 / 0.253 / 0.065 becomes 0.778 / 0.297 / 0.064, post_residual stays 0.015 /
 0.000 / 0.000.
@@ -405,26 +405,26 @@ transfer and absolute ones do not.
 1. **Do the relocated dimensions under SAM stay disjoint from a second SAM seed?**
    Only seed 0 exists for these checkpoints, so "SAM relocates" cannot yet be
    distinguished from "any retraining relocates". This is the cheapest and most
-   important follow-up in this file, and it needs 1 retrain per cell, not a sweep.
+   important follow-up in this ledger, and it needs 1 retrain per cell, not a sweep.
 2. If the peak layer moves earlier under SAM, the best block-restricted placement
    from [H10](H10-depth-band-placement.md) should move earlier with it. Blocks 5-8
-   won on Adam; at rho 0.2 the peaks are at 8 to 10, so blocks 5-8 should hold or
+   won on Adam. At rho 0.2 the peaks are at 8 to 10, so blocks 5-8 should hold or
    improve while a 9-12 restriction should degrade. Directly testable on cached
    sweep output, no GPU needed.
 3. **Answered in section 8, and it overturned the framing.** Coordinate ablation
-   does nothing; direction ablation removes the backdoor entirely.
+   does nothing. Direction ablation removes the backdoor entirely.
 4. Why is `lf`'s peak at layer 10 rather than 12, with a relative direction norm of
    2.18, double every other attack? It is the only attack whose direction *shrinks*
    over the last 2 blocks.
 5. **Answered in section 9, and it refuted the guess.** Rank 2, 4, 8 and 16
-   subspaces of the difference do not recover the kill under SAM; they destroy
+   subspaces of the difference do not recover the kill under SAM. They destroy
    clean accuracy instead. The open form of the question is now which direction
    SAM's backdoor does use, with the target class readout direction as the first
    candidate.
 6. Direction ablation costs 0.03 to 0.08 clean accuracy on single-target attacks
-   and **0.26** on `badnet_a2a` at rho 0.1. It is not a free defence, and the cost
-   is worth characterising against fine-tuning-based removal.
+   and **0.26** on `badnet_a2a` at rho 0.1. It is not a free defense, and the cost
+   is worth characterizing against fine-tuning-based removal.
 7. The ablation reads the backdoor direction off paired clean/triggered data, which
-   a defender does not have. It is a mechanism result, not a defence. Whether the
+   a defender does not have. It is a mechanism result, not a defense. Whether the
    direction can be estimated from clean data alone is the question that would turn
    it into one.

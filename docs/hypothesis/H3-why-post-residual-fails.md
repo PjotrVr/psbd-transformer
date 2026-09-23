@@ -1,4 +1,4 @@
-# H3 — Post-residual fails because it saturates: it destroys clean and backdoor evidence alike
+# H3: Post-residual fails because it saturates: it destroys clean and backdoor evidence alike
 
 **Status: REFUTED as stated. The saturation is real and measured, but it does not
 make post-residual fail, and the sub-0.1 window it claimed does not exist was found.**
@@ -14,7 +14,7 @@ enough p exists, because the compounding is exponential in depth.**
 
 ## What was actually found
 
-Two halves, one confirmed and one refuted.
+2 halves, 1 confirmed and 1 refuted.
 
 **Confirmed: the saturation is real.** Clean-validation shift ratio on
 `vit_cifar10_badnet_a2o_0_1`:

@@ -1,6 +1,6 @@
-# H43 — the case PSBD cannot cover is covered by its own discarded tensor
+# H43: the case PSBD cannot cover is covered by its own discarded tensor
 
-**Status: SUPPORTED, and the defence half is now closed.** Predictive entropy reaches
+**Status: SUPPORTED, and the defense half is now closed.** Predictive entropy reaches
 mean AUROC **0.761** on all-to-all where PSBD reaches **0.411**, with benign controls at
 chance. A label-free, parameter-free rule selects between them and gains **+0.045** mean
 AUROC over always-PSU, bootstrap CI **[+0.017, +0.079]**, helping 8 cells and **hurting
@@ -29,7 +29,7 @@ clean-validation shift ratio 0.6, one-sided, direction fixed a priori.
 | **all-to-all** | 12 | **0.411** | **0.761** | 0.752 | 0.728 |
 | benign | 4 | 0.496 | 0.506 | 0.506 | 0.505 |
 
-Per-cell, all 4 datasets and all 3 poison rates behave the same way; the strongest cell is
+Per-cell, all 4 datasets and all 3 poison rates behave the same way. The strongest cell is
 `vit_cifar100_badnet_a2a_0_01` at 0.963.
 
 Cost: **1 deterministic forward pass**, already cached. The sweep writes the full
@@ -37,7 +37,7 @@ Cost: **1 deterministic forward pass**, already cached. The sweep writes the ful
 
 ## Why this is not H15 being reopened
 
-It is not a two-sided reading of one statistic. These are 2 different statistics, each
+It is not a two-sided reading of 1 statistic. These are 2 different statistics, each
 scored one-sided in the direction its own mechanism predicts, on the same splits. What
 H15 forbids, and what is still forbidden, is choosing between them by reading the AUROC.
 
@@ -57,7 +57,7 @@ defender holds clean validation data and the suspect pool. Write
 
 Under all-to-one the poisoned subpopulation resists the probe MORE than clean data, so it
 pulls the pool's mean down and `d < 0`. Under all-to-all the trigger must read the source
-class first, so the backdoor pathway is more fragile, and `d > 0`. The threshold is 0,
+class first, so the backdoor pathway is more fragile and `d > 0`. The threshold is 0,
 fixed by the mechanism rather than tuned.
 
     use PSU if d < 0, otherwise use entropy
@@ -69,15 +69,15 @@ fixed by the mechanism rather than tuned.
 | **routed** | **0.865** |
 | oracle-max (needs labels) | 0.883 |
 
-+0.045 over always-PSU, CI [+0.017, +0.079], **98% of oracle-max**, and positive on every
++0.045 over always-PSU, CI [+0.017, +0.079], **98% of oracle-max** and positive on every
 leave-one-dataset-out refit (+0.035 to +0.058). It **hurts no cell**, because it only
 diverts when PSU's own premise is violated.
 
-Nothing in the rule needs the poison rate, the target class, or any poison label. The
-suspect pool is what the defender was handed; the rate appears only in the script that
+Nothing in the rule needs the poison rate, the target class or any poison label. The
+suspect pool is what the defender was handed. The rate appears only in the script that
 simulates such a pool from cached splits.
 
-## It is not an artifact of one placement
+## It is not an artifact of 1 placement
 
 The rule was derived at `token_mask @ before_attention_norm`. Re-derived independently at
 3 other placements, including the one the PSBD paper publishes, each read at the rate

@@ -1,13 +1,13 @@
-# H27 — Removing whole tokens separates local triggers from distributed ones
+# H27: Removing whole tokens separates local triggers from distributed ones
 
-**Status: prediction 1 SUPPORTED. Prediction 2 untested. One coverage gap that is
+**Status: prediction 1 SUPPORTED. Prediction 2 untested. 1 coverage gap that is
 itself a finding.**
 
 ## Result
 
-`token_mask` is one of the strongest operators at 10%, taking three of the top six
+`token_mask` is one of the strongest operators at 10%, taking 3 of the top 6
 full-coverage rows (`before_mlp_residual` 0.929, `before_attention_norm` 0.927,
-`mlp_neurons` 0.927), which the pre-registration did not predict; it expected an
+`mlp_neurons` 0.927), which the pre-registration did not predict. It expected an
 operator useful on patch triggers and useless elsewhere.
 
 **Prediction 1 (the attack ordering) holds.** At `before_attention_norm`:
@@ -28,7 +28,7 @@ positions never reach clean-validation sigma 0.6, so it has no comparable
 operating point there at all. That is a property of the operator (removing tokens
 disturbs predictions less than removing channels, at every rate up to 0.9), not a
 missing run. The full position sweep at 1% will settle whether any position
-reaches the window; if none does, the limitation is the result.
+reaches the window. If none does, the limitation is the result.
 
 Prediction 2 (AUROC falling with rate on patch triggers as masking shifts from
 perturbing the trigger to deleting it) needs the per-rate curves and has not been
@@ -56,7 +56,7 @@ difference:
 
 - `badnet_a2o` and `badnet_a2a` use a small corner patch, which lands in roughly 4
   of 196 tokens. Masking a fraction p of tokens removes the trigger entirely with
-  probability about p^4 per sample, so at high p the trigger is often simply gone.
+  probability about p^4 per sample, so at high p the trigger is often just gone.
 - `blend`, `wanet`, `adaptive_blend` modify every pixel, so every token carries
   some trigger and no amount of token removal deletes it.
 
@@ -95,7 +95,7 @@ Two-part, and the second is the interesting one:
 - No attack-family ordering: `token_mask` ranks attacks the same way `dropout`
   does, so spatial support is not what it is measuring.
 - It works equally well on `blend` and `wanet`, which have no spatial locality to
-  exploit; then any gain comes from generic capacity removal and `channel_mask`
+  exploit. Then any gain comes from generic capacity removal and `channel_mask`
   is the cleaner way to get it.
 - Prediction 2 fails and AUROC *rises* monotonically with rate on patch triggers,
   which would mean trigger deletion is not happening even at p = 0.9.

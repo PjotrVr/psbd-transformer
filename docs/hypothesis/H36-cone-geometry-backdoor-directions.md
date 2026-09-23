@@ -1,9 +1,9 @@
-# H36 -- Backdoor direction cone geometry
+# H36: Backdoor direction cone geometry
 
 **Status: REFUTED.** There is no cone. 9 of 10 attack directions are nearly
 orthogonal to the readout weight (angle 87 to 91 degrees, cosine near 0). Only
 badnet_a2o aligns (33 to 43 degrees). The earlier H16 readout alignment finding
-(cosine 0.87 to 0.89) was measured per-model; the directions align with their
+(cosine 0.87 to 0.89) was measured per-model. The directions align with their
 OWN model's readout weight, not with a shared reference.
 
 Evidence: `experiments/backdoor_direction/cone_geometry.py`, results in `results/cone_geometry.json`.
@@ -15,14 +15,14 @@ centered on the target class readout weight. The cone has angular radius
 approximately 45 degrees (arccos 0.7, the typical direction-to-readout cosine
 from H16), and within it, different attacks find near-orthogonal directions. The
 cone's solid angle bounds how many independent backdoors can coexist targeting
-one class.
+1 class.
 
 ## Test
 
 1. Extract backdoor directions for all 10 attacks at the final CLS layer.
 2. Measure angle between each direction and the target class readout weight.
 3. Compute pairwise cosines between directions.
-4. Compute the cone's angular radius, orthogonal capacity, and expected
+4. Compute the cone's angular radius, orthogonal capacity and expected
    random-in-cone cosine via Monte Carlo simulation.
 
 ## Results
@@ -57,7 +57,7 @@ one class.
 ### The cone does not exist
 
 The premise was that all backdoor directions cluster in a cone around the
-readout weight. The data shows the opposite: 9 of 10 directions are essentially
+readout weight. The data shows the opposite: 9 of 10 directions are nearly
 perpendicular to the readout weight (cosine within +/- 0.07 of zero). Only
 badnet_a2o has meaningful alignment (cosine 0.84 on CIFAR-100, 0.73 on Tiny).
 
@@ -81,7 +81,7 @@ readout weight. The readout weight adaptation is itself attack-specific.
 Even treating the angular spread as a cone, the observed pairwise cosines (0.023
 to 0.053) are far below what random vectors in such a cone would produce (0.43
 to 0.47). The directions are spread more widely than random-in-cone, consistent
-with being essentially random in the full 768-dim space (expected cosine 0.0 for
+with being nearly random in the full 768-dim space (expected cosine 0.0 for
 random unit vectors).
 
 ### Why badnet_a2o is special
@@ -106,4 +106,4 @@ the static patch creates a uniquely strong, direct pathway to the classifier.
 
 3. **The H29 result (near-orthogonal directions) is tighter than random-in-cone
    would predict.** The attacks do not merely find different directions in a
-   cone; they find directions that are spread across the full sphere.
+   cone. They find directions that are spread across the full sphere.

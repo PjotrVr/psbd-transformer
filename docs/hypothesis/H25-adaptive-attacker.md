@@ -1,4 +1,4 @@
-# H25 — An adaptive attacker can hide from PSBD, but only from the probe it trained against
+# H25: An adaptive attacker can hide from PSBD, but only from the probe it trained against
 
 **Status: CONFIRMED.** Both parts of the claim hold.
 
@@ -21,16 +21,16 @@ Full data: [adaptive-attacker-analysis.md](../results/adaptive-attacker-analysis
 
 ## Claim
 
-Two parts, and the second is the one worth publishing either way.
+2 parts, and the second is the one worth publishing either way.
 
 1. **An attacker who knows PSBD can defeat it.** Adding a hinge penalty to the
    training loss that raises poisoned samples' prediction shift onto the clean
    distribution should drive detection AUROC toward 0.5 while keeping ASR high.
 2. **The evasion is probe-specific.** A model trained to look normal under
-   dropout at one position should still be detectable by a *different*
-   perturbation operator or position, because it was never optimised against
+   dropout at 1 position should still be detectable by a *different*
+   perturbation operator or position, because it was never optimized against
    those. If so, the operator family built in H21, H22, H23, H26 and H27 is not a menu of
-   alternatives, it is a defence in depth an attacker must evade all of at once.
+   alternatives, it is a defense in depth an attacker must evade all of at once.
 
 ## Mechanism
 
@@ -47,11 +47,11 @@ evasion benefit and risking a separation readable from the other side.
 
 ## Why it should work
 
-PSBD reads exactly one scalar per sample, and that scalar is differentiable with
-respect to the weights. A defence whose entire decision rests on a differentiable
+PSBD reads exactly 1 scalar per sample, and that scalar is differentiable with
+respect to the weights. A defense whose entire decision rests on a differentiable
 statistic that the attacker can compute during training is, in principle,
 trainable against. Nothing about PSU is hidden from the attacker: the placement
-registry is public, the rate rule is published, and the statistic is Equation 2.
+registry is public, the rate rule is published and the statistic is Equation 2.
 
 ## Why it might fail
 
@@ -61,17 +61,17 @@ registry is public, the rate rule is published, and the statistic is Equation 2.
   weakening the backdoor, the attacker faces a real trade-off and the penalty
   buys evasion only at the cost of ASR. That would be a strong positive result
   for PSBD.
-- **The penalty may degenerate.** The cheapest way to close a gap between two
-  means is to move either one. If clean PSU falls to meet poisoned PSU rather
+- **The penalty may degenerate.** The cheapest way to close a gap between 2
+  means is to move either 1. If clean PSU falls to meet poisoned PSU rather
   than the reverse, the attacker has changed the model's overall robustness
-  rather than hidden anything, and the gap alone cannot tell the two apart. Both
+  rather than hidden anything, and the gap alone cannot tell the 2 apart. Both
   group means are logged every epoch for this reason.
 - **Estimator mismatch.** The attacker trains against a k = 2 or 3 estimate of an
   expectation the defender evaluates at a different k and a different rate. The
   penalty may fit the attacker's particular noise realisation rather than the
   statistic.
 
-## Success criteria, all three required together
+## Success criteria, all 3 required together
 
 | Quantity | Requirement | Result |
 |---|---|---|
@@ -124,13 +124,13 @@ the placement but differ in perturbation mechanism.
 
 ### Why transfer fails
 
-The evasion penalty optimises against one specific Jacobian (the one computed
+The evasion penalty optimizes against 1 specific Jacobian (the one computed
 through the probed operator's forward graph). A different operator produces a
 different Jacobian, so the gradient never touches the features that operator
 reads. This is the same mechanism H16 observed: the backdoor direction's
 coordinate indices relocate almost completely under a change in the optimizer
 (Jaccard 0.03 to 0.08 between Adam and SAM), while ASR stays constant. The
-evasion does something similar: it moves the representation's response to one
+evasion does something similar: it moves the representation's response to 1
 probe without moving its response to others.
 
 ## Cost
@@ -140,9 +140,9 @@ backward, so peak memory scales with `(passes + 1) x batch`. Batch 64 with
 passes 3 exhausted a 40GB card, which is what `psbd_evade_smoke` establishes a
 safe setting for before the matrix runs. Roughly 4x normal training wallclock.
 
-One implementation note worth keeping: the first version computed the clean
+1 implementation note worth keeping: the first version computed the clean
 forward twice, once for the PSU base term and once for cross-entropy. That extra
-retained graph was on its own enough to cause the OOM. The two now share one
+retained graph was on its own enough to cause the OOM. The 2 now share 1
 forward.
 
 ## Increasing the dropout rate does NOT counter the adaptive attacker
@@ -153,7 +153,7 @@ against the operator family rather than a fixed rate.
 
 A full rate sweep across all available rates (0.05 to 0.9) on ViT CIFAR-100
 shows that the evasive model's AUROC at the probed operator is below 0.05 at
-every rate for badnet_a2o, blend 10%, and adaptive_blend. The oracle-best rate
+every rate for badnet_a2o, blend 10% and adaptive_blend. The oracle-best rate
 for the evasive model is 0.024-0.053 on badnet, 0.018 on blend 10%, 0.040-0.158
 on adaptive_blend.
 
@@ -172,8 +172,8 @@ the penalty mechanism itself rather than a per-attack interaction.
 
 ## A measurement that came out of the unit tests
 
-PSU is **identically zero at random initialisation**: a near-uniform softmax
-barely moves under dropout, so `P_c` is the same with and without it, and the
+PSU is **identically zero at random initialization**: a near-uniform softmax
+barely moves under dropout, so `P_c` is the same with and without it and the
 statistic only exists once the model is confident. It rose from 0.0000 to 0.12
 over 60 warmup steps on a toy model. This is a mechanical reason for the paper's
 instruction to score a late-stage model rather than an early one, and it means

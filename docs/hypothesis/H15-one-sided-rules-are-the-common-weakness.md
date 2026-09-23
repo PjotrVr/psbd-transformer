@@ -1,9 +1,9 @@
-# H15 — One-sided decision rules are a systematic weakness across backdoor detectors
+# H15: One-sided decision rules are a systematic weakness across backdoor detectors
 
 **Status: RETIRED as a method. Kept as a recorded negative result.**
 
 The measurements below stand and are not withdrawn: STRIP and PSBD really do run
-anti-correlated on nine checkpoints, and the effect really is concentrated at low
+anti-correlated on 9 checkpoints, and the effect really is concentrated at low
 poison rate. What is withdrawn is the idea of *acting* on it.
 
 **Inversion is a diagnostic symptom of a broken assumption, never a decision
@@ -30,16 +30,16 @@ build on.
 
 ## Original content, retained as recorded observation
 
-**Original status: SUPPORTED.** Found independently in two unrelated detectors.
-Nine checkpoints where STRIP is genuinely anti-correlated, recovering up to +0.98
+**Original status: SUPPORTED.** Found independently in 2 unrelated detectors.
+9 checkpoints where STRIP is genuinely anti-correlated, recovering up to +0.98
 AUROC when the sign is allowed to flip, against a measured chance floor of 0.515.
 
 ## Claim
 
-Both PSBD and STRIP flag one tail: PSBD flags low prediction-shift uncertainty, STRIP
+Both PSBD and STRIP flag 1 tail: PSBD flags low prediction-shift uncertainty, STRIP
 flags low superimposition entropy. Each assumes the backdoor makes its statistic move
-in one particular direction. When that assumption fails the detector does not degrade
-to chance, it **runs backwards**, and a one-sided rule scores near-perfect separation
+in 1 particular direction. When that assumption fails the detector does not degrade
+to chance, it **runs backwards** and a one-sided rule scores near-perfect separation
 as total failure.
 
 This was first found for PSBD on all-to-all ([H5](H5-all-to-all-breaks-psbd.md)).
@@ -66,8 +66,8 @@ Checkpoints clearing that floor by a wide margin:
 | `lc` 0.5% | 0.12 | 0.390 | 0.610 | +0.220 |
 | `tact` 0.5% | 0.11 | 0.415 | 0.585 | +0.170 |
 
-Nine genuinely inverted. Five more are nominally inverted but land within 0.05 of the
-floor; those are the selection effect and are **not** counted.
+9 genuinely inverted. 5 more are nominally inverted but land within 0.05 of the
+floor. Those are the selection effect and are **not** counted.
 
 `badnet_a2a` at 0.5% poisoning is the extreme case: AUROC 0.010 is a detector that is
 right 99% of the time about which sample is poisoned, and wrong about which direction
@@ -75,27 +75,27 @@ means poisoned.
 
 ## Which attacks invert, and why
 
-The nine split cleanly into two families, and neither is the family STRIP was designed
+The 9 split cleanly into 2 families, and neither is the family STRIP was designed
 against:
 
 - **Low-amplitude, full-image triggers**: `adaptive_blend`, `sig`, `lc`. STRIP's
   premise is that a trigger survives superimposition and keeps dragging the prediction
   to the target, giving *low* entropy. A low-amplitude trigger spread over the whole
-  image does not survive; it acts as added noise, which makes the superimposed image
+  image does not survive. It acts as added noise, which makes the superimposed image
   *harder* to classify and pushes entropy *up*. The statistic still separates, with
   the sign reversed.
 - **All-to-all**: `badnet_a2a`. No single target class for the superimposed prediction
   to collapse onto, the same structural reason PSBD inverts on it.
 
-Note what these two families have in common with the PSBD result: they are exactly the
+Note what these 2 families have in common with the PSBD result: they are exactly the
 cases where the detector's stated mechanism does not apply. The inversion is a
 signature of a broken assumption, not of a broken measurement.
 
 ## Why this matters more than either individual result
 
-The same failure appeared in two detectors that share no machinery: one measures
+The same failure appeared in 2 detectors that share no machinery: 1 measures
 prediction shift under internal dropout, the other measures entropy under input
-superimposition. Both are one-tailed, both invert, and both invert on the cases their
+superimposition. Both are one-tailed, both invert and both invert on the cases their
 stated mechanism does not cover.
 
 Since a two-sided rule costs almost nothing (the benign floor rises from 0.5 to 0.515)
@@ -134,13 +134,13 @@ the pool is poisoned**, which is the realistic case. A rare contaminant does not
 a 5th percentile.
 
 Tightening the tail largely rescues it: at q = 0.002 agreement is 79% to 92% across
-all three fractions, and a fixed tight tail is a reasonable default since it costs
+all 3 fractions, and a fixed tight tail is a reasonable default since it costs
 little at high contamination and is the only thing that works at low.
 
 **So the honest position is:** the inversion is real and large, a label-free tail
 choice recovers most of the gain when the tail quantile is matched to a rare
 contaminant, and it fails outright with a loose tail. The two-sided numbers above
-remain an upper bound; the deployable figure is roughly 80% of the checkpoints getting
+remain an upper bound. The deployable figure is roughly 80% of the checkpoints getting
 the right tail at 1% contamination, not all of them.
 
 A genuinely two-sided statistic (distance from the clean-validation median) needs no

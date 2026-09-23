@@ -1,4 +1,4 @@
-# H20 — The placement that matters is sub-layer input versus residual stream, not pre-residual versus post-residual
+# H20: The placement that matters is sub-layer input versus residual stream, not pre-residual versus post-residual
 
 **Status: SUPPORTED.** +0.054 deployable AUROC, 4.0 standard errors from zero, higher
 on 11 of 12 units, on a fully balanced panel.
@@ -7,7 +7,7 @@ on 11 of 12 units, on a fully balanced panel.
 
 This project was founded on a binary: dropout **before** the residual add
 (pre-residual) against **after** it (post-residual). Both have now been measured over
-their own rate windows, on balanced panels, at deployable rates, and the answer is
+their own rate windows, on balanced panels and at deployable rates, and the answer is
 that the distinction barely matters, because **both sit in the losing family**.
 
 The split that does matter is between perturbing what a sub-layer **reads** and
@@ -24,7 +24,7 @@ perturbing what the residual stream **carries**:
 
 Balanced panel, 13 placements x 12 units, every cell present, CIFAR-10 ViT, deployable
 (adaptive-rate) AUROC, `badnet_a2a` excluded as the known PSBD failure case. Paired
-per unit, so each comparison is on one problem:
+per unit, so each comparison is on 1 problem:
 
 | | mean | sd | se | distance from 0 | units higher |
 |---|---|---|---|---|---|
@@ -44,7 +44,7 @@ Balanced panel means:
 
 **Within the winning family the ordering is noise.** `before_attention_norm` beats
 `before_attention` by 0.006, which is 0.41 standard errors and wins on only 5 of 12
-units. Naming a single best placement is not supported; naming the family is.
+units. Naming a single best placement is not supported. Naming the family is.
 
 **And pre-residual versus post-residual is 0.002**, the founding question, both
 sitting 0.06 below the input-side family.
@@ -99,7 +99,7 @@ instead corrupts the computation that produces the write, and there is no compar
 cheap path to restore it.
 
 That predicts something testable, and the prediction has to be stated in the right
-direction. PSBD does **not** want the backdoor direction destroyed; it wants the
+direction. PSBD does **not** want the backdoor direction destroyed. It wants the
 clean evidence destroyed while the trigger path survives. So the winning family
 should **retain more** separation along the backdoor direction at matched clean
 shift ratio, not less.
@@ -137,7 +137,7 @@ names.
 ## The cheap option: 1 perturbation site instead of 12
 
 `after_embedding` puts a single dropout before block 1. Every other placement here
-installs one per block, 12 sites on ViT. On the balanced panel it is **statistically
+installs 1 per block, 12 sites on ViT. On the balanced panel it is **statistically
 indistinguishable from all of them**:
 
 | after_embedding vs | delta | distance | wins |
@@ -160,7 +160,7 @@ says decides deployable performance:
 | `pre_residual` | 0.084 |
 
 Its small mean shortfall is not spread evenly. Against `before_attention_norm` per
-unit, it wins 6 of 9 on `blend`, `bpp` and `lf` with tiny margins either way, and
+unit it wins 6 of 9 on `blend`, `bpp` and `lf` with tiny margins either way. It
 loses on `badnet_a2o` at 1% (0.494 against 0.615) and 10% (0.570 against 0.837),
 while winning at 5% (0.855 against 0.842).
 
@@ -174,9 +174,9 @@ settles:
 | 10% | 0.570 | **0.601** | 0.031 |
 
 At 1% and 10% no rate in the grid gets `after_embedding` above 0.60 on this attack.
-The rule is aiming fine, the gaps are the smallest in the table; there is simply
+The rule is aiming fine, the gaps are the smallest in the table. There is simply
 nothing to aim at. So this is a real limitation of the placement against the static
-patch trigger, not noise, and the practical reading below has to be conditioned on
+patch trigger (not noise), and the practical reading below has to be conditioned on
 it rather than hedged.
 
 The natural explanation is that the patch trigger's direction does not reach `[CLS]`
@@ -209,7 +209,7 @@ seed. Recorded rather than smoothed over, because it is the kind of non-monotoni
 that usually means a confound rather than a discovery.
 
 **Practical reading.** A single dropout at the embedding matches 12-site schemes on
-`blend`, `bpp` and `lf`, is 3x easier for the rate rule to aim, and costs a twelfth
+`blend`, `bpp` and `lf`, is 3x easier for the rate rule to aim and costs a twelfth
 of the perturbation machinery. It **cannot** detect the static patch trigger: its
 ceiling there is 0.56 to 0.60 at 1% and 10% poisoning regardless of rate.
 

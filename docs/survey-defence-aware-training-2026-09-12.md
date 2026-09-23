@@ -56,7 +56,7 @@ reports the gain is largest exactly where detection is weakest, at low poisoning
 trigger strength, +34.38 points average true positive rate over the same detectors on a vanilla
 model. Our own `docs/sam-findings-2026-09-11.md` reruns this claim on ViT-B/16 CIFAR-100 with
 Spectral Signature and Activation Clustering at their own decision rules and reads at most 2.0
-points of TPR movement at 1% poisoning, essentially flat, against the paper's double-digit ResNet18
+points of TPR movement at 1% poisoning, nearly flat, against the paper's double-digit ResNet18
 CIFAR-10 gain. The most likely reason on record is a ceiling effect, ViT's target class features
 are already 73 to 79% separable under plain Adam at 1% poisoning where the paper's ResNet18 baseline
 for a weak trigger sits at 32.9%, leaving SAM little room to add. Our own PSBD-side reading (not
@@ -70,7 +70,7 @@ detection method, but its diagnosis is the one we need. It states directly that 
 purification fails specifically at low poisoning rates because backdoor and clean features are
 entangled in the same feature directions, and the entanglement is worse the fewer poisoned examples
 shaped that direction. FST's fix is to actively push the classifier's weight direction away from
-the compromised one during fine-tuning, which stabilizes purification across poisoning rates at a
+the compromised direction during fine-tuning, which stabilizes purification across poisoning rates at a
 cost of only 10 epochs of tuning. The relevant lesson for us is diagnostic, not directly portable,
 because FST assumes a fixed poisoned checkpoint and a labeled clean set, neither of which our
 training-time setting has, but the entanglement account explains why any low-rate defense needs to
@@ -84,7 +84,7 @@ head trained on the frozen backbone, and a semi-supervised fine-tune that treats
 samples as unlabeled. Because self-supervised pretraining never sees labels, it cannot learn the
 label-trigger shortcut in the first stage, so poisoned and clean features stay closer together in
 that space and the resulting classifier is harder to backdoor at all. It is a full retraining
-recipe, expensive, and it changes what gets learned rather than making an already-learned backdoor
+recipe, expensive and it changes what gets learned rather than making an already-learned backdoor
 more visible to a probe.
 
 **Backdoor Defense via Adaptively Splitting Poisoned Dataset (ASD).** Gao et al., CVPR 2023,
@@ -99,10 +99,10 @@ results are again reported at 5 to 10% poisoning rather than at 1%.
 
 **Backdoor Defense via Deconfounded Representation Learning (CBD).** Zhang, Jin, Wang, Qi, Wu, Yang,
 Wang, CVPR 2023, [arXiv:2303.06818](https://arxiv.org/abs/2303.06818), peer reviewed. Casts the
-backdoor as a confounder in a causal graph linking image and label, trains one deliberately
-under-fit model (via early stopping) to capture the confounded, trigger-driven association, and a
+backdoor as a confounder in a causal graph linking image and label, trains 1 deliberately
+under-fit model (via early stopping) to capture the confounded, trigger-driven association and a
 second model that is penalized for mutual information with the first model's confounded features
-and reweighted per sample. The mechanism, deliberately encouraging one copy of the network to
+and reweighted per sample. The mechanism, deliberately encouraging 1 copy of the network to
 overfit the shortcut early so a second copy can be pushed away from it, is the closest published
 idea in this survey to a training-time hinge that separates clean from backdoor behavior without
 sample labels, though it targets robust classification rather than a downstream detector's score
@@ -112,7 +112,7 @@ gap.
 Xiang, Xiong, Li, NeurIPS 2023, [arXiv:2310.17498](https://arxiv.org/abs/2310.17498), peer reviewed.
 An inference-time detector built on randomized smoothing, certifying that a flagged input's
 prediction under noise is dominated by a single class with a provable margin. It is a test-time
-detector, not a training-time lever, and it needs no clean validation set, but its certification
+detector, not a training-time lever and it needs no clean validation set, but its certification
 guarantee is a property of the noise distribution and the frozen model, so it offers a template for
 what a certified version of PSBD's own dropout perturbation could look like, at the cost of the
 usual smoothing overhead (many noisy forward passes per input).
@@ -192,7 +192,7 @@ ASD's per-sample loss trajectory (how fast a sample's own loss falls early in tr
 orthogonal to PSBD's dropout-shift signal and free to compute from logs we already write, since
 `training.loop` already tracks per-epoch loss. Before touching the training objective, log
 per-sample early-training loss for every checkpoint we already have at 1% poisoning and correlate
-it against the eventual PSU gap that same sample gets from PSBD, to see whether the two signals
+it against the eventual PSU gap that same sample gets from PSBD, to see whether the 2 signals
 disagree in the cases PSBD misses. If they are correlated at 1% where PSBD alone is weak, a fused
 score (their loss-speed feature plus PSBD's PSU) is a 0-cost win with no training change at all.
 This is the lowest-risk item on this list because it changes nothing about training, only what we
@@ -214,7 +214,7 @@ BadNet or WaNet there.
 
 4. **SAM at rho tuned per dataset rather than a single fixed rho, revisited only if item 1 fails.**
 Our own `docs/sam-findings-2026-09-11.md` already shows SAM's PSBD-TM gain is real but rate-gated,
-present and significant at 10%, flat or sign-flipping at 1%, and the training-set detection version
+present and significant at 10%, flat or sign-flipping at 1% and the training-set detection version
 of the same idea (arXiv:2411.11525) shows the identical rate gate on ViT independently. This is not
 a new idea to test, it is a documented negative for our exact question at the exact rate we care
 about, kept on the list only because a rho sweep finer than the 4 values already tried (a value
@@ -230,7 +230,7 @@ just the false negatives. The candidate worth testing is narrower than their cla
 our existing `--augment standard` alongside a CutMix variant only on the hard low-rate triggers
 already prioritized in this project (adaptive-blend, WaNet, LC, SIG at 1% and 5%) and check ASR
 first. If ASR survives above the 0.85 clearing bar under CutMix, check whether PSBD's PSU gap
-widens; if ASR collapses, this idea is disqualified for our setting the same way it was for
+widens. If ASR collapses, this idea is disqualified for our setting the same way it was for
 Borgnia et al.'s BadNet. Cost is 1 augmentation flag change and a rerun of the existing 1%/5% hard
 attack grid, cheap and already gated by an ASR check we run anyway.
 

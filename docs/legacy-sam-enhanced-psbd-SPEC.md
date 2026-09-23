@@ -7,7 +7,7 @@ Source read: LaTeX at
 (`main.tex`, `sec/0_abstract.tex`, `sec/1_intro.tex`, `sec/2_related.tex`, `sec/3_method.tex`,
 `sec/4_experiment.tex`, `sec/6_conclusion.tex`, `sec/proof.tex`, `sec/X_suppl.tex`, `tables/*.tex`,
 `figs/*.png`). No reference code is released (no GitHub URL anywhere in `sec/` or `main.bib`).
-All labels below are `paper` unless stated; there is no code side to compare against.
+All labels below are `paper` unless stated. There is no code side to compare against.
 
 ## Threat model
 
@@ -44,7 +44,7 @@ trigger_activation_change(neuron, layer, clean_set) =
 ```
 
 where `x̃ = g(x, Δ)` is the triggered version of the same image `x`, and the network is written
-`f_θ = f^(L) ∘ ... ∘ f^(1)`. Backdoor effect of a model = mean of the **Top-K** TAC values;
+`f_θ = f^(L) ∘ ... ∘ f^(1)`. Backdoor effect of a model = mean of the **Top-K** TAC values.
 `K = 2` in Fig. 2 (`sec/3_method.tex` Fig. `tac_auc` caption). `paper`
 
 ### 2. SAM objective
@@ -66,7 +66,7 @@ loss is averaged over the WHOLE poisoned training set (clean part and poisoned p
 perturbation_radius (rho) > 0 is the weight-perturbation budget
 ```
 
-Note the loss is over all of `D_tr`; there is no separate poisoned-only loss term and no
+Note the loss is over all of `D_tr`. There is no separate poisoned-only loss term and no
 clean/poison split in the objective. `paper`
 
 ### 3. SAM first-order expansion used in the proof
@@ -79,7 +79,7 @@ Original form (`sec/proof.tex`):
   = ∇[ ℓ(θ) + ρ||∇ℓ(θ)||_2 + O(ρ²) ]
 ```
 
-Descriptive form: to first order, one SAM step equals one gradient step on
+Descriptive form: to first order, 1 SAM step equals 1 gradient step on
 `cross_entropy_loss + perturbation_radius * gradient_norm`, i.e. SAM is gradient-norm
 regularization. `paper`
 
@@ -106,7 +106,7 @@ then one SAM step raises neuron j's pre-activation on the poisoned input more th
 ```
 
 Remark (Sec. 3.3): neurons satisfying the condition have strongly negative `a_j` and are
-activated by the poisoned sample; the authors identify these as backdoor neurons and conclude
+activated by the poisoned sample. The authors identify these as backdoor neurons and conclude
 SAM raises poisoned-sample activation on backdoor neurons. Target label is assumed `y_t = 0`.
 `paper`
 
@@ -160,25 +160,25 @@ regularization are `NOT STATED` (see "Not stated"). `paper`
 
 ## Evaluation protocol
 
-- **Split scored**: the poisoned **training** set `D_tr`. Detection is per training sample; there
+- **Split scored**: the poisoned **training** set `D_tr`. Detection is per training sample. There
   is no held-out detection split. `paper`, Sec. 3.1.
-- **Checkpoint**: the single model trained in Stage 1; no statement about which epoch/checkpoint
+- **Checkpoint**: the single model trained in Stage 1. No statement about which epoch/checkpoint
   is used. `NOT STATED`.
-- **Seeds / aggregation**: `NOT STATED`. Tables report one number per (attack, detector, dataset)
+- **Seeds / aggregation**: `NOT STATED`. Tables report 1 number per (attack, detector, dataset)
   cell. The "Average" row is the mean *delta* (SAM minus base) across the attacks in the column.
-- **Metrics reported**: TPR (%), FPR (%), F1 (%). No AUROC in the main tables; AUC appears only in
+- **Metrics reported**: TPR (%), FPR (%), F1 (%). No AUROC in the main tables. AUC appears only in
   the correlation study (Fig. 2) and the intro t-SNE claim. Sec. 4.1 "Evaluation metrics".
-- **Metric definitions**: not written out. TPR = fraction of poisoned training samples flagged;
-  FPR = fraction of clean training samples flagged; F1 = harmonic mean of precision and recall
+- **Metric definitions**: not written out. TPR = fraction of poisoned training samples flagged.
+  FPR = fraction of clean training samples flagged. F1 = harmonic mean of precision and recall
   (the sentence defining F1 is commented out in `sec/4_experiment.tex` line 17). Because base rate
-  is 5%, F1 is heavily penalized by FPR; several cells show TPR near 100 with F1 near 50 for this
+  is 5%, F1 is heavily penalized by FPR. Several cells show TPR near 100 with F1 near 50 for this
   reason (e.g. AC + SAM on BadNets: TPR 95.4, FPR 13.3, F1 42.5).
 - **Threshold**: no global threshold. Each off-the-shelf detector supplies its own decision rule
   (AC K-means split, SS/Spectre robust-statistic cut, SCAn hypothesis test, Beatrix's own
   threshold). Several detectors are visibly run at a **fixed removal budget**: Beatrix rows are
   pinned at FPR = 5.0 across the whole vanilla column, and STRIP rows sit near 10-17% FPR. So
   "successful detection" = flagged by the base detector's own rule, applied to SAM features.
-  `paper`; the pinning is inferred from the tables, not stated.
+  `paper`. The pinning is inferred from the tables, not stated.
 - **ASR convention**: not applicable, ASR is barely used. The only ASR number is "the average
   attack success rate is only 31.8%" at poisoning ratio 0.1% (Sec. 4.2). Whether target-class
   samples are excluded from the ASR set is `NOT STATED`.
@@ -188,7 +188,7 @@ regularization are `NOT STATED` (see "Not stated"). `paper`
 ## Reported results
 
 Datasets/architectures actually shown in the compiled paper: **CIFAR-10 + ResNet18** (Table 1),
-plus one more table whose caption and label disagree (see divergences). Tiny ImageNet, VGG19-BN
+plus 1 more table whose caption and label disagree (see divergences). Tiny ImageNet, VGG19-BN
 and DenseNet-161 are deferred to a supplementary that does not exist in this source or on arXiv.
 **No Vision Transformer anywhere.** `paper`, Sec. 4.1.
 
@@ -212,9 +212,9 @@ Attacks (10): BadNets-A2O, BadNets-A2A, Blended, LC, LF, SSBA, TaCT, Adap-Blend,
 | Mean ΔFPR | -1.8 | -0.0 | -1.3 | **+4.0 (worse)** | -2.3 |
 | Mean ΔF1 | +25.8 | +1.9 | +22.8 | +8.0 | +69.5 |
 
-Notable per-cell **regressions** with SAM: SCAn/BadNets 96.0 -> 95.2, SCAn/Blended 99.2 -> 98.7,
-SCAn/LC 100.0 -> 99.9, AC/BadNets 96.8 -> 95.4 with FPR 0.1 -> 13.3 (F1 97.1 -> 42.5),
-AC/SSBA 99.3 -> 96.5 with FPR 3.3 -> 16.2 (F1 76.1 -> 38.3), AC/BadNets-A2A 97.8 -> 96.1.
+Notable per-cell **regressions** with SAM: SCAn/BadNets 96.0 to 95.2, SCAn/Blended 99.2 to 98.7,
+SCAn/LC 100.0 to 99.9, AC/BadNets 96.8 to 95.4 with FPR 0.1 to 13.3 (F1 97.1 to 42.5),
+AC/SSBA 99.3 to 96.5 with FPR 3.3 to 16.2 (F1 76.1 to 38.3), AC/BadNets-A2A 97.8 to 96.1.
 The abstract's headline "+34.38% TPR on average" does not match any single table average here.
 
 ### Table 2 (`tables/gtsrb.tex`, label `tab:gtsrb`, caption says "Tiny"), TPR% base / +SAM
@@ -249,7 +249,7 @@ which breaks the assumptions of Spectre and SS", Sec. 4.2). SCAn cannot handle B
 | Blended | no | yes | 60.4 / 1.9 | 27.1 / 5.0 |
 | Blended | yes | yes | 94.6 / 1.1 | 99.8 / 1.5 |
 
-SAM alone carries most of the gain; feature scaling alone gives a smaller but real gain.
+SAM alone carries most of the gain. Feature scaling alone gives a smaller but real gain.
 
 ### rho sensitivity (Fig. 10, `figs/fig10_rho.png`)
 
@@ -259,11 +259,11 @@ ResNet18. Read off the plot (no table is given):
 - SCAn: flat, TPR 93-100 across the whole range including `rho = 0`.
 - SS: TPR ~63-80 at `rho = 0`, jumps to ~85-97 by `rho = 0.05-0.10`, then slowly decays to ~85-92
   at `rho = 0.5`.
-- AC: TPR ~0-10 at `rho = 0`, near 95-100 for every `rho >= 0.15`. One dip to ~10-17 at
-  `rho = 0.10` for four of five attacks (unexplained).
+- AC: TPR ~0-10 at `rho = 0`, near 95-100 for every `rho >= 0.15`. 1 dip to ~10-17 at
+  `rho = 0.10` for 4 of 5 attacks (unexplained).
 - Beatrix: TPR 5-57 at `rho = 0`, reaches ~100 by `rho = 0.10-0.15` and stays there.
-- FPR stays flat and low for all four across the sweep.
-- Text conclusion (Sec. 4.3): "rho proves to be relatively insensitive; a broad range of values can
+- FPR stays flat and low for all 4 across the sweep.
+- Text conclusion (Sec. 4.3): "rho proves to be relatively insensitive. A broad range of values can
   be selected with good detection performance." Best region from the plot is roughly
   `rho ∈ [0.10, 0.30]`.
 
@@ -278,13 +278,13 @@ Average TPR over all attacks, CIFAR-10 / ResNet18, base vs +SAM (read off the pl
 | 1% | ~76 / ~84 | ~40 / ~88 | ~2 / ~93 | ~19 / ~97 |
 | 5% | ~85 / ~88 | ~59 / ~83 | ~67 / ~97 | ~14 / ~99 |
 
-At 0.1% poisoning the method still fails (avg TPR below 60%); the paper attributes this to
+At 0.1% poisoning the method still fails (avg TPR below 60%). The paper attributes this to
 ASR 31.8%, i.e. "a complete backdoor cannot form".
 
-### Orphan tables (`tables/cifar0.001.tex`, `cifar0.005.tex`, `cifar0.01.tex`) — NOT compiled
+### Orphan tables (`tables/cifar0.001.tex`, `cifar0.005.tex`, `cifar0.01.tex`), not compiled
 
-These three files are not `\input` by `main.tex` (they are commented out at `main.tex:100-102`).
-They add two detectors absent from the compiled paper: **CD (Cognitive Distillation)** and
+These 3 files are not `\input` by `main.tex` (they are commented out at `main.tex:100-102`).
+They add 2 detectors absent from the compiled paper: **CD (Cognitive Distillation)** and
 **STRIP**. Mean ΔTPR from these files:
 
 | file | Spectre | SCAn | SS | AC | Beatrix | CD | STRIP |
@@ -297,7 +297,7 @@ STRIP is the one **prediction/output-space** detector in the whole paper and it 
 detector whose average TPR goes **down** or barely moves under SAM, with FPR in the 10-17% band.
 These tables were dropped from the compiled version. Treat their numbers as unverified drafts
 (their captions are stale, see divergences), but the sign of the STRIP result is consistent
-across all three files.
+across all 3 files.
 
 ## Paper versus code divergences
 
@@ -310,12 +310,12 @@ the paper source instead:
 2. `tables/cifar0.001.tex`, `cifar0.005.tex`, `cifar0.01.tex` all carry the identical caption
    "eta = 0.09, i.e. 500 poisoned samples per class" and the identical label `tab:cifar10`,
    although the filenames imply poisoning ratios 0.1%, 0.5%, 1%. `cifar0.001.tex` and
-   `cifar0.01.tex` are near-duplicates differing in only three cells (LC/Spectre 20.8 vs 26.4,
+   `cifar0.01.tex` are near-duplicates differing in only 3 cells (LC/Spectre 20.8 vs 26.4,
    TaCT/Spectre 18.5 vs 22.6, TrojanNN/Beatrix 57.4 vs 100.0). Stale copies. `paper`
-3. Abstract claims "+34.38% TPR on average"; a commented-out earlier abstract claims "+25.54%".
+3. Abstract claims "+34.38% TPR on average". A commented-out earlier abstract claims "+25.54%".
    Neither number equals any table's average (Table 1 column means: +29.8, +3.2, +24.2, +29.2,
    +85.5). The aggregation producing 34.38 is not defined anywhere. `paper`, `sec/0_abstract.tex:13,16`
-4. Sec. 4.4 says "As shown in Fig. 13 (assuming the correct figure reference)" — the authors left
+4. Sec. 4.4 says "As shown in Fig. 13 (assuming the correct figure reference)", the authors left
    an unresolved cross-reference note in the text (`sec/4_experiment.tex:106`). The weight-norm
    claim spans `fig:weight_norm` and `fig:weightdiff` and it is unclear which supports which
    sentence. `paper`
@@ -326,9 +326,9 @@ the paper source instead:
    and the extra dataset **do not exist in any public version**. `paper`
 6. Sec. 4.1 lists BadNets "in its class-specific (BadNets-A2O) and universal forms (BadNets-A2A)".
    The A2O/A2A naming is inverted relative to normal usage (A2O = all-to-one is the universal
-   trigger; A2A = all-to-all is the label-shifting variant). Terminology slip only. `paper`
-7. Sec. 4.2 says "For CIFAR-10, we improved the TPR by over 25% for four detection methods";
-   Table 1 shows four columns above +24 (Spectre +29.8, SS +24.2, AC +29.2, Beatrix +85.5), so SS
+   trigger. A2A = all-to-all is the label-shifting variant). Terminology slip only. `paper`
+7. Sec. 4.2 says "For CIFAR-10, we improved the TPR by over 25% for four detection methods".
+   Table 1 shows 4 columns above +24 (Spectre +29.8, SS +24.2, AC +29.2, Beatrix +85.5), so SS
    at +24.2 is under the stated 25 threshold. Minor overclaim. `paper`
 
 ## Not stated
@@ -342,11 +342,11 @@ arXiv v1 HTML:
 - SAM variant details: m-sharpness, adaptive vs standard, whether the perturbation is computed
   per micro-batch, whether BatchNorm statistics are frozen in the first pass.
 - Number of seeds, variance/error bars, whether tables are single runs.
-- PCA rank of the projection matrix `P`, covariance shrinkage/regularization, and the exact rule
+- PCA rank of the projection matrix `P`, covariance shrinkage/regularization and the exact rule
   for "potential clean samples dynamically collected from the poisoned dataset" in feature scaling.
 - Which layer's features `φ` returns for each architecture (only the neuron-level TAC/weight-norm
   analysis names a layer: the last conv layer of ResNet18).
-- The decision threshold for each detector; whether Beatrix/STRIP are run at a fixed FPR budget.
+- The decision threshold for each detector. Whether Beatrix/STRIP are run at a fixed FPR budget.
 - Formal definitions of TPR, FPR, F1 and the population they are computed over.
 - ASR definition and whether target-class samples are excluded from the ASR denominator.
 - Any Vision Transformer or attention-based architecture: **absent entirely**. Only ResNet18
@@ -354,7 +354,7 @@ arXiv v1 HTML:
 - Any layer-depth or layer-wise analysis: **absent**. All neuron-level evidence is the single
   final feature layer.
 - Any prediction-space / uncertainty-based detector in the compiled paper: **absent** (STRIP and
-  CD appear only in the three uncompiled orphan tables). PSBD is not cited in `main.bib` and not
+  CD appear only in the 3 uncompiled orphan tables). PSBD is not cited in `main.bib` and not
   evaluated.
 - Clean accuracy / ASR of the SAM-trained models versus vanilla (the cost side of the tradeoff)
   except the single 31.8% ASR figure at 0.1% poisoning.

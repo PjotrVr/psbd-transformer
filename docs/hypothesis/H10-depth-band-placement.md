@@ -1,13 +1,13 @@
-# H10 — Aiming dropout at the depth where an attack's direction lives beats spreading it over all blocks
+# H10: Aiming dropout at the depth where an attack's direction lives beats spreading it over all blocks
 
 **Status: the band premise is SUPPORTED (6/6). The onset-based selection rule is
 REFUTED by a pre-registered out-of-sample test, 0/2.**
 
 Restricting pre-residual dropout to a band of blocks always beats applying it to all
-12. But the onset layer does **not** predict which band, in either direction, and the
-rule that appeared to work was fitted to four points.
+12. But the onset layer does **not** predict which band (in either direction), and the
+rule that appeared to work was fitted to 4 points.
 
-> **Metric note, added later.** Every AUROC in this file is the **oracle** value:
+> **Metric note, added later.** Every AUROC recorded here is the **oracle** value:
 > the rate is chosen by maximizing AUROC, which reads the labels. See
 > [H19](H19-placement-ranking-is-rate-selection.md). The headline "a band beats
 > all-blocks" survives at the deployable rate (15 of 19 checkpoints), but the
@@ -34,12 +34,12 @@ blocks instead of 12.
 
 ## What was refuted, and how
 
-After the four derivation attacks, the pattern looked clean: attacks whose direction
+After the 4 derivation attacks, the pattern looked clean: attacks whose direction
 is written early were best caught late, and the one written late was best caught
 early. The inverted rule "perturb as far as possible from the onset layer" fitted all
-four.
+4.
 
-It was pre-registered against two held-out attacks. Onsets were measured first, the
+It was pre-registered against 2 held-out attacks. Onsets were measured first, the
 predictions written to `docs/runs/2026-08-13-h10-out-of-sample.md`, and only then were
 the jobs run.
 
@@ -53,13 +53,13 @@ the jobs run.
 the best by 0.158. That checkpoint was the sharper test by design, because its onset
 of 12 forced the rule to extrapolate past the derivation range.
 
-So the onset-to-band mapping was an artifact of four data points. Four attacks,
-three bands, and a rule with a free direction is not enough evidence for a
+So the onset-to-band mapping was an artifact of 4 data points. 4 attacks,
+3 bands, and a rule with a free direction is not enough evidence for a
 mechanism, and it took a deliberate held-out test to see it.
 
 ## What to use instead
 
-**Blocks 5-8 is the robust default.** Over all six attacks it has the best mean rank
+**Blocks 5-8 is the robust default.** Over all 6 attacks it has the best mean rank
 (1.67 against 1.83 for blocks 9-12 and 2.50 for blocks 1-4) and, unlike either
 alternative, it is **never worse than second**. Blocks 9-12 wins more often (3 of 6)
 but collapses badly when it loses: 0.829 on `badnet_a2o` and 0.569 on
@@ -76,7 +76,7 @@ accounted for by any mechanism proposed here. The honest position is that the ba
 effect is real and reproducible, and its cause is not yet known. Candidates worth
 testing, none of them tested:
 
-- Blocks 5-8 may simply be where clean class evidence is most concentrated,
+- Blocks 5-8 may just be where clean class evidence is most concentrated,
   independent of where any backdoor is written.
 - Late-block perturbation may be too close to the readout: whatever it damages, the
   model has no depth left to recover from, so clean and backdoor collapse together.

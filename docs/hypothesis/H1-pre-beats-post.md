@@ -1,7 +1,7 @@
-# H1 — Pre-residual dropout beats post-residual dropout on ViT
+# H1: Pre-residual dropout beats post-residual dropout on ViT
 
-**Status: REFUTED as a general claim.** It holds for exactly one trigger family
-(static patch) and is reversed for the other three. `pre_residual` is also not the
+**Status: REFUTED as a general claim.** It holds for exactly 1 trigger family
+(static patch) and is reversed for the other 3. `pre_residual` is also not the
 best placement available: it ranks 4th of 11.
 
 ## Claim
@@ -40,7 +40,7 @@ Head to head, at each placement's own best rate:
 | `lf` | 0.947 | **0.969** | 0.07 | post |
 | `badnet_a2o` | **0.889** | 0.747 | 0.02 | pre |
 
-**Post-residual wins on three of the four working attacks.** The founding claim
+**Post-residual wins on 3 of the 4 working attacks.** The founding claim
 survives only for the static patch trigger, where pre-residual leads by +0.142.
 
 ## Why the earlier verdict was wrong
@@ -51,14 +51,14 @@ range*. Given its own window, it gains +0.065 (blend), +0.057 (bpp), +0.053 (lf)
 +0.080 (badnet_a2o) over its phase-3a scores.
 
 This is [H9](H9-strength-not-position.md), the adversarial hypothesis, being right.
-The apparent pre-versus-post gap was mostly an artifact of comparing one placement
+The apparent pre-versus-post gap was mostly an artifact of comparing 1 placement
 inside its range against another outside its own.
 
-## Two further findings the ranking exposes
+## 2 further findings the ranking exposes
 
 **`pre_residual` is worse than half of itself.** It combines
 `before_attention_residual` (0.910) and `before_mlp_residual` (0.969), and scores
-0.948 — *below* its better component. Adding the attention-branch perturbation
+0.948, *below* its better component. Adding the attention-branch perturbation
 actively dilutes the MLP-branch one. `post_residual` behaves oppositely: its
 components score 0.873 and 0.896 and the combination reaches 0.924. So combining
 positions is not additive in either direction, and the two-position combos that
@@ -66,7 +66,7 @@ frame this whole study were never the right unit of analysis.
 
 **The best placements are on the attention side, and none of them is a residual
 position at all.** `before_mlp_residual`, `before_attention_norm` and
-`before_attention` take the top three. Two of those perturb *inputs to a sublayer*,
+`before_attention` take the top 3. 2 of those perturb *inputs to a sublayer*,
 not contributions to the stream.
 
 ## Reproduce

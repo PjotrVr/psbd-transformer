@@ -1,11 +1,11 @@
-# H19 — On Swin, the placement ranking is not about placement. It is about which placement the rate rule can aim at
+# H19: On Swin, the placement ranking is not about placement. It is about which placement the rate rule can aim at
 
 **Status: the Swin half is INCONCLUSIVE and this file has now been wrong about it
 twice, in opposite directions.** On ViT the effect remains, in the weaker form
 recorded below.
 
 > **Correction history, 2026-08-14.** The Swin deployable difference was reported as
-> a firm result, then as firmly refuted, and it is neither. Tracked as the stalled
+> a firm result, then as firmly refuted and it is neither. Tracked as the stalled
 > Swin arm was [unblocked](../runs/2026-08-14-swin-batch-completion.md) and the panel
 > grew:
 >
@@ -16,7 +16,7 @@ recorded below.
 > | **n = 16** | **+0.045** (1.1 SE) | **+0.055** (1.4 SE) | inconclusive |
 > | | CI [-0.026, +0.121] | CI [-0.019, +0.134] | |
 >
-> The point estimate has been 0.110, then 0.015, then 0.045, and at every n where a
+> The point estimate has been 0.110, then 0.015, then 0.045. At every n where a
 > bootstrap interval was computed **it contains zero**. The correct reading is that
 > Swin cannot resolve a difference of this size with the checkpoints available, not
 > that the difference is large and not that it is absent.
@@ -26,13 +26,13 @@ recorded below.
 > should have been written at n = 6, and is the stable statement at any n, is that a
 > 3-placement panel this small cannot settle it.
 >
-> One thing does survive independently of panel size: the oracle values are nearly
+> 1 thing does survive independently of panel size: the oracle values are nearly
 > identical across the 3 placements (spread **0.011**), so "placement barely matters
 > on Swin" holds even where the deployable comparison cannot decide.
 >
 > [H20](H20-input-side-beats-residual-adjacent.md) is unaffected and is the result to
-> rely on. Its family effect is a ViT measurement whose bootstrap CI, [+0.031,
-> +0.080], excludes zero, and which stays positive under every leave-one-out refit.
+> rely on. Its family effect is a ViT measurement whose bootstrap CI [+0.031,
+> +0.080] excludes zero, and which stays positive under every leave-one-out refit.
 >
 > **Pre-registered stopping rule, so this stops flip-flopping.** Re-reading the same
 > comparison at every panel size is what produced 3 different verdicts, and each
@@ -51,7 +51,7 @@ recorded below.
 > point. Recording the threshold in advance is the only thing that makes the eventual
 > verdict mean anything.
 
-Two follow-ups tested and **REFUTED**: a placement-dependent rate target does not
+2 follow-ups tested and **REFUTED**: a placement-dependent rate target does not
 close the gap (+0.002), and SAM does not sharpen the ridge. The SAM finding came with
 a separate correction, that every Adam-versus-SAM comparison here has been confounded
 by unequal coverage badly enough to invert the sign.
@@ -86,7 +86,7 @@ Swin CIFAR-10 `badnet_a2o`, mean over checkpoints:
 | `pre_residual` | 0.816 | **0.979** | 0.162 | 8 |
 
 Read the 2 middle columns against each other. **At the oracle rate all 3 placements
-are equivalent**, spanning 0.962 to 0.979, and `pre_residual` is nominally the best
+are equivalent** (spanning 0.962 to 0.979), and `pre_residual` is nominally the best
 of them. At the rate a defender can actually select, `before_attention_norm` wins by
 0.09 to 0.11 AUROC, purely because its gap is 4x smaller.
 
@@ -123,7 +123,7 @@ rather than 6 of 6. The exceptions are `blend_0_1`, `bpp_0_05`, `bpp_0_1` and
 `sig_0_1`, where all-12 pre_residual is better.
 
 **Its per-attack recommendations do not.** H10 names blocks 9-12 as best for
-`blend`, `bpp` and `lf`, and blocks 9-12 is exactly the placement with no deployable
+`blend`, `bpp` and `lf`. Blocks 9-12 is exactly the placement with no deployable
 operating point. The deployable choice is blocks 5-8 or 1-4, and 5-8 wins more
 often, which is what H10 concluded for a different reason.
 
@@ -133,7 +133,7 @@ It changes what a placement study is measuring. "Which position is best" has bee
 treated as a question about where in the block to perturb, and on Swin it is mostly
 a question about **which position has a well-behaved shift-ratio-to-AUROC curve**, so
 that a rule calibrated on clean data lands near the peak. A placement whose optimum
-sits on a narrow ridge is worse in deployment than one with a lower but flatter
+sits on a narrow ridge is worse in deployment than 1 with a lower but flatter
 optimum, even though the ranking by best-achievable AUROC says the opposite.
 
 This is the same underlying defect as [H11](H11-adaptive-rate-overshoots.md), which
@@ -145,7 +145,7 @@ fixed rate rule is confounded by it.
 It also connects to [H9](H9-strength-not-position.md), the standing hazard in this
 project: no comparison across placements is valid at a shared dropout rate. H19 is
 the deployment-side version. Matching on clean-validation shift ratio fixes the
-*comparison*; it does not fix the fact that the deployable rule has to hit the ridge.
+*comparison*. It does not fix the fact that the deployable rule has to hit the ridge.
 
 ## Caveats
 
@@ -184,7 +184,7 @@ the table.
 
 The difference from Swin is that on ViT the placements are genuinely unequal at the
 oracle too (spread 0.094, against 0.017 on Swin). So on ViT rate selection reshuffles
-the ranking; on Swin it produces the ranking outright.
+the ranking. On Swin it produces the ranking outright.
 
 ## The obvious fix does not work
 
@@ -203,8 +203,8 @@ Over the same 15 shared checkpoints, mean AUROC per placement per target:
 **Refuted.** Tuning the target per placement buys 0.002 AUROC. 11 of 14 placements
 want the same target, and the 3 that differ (`pre_residual` at 0.6,
 `pre_residual_blocks_5_8` and `_9_12` at 0.4) gain almost nothing from it. So the
-gap H19 identifies is not something a smarter constant closes; the placements whose
-adaptive rate lands badly are not simply mis-targeted.
+gap H19 identifies is not something a smarter constant closes. The placements whose
+adaptive rate lands badly are not just mis-targeted.
 
 Caveat: the available grid is coarse (steps of 0.2) and does not contain 0.7, which
 is the value H11 found best on ViT, so this rules out a *large* placement-dependent
@@ -279,7 +279,7 @@ The rho rows are the worst: a 45x imbalance, and on a balanced panel **SAM wins 
 both metrics**, where the naive table says Adam wins by a wide margin. That is the
 same reversal found by hand above, reproduced mechanically.
 
-**One correction to this file falls out of it.** The ViT panel above ("it holds on ViT
+**1 correction to this file falls out of it.** The ViT panel above ("it holds on ViT
 too") includes `badnet_a2a`. Excluding it, as the audit does by default since it is
 the known PSBD failure case, the oracle and deployable winners become the same
 placement:

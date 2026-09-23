@@ -1,4 +1,4 @@
-# H34 — Backdoor erasure via direction orthogonalization
+# H34: Backdoor erasure via direction orthogonalization
 
 **Status: PARTIALLY SUPPORTED.** Weight orthogonalization works on weaker
 attacks (LC, adaptive_blend) but fails completely on strong attacks (badnet,

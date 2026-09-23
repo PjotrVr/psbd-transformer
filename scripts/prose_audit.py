@@ -179,7 +179,10 @@ AI_TELLS = (
     "it is worth noting",
     "in order to",
     "is responsible for",
-    "leverage",
+    "leverage the",
+    "leverage a",
+    "leverages",
+    "leveraging",
     "seamless",
     "ensure that",
     "simply ",
@@ -237,6 +240,7 @@ def markdown_prose(path: str) -> list[tuple[int, str, str]]:
     """
     found = []
     in_fence = False
+    in_math = False
     after_blank = True
     with open(path) as handle:
         for number, line in enumerate(handle.read().split("\n"), start=1):
@@ -247,6 +251,12 @@ def markdown_prose(path: str) -> list[tuple[int, str, str]]:
                 after_blank = False
                 continue
             if in_fence:
+                continue
+            if stripped.startswith("$$"):
+                in_math = not in_math
+                after_blank = False
+                continue
+            if in_math:
                 continue
             if line.startswith("    ") and after_blank:
                 after_blank = blank
@@ -379,9 +389,13 @@ def prose_of(path: str) -> list[tuple[int, str, str]]:
     return extractor(path)
 
 
+MARKDOWN_MATH = re.compile(r"\$\$.*?\$\$|\$[^$\n]*\$", re.DOTALL)
+
+
 def strip_code_spans(text: str) -> str:
     """Prose with backticked spans and bracketed math removed, since those are code."""
-    text = re.sub(r"`[^`]*`", "", text)
+    text = MARKDOWN_MATH.sub(" code ", text)
+    text = re.sub(r"`[^`]*`", "code", text)
     text = re.sub(r"\([^()]*\)", "", text)
     text = re.sub(r"\[[^\[\]]*\]", "", text)
     return text

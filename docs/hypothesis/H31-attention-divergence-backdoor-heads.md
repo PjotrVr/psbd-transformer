@@ -1,8 +1,8 @@
-# H31 — Attention map divergence reveals consistent backdoor heads
+# H31: Attention map divergence reveals consistent backdoor heads
 
 **Status: SUPPORTED.** A small set of heads (layer 5 head 0, layer 6 head 3,
 layer 5 head 10) show elevated JS divergence between clean and triggered
-attention patterns across ALL tested attacks and datasets. BadNet additionally
+attention patterns across ALL tested attacks and datasets. BadNet also
 recruits late-layer heads (layer 9 head 7, layer 10 head 9) that are specific
 to localized triggers.
 
@@ -31,7 +31,7 @@ attacks).
 
 ### Cross-attack consistency
 
-Three heads appear in the top 5 across nearly all checkpoints:
+3 heads appear in the top 5 across nearly all checkpoints:
 
 | head | appearances in top 5 | attacks |
 |---|---:|---|
@@ -41,7 +41,7 @@ Three heads appear in the top 5 across nearly all checkpoints:
 
 These are mid-network heads in the attention crystallization zone (layers 5 to
 7), consistent with the H30 finding that the backdoor direction begins forming
-around layers 7 to 9. The attention divergence appears one to two layers earlier,
+around layers 7 to 9. The attention divergence appears 1 to 2 layers earlier,
 suggesting these heads are part of the circuit that WRITES the backdoor direction
 into the residual stream.
 
@@ -57,7 +57,7 @@ layers can attend to specifically.
 
 ## Interpretation
 
-1. **Backdoor circuits are partially shared across attacks.** The three
+1. **Backdoor circuits are partially shared across attacks.** The 3
    consistent heads (5:0, 5:10, 6:3) may represent a general "anomaly
    processing" circuit in the pretrained ViT that all attacks co-opt. They
    diverge between clean and triggered inputs because the trigger (any trigger)
@@ -70,6 +70,6 @@ layers can attend to specifically.
    recruit these additional heads.
 
 3. **JS divergence magnitude predicts attack detectability.** BadNet (max
-   JS=0.572) is easy to detect; blend (max JS=0.318) and wanet (max JS=0.355)
+   JS=0.572) is easy to detect. Blend (max JS=0.318) and wanet (max JS=0.355)
    are harder. This aligns with the detection AUROC ordering from the operator
    comparison results.

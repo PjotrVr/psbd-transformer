@@ -95,4 +95,4 @@ Read-only note for the authors, not for the paper. Models are the ViT-B/16 check
 
 Every placement that acts in all 12 blocks reaches 0.8 on every model. Only the banded placements fall short, because masking or dropping in 4 of 12 blocks at the highest rate of the ladder does not move 80% of clean predictions on every model.
 
-Note: the `adaptive` block of `psbd_metrics.json` stores the absolute PSU reading, not the fractional one, so a reader of that file must take the rate row named by `adaptive_rate` and its `detection_psu_ratio` field to match the paper.
+Note: the `adaptive` block of `psbd_metrics.json` stores the absolute PSU reading, not the fractional reading, so a reader of that file must take the rate row named by `adaptive_rate` and its `detection_psu_ratio` field to match the paper.

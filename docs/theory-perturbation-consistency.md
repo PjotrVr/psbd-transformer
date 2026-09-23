@@ -119,7 +119,7 @@ So $\|H\| $ is a decreasing function of margin, and therefore
 $$\phi(x) \;\propto\; \text{curvature at } x \;\propto\; \text{(decreasing in)}\; \text{margin}(x)$$
 
 A backdoored input sits far from the boundary in the direction the trigger pushes,
-so its margin is large, its curvature is near 0, and its PSU is low. A clean input
+so its margin is large, its curvature is near 0 and its PSU is low. A clean input
 sits nearer a boundary, so its curvature is large and its PSU is high. **Low PSU
 means poisoned** is not a heuristic, it is what the expansion says.
 
@@ -174,7 +174,7 @@ operators still detect at 0.887 mean, and the min-rank union of 4 probes recover
 0.951. H25 and H41.
 
 Prediction 4 is the one that turns the theory into a method. **Operator diversity
-is defence in depth, and the reason is that an attacker cannot flatten a Hessian
+is defense in depth, and the reason is that an attacker cannot flatten a Hessian
 in every direction at once without destroying the model.**
 
 ### But the union rule that implements it has a fragility the theory did not anticipate
@@ -186,7 +186,7 @@ measured answer is worse than "nothing".
 On the evasive checkpoint, the probed position does not merely stop working. It
 **inverts**: AUROC 0.982 becomes **0.023**, far below chance, while an unprobed
 position still reads 0.913. An inverted probe does not contribute useless
-evidence, it contributes confident wrong evidence, and the min-rank union takes
+evidence. It contributes confident wrong evidence, and the min-rank union takes
 the most extreme evidence available, so it adopts the inversion.
 
 Measured on synthetic probes with a known answer:
@@ -207,7 +207,7 @@ inversion corrupts the clean validation reference the threshold is read from.
 **A median-rank reduction appeared to fix it, and does not.** On the synthetic
 probes above it dominates min everywhere until the attacker controls a majority.
 Run on all 120 real evasive checkpoints it **loses**: min 0.702 against median
-0.673 mean AUROC, min winning on 65 of 120, and min still ahead (0.683 against
+0.673 mean AUROC, min winning on 65 of 120 and min still ahead (0.683 against
 0.654) on the 110 where a probe is genuinely inverted.
 
 The synthetic inverted probe was built symmetrically, so it assigned aggressively
@@ -218,7 +218,7 @@ that made min fragile in simulation is not the property real inverted probes hav
 
 **And neither union beats the best single probe**, by -0.065 and -0.094. The union
 survives as a threat-model argument, that an attacker must evade every probe
-rather than guess the deployed one, and not as an AUROC improvement. See
+rather than guess the deployed probe, and not as an AUROC improvement. See
 `experiments/median_rank_union/`.
 
 This matters more than a tuning change. The union was the answer to the adaptive
@@ -278,7 +278,7 @@ advantage is only worth having if the Hessian of a softmax output is diagonally
 dominant, which is an empirical question about the network and not something the
 estimator theory settles.** A measured tie between Rademacher and Gaussian is
 therefore evidence about $H$'s structure rather than a refutation of the
-framework; a measured loss for Rademacher would refute it.
+framework. A measured loss for Rademacher would refute it.
 
 ## Where the margin comes from: collapse and curvature are the same fact
 
@@ -322,7 +322,7 @@ $$\operatorname{tr}(H) \;\approx\; r(x)\,\bar{\lambda}(x)
 
 **PSU scales with the effective dimension of the subspace the input lives in.** A
 triggered input routed onto a low dimensional attractor has small $r$, hence small
-$\operatorname{tr}(H)$, hence small PSU, and is flagged.
+$\operatorname{tr}(H)$, hence small PSU and is flagged.
 
 ### Do not claim these are the same geometry
 
@@ -331,8 +331,8 @@ An earlier draft of this section said the margin story and the collapse story ar
 least 4 published counterexamples pointing the other way.**
 
 - Sukenik, Mondelli and Lampert (NeurIPS 2024, arXiv:2405.14468) Theorem 5: deep
-  neural collapse is **not** optimal, lower rank solutions beat it, and the
-  equiangular half is violated. Regularization favours rank reduction **over**
+  neural collapse is **not** optimal, lower rank solutions beat it and the
+  equiangular half is violated. Regularization favors rank reduction **over**
   orthogonality, so collapse and maximal separation are not the same optimum.
 - Ma et al. (ICLR 2018) measure adversarial inputs at LID about 4.36 against about
   1.53 for normal inputs, so attacked inputs are locally **higher** dimensional.
@@ -347,7 +347,7 @@ What is defensible is weaker and still worth having:
 > Margin maximization and rank collapse are **coupled outputs of the same implicit
 > bias of gradient descent on deep homogeneous networks**, not the same quantity.
 > Ji and Telgarsky (ICLR 2019) prove that in deep linear networks the max margin
-> limit and the rank-1 limit are literally the same limit; Timor, Vardi and Shamir
+> limit and the rank-1 limit are literally the same limit. Timor, Vardi and Shamir
 > (ALT 2023) Theorem 5 extends the rank half asymptotically in depth, with their
 > Theorem 2 giving the depth-2 counterexample as the caveat. A trigger is a
 > feature the network fits faster and more completely than any clean feature, so
@@ -362,7 +362,7 @@ identity has 4 theorems aimed at it.
 
 LID and the participation ratio are not in contradiction even though they carry
 opposite signs in the literature. LID is a **local** neighbourhood expansion rate
-at 1 point; the participation ratio is a **global** second moment property of a
+at 1 point. The participation ratio is a **global** second moment property of a
 population. A sample can sit in a locally sparse region, so high LID, while the
 population it belongs to occupies few directions, so low participation ratio.
 
@@ -372,7 +372,7 @@ That is an argument until both are measured on the same features, so both now ar
 adversarial inputs read high, that separates backdoors from adversarial examples
 on a quantity 2 published papers use, and it is a result in its own right.**
 
-That gives prediction 6, and it is the sharpest one available because it is
+That gives prediction 6, and it is the sharpest prediction available because it is
 cross modal: it links a quantity measured with no perturbation at all to the
 output of a perturbation based detector.
 
@@ -419,7 +419,7 @@ story available to it, and it matches the best structured masks.
 
 ## The direction is causally sufficient, and it is not sparse
 
-Two measurements constrain what the backdoor can be.
+2 measurements constrain what the backdoor can be.
 
 Adding the backdoor direction to a clean batch's residual stream at the peak
 layer, with no trigger in the pixels:
@@ -434,14 +434,14 @@ layer, with no trigger in the pixels:
 At the direction's own natural magnitude, adding it flips 43 percent of clean
 images to the target while most predictions remain intact. The scale 2.0 row is
 not evidence, since almost nothing keeps its original prediction there and the
-representation has simply been destroyed. The benign model's own paired difference
+representation has been destroyed. The benign model's own paired difference
 steers nothing at any scale, which is the control that makes the rest meaningful.
 
 So the direction is causally sufficient, not merely correlated. But it is not
 sparse: at the peak layer, 50 percent of total TAC is carried by 291 of 768
 dimensions and 90 percent by 651. A backdoor that were a handful of neurons would
 be cheap to remove, and this one is not. That is the same non axis aligned
-geometry prediction 2 relies on, measured a second way, and it is why the 4
+geometry that prediction 2 relies on, measured a second way and it is why the 4
 structured masking failures were structural rather than tuning problems.
 
 ## Prior art, and what it takes off the table
@@ -489,7 +489,7 @@ survives is narrower and has to be stated as such:
 3. the **refutation of PSBD's published mechanism**, which neither could attempt
    because neither had a mechanistic claim to test.
 
-## Four objections that the framing has to survive
+## 4 objections that the framing has to survive
 
 These come from the same review and are recorded before the results rather than
 after, because 2 of them are load bearing.
@@ -522,7 +522,7 @@ $\operatorname{tr}(H \operatorname{diag}(h^2))$ rather than a bare trace.
 ### 2. Curvature is not margin
 
 An affine classifier has $H \equiv 0$ and arbitrary margin, including arbitrarily
-small. Margin is first order, $|f_c - f_k| / \|\nabla(f_c - f_k)\|$, and curvature
+small. Margin is first order, $|f_c - f_k| / \|\nabla(f_c - f_k)\|$ and curvature
 is a correction to it, not a substitute. Moosavi-Dezfooli et al.'s CURE bound
 (CVPR 2019) makes robustness decrease in curvature only **with the gradient norm
 held fixed**.
@@ -536,7 +536,7 @@ Hessian of $p_c$ with respect to the logits has a closed form:
 
 $$\operatorname{tr}\nabla^2_z p_c = 2\,p_c\big(\|p\|_2^2 - p_c\big) \;\le\; 0$$
 
-since $\|p\|_2^2 \le (\max_i p_i)(\sum_i p_i) = p_c$. Three consequences, and the
+since $\|p\|_2^2 \le (\max_i p_i)(\sum_i p_i) = p_c$. 3 consequences, and the
 third is the one that bites.
 
 **PSU is non negative to second order.** With $\Sigma = \sigma^2 I$ at the logits,
@@ -551,7 +551,7 @@ the position result from an empirical finding into a prediction**, and it is
 directly testable against the position sweep.
 
 **Curvature vanishes at both extremes.** For 2 classes with $p_c = p \ge 1/2$,
-$\operatorname{tr} = 2p(2p-1)(p-1)$ is 0 at $p = 1/2$, 0 at $p = 1$, and peaks
+$\operatorname{tr} = 2p(2p-1)(p-1)$ is 0 at $p = 1/2$, 0 at $p = 1$ and peaks
 near $p \approx 0.789$. So a sample sitting **on** the boundary also has near zero
 curvature, and low PSU stops meaning large margin at the low confidence end. This
 predicts **inversions concentrated on low confidence clean samples**, which is a
@@ -623,14 +623,14 @@ argument 2 regimes instead of 1:
 | small $\sigma$ | $\phi \approx -\tfrac{1}{2}\operatorname{tr}(H\Sigma)$ | approximation, and published already |
 | any $\sigma$ | $\sigma\Phi^{-1}(g(h) - \phi)$ is a certified radius | exact, and unclaimed |
 
-Two caveats that have to be stated with it. The certificate is for perturbations
+2 caveats that have to be stated with it. The certificate is for perturbations
 in the space the noise is added to, so it is an $\ell_2$ ball in **activation**
 space at the probe site, and converting to input space needs a Lipschitz constant
 for the input to $h$ map. And an activation space radius is itself scale
 dependent, so objection 1's relative $\Sigma$ requirement applies here too.
 
 There is also a paper a reviewer will raise: Wang et al. (arXiv:2002.11750)
-conclude randomized smoothing is **not** an effective defence against backdoors.
+conclude randomized smoothing is **not** an effective defense against backdoors.
 That is about certifying robustness to a training set attack. This uses the
 smoothed probability as a **detection statistic**, which is a different use, and
 their negative result does not transfer. It has to be said explicitly rather than
@@ -645,7 +645,7 @@ left for the rebuttal.
 - It explains the ordering of operators and positions. It does not predict the
   absolute AUROC of any cell.
 - It does not explain why WaNet is harder than Blend. Both are spatially
-  distributed, so the framework does not separate them, and that gap is real.
+  distributed, so the framework does not separate them and that gap is real.
 - It does not explain the clean-label case, where LC has decent AUROC and a
   collapsed TPR at low FPR. The margin story predicts a thin margin and therefore
   a hard case, but not that specific shape.
@@ -682,7 +682,7 @@ can tell whether their gain came from the site or the noise.
    unstructured noise while the backdoor is a non axis aligned direction. This
    retires an entire family of proposals and is supported by 4 independent
    negative results plus a causal ablation.
-3. **Operator diversity as a defence.** It follows from the framework, it is
+3. **Operator diversity as a defense.** It follows from the framework, it is
    falsifiable, and it was confirmed against an adaptive attacker that this
    project trained specifically to break the method.
 4. **The published mechanism is refuted on this architecture.** The neuron bias
@@ -690,7 +690,7 @@ can tell whether their gain came from the site or the noise.
    Measured, exactly 0 of them do, against a uniform expectation of 1 percent.
    This is a negative result about a published explanation rather than about a
    published method, and it is stated that way.
-5. **Collapse and curvature are one quantity.** Effective rank ratio, measured
+5. **Collapse and curvature are 1 quantity.** Effective rank ratio, measured
    with no perturbation at all, is proposed as the bridge between the latent
    geometry and the detector's output. This is the least settled of the 5 and the
    most interesting if it holds.
@@ -698,6 +698,6 @@ can tell whether their gain came from the site or the noise.
 The trace estimator identity sits alongside these rather than inside the ranking.
 It is not a claim about backdoors at all, it is a recognition that the family's
 central computation already has a name, and its value is the machinery it makes
-available: variance formulas, minimum variance probes, and the whole
+available: variance formulas, minimum variance probes and the whole
 variance reduction literature that has grown up around estimating a trace from a
 budget of probes.

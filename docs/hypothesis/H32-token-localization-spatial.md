@@ -1,4 +1,4 @@
-# H32 — Token-level PSU decomposition localizes triggers spatially
+# H32: Token-level PSU decomposition localizes triggers spatially
 
 **Status: SUPPORTED.** Per-token direction norms reveal the spatial location of
 localized triggers without knowing the attack. BadNet's trigger patches are the
@@ -40,7 +40,7 @@ in the 14x14 grid.
 ### SIG (sinusoidal stripe, horizontal)
 
 All top 5 patches are in row 0: (0,9), (0,8), (0,1), (0,11), (0,3). SIG adds
-a sinusoidal pattern that is strongest along one edge of the image. The token
+a sinusoidal pattern that is strongest along 1 edge of the image. The token
 decomposition correctly identifies the affected row.
 
 ### Blend (global alpha blending)
@@ -58,7 +58,7 @@ effect is distributed differently across the residual stream.
 
 ## Key observation: patch norms > CLS norm for most attacks
 
-For badnet (42.47 vs 13.15), blend (24.33 vs 19.31), and lf (11.11 vs 22.09,
+For badnet (42.47 vs 13.15), blend (24.33 vs 19.31) and lf (11.11 vs 22.09,
 exception), the mean patch token direction norm exceeds the CLS token direction
 norm. This means the backdoor signal is distributed across many token positions,
 not concentrated in CLS. The CLS token's strong backdoor direction (which drives
@@ -71,5 +71,5 @@ Token-level direction decomposition provides:
 1. **Trigger localization** for patch-based attacks at zero cost (no extra
    training, no trigger search)
 2. **Attack family identification**: high concentration (> 3x) indicates a
-   localized trigger; low concentration (< 2x) indicates a global trigger
+   localized trigger. Low concentration (< 2x) indicates a global trigger
 3. **Interpretable evidence** for why a sample was flagged

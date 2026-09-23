@@ -240,7 +240,7 @@ Under zsum, mean TPR at 10% moves 2 to 3 -0.003, 3 to 4 -0.003, 4 to 5 -0.005 as
 ## Summary
 
 The best-unioning pair is PSBD-TM with token mask, attention input and scale up, input pixels, mean AUROC 0.937 and mean TPR at 10% 0.803 on 69 models, a gain over PSBD-TM alone of +0.010 AUROC [-0.002, +0.024].
-At the 10% clean-validation quantile the pair raises TPR by +0.037 over PSBD-TM alone, from 0.766 to 0.803, and zsum beats min on it by +0.016 more mean TPR at 10%.
+At the 10% clean-validation quantile the pair raises TPR by +0.037 over PSBD-TM alone, from 0.766 to 0.803 and zsum beats min on it by +0.016 more mean TPR at 10%.
 The union to deploy is the 2-probe set token mask, attention input and token mask, attention output before the add under the product rule, mean AUROC 0.958, mean TPR at 10% 0.858 and mean TPR at 20% 0.909 on 66 models.
 That set gains +0.023 AUROC [+0.008, +0.044] over PSBD-TM alone and +0.054 mean TPR at 10% over the best pair.
 Every larger subset searched plateaus at or below that 2-probe ceiling, the best 3-to-5-probe union reads 0.858 mean TPR at 10%, -0.000 against the deployed pair, so adding a 3rd, 4th or 5th probe to this pool buys no further detection power.

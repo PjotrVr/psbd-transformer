@@ -4,8 +4,8 @@ Status: 2026-09-07. ViT evidence complete. **The ResNet-18 replication confirms 
 limitation belongs to the method, not to the ViT adaptation.**
 
 `badnet_a2a` is the only attack in the panel where detection scores *below* chance:
-AUROC 0.31 to 0.47 across all four datasets and all three poison rates. That is not weak
-detection, it is anti-detection, and the cause is structural rather than a tuning failure.
+AUROC 0.31 to 0.47 across all 4 datasets and all 3 poison rates. That is not weak
+detection, it is anti-detection and the cause is structural rather than a tuning failure.
 
 ## It is PSBD's limitation, not the ViT port's
 
@@ -18,7 +18,7 @@ recipe: ResNet-18, 100 epochs SGD, detection at epoch 95, 25th-percentile thresh
 | **all-to-all** | **0.210** | **0.192** | 0.860 | 0.842 |
 
 TPR 0.210 against FPR 0.192: poisoned and clean data are flagged at nearly the same rate, so
-there is no detection at all. The paper marks TPR below 0.8 as a failed case; this is far
+there is no detection at all. The paper marks TPR below 0.8 as a failed case. This is far
 below that, on the paper's own architecture.
 
 No probe rate rescues it. Sweeping the rate by hand on the same checkpoint, TPR never
@@ -30,14 +30,14 @@ exceeds 0.216 while FPR runs 0.166 to 0.291:
 | FPR | 0.291 | 0.207 | 0.174 | 0.192 | 0.177 | 0.166 |
 | AUROC | 0.314 | 0.461 | 0.500 | 0.541 | 0.557 | 0.561 |
 
-The ResNet-18 inverts at low rates (0.314) and is weakly positive at high ones (0.561); the
+The ResNet-18 inverts at low rates (0.314) and is weakly positive at high ones (0.561). The
 ViT inverts at the matched rate instead. The direction of the residual differs, the outcome
 does not: no rate on either architecture produces a usable detector, one-sided or two-sided.
 
 The attack itself is healthy, with clean accuracy 0.860 and ASR 0.842. The ASR shortfall
 relative to all-to-one's 1.000 is itself predicted: with a rotation the poisoned logit must
 beat the source class rather than an arbitrary runner-up, so the margin is contested and
-empirical risk minimisation stops as soon as it is satisfied. WaNet reports the same effect
+empirical risk minimization stops as soon as it is satisfied. WaNet reports the same effect
 in its own all-to-all mode, roughly 78% against 99% for the single-target version.
 
 ## The measurement
@@ -51,7 +51,7 @@ clean-validation shift ratio is closest to 0.8. Shift ratio is how often the pre
 | badnet_a2o | 0.806 | 0.804 | **0.005** | 0.991 |
 | badnet_a2a | 0.791 | 0.786 | **0.903** | 0.440 |
 
-Under all-to-one the backdoor samples are essentially immune to the probe: their prediction
+Under all-to-one the backdoor samples are nearly immune to the probe: their prediction
 moves 0.5% of the time against 80% for clean data. That gap *is* the method.
 
 Under all-to-all the ordering reverses. Backdoor samples move **more** than clean ones,
@@ -75,7 +75,7 @@ all-to-one, the trigger maps to a fixed class regardless of the image:
 Under the probe the image features degrade, but the shortcut does not depend on them, so the
 prediction stays pinned to the target. Clean predictions, having lost their features, drift,
 and they drift *onto that same target class*: 84.4% of shifted clean predictions land on the
-target on CIFAR-10, against 10% under uniform chance. The two populations separate.
+target on CIFAR-10, against 10% under uniform chance. The 2 populations separate.
 
 All-to-all rotates each class instead:
 
@@ -84,26 +84,26 @@ All-to-all rotates each class instead:
 The poisoned output now **depends on the source class**, so there is no content-independent
 shortcut to survive the probe. The model must still read the image to know which class to
 increment from, which means the backdoor pathway inherits the fragility of the clean pathway.
-It is also strictly more work than clean classification (recognise the trigger, recognise the
+It is also strictly more work than clean classification (recognize the trigger, recognize the
 source class, apply the rotation), so it degrades faster. Hence backdoor samples shift more
 than clean ones, not less.
 
 The shift destinations confirm there is no target to collapse onto. At the same rate, the
 fraction of shifted clean predictions landing on the attacker's target class is 0.844 for
 all-to-one and **0.0002** for all-to-all. Under all-to-all, clean and backdoor predictions
-also drift to the *same* attractor classes (clean: 8 at 54%, 6 at 28%; backdoor: 6 at 58%,
+also drift to the *same* attractor classes (clean: 8 at 54%, 6 at 28%. backdoor: 6 at 58%,
 8 at 32%), so the populations are not separable by where they move either.
 
 ## The inversion is not exploitable as-is
 
 `direction` in `psbd_metrics.json` is set from `auroc < 0.5`, and AUROC needs labels. A
 defender cannot know a cell is inverted without already knowing which samples are poisoned,
-so the sign cannot simply be flipped in deployment. This is the same reason `auroc_two_sided`
+so the sign cannot just be flipped in deployment. This is the same reason `auroc_two_sided`
 was retired (audit H15).
 
 ## A label-free validity check the method already half-computes
 
-PSBD's own rate rule maximises the gap between the clean-validation shift ratio and the shift
+PSBD's own rate rule maximizes the gap between the clean-validation shift ratio and the shift
 ratio of the whole suspect training set. Both quantities are available to a defender: clean
 validation data is assumed by the threat model, and the suspect training set is the thing
 being screened. No labels are involved. Only its *magnitude* is currently unused.
@@ -119,7 +119,7 @@ max over rates of (validation shift - suspect-training-set shift):
 
 A 20-fold separation, computed without labels. The interpretation is exactly the premise:
 the suspect set is supposed to contain samples that resist the probe *more* than clean
-validation data does. When the best achievable gap is ~0, no such samples exist, and PSBD's
+validation data does. When the best achievable gap is ~0, no such samples exist and PSBD's
 output on that dataset carries no information regardless of what its TPR happens to be.
 
 **Proposed use.** Report this gap alongside every detection result and treat a near-zero
@@ -129,8 +129,8 @@ term.
 
 ## What this does not claim
 
-The reversal is consistent and large, but this is one operator at one position on one
+The reversal is consistent and large, but this is 1 operator at 1 position on 1
 architecture family. A ResNet-18 all-to-all run using the original authors' code is in
-flight; if it inverts too, the limitation belongs to the method rather than to the ViT
+flight. If it inverts too, the limitation belongs to the method rather than to the ViT
 adaptation. `scratch/psbd-upstream/run_a2a.sh`, with all-to-all added to their BadNet as
 `badnet_a2a`.

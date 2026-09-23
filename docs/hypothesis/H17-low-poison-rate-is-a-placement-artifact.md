@@ -1,8 +1,8 @@
-# H17 — PSBD's low-poison-rate failure is a placement artifact, not a limit of the method
+# H17: PSBD's low-poison-rate failure is a placement artifact, not a limit of the method
 
 **Status: SUPPORTED (full panel, 48/48 coverage).**
 
-The full panel has landed. Across 4 datasets, 3 poison rates, and the 5-attack
+The full panel has landed. Across 4 datasets, 3 poison rates and the 5-attack
 panel, switching from the founding placement (dropout @ pre_residual, refuted
 by H1) to either token_mask @ before_attention_norm or gain_scale @
 mlp_norm_out recovers detection at 1%.
@@ -22,7 +22,7 @@ clean-validation shift ratio**:
 > disturbance gap the same size as the reported effect. Over the full panel at matched
 > strength that `gain_scale` arm gains **-0.007**, not +0.258. It is also deterministic,
 > so it pays no Monte Carlo penalty the stochastic baseline pays, worth about 0.03.
-> `docs/results-report.md` carries the replacement numbers; this file previously kept the
+> `docs/results-report.md` carries the replacement numbers. This file previously kept the
 > withdrawn ones without saying so.
 
 The surviving claim is the `token_mask` one: **+0.166** mean AUROC at 1% on CIFAR-100
@@ -32,7 +32,7 @@ Full detection tables: [cifar100-detection-tables.md](../results/cifar100-detect
 [tiny-detection-tables.md](../results/tiny-detection-tables.md).
 
 **Original status: SUPPORTED on CIFAR-10 (derivation set).** The published configuration is
-anti-correlated at 1% poisoning; a different placement on the same checkpoints,
+anti-correlated at 1% poisoning. A different placement on the same checkpoints,
 same one-sided rule, same defender-legal rate rule, reaches **0.936** mean AUROC at
 1%. Out-of-sample test on GTSRB and Tiny is pre-registered and in flight
 ([2026-08-14-h16-out-of-sample](../runs/2026-08-14-h16-out-of-sample.md)).
@@ -68,7 +68,7 @@ the paper uses, is below 0.5 at **all 16 of its cached rates** at 1%:
 
 ## Evidence 2: there is a critical dropout rate, and it moves with poison rate
 
-The same placement at the two poison rates, one-sided AUROC against p:
+The same placement at the 2 poison rates, one-sided AUROC against p:
 
     before_attention_norm @ 1%    0.1:0.55 0.2:0.52 0.3:0.57 0.4:0.70 0.5:0.83
                                   0.6:0.82 0.7:0.61 0.8:0.32 0.9:0.24
@@ -78,7 +78,7 @@ The same placement at the two poison rates, one-sided AUROC against p:
 At 10% the curve is monotone increasing and never inverts: the backdoor survives
 even 90% dropout. At 1% it peaks at p = 0.5 and then **crosses through 0.5 into
 inversion**. Read mechanistically, there is a critical rate p\* at which the
-backdoor circuit stops surviving the perturbation; past p\*, the poisoned samples
+backdoor circuit stops surviving the perturbation. Past p\*, the poisoned samples
 are disturbed *more* than clean ones and the statistic runs backwards. p\* rises
 with poison rate, which is what a redundancy argument predicts: more poisoned
 training samples produce a more redundantly encoded shortcut, which survives more
@@ -86,7 +86,7 @@ dropout.
 
 The paper's rate rule targets clean-validation shift ratio sigma >= 0.8. At 1%
 that lands at p = 0.8-0.9, i.e. **past p\***. The rule does not merely lose a
-little AUROC at low poison rate ([H11](H11-adaptive-rate-overshoots.md)); it
+little AUROC at low poison rate ([H11](H11-adaptive-rate-overshoots.md)). It
 selects into the inverted region.
 
 ## Evidence 3: a defender-legal configuration recovers it
@@ -137,7 +137,7 @@ survive. On this grid at 1%:
 
 Published ViT-B/16 results elsewhere report much weaker attacks at 1% (BadNet 39.5%
 ASR on CIFAR-100 in the backdoor-directions work). Those are different checkpoints
-under a different recipe; on this repo's checkpoints the attack is not the limiting
+under a different recipe. On this repo's checkpoints the attack is not the limiting
 factor at 1%, and the low-rate argument built on weak implantation does not
 transfer here. It may still bind at 0.5%, which is outside this file's scope.
 
@@ -158,9 +158,9 @@ it is a wash overall, and it **destroys the case this file is about**. The 0.897
 supersedes an earlier 0.900, which was computed with clean and backdoor scores
 ranked against a pool containing the backdoor split. The leak inflated the
 ensemble by 0.003 and the conclusion is unchanged, see `audit-2026-09-07.md`. The reason
-is structural: at 1% three of the four members are inverted or near chance
+is structural: at 1% 3 of the 4 members are inverted or near chance
 (`post_residual` 0.194), and rank-averaging an inverted member actively poisons the
-pool. Ensembling assumes members are at worst uninformative; here they are
+pool. Ensembling assumes members are at worst uninformative. Here they are
 anti-correlated.
 
 So the fix is placement *selection*, not placement *aggregation*.
@@ -204,14 +204,14 @@ covers.
    (`analysis/direction.py`, `analysis/features.py`) would turn the redundancy
    argument from an interpretation into a measurement.
 3. `k = 3` Monte Carlo passes is the paper's value and this repo's. PSU is an
-   expectation estimated from 3 samples; at low poison rate the true gap is small,
+   expectation estimated from 3 samples. At low poison rate the true gap is small,
    so estimator variance may dominate. Sweeping k in (3, 10, 20, 50) needs a GPU
    re-run but is cheap.
 4. The cache stores only the tracked-class probability and the argmax per pass, not
    the full predictive distribution, so BALD-style mutual information (entropy of
    the mean minus mean of the entropies) cannot be computed from it. It is strictly
-   more information than PSU and is the natural next score to try; it needs the
+   more information than PSU and is the natural next score to try. It needs the
    sweep to store full probabilities.
-5. Per-class score normalisation is computable from the existing cache, since the
+5. Per-class score normalization is computable from the existing cache, since the
    baseline argmax class is stored. At 1% the target class should dominate the
-   false positives; if it does, normalising within predicted class is free.
+   false positives. If it does, normalizing within predicted class is free.

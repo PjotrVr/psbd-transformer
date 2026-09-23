@@ -1,4 +1,4 @@
-# H23 — Does PSBD need capacity removed, or merely disturbed?
+# H23: Capacity removal versus mere disturbance in PSBD
 
 **Status: REFUTED, and it is the most consequential result of the operator study.**
 Additive noise is not worse than structured removal. It is competitive with the
@@ -28,9 +28,9 @@ If noise matched removal because the perturbation earns nothing at all, the
 conclusion would be different and much worse for PSBD. It does not: the
 confidence-only null in `defences/baselines.py`, scored on the same checkpoints,
 averages **0.520** AUROC over 21 backdoored CIFAR-10 checkpoints with TPR at 1%
-FPR of **0.000** on all but three.
+FPR of **0.000** on all but 3.
 
-So the perturbation is doing real work; what it does not need to be is a
+So the perturbation is doing real work. What it does not need to be is a
 *removal*. That distinction is the whole content of this file.
 
 ## What this costs the paper's framing
@@ -51,7 +51,7 @@ requires structure.
 This lines up with [H22](H22-head-mask-attention-units.md) (the transformer's own
 computational unit is not privileged) and
 [H18](H18-sensitivity-profile-over-units.md) (per-unit sensitivity carries no
-detection signal at all). Three independent results now point the same way: the
+detection signal at all). 3 independent results now point the same way: the
 unit-level story is not what carries the method on ViT.
 
 ## Still open
@@ -95,7 +95,7 @@ Nothing in that argument requires the perturbation to be structured. If it holds
   noise while leaving a zeroed channel zeroed. This predicts `gaussian` should do
   relatively worse at `before_attention_norm` than at `post_residual`, and that
   contrast is itself a measurement worth having.
-- Noise is **isotropic**; the backdoor is a specific direction
+- Noise is **isotropic**. The backdoor is a specific direction
   ([H16](H16-where-the-backdoor-neurons-are.md): 5 to 17 of 768 dimensions,
   linearly separable). Isotropic noise puts only a 17/768 fraction of its energy
   in the subspace that matters, so it may need an implausibly large magnitude to

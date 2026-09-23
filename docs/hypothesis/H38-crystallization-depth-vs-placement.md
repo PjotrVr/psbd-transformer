@@ -1,4 +1,4 @@
-# H38 -- Crystallization depth predicts optimal perturbation placement
+# H38: Crystallization depth predicts optimal perturbation placement
 
 **Status: SUPPORTED (crystallization confirmed), INCONCLUSIVE (placement
 correlation).** Crystallization depths are attack-dependent and consistent: blend
@@ -60,7 +60,7 @@ should be best detected at those layers.
    same alignment.
 
 2. **Poison rate has a small but consistent effect on badnet**: lower rates
-   (0.5%, 1%) push crystallization one layer later (11 vs 10). The weaker
+   (0.5%, 1%) push crystallization 1 layer later (11 vs 10). The weaker
    signal needs more processing. Blend is nearly unaffected by rate.
 
 3. **No per-block-band PSBD sweep data found.** The PSBD sweep results use

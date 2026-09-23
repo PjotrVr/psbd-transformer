@@ -1,12 +1,12 @@
-# Placements and operators: what we tested, what we found, and how it maps to Swin
+# Placements and operators: what we tested, what we found and how it maps to Swin
 
-A **placement** in this project is two independent choices, and the cache directory name is
-just the two concatenated:
+A **placement** in this project is 2 independent choices, and the cache directory name is
+just the 2 concatenated:
 
     <position>_<operator>          e.g.  before_attention_residual_token_mask
 
-- **position** — *where* in the network the probe is attached
-- **operator** — *what* the probe does to the activation there
+- **position**: *where* in the network the probe is attached
+- **operator**: *what* the probe does to the activation there
 
 Both are swept independently. `before_attention_norm_token_mask` is `token_mask` applied at
 `before_attention_norm`. A bare name like `pre_residual` means the default operator,
@@ -14,7 +14,7 @@ Both are swept independently. `before_attention_norm_token_mask` is `token_mask`
 
 A third choice is implicit and is the one most people miss:
 
-- **block range** — *which* transformer blocks get a probe. The default is **every block**.
+- **block range**: *which* transformer blocks get a probe. The default is **every block**.
 
 ## How a probe is attached
 
@@ -22,19 +22,19 @@ A third choice is implicit and is the one most people miss:
 named submodule boundary, by forward pre-hook or forward hook, then `unplug_dropout` removes
 it by handle. It never toggles a dropout the model already contains, because a trained
 dropout's inverted-scaling factor was calibrated against the next layer's weights, so
-switching it back on at inference would conflate the model's own regularisation with the
+switching it back on at inference would conflate the model's own regularization with the
 probe.
 
-Two positions cannot be a hook at all, because the tensor they perturb is a local variable
+2 positions cannot be a hook at all, because the tensor they perturb is a local variable
 that never crosses a module boundary. `after_attention_residual` (the stream between the
-attention add and its two consumers) and `attention_heads` (per-head outputs inside
+attention add and its 2 consumers) and `attention_heads` (per-head outputs inside
 `F.multi_head_attention_forward`) use a removable per-instance forward wrapper instead.
 
 ---
 
 # The positions
 
-## The 9 atomic positions, in forward order through one block
+## The 9 atomic positions, in forward order through 1 block
 
 These are the placement study proper. Each is swept in isolation, at every block.
 
@@ -51,7 +51,7 @@ These are the placement study proper. Each is swept in isolation, at every block
 | `after_mlp_residual` | the stream (wrapper) | the residual stream after the MLP add |
 
 The distinction that the whole study turns on is **branch versus stream**.
-`before_mlp_residual` perturbs only the MLP's contribution; `after_attention_residual`
+`before_mlp_residual` perturbs only the MLP's contribution. `after_attention_residual`
 perturbs the stream itself, so the perturbation propagates through every later block. That
 is the PSBD paper's own ConvNet placement.
 
@@ -118,7 +118,7 @@ across operators.
 # Do you need every layer, or only some?
 
 **No, and a band beats the full stack.** `pre_residual` swept over all 12 blocks against the
-same positions restricted to a 4-block band, on the 44 ViT cells carrying all four:
+same positions restricted to a 4-block band, on the 44 ViT cells carrying all 4:
 
 | block range | mean AUROC |
 |---|---|
@@ -130,19 +130,19 @@ same positions restricted to a 4-block band, on the 44 ViT cells carrying all fo
 Early blocks are clearly worse. A middle or late band is **better than perturbing
 everything**, which is not obvious: adding probes to the early blocks actively costs
 detection. This is consistent with H30's finding that the backdoor direction crystallizes at
-layers 8–10, and with H10's band premise.
+layers 8 to 10, and with H10's band premise.
 
-**But blocks 5–8 must not be deployed**, and this is the important caveat. Ranked within
+**But blocks 5 to 8 must not be deployed**, and this is the important caveat. Ranked within
 poison rate it is 1st at 5% and 10% and **8th at 1%** (0.872). A defender may guess the
 attack but can never know the poison rate, so a configuration whose ranking depends on it is
-not a usable defence. The full-stack default is rate-stable; the band is not.
+not a usable defense. The full-stack default is rate-stable. The band is not.
 
 ---
 
 # How this translates to Swin
 
-The position **names are shared** — `POSITION_REGISTRY` keys on architecture and every name
-resolves to the analogous Swin module — so every sweep, table and comparison is written once
+The position **names are shared**: `POSITION_REGISTRY` keys on architecture and every name
+resolves to the analogous Swin module, so every sweep, table and comparison is written once
 and runs on both.
 
 | position | ViT module | Swin module |
@@ -162,7 +162,7 @@ and runs on both.
 cannot tell which branch invoked it. We hook `attn` and `mlp` directly instead, which is
 unambiguous at the cost of landing just *before* stochastic depth sees the branch output
 rather than just after. `stochastic_depth` itself is never touched. Swin also has **24
-blocks** to ViT's 12, so its bands are 1–8, 9–16, 17–24.
+blocks** to ViT's 12, so its bands are 1 to 8, 9 to 16, 17 to 24.
 
 ## What Swin actually measures
 
@@ -180,7 +180,7 @@ blocks** to ViT's 12, so its bands are 1–8, 9–16, 17–24.
 
 **The depth-band finding replicates on Swin**: the late band (0.889) beats the full stack
 (0.847) by the same margin and in the same direction as ViT, and the early band is not
-better. Two architectures, different block counts, same conclusion — perturbing every block
+better. 2 architectures, different block counts, same conclusion. Perturbing every block
 is not the right default, and the useful depth is late-middle.
 
 The deployed configuration reads **0.913** on Swin against 0.869 on ViT, so nothing about the

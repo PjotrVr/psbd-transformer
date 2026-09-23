@@ -2,16 +2,16 @@
 
 A detection result on a cell whose attack never implanted is meaningless: there is no
 backdoor to detect. The panel's ASR bar of 0.85 exists to keep those cells out, and
-until now the cells below it were treated as one undifferentiated pile of failures.
+until now the cells below it were treated as a single undifferentiated pile of failures.
 
-They are not one pile. Sorting them by cause gives **four distinct failure modes, only
-two of which are fixable**, and mixing them was hiding both the fixes and the genuine
+They are not 1 pile. Sorting them by cause gives **4 distinct failure modes, only
+2 of which are fixable**, and mixing them was hiding both the fixes and the genuine
 limits.
 
 ## The measurement
 
 ViT, seed 0, base cells only (no SAM, evasion, epoch snapshots, seed replicates, or
-strength-sweep variants). ASR at each nominal poison rate; `--` is a cell never trained.
+strength-sweep variants). ASR at each nominal poison rate. `--` is a cell never trained.
 
 | attack | dataset | 0.5% | 1% | 5% | 10% | verdict |
 |---|---|---:|---:|---:|---:|---|
@@ -59,29 +59,29 @@ strength-sweep variants). ASR at each nominal poison rate; `--` is a cell never 
 ## Mode 1: structural. The rate was never applied (sig, lc)
 
 Clean-label attacks may only poison the target class, so the columns above are not what
-they say. On CIFAR-100 the 1%, 5% and 10% cells are the **same 500 images**; on GTSRB the
-same 150; on Tiny the same 500 at every rate including 0.5%. Their spread is training
+they say. On CIFAR-100 the 1%, 5% and 10% cells are the **same 500 images**. On GTSRB the
+same 150. On Tiny the same 500 at every rate including 0.5%. Their spread is training
 noise, not a dose-response.
 
 `poison.choose_poison_indices` clamps silently. This much was established by audit
-finding A8 on 2026-09-07; 189 of the 316 clean-label folders are affected. The
+finding A8 on 2026-09-07. 189 of the 316 clean-label folders are affected. The
 reachability table and the fixes are in
 [clean-label-rate-caps.md](clean-label-rate-caps.md).
 
-Two things follow. First, **`lc` was also the wrong attack**: Turner's adversarial
+2 things follow. First, **`lc` was also the wrong attack**: Turner's adversarial
 pre-perturbation was never implemented, which is why the patch-only variant needs
-essentially the whole target class before it implants (CIFAR-10 clears only at 10%, which
+nearly the whole target class before it implants (CIFAR-10 clears only at 10%, which
 *is* 100% of the target class). Second, **GTSRB's target class was a self-imposed
 handicap**: class 0 holds 150 images against 1,500 in classes 1 and 2.
 
 Fixable: yes for GTSRB (target class) and for `lc` everywhere (adversarial bases). Not
-fixable for `sig` above each dataset's cap; 10% clean-label is impossible anywhere but
+fixable for `sig` above each dataset's cap. 10% clean-label is impossible anywhere but
 CIFAR-10, and that is a property of the datasets.
 
 ## Mode 2: trigger too weak. WaNet at 1% (fixable, and partly fixed)
 
 WaNet's implementation is faithful to Nguyen and Tran: `k x k` uniform control offsets,
-normalised by mean absolute value, bicubic upsampled, applied as
+normalized by mean absolute value, bicubic upsampled, applied as
 `identity + strength * field / image_size`. At the default `strength = 0.5` the
 displacement is roughly a quarter of a pixel, which is too subtle to learn from few
 poisoned samples. That is a dose problem, not a bug, so it responds to dose.
@@ -106,13 +106,13 @@ non-monotonicity. Both need strength 8 or higher tested.
 
 Sweep jobs are still in flight and will fill the missing cells, including 5% and the
 BadNet patch-size arm. These results only exist because the sweep's output bug was caught
-while it was running; see
+while it was running. See
 [checkpoint-integrity-2026-09-09.md](checkpoint-integrity-2026-09-09.md).
 
 ## Mode 3: seed sensitivity (adaptive_blend)
 
-Adaptive-Blend fails at seed 0 on all four datasets (0.505 to 0.838) but clears at seeds
-1 and 2. That is not a dose problem and not a structural one; it is a single-run readout
+Adaptive-Blend fails at seed 0 on all 4 datasets (0.505 to 0.838) but clears at seeds
+1 and 2. That is not a dose problem and not a structural failure. It is a single-run readout
 of a quantity with a wide distribution. An asymmetric-trigger correction is committed but
 untested at scale.
 
@@ -120,8 +120,8 @@ This is the mode that most argues for seeds. See the next section.
 
 ## Mode 4: broken individual runs
 
-Two cells are not weak attacks but failed training runs, and should be retrained rather
-than analysed:
+2 cells are not weak attacks but failed training runs, and should be retrained rather
+than analyzed:
 
 - `vit_gtsrb_tact_0_01`: ASR 0.000 with clean accuracy 0.121 against a benign 0.991. The
   model did not train at all.
@@ -130,13 +130,13 @@ than analysed:
 ## How wide is the error bar on a single ASR?
 
 Wider than the 0.85 bar assumes. The clean-label cap accidentally produced replicates:
-three CIFAR-100 `lc` runs at identical configurations, down to the poisoned index set,
-read **0.873 / 0.545 / 0.785**, and three GTSRB `lc` runs read **0.464 / 0.239 / 0.129**.
+3 CIFAR-100 `lc` runs at identical configurations, down to the poisoned index set,
+read **0.873 / 0.545 / 0.785**, and 3 GTSRB `lc` runs read **0.464 / 0.239 / 0.129**.
 Spreads of 0.33 and 0.34.
 
 Those runs predate the seeding commit, so they differ only by an unrecorded random
-initialisation and shuffle. They are, in effect, free seed replicates, and they say that
-a hard threshold applied to one training run is not a reliable classification. Every new
+initialization and shuffle. They are, in effect, free seed replicates and they say that
+a hard threshold applied to 1 training run is not a reliable classification. Every new
 cell in the clean-label work is therefore trained at seeds 0 to 4, and reported as a mean
 with a spread rather than as a single number.
 
@@ -147,7 +147,7 @@ with a spread rather than as a single number.
 2. **Extend the WaNet sweep to strength 8 and 16** on CIFAR-10 and CIFAR-100 at 1%, and
    accept the smallest strength clearing 0.85 with clean-accuracy drop no worse than
    -0.05. GTSRB is already answered at 4.0.
-3. **Retrain the two broken runs** (`vit_gtsrb_tact_0_01`, `vit_gtsrb_badnet_a2a_0_01`).
+3. **Retrain the 2 broken runs** (`vit_gtsrb_tact_0_01`, `vit_gtsrb_badnet_a2a_0_01`).
 4. **Test the Adaptive-Blend asymmetry fix** at seeds 0 to 4, since seed sensitivity is
    the whole of its failure mode.
 5. **Decide the `sig` policy.** Its GTSRB cells inherit the target-class fix, but

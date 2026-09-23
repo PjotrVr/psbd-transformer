@@ -1,4 +1,4 @@
-# H5 — PSBD degrades on all-to-all, which has no single target class
+# H5: PSBD degrades on all-to-all, which has no single target class
 
 **Status: REFUTED, and the refutation is one of the strongest results here.**
 All-to-all is not undetectable. Its PSU signal is **inverted**, and once the sign is
@@ -28,7 +28,7 @@ at the PSU means explains it immediately (blocks 9-12, rate 0.7):
 | `badnet_a2o` | 0.101 | **0.022** | backdoor **more** robust, the paper's premise |
 | `badnet_a2a` | 0.144 | **0.588** | backdoor **less** robust, the premise inverted |
 
-All-to-all backdoor samples are not resistant to perturbation. They are *four times
+All-to-all backdoor samples are not resistant to perturbation. They are *4 times
 more fragile* than clean samples.
 
 ## Two-sided detection
@@ -55,7 +55,7 @@ earlier that one-sided detection got worse as poisoning increased.
 
 ## Why all-to-all is fragile rather than robust
 
-All-to-one learns one mapping, trigger to `y_t`, reinforced by every poisoned sample.
+All-to-one learns 1 mapping, trigger to `y_t`, reinforced by every poisoned sample.
 It is a single high-capacity shortcut and it survives heavy perturbation, which is
 exactly PSBD's premise.
 
@@ -70,7 +70,7 @@ So the label geometry does matter, as the original hypothesis said, but it chang
 
 ## What this changes
 
-- PSBD as published would report all-to-all as undetectable. It is not; the rule is
+- PSBD as published would report all-to-all as undetectable. It is not. The rule is
   one-sided and the phenomenon is not.
 - A defender does not know the label geometry in advance, but does not need to: the
   two-sided rule costs almost nothing on a benign model (0.506 to 0.522) and recovers

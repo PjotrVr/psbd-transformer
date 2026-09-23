@@ -1,4 +1,4 @@
-# H12 — PSU is just a proxy for baseline confidence
+# H12: PSU is just a proxy for baseline confidence
 
 **Status: REFUTED.** And the test that refuted it produced a free improvement to the
 score.
@@ -6,8 +6,8 @@ score.
 ## Claim (the skeptical one)
 
 PSU is `P_c(x)` minus the mean dropout-perturbed `P_c(x)`. A sample starting near
-probability 1 has more room to fall than one starting at 0.6, and a backdoored model
-is extremely confident on triggered inputs. So PSU may simply be measuring baseline
+probability 1 has more room to fall than 1 starting at 0.6, and a backdoored model
+is extremely confident on triggered inputs. So PSU may just be measuring baseline
 confidence, dressed up with `k` stochastic forward passes that a defender could skip.
 
 Raised by an adversarial verification pass, which noticed that on the benign control
@@ -15,7 +15,7 @@ a confidence-only detector scores 0.514 against PSBD's 0.506.
 
 ## Test
 
-Three detectors on the same cached tensors, `before_mlp_residual`, CIFAR-10 ViT at
+3 detectors on the same cached tensors, `before_mlp_residual`, CIFAR-10 ViT at
 10% poisoning, each at PSU's own best rate:
 
 - **psu** `P_c(x) - mean_k(P_c_dropout(x))`, the method
@@ -23,8 +23,8 @@ Three detectors on the same cached tensors, `before_mlp_residual`, CIFAR-10 ViT 
 - **fractional drop** `1 - mean_k(P_c_dropout(x)) / P_c(x)`, which divides the
   starting confidence out entirely
 
-The third is the decisive one. If PSU works only because confident samples fall
-further in absolute terms, normalising by the starting confidence should destroy it.
+The third is the decisive 1. If PSU works only because confident samples fall
+further in absolute terms, normalizing by the starting confidence should destroy it.
 
 ## Evidence
 
@@ -41,7 +41,7 @@ further in absolute terms, normalising by the starting confidence should destroy
 PSU beats confidence-only on **5 of 5** checkpoints, by 0.19 on average. The
 stochastic passes earn their cost.
 
-And normalising the confidence out does not destroy the signal, it slightly improves
+And normalizing the confidence out does not destroy the signal, it slightly improves
 it, on every checkpoint. So PSU measures how **robust** a prediction is, not how
 confident it started.
 
@@ -97,7 +97,7 @@ PYTHONPATH=. python experiments/psu_vs_confidence/measure.py
 ## Subquestions
 
 1. Does the fractional form's advantage hold under the adaptive rate rule (not just
-   the oracle rate), across poison rates, and under SAM? If so it should replace the
+   the oracle rate), across poison rates and under SAM? If so it should replace the
    absolute form in `psu_from_cache` outright.
 2. Confidence-only at 0.685 mean is a baseline every detection method should be
    required to beat, and it is absent from the literature this project builds on.

@@ -1,12 +1,12 @@
 # Hypothesis ledger
 
-One file per hypothesis. Each states what it predicts in falsifiable terms, what
+1 file per hypothesis. Each states what it predicts in falsifiable terms, what
 evidence would settle it, and the verdict once evidence lands.
 
 **Status vocabulary.** `OPEN` (no evidence yet), `SUPPORTED` (evidence points
 this way, stated with the numbers), `REFUTED` (evidence points the other way),
 `INCONCLUSIVE` (evidence gathered and it does not decide). A hypothesis is never
-quietly deleted; a refuted one keeps its file, because knowing what was ruled out
+quietly deleted. A refuted 1 keeps its file, because knowing what was ruled out
 is most of the value.
 
 Every file names the script or artifact that produced its evidence. If a claim
@@ -15,7 +15,7 @@ and it says so.
 
 ## Reporting standard: the coverage bar
 
-**No conclusion is reported unless it has been measured across all three axes at
+**No conclusion is reported unless it has been measured across all 3 axes at
 once:**
 
 | axis | required |
@@ -24,26 +24,26 @@ once:**
 | poison rates | 1%, 5%, 10%, all three |
 | attacks | `badnet_a2o`, `wanet`, `lc`, `blend`, `adaptive_blend`, every one that implants |
 
-A number that covers two of the three axes is not a partial result, it is a lead,
-and it is labelled PROVISIONAL. `defence_tables.py` enforces this in code: it
+A number that covers 2 of the 3 axes is not a partial result, it is a lead,
+and it is labeled PROVISIONAL. `defence_tables.py` enforces this in code: it
 refuses to emit a row whose coverage is incomplete and prints what is missing
 instead, so an under-covered claim cannot reach a table by accident.
 
 **No conclusion is reported unless it has been measured on the full panel:
 `badnet_a2o`, `wanet`, `lc`, `blend`, `adaptive_blend`.** A result on a single
-attack, `badnet_a2o` above all, is a lead and is labelled PROVISIONAL. It is
-never a finding, never a headline, and never goes in a table without the other
-four beside it.
+attack, `badnet_a2o` above all, is a lead and is labeled PROVISIONAL. It is
+never a finding, never a headline and never goes in a table without the other
+4 beside it.
 
 The reason is not pedantry. `badnet_a2o` is a static patch trigger, the easiest
 attack to implant (ASR 0.997 to 1.000 at every poison rate on every dataset) and
-the one whose detection behaviour is least like the others. Three results in this
+the one whose detection behavior is least like the others. 3 results in this
 ledger already show the panel disagreeing with itself: `token_mask` is best on the
 patch trigger and worst on `wanet` ([H27](H27-token-mask-trigger-locality.md)),
 `channel_mask` loses everywhere except the patch trigger at 1%
 ([H26](H26-channel-mask-structured-vs-elementwise.md)), and `lc` fails under
-configurations that carry every other attack. Generalising from `badnet_a2o` to
-"the method" is exactly the error those three results warn about.
+configurations that carry every other attack. Generalizing from `badnet_a2o` to
+"the method" is exactly the error those 3 results warn about.
 
 **Where the panel cannot be completed, say so rather than substituting.**
 Attack success at ASR >= 0.5, ViT, no SAM:
@@ -59,13 +59,13 @@ Attack success at ASR >= 0.5, ViT, no SAM:
 `wanet` does not implant at 1% on any dataset (peak ASR 0.379 on Tiny). So at 1%
 the panel is `badnet_a2o`, `blend`, `adaptive_blend` and `lc` where viable, and
 `wanet` is reported as **attack failed to implant**, not as a detection failure
-and not silently omitted. Any 1% claim states which of the five it rests on.
+and not silently omitted. Any 1% claim states which of the 5 it rests on.
 
 ## The question all of these serve
 
 PSBD (`literature/psbd-li-arxiv2024-source/`) detects backdoors by turning dropout on at inference and
 measuring how far the model's confidence in its own no-dropout prediction falls.
-Clean samples lose a lot of confidence; backdoor samples barely move, because the
+Clean samples lose a lot of confidence. Backdoor samples barely move, because the
 trigger-to-target path is the most robust thing the model learned. On ResNet-18
 the paper places dropout **after each residual add**. On ViT that placement is
 reported to fail, and **pre-residual** (on each branch, just before the add) to
@@ -95,7 +95,7 @@ written.
 | [H10](H10-depth-band-placement.md) | Aiming dropout at the depth where an attack's direction lives beats spreading it over all blocks | band premise **SUPPORTED** 6/6; onset-based selection **REFUTED** out of sample 0/2 |
 | [H11](H11-adaptive-rate-overshoots.md) | PSBD's adaptive rate rule overshoots on ViT | **SUPPORTED**, 12/12, and free to fix |
 | [H12](H12-psu-is-not-just-confidence.md) | PSU is just a proxy for baseline confidence | **REFUTED** (and yielded a free improvement) |
-| [H13](H13-combined-variant.md) | The accumulated changes combine into a materially better defence | **SUPPORTED**: +0.110 derivation, **+0.151 held out (2/2)** |
+| [H13](H13-combined-variant.md) | The accumulated changes combine into a materially better defense | **SUPPORTED**: +0.110 derivation, **+0.151 held out (2/2)** |
 | [H14](H14-fusion.md) | PSBD and STRIP fuse into something better than either | **SUPPORTED**: 0.614 TPR at 1% FPR, 93% of oracle-max |
 | [H15](H15-one-sided-rules-are-the-common-weakness.md) | One-sided decision rules are a systematic weakness across detectors | **RETIRED as a method**, kept as a recorded negative result. Inversion is a symptom of a broken assumption, never a decision rule; nothing downstream uses it |
 | [H16](H16-where-the-backdoor-neurons-are.md) | The backdoor is one late-layer linear direction, not a set of neurons | **SUPPORTED**: post-LayerNorm rank-1 removal takes ASR 1.00 to 0.00 on every checkpoint; "neurons" framing **REFUTED** (300 of 768 coords does nothing); SAM sub-claim **REFUTED** as a LayerNorm artifact |
@@ -129,31 +129,31 @@ written.
 | [H41](H41-multi-probe-defence.md) | Multi-probe PSBD defeats the adaptive attacker | **SUPPORTED**: min-rank union of k probes recovers AUROC 0.951 from single-probed 0.322. 48/56 above 0.90 |
 | [H42](H42-evasion-identification.md) | The evaded operator can be identified without poison labels | **REFUTED**: 8.9% accuracy by val PSU std, below 25% chance. Inherent operator differences dominate. Identification not needed: multi-probe works without it |
 | [H43](H43-entropy-covers-all-to-all.md) | The case PSBD cannot cover is covered by its own discarded tensor | **SUPPORTED**: entropy 0.761 against PSBD's 0.411 on all-to-all, benign at chance, from 1 cached forward pass. A label-free sign rule (mean PSU of the suspect pool minus clean validation) selects between them for **+0.045**, CI [+0.017, +0.079], 98% of oracle-max, hurting 0 of 64 cells. Rests on 9 all-to-all cells and is 0.000 at 1% poisoning |
-| [H44](H44-content-dependence-law.md) | PSBD's failure is a continuous law in content dependence, not a special case | **SUPPORTED as a measurement, FRAMING ANTICIPATED** by A2X (AAAI 2026), which sweeps target count over {1,2,5,8,10} and reports defences failing. What survives, and is NOT in A2X, is the DETECTION VALLEY: PSU and entropy fail at opposite ends of the axis, so the attacker's optimum is interior (m=8 on CIFAR-100 and Tiny), reaching best-of-2 detection 0.553 to 0.584 for ~20-25 ASR points. All-to-all is the EASIEST end for entropy (0.849). Plus the decoupling and the rate-surface control: on GTSRB at 10%, 8 target classes instead of 1 takes AUROC 0.999 to 0.491 and TPR@1%FPR 0.981 to 0.007 for 1.3 points of ASR, with clean accuracy improving. No rate rescues it: best over the whole 10-rate surface is 0.532. Free on GTSRB and CIFAR-10, ~0.20 ASR on CIFAR-100 |
-| [H45](../../experiments/style_content_split/README.md) | A backdoor trigger is a style feature, so style normalisation purifies it | **REFUTED**, and scooped. Deployable ASR gain is 0.000 on adaptive_blend and on lf, which survives FULL amplitude replacement at 0.949 ASR. The premise is FIBA (CVPR 2022) and DFST (AAAI 2021). The surviving result is the reason: for an additive trigger the amplitude/phase split reads trigger CONTRAST, not TYPE, so 7 of 9 attacks here are unattributable in that basis by construction |
+| [H44](H44-content-dependence-law.md) | PSBD's failure is a continuous law in content dependence, not a special case | **SUPPORTED as a measurement, FRAMING ANTICIPATED** by A2X (AAAI 2026), which sweeps target count over {1,2,5,8,10} and reports defenses failing. What survives, and is NOT in A2X, is the DETECTION VALLEY: PSU and entropy fail at opposite ends of the axis, so the attacker's optimum is interior (m=8 on CIFAR-100 and Tiny), reaching best-of-2 detection 0.553 to 0.584 for ~20-25 ASR points. All-to-all is the EASIEST end for entropy (0.849). Plus the decoupling and the rate-surface control: on GTSRB at 10%, 8 target classes instead of 1 takes AUROC 0.999 to 0.491 and TPR@1%FPR 0.981 to 0.007 for 1.3 points of ASR, with clean accuracy improving. No rate rescues it: best over the whole 10-rate surface is 0.532. Free on GTSRB and CIFAR-10, ~0.20 ASR on CIFAR-100 |
+| [H45](../../experiments/style_content_split/README.md) | A backdoor trigger is a style feature, so style normalization purifies it | **REFUTED**, and scooped. Deployable ASR gain is 0.000 on adaptive_blend and on lf, which survives FULL amplitude replacement at 0.949 ASR. The premise is FIBA (CVPR 2022) and DFST (AAAI 2021). The surviving result is the reason: for an additive trigger the amplitude/phase split reads trigger CONTRAST, not TYPE, so 7 of 9 attacks here are unattributable in that basis by construction |
 | [H46](../../experiments/retention_curves/README.md) | The backdoor is the robust path in EVERY perturbation modality | **REFUTED**. At matched clean damage on GTSRB: activation dropout gives ASR retention 0.910 against clean 0.527, 12/14 cells; Fourier amplitude gives 0.627 against 0.718, only 2/5. The asymmetry is specific to activation space. Internal control: the 2 dropout exceptions are both badnet_a2a, H5's inversion. Sharpest sub-result: adaptive_blend is ANTI-FRAGILE, ASR retention 1.28 and 1.19 under dropout and 1.13 under amplitude, i.e. it strengthens as the model is damaged, which is why it defeats every perturbation-consistency detector |
 
 ## Where this stands after phases 3a and 3b
 
 **The founding claim did not survive.** Pre-residual does not beat post-residual on
 ViT in general. Swept over its own rate window (p = 0.005 to 0.09, which the grid
-inherited from the ConvNet paper never reached), post-residual **wins on three of the
-four working attacks**: blend 0.989 against 0.978, bpp 0.991 against 0.977, lf 0.969
+inherited from the ConvNet paper never reached), post-residual **wins on 3 of the
+4 working attacks**: blend 0.989 against 0.978, bpp 0.991 against 0.977, lf 0.969
 against 0.947. Pre-residual leads only on the static patch trigger, and there by a
 large margin (0.889 against 0.747).
 
 **And pre-residual is not the best placement anyway.** It ranks 4th of 11. The top
-three are `before_mlp_residual` (0.969 mean), `before_attention_norm` (0.965) and
+3 are `before_mlp_residual` (0.969 mean), `before_attention_norm` (0.965) and
 `before_attention` (0.962), against pre-residual's 0.948. `pre_residual` even scores
-below `before_mlp_residual` alone, which is one of its own two components: adding the
+below `before_mlp_residual` alone, which is one of its own 2 components: adding the
 attention-branch perturbation actively dilutes the MLP-branch one.
 
 **The most useful result is the cheapest.** PSBD's adaptive rate rule targets a
-clean-validation shift ratio of 0.8; on ViT the optimum sits near 0.7, and the rule
-overshoots on 12 of 12 checkpoints, costing about 0.09 AUROC that retuning one
+clean-validation shift ratio of 0.8. On ViT the optimum sits near 0.7, and the rule
+overshoots on 12 of 12 checkpoints, costing about 0.09 AUROC that retuning 1
 constant recovers for free ([H11](H11-adaptive-rate-overshoots.md)).
 
-The two results that would change a paper:
+The 2 results that would change a paper:
 
 - **H7.** `blend` is the best-detected attack in the grid (AUROC 0.978 to 0.986) and
   shows *no* shift-to-target effect (0.052 at 10% poisoning, below the 0.10 chance
@@ -169,7 +169,7 @@ The two results that would change a paper:
   flag needs the poison labels the detector exists to predict, so a two-sided
   number is not a result. All-to-all stands as a case PSBD does not cover.
 
-Corrections worth being loud about. **Three verdicts have now been overturned by
+Corrections worth being loud about. **3 verdicts have now been overturned by
 their own follow-ups**: H3 (post-residual does not fail after all), H1 (pre-residual
 does not generally win), and the earlier reading of H9 (the adversarial hypothesis was
 largely right). In every case the error ran the same way, and it is worth naming:
@@ -180,19 +180,19 @@ The through-line of this whole study is therefore methodological rather than abo
 any particular position: **what transfers badly from ConvNets to transformers is the
 rate grid and the rate-selection constant, not the placement.**
 
-H9 is deliberately the adversarial one. It is the reviewer's objection stated as a
+H9 is deliberately the adversarial 1. It is the reviewer's objection stated as a
 hypothesis, and the whole study is worthless if it cannot be refuted.
 
 The confound H9 names has now appeared twice: once for pre versus post residual, and
 again for early versus late block bands (H10), where an early band is a stronger
-intervention than a late one at the same rate because it propagates through more
+intervention than a late 1 at the same rate because it propagates through more
 blocks. Treat it as the default hazard of this whole line of work: **no comparison
 across placements is valid at a shared dropout rate.** Match on clean-validation
 shift ratio instead.
 
 ## The failure mode this ledger keeps hitting
 
-Three distinct versions of one mistake, each of which inverted a conclusion:
+3 distinct versions of 1 mistake, each of which inverted a conclusion:
 
 1. **Comparing outside a placement's operating range** (H9, H1, H3). Fixed by
    matching on clean-validation shift ratio, never on rate.
@@ -226,10 +226,10 @@ statistic, and at a pre-committed sample size as unverified.
 - **FPR is nearly uninformative here, by construction.** The threshold is a
   quantile of clean *test* PSU and FPR is measured on clean *test* PSU from the
   same distribution, so FPR lands near the quantile whatever the placement does.
-  AUROC and TPR carry the signal; FPR is reported for completeness, not as
+  AUROC and TPR carry the signal. FPR is reported for completeness, not as
   evidence.
 - **Deviation from the paper's protocol.** PSBD scores the poisoned *training*
-  set; this scores a held-out *test* pool (clean images vs the same images
+  set. This scores a held-out *test* pool (clean images vs the same images
   triggered). So these numbers answer "can PSBD flag a triggered input" and are
   not directly comparable to the paper's tables. Stated once here rather than
   hedged in every file.

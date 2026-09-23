@@ -1,4 +1,4 @@
-# H40 -- Per-sample attention entropy as detection feature
+# H40: Per-sample attention entropy as detection feature
 
 **Status: REFUTED as stated.** Attention entropy in the 3 backdoor heads (L5H0,
 L5H10, L6H3) does not separate backdoor from clean samples for most attacks
@@ -56,7 +56,7 @@ fused with PSU.
 
 ### Most attacks produce no per-sample entropy signal
 
-For badnet, wanet, lc, and badnet on Tiny, the mean entropy gap between clean
+For badnet, wanet, lc and badnet on Tiny, the mean entropy gap between clean
 and backdoor samples is within +/- 0.02 nats. The per-sample distributions
 overlap almost completely, producing AUROC near 0.5. The backdoor heads diverge
 at the POPULATION level (H31 showed JS divergence 0.15 to 0.35) but not at the

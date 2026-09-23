@@ -1,4 +1,4 @@
-# H8 — Detection improves with poison rate
+# H8: Detection improves with poison rate
 
 **Status: INCONCLUSIVE. The trend is attack-dependent and reverses sign.**
 
@@ -20,7 +20,7 @@ AUROC at the 25th-percentile threshold, best rate, pre-residual, CIFAR-10 ViT:
 | `blend` | 0.986 | 0.980 | 0.978 | **falls** slightly |
 | `badnet_a2a` | 0.601 | 0.539 | 0.510 | **falls**, toward chance |
 
-Two attacks rise, one is flat-to-falling, one is non-monotone, one falls
+2 attacks rise, 1 is flat-to-falling, 1 is non-monotone, 1 falls
 substantially. There is no single trend.
 
 ## Reading
@@ -31,7 +31,7 @@ with the *lowest* baseline detectability, so the pattern is better described as
 already at 0.96 to 0.99 at 1% poisoning and have nowhere to go.
 
 That reframing matters for the deployment claim: the hardest case for a defender is
-a low poison rate, and at 1% poisoning three of four attacks are already detected at
+a low poison rate, and at 1% poisoning 3 of 4 attacks are already detected at
 0.89 or better. The exception is `badnet_a2o` at 0.686, which is the case worth
 reporting rather than the 10% column.
 
@@ -53,14 +53,14 @@ varies (WaNet spans 0.12 to 0.96 across rates) would separate "more poison" from
 Poison rate does **not** mean what the folder name says for clean-label attacks.
 `poison.choose_poison_indices` caps the count at the number of eligible samples, and
 clean-label eligibility is the target class only. On CIFAR-100 that is 500 images,
-so 1%, 5% and 10% all resolve to the same 500 poisoned samples: three folders, one
+so 1%, 5% and 10% all resolve to the same 500 poisoned samples: 3 folders, 1
 experiment. `args.json` records the *requested* rate with no warning. Confirmed by
 ASR: `vit_cifar100_sig_0_01` 0.250 against `_0_05` 0.252.
 
 `sig` and `lc` are excluded from this grid for unrelated reasons (weak ASR on ViT),
 so no result here is affected. It does invalidate any poison-rate trend anyone draws
 for clean-label attacks on CIFAR-100, and it should be fixed by recording a
-`realized_poison_rate` alongside the requested one.
+`realized_poison_rate` alongside the requested 1.
 
 ## Subquestions
 

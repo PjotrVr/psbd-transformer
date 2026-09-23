@@ -136,7 +136,7 @@ as the paper says so.
 
 Swin. The claim these support is that the operator ranking is architecture
 invariant, which is a qualitative ordering rather than a numeric effect, so it is
-the least sensitive to seed noise of the three.
+the least sensitive to seed noise of the 3.
 
 **25 checkpoints, 50 extra runs, 176 GPU-hours.**
 

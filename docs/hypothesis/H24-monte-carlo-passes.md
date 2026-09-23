@@ -1,4 +1,4 @@
-# H24 — k = 3 Monte Carlo passes is the noise floor at low poison rate
+# H24: k = 3 Monte Carlo passes is the noise floor at low poison rate
 
 **Status: CONFIRMED, both predictions.** k = 20 was run and the gain is real and
 concentrated at low poison rate, exactly as predicted.
@@ -22,12 +22,12 @@ AUROC, fractional PSU:
 | **benign control** | 0.494 | 0.495 | **+0.001** |
 
 Mean delta **+0.028 at 1%**, +0.011 at 5%, +0.011 at 10%. Prediction 2 asked for
-at least +0.03 at 1% and under +0.01 at 10%; the low-rate figure lands just under
+at least +0.03 at 1% and under +0.01 at 10%. The low-rate figure lands just under
 and the high-rate figure just over, so the *direction* and the *concentration* are
 confirmed while the exact magnitudes were slightly optimistic.
 
 The benign control moving +0.001 is what makes this readable: more sampling is not
-simply making every statistic look better.
+just making every statistic look better.
 
 **Practical consequence.** The PSBD paper's k = 3 is leaving detection on the
 table, and it leaves most where the method is weakest. Raising k costs inference
@@ -66,7 +66,7 @@ is the one this whole line of work is about:
 | `bpp` 1% | 0.974 | 0.975 | 0.976 | +0.002 |
 | benign control | 0.494 | 0.494 | 0.494 | +0.000 |
 
-Two things to read off this. `badnet_a2o` at 1% is **still climbing at k = 3**, so
+2 things to read off this. `badnet_a2o` at 1% is **still climbing at k = 3**, so
 its PSU estimate has not converged and the published pass count is leaving
 detection on the table for exactly the case that fails. And `blend` and `bpp` at
 1% are flat because they are already saturated near 0.99, so more passes cannot
@@ -74,7 +74,7 @@ help them: the gain is specific to checkpoints that are neither saturated nor
 hopeless.
 
 The benign control is unmoved at 0.494 across every k, which is the check that
-this is not simply more sampling making any statistic look better.
+this is not just more sampling making any statistic look better.
 
 **Gate passed**, so k = 20 runs on the 10 checkpoints that are still climbing, at
 `before_attention_norm`, rates 0.3 to 0.7. Predictions 2 and 3 remain open.
@@ -99,7 +99,7 @@ below 5% poisoning.
 
 ## Why more passes might help
 
-The separation PSBD needs is a difference between two distributions of PSU. At
+The separation PSBD needs is a difference between 2 distributions of PSU. At
 10% poisoning that difference is large and 3 draws resolve it. At 1% it is small
 enough that the published configuration reads **0.297** on `badnet_a2o`
 ([H17](H17-low-poison-rate-is-a-placement-artifact.md)) while a different

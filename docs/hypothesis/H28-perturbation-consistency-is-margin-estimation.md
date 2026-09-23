@@ -1,4 +1,4 @@
-# H28 — Prediction-shift detection is margin estimation, and the operator only sets the Jacobian
+# H28: Prediction-shift detection is margin estimation, and the operator only sets the Jacobian
 
 **Status: PARTIALLY SUPPORTED.** Prediction 4 (interchangeability at matched
 sigma) confirmed: position variance exceeds family variance by 1.43x, Kendall
@@ -11,17 +11,17 @@ p >= 0.200), but layer-wise growth is highly consistent (159x from layer 1 to
 Prediction 2 untested (needs coefficient extraction per operator).
 
 > **Panel note.** The inversion evidence cited below (`badnet_a2o` at 1% reading
-> 0.194) is one attack. The asymmetry account predicts inversion wherever the
+> 0.194) is 1 attack. The asymmetry account predicts inversion wherever the
 > backdoor direction's coefficient is small, so it must be checked against
 > `blend`, `adaptive_blend` and `lc` at 1% before any of this is written up.
-> `wanet` cannot contribute at 1%; it does not implant there on any dataset.
+> `wanet` cannot contribute at 1%. It does not implant there on any dataset.
 > Prediction 3 below is the panel version of the claim and is the one that
 > settles it.
 
 ## The claim
 
-PSBD, SCALE-UP, IBD-PSC and STRIP are usually presented as four methods with four
-mechanisms. They are one method with four choices of **where to perturb**:
+PSBD, SCALE-UP, IBD-PSC and STRIP are usually presented as 4 methods with 4
+mechanisms. They are 1 method with 4 choices of **where to perturb**:
 
 | family | detector | perturbs | implemented here as |
 |---|---|---|---|
@@ -30,8 +30,8 @@ mechanisms. They are one method with four choices of **where to perturb**:
 | activation | **PSBD** (Li et al., CVPR 2025) | activations, by dropout | `dropout` and the mask operators |
 | parameter | IBD-PSC (Hou et al., ICML 2024) | BatchNorm affine parameters | `gain_scale` at the LayerNorm outputs |
 
-All four compute the same thing: how far a prediction moves when the model or its
-input is disturbed, and all four flag the samples that move **least**.
+All 4 compute the same thing: how far a prediction moves when the model or its
+input is disturbed, and all 4 flag the samples that move **least**.
 
 > **The claim is that what they measure is decision margin, and that the
 > perturbation operator and position determine only the Jacobian from the
@@ -42,8 +42,8 @@ input is disturbed, and all four flag the samples that move **least**.
             P(flip) = P( delta . g  >  margin ),   g = J_position^T w_readout
 
     restated
-        pick a place to perturb; the perturbation of size delta arrives at the
-        classifier scaled by that place's Jacobian; whether the prediction
+        pick a place to perturb. The perturbation of size delta arrives at the
+        classifier scaled by that place's Jacobian. Whether the prediction
         survives depends on how that compares to how far the sample sits from
         the decision boundary
 
@@ -52,7 +52,7 @@ claim about which units carry the trigger.
 
 ## Why the mechanism claim has to go
 
-Four measured results, none of which PSBD's own mechanism predicts:
+4 measured results, none of which PSBD's own mechanism predicts:
 
 1. **Gaussian noise, which removes nothing, scores 0.950** at
    `before_attention` and beats most structured masks
@@ -63,12 +63,12 @@ Four measured results, none of which PSBD's own mechanism predicts:
    ([H22](H22-head-mask-attention-units.md)).
 3. **The 144-head leave-one-out profile carries no signal at all**
    ([H18](H18-sensitivity-profile-over-units.md)), benign control clean at 0.497.
-4. **The backdoor is one non-axis-aligned direction**
+4. **The backdoor is 1 non-axis-aligned direction**
    ([H16](H16-where-the-backdoor-neurons-are.md)): zeroing the top 300 of 768
    coordinates leaves ASR at 1.00, removing the direction takes it to 0.00.
 
 Result 4 explains 2 and 3. A head, a neuron and a coordinate are axis-aligned
-objects; no ranking over them names a direction lying across the axes. Result 1
+objects. No ranking over them names a direction lying across the axes. Result 1
 follows too: isotropic noise is indifferent to axis alignment, and so is the
 backdoor.
 
@@ -85,8 +85,8 @@ placement reads **0.194**, well below chance on a fully implanted attack
 that. The margin account does, through an asymmetry in what supports each
 prediction:
 
-- a clean prediction is supported **redundantly** by many features;
-- the backdoor prediction rests on **one direction** with coefficient `alpha`.
+- a clean prediction is supported **redundantly** by many features.
+- the backdoor prediction rests on **1 direction** with coefficient `alpha`.
 
 Perturbing the residual stream, where that direction lives, attenuates the single
 thing holding the backdoor up. When `alpha` is small (low poison rate) the
@@ -109,13 +109,13 @@ This predicts a critical rate `p*` at which AUROC crosses 0.5, moving with
 2. **`p*` is predicted by `||v||`.** The rate at which each (position, operator)
    crosses AUROC 0.5 should be an increasing function of the measured direction
    norm, across attacks and poison rates. This is the quantitative test and the
-   one worth a figure.
+   1 worth a figure.
 3. **Only residual-stream positions invert.** Input-side positions should stay
-   above 0.5 at every rate and poison rate; stream positions should invert once
+   above 0.5 at every rate and poison rate. Stream positions should invert once
    `alpha` falls below a threshold.
-4. **The three families are interchangeable at matched disturbance.** If the
+4. **The 3 families are interchangeable at matched disturbance.** If the
    operator only sets the Jacobian, then at matched clean-validation shift ratio
-   `scale_up`, `gain_scale` and `dropout` should rank attacks similarly, and their
+   `scale_up`, `gain_scale` and `dropout` should rank attacks similarly and their
    differences should be smaller than the differences between positions within a
    family. A large, systematic family effect at matched sigma refutes this.
 
@@ -158,13 +158,13 @@ that some sub-layer inputs are themselves LayerNorm outputs, and perturbation
 after LayerNorm is amplified by the normalization gain in a way that does not
 respect the input/stream distinction. `after_embedding` inversions also break
 the prediction: the embedding output is the initial residual stream, so
-classifying it as "input-side" is a labelling artefact, but the inversions at
+classifying it as "input-side" is a labeling artifact, but the inversions at
 `before_attention_norm` and `before_mlp_norm` are genuine input-side positions
 and they invert anyway.
 
 ### Prediction 4: SUPPORTED
 
-The three perturbation families should be interchangeable at matched sigma:
+The 3 perturbation families should be interchangeable at matched sigma:
 position variance should exceed family variance, and families should rank
 attacks similarly.
 
@@ -271,7 +271,7 @@ perturbation, the strongest mean (`token_mask@before_attention_norm` and
 | `gain_scale` (omega 2) | parameter | `attention_norm_out` | 0.670 | 0.923 |
 
 Both ports separate on their first contact with real data, which is the minimum
-needed for prediction 4 to be worth testing. It is one checkpoint at one poison
+needed for prediction 4 to be worth testing. It is 1 checkpoint at 1 poison
 rate with no matched-sigma control, so it is a reason to run the grid, not a
 result.
 
@@ -284,7 +284,7 @@ published method cannot be applied directly. But for LayerNorm,
 which a post-hook does without mutating a single weight. Verified to 9.5e-07.
 
 **SCALE-UP has to round-trip the normalization.** The loaders deliver normalized
-tensors; scaling those directly would amplify the dataset mean as if it were
+tensors. Scaling those directly would amplify the dataset mean as if it were
 signal and would put the clip, which is where SCALE-UP's nonlinearity lives, in
 the wrong place. The operator un-normalizes, scales, clips to the valid pixel
 range and renormalizes. Verified against `clip(2x, 0, 1)` to 8.9e-08.

@@ -1,4 +1,4 @@
-# H30 — Backdoor direction shows a phase transition, not uniform persistence
+# H30: Backdoor direction shows a phase transition, not uniform persistence
 
 **Status: SUPPORTED with a qualification.** The direction is NOT uniformly
 persistent. It crystallizes around layers 8 to 10, with a clear S-curve in

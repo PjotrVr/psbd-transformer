@@ -10,7 +10,7 @@ fractional, one-sided. Base checkpoints only: `_evade_*` folders are adversarial
 trained to defeat PSBD and `_sam_rho_*` use a different optimizer, so both are excluded.
 Generated from `results/operating_points.csv`.
 
-## Poison rate 10% — ViT-B/16, token_mask @ before_attention_norm
+## Poison rate 10%, ViT-B/16, token_mask @ before_attention_norm
 
 Rate chosen per cell as the one whose clean-validation shift ratio is closest to 0.8. PSU variant: fractional, one-sided. Base checkpoints only.
 
@@ -51,9 +51,9 @@ Rate chosen per cell as the one whose clean-validation shift ratio is closest to
 | **mean** | **32 valid cells** | | | | **0.877** | **0.777** | | **0.837** | |
 | **worst** | | | | | **0.377** | **0.026** | | **0.130** | |
 
-⚠ = ASR below 0.5, so the backdoor was never reliably implanted; excluded from mean/worst.
+⚠ = ASR below 0.5, so the backdoor was never reliably implanted. Excluded from mean/worst.
 
-## Poison rate 5% — ViT-B/16, token_mask @ before_attention_norm
+## Poison rate 5%, ViT-B/16, token_mask @ before_attention_norm
 
 Rate chosen per cell as the one whose clean-validation shift ratio is closest to 0.8. PSU variant: fractional, one-sided. Base checkpoints only.
 
@@ -92,4 +92,4 @@ Rate chosen per cell as the one whose clean-validation shift ratio is closest to
 | **mean** | **30 valid cells** | | | | **0.852** | **0.742** | | **0.800** | |
 | **worst** | | | | | **0.312** | **0.015** | | **0.070** | |
 
-⚠ = ASR below 0.5, so the backdoor was never reliably implanted; excluded from mean/worst.
+⚠ = ASR below 0.5, so the backdoor was never reliably implanted. Excluded from mean/worst.

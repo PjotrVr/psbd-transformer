@@ -1,4 +1,4 @@
-# H14 — PSBD and STRIP fuse into something better than either
+# H14: PSBD and STRIP fuse into something better than either
 
 **Status: SUPPORTED.** Rank-fusion by the more suspicious verdict recovers **93.1% of
 the oracle-max** with no oracle, at mean TPR 0.614 at 1% FPR against 0.507 for STRIP
@@ -6,7 +6,7 @@ and 0.379 for PSBD.
 
 ## Claim
 
-The comparison table showed the two detectors failing on opposite attacks, with no
+The comparison table showed the 2 detectors failing on opposite attacks, with no
 checkpoint defeating both. If those failures are genuinely disjoint, a defender who
 runs both and takes the more suspicious verdict should approach the performance of
 always picking the right detector, without knowing in advance which that is.
@@ -14,11 +14,11 @@ always picking the right detector, without knowing in advance which that is.
 ## Method
 
 Both scores become **percentiles of the same reference**, the clean validation split.
-That reference choice is the whole method; see the correction below. Then two rules,
+That reference choice is the whole method. See the correction below. Then 2 rules,
 neither of which touches poisoned data:
 
-- `mean` the average of the two percentiles
-- `min` the more suspicious of the two, so a sample escapes only if **both**
+- `mean` the average of the 2 percentiles
+- `min` the more suspicious of the 2, so a sample escapes only if **both**
   detectors consider it clean
 
 Threshold remains the quantile of clean-validation fused score, so the false-positive
@@ -41,8 +41,8 @@ Benign control: 0.013 at 1% FPR, 0.042 at 5%. The fusion invents nothing.
 ## Why it works, and it is not what "beats both" would suggest
 
 `min` beats **both** components on only 6 of 23 checkpoints. Its advantage is not that
-it exceeds the better detector; it is that it **never collapses**. Median shortfall
-against the oracle-max is **-0.017**, i.e. it lands within two points of whichever
+it exceeds the better detector. It is that it **never collapses**. Median shortfall
+against the oracle-max is **-0.017**, i.e. it lands within 2 points of whichever
 detector happened to be right.
 
 The single-detector columns each contain catastrophic failures that the other covers:
@@ -55,7 +55,7 @@ The single-detector columns each contain catastrophic failures that the other co
 | `bpp` 1% | 0.917 | 0.113 | **0.867** |
 | `lc` 10% | 0.100 | 0.897 | **0.880** |
 
-In each row one detector is near-useless and the fusion tracks the other. That is the
+In each row 1 detector is near-useless and the fusion tracks the other. That is the
 practical value: a defender does not know the attack, so a detector that is excellent
 half the time and useless the other half is not deployable, and this one is neither.
 
@@ -94,10 +94,10 @@ PYTHONPATH=. python detector_fusion.py --fpr 0.01 0.05
 ## Subquestions
 
 1. **Add the two-sided rule to the fusion.** `badnet_a2a` is 3 of the 23 rows and
-   contributes zeros; H5 shows it is detectable at 0.966 with the sign flipped.
+   contributes zeros. H5 shows it is detectable at 0.966 with the sign flipped.
 2. `min` follows the more extreme verdict, which is wrong when a detector fails
    confidently (`wanet`). A rule weighted by each detector's *validation-measured*
    reliability would need no poisoned data and should fix that.
 3. Both components here are prediction-space. A feature-space detector would likely
    be more complementary still, and would test whether the gain is about detector
-   family rather than about these two methods.
+   family rather than about these 2 methods.

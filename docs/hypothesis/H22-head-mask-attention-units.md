@@ -1,4 +1,4 @@
-# H22 — Attention heads are the transformer's own unit, and masking them is the ViT-native PSBD
+# H22: Attention heads are the transformer's own unit, and masking them is the ViT-native PSBD
 
 **Status: REFUTED.** Attention heads are not a privileged unit for this statistic,
 and the early smoke number that looked promising did not survive the full sweep.
@@ -14,7 +14,7 @@ The prediction was a win on patch triggers, where attention to a spatial locatio
 is most obviously head-mediated. On `badnet_a2o` at 10%, `head_mask` gives 0.934
 against `dropout` / `before_attention`'s 0.958. It is close but it does not win.
 
-## Three independent reasons it fails, all now measured
+## 3 independent reasons it fails, all now measured
 
 1. **Heads are redundant.** Masking 60% of all 144 heads reaches clean-validation
    sigma of only 0.762, while masking 10% of the residual stream reaches 0.870
@@ -27,7 +27,7 @@ against `dropout` / `before_attention`'s 0.958. It is close but it does not win.
    ASR to 0.00. A head is an axis-aligned object, so no head subset names that
    direction. H16 separately refuted the head-alignment localizer (0 of 15 true
    positives), which is the same fact measured another way.
-3. **One head dominates everything.** The leave-one-out profile
+3. **1 head dominates everything.** The leave-one-out profile
    ([H18](H18-sensitivity-profile-over-units.md)) shows block 1 head 6 costing
    0.506 mean confidence against 0.033 for the next head. Random head masking
    mostly removes heads that do nothing, and the one head that matters is used
@@ -52,13 +52,13 @@ Reaching the head axis needed a forward wrapper rather than a hook.
 `out_proj.weight` directly and never calls `out_proj` as a module, so a forward
 hook on `out_proj` never fires and the model output comes back bit-identical.
 This was verified the hard way. The wrapper recomputes attention and exposes the
-per-head tensor; at rate 0 it reproduces PyTorch to 3.6e-07 on logits of scale
+per-head tensor. At rate 0 it reproduces PyTorch to 3.6e-07 on logits of scale
 0.79, which is float32 associativity.
 
 ## Why it might work
 
 This is the operator the mentor's framing points at: a transformer's natural unit
-is the head, not the channel, and PSBD's dropout is aligned with neither.
+is the head (not the channel), and PSBD's dropout is aligned with neither.
 
 - Heads are **functionally specialised**, so a backdoor implemented as "attend to
   the trigger patch, write the target direction" plausibly lives in a small number
@@ -71,7 +71,7 @@ is the head, not the channel, and PSBD's dropout is aligned with neither.
 
 ## Why it might fail
 
-[H16](H16-where-the-backdoor-neurons-are.md) supplies two specific reasons, and
+[H16](H16-where-the-backdoor-neurons-are.md) supplies 2 specific reasons, and
 they are serious:
 
 - The backdoor lives in **residual-stream dimensions**, not demonstrably in heads.
@@ -82,7 +82,7 @@ they are serious:
   0 of 15 true positives and 1 of 3 false positives on these very checkpoints. If
   heads carried the backdoor cleanly, that rule should have worked.
 
-Additionally, random head masking is not head *selection*. Even if a few heads
+Random head masking is also not head *selection*. Even if a few heads
 carry the backdoor, hitting them at random dilutes the signal by 144/k, which is
 what [H18](H18-sensitivity-profile-over-units.md)'s per-unit profile is meant to
 address and this operator is not.
@@ -96,7 +96,7 @@ most obviously head-mediated, and is **comparable elsewhere**.
 An early smoke measurement is consistent but far too small to lean on: on
 `vit_cifar10_badnet_a2o_0_01` with only 300 samples and 2 rates, `head_mask`
 scored 0.633 against the published configuration's 0.297 on the full split. That
-is 1 checkpoint, 300 samples, and no matched-sigma control, so it is a reason to
+is 1 checkpoint, 300 samples and no matched-sigma control, so it is a reason to
 run the pilot, not a result.
 
 ## What would refute it

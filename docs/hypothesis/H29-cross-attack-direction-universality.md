@@ -1,4 +1,4 @@
-# H29 — Cross-attack backdoor directions are NOT universal
+# H29: Cross-attack backdoor directions are NOT universal
 
 **Status: REFUTED.** Off-diagonal cosine similarity is near zero across all
 settings. Each attack creates its own direction.
@@ -15,7 +15,7 @@ cosine > 0.8 across attack pairs.
 
 ## Why it mattered
 
-If confirmed, a defender who knows ONE attack's direction could detect ALL
+If confirmed, a defender who knows 1 attack's direction could detect ALL
 attacks targeting that class, and it would ground the margin estimation account:
 the direction IS the margin direction to the target class decision boundary.
 
@@ -54,7 +54,7 @@ trigger-specific direction, not the target class's margin direction. The highest
 pairwise cosine (0.374 for lc vs tact on CIFAR-100 at 10%) is well below the
 0.8 threshold.
 
-This has two consequences:
+This has 2 consequences:
 
 1. **No universal detection from a single known direction.** A defender must
    detect each attack's direction independently. The direction ablation defense

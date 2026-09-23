@@ -1,4 +1,4 @@
-# H39 -- Skip connection scaling as inference-time defense
+# H39: Skip connection scaling as inference-time defense
 
 **Status: PARTIALLY SUPPORTED.** Skip scaling (replacing `x + branch` with
 `alpha * x + branch` at layers 10 to 11) removes some backdoors but is
@@ -71,9 +71,9 @@ Predicted: alpha=0.3 drops ASR below 0.20 with < 5% CA loss across all attacks.
 
 ## Interpretation
 
-### Three attack regimes
+### 3 attack regimes
 
-The attacks split into three distinct scaling-sensitivity regimes:
+The attacks split into 3 distinct scaling-sensitivity regimes:
 
 1. **Fragile (wanet, lc):** ASR collapses at alpha=0.3 to 0.5 with < 3% CA
    cost. The backdoor signal in the skip connection is weak enough that
@@ -82,7 +82,7 @@ The attacks split into three distinct scaling-sensitivity regimes:
 
 2. **Threshold (blend):** ASR stays at 1.000 down to alpha=0.3, then crashes
    to near 0 at alpha=0.1. A sharp phase transition, not a gradual decay.
-   The blend direction rides the skip connection at a specific norm; once
+   The blend direction rides the skip connection at a specific norm. Once
    scaling pushes it below the classifier's decision boundary, the backdoor
    collapses entirely. The threshold is between alpha=0.1 and alpha=0.3,
    which corresponds to attenuating the accumulated direction by 70 to 90%.
@@ -103,8 +103,8 @@ representation. That badnet still achieves ASR=0.995 means:
 
 1. The branch computations have learned to produce the backdoor direction
    independently of the residual stream's accumulated signal.
-2. The backdoor is not merely "riding" the skip connection (as H34 suggested);
-   it is also being actively computed by the branch at layers 10 to 11.
+2. The backdoor is not merely "riding" the skip connection (as H34 suggested).
+   It is also being actively computed by the branch at layers 10 to 11.
 3. This is consistent with H31's finding that badnet recruits additional late
    heads (L9H7, L10H9). These late attention heads process the trigger and
    write the direction directly into the branch output.

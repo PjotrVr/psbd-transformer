@@ -1,4 +1,4 @@
-# H41 -- Multi-probe PSBD defeats the adaptive attacker
+# H41: Multi-probe PSBD defeats the adaptive attacker
 
 **Status: SUPPORTED.**
 
@@ -8,7 +8,7 @@ detection even when the attacker has collapsed the probed operator. At the
 calibrated threshold the union reaches TPR 0.933 at FPR 0.254 against a target
 of 0.25. The threshold-free AUROC remains the definitive number.
 
-Two things changed since the first version of this page, and they are
+2 things changed since the first version of this page, and they are
 independent of each other. The threshold rule was corrected (see "Superseded
 figures" below), which moved TPR and FPR only. Separately, the
 `gaussian@before_mlp` sweep caches were archived to `*_gaussian_batchstd` by
@@ -17,7 +17,7 @@ its noise by a batch-reduced std and so coupled each sample's perturbation to
 its batch neighbours. That archive covers 22 of the 120 evasive checkpoints, 14
 of them inside the 56 with ASR > 0.9, which currently leaves those checkpoints
 running at 3 probes instead of 4 and is what moved AUROC. Every checkpoint
-whose probe pool is unchanged has a bit-identical AUROC across the two runs, so
+whose probe pool is unchanged has a bit-identical AUROC across the 2 runs, so
 none of the AUROC movement is attributable to the threshold fix.
 
 The lowest cell is badnet_a2o on Tiny at 5% (0.632), and the 5 cells at or
@@ -50,12 +50,12 @@ clean.
 
 H25 showed that evasion is probe-specific: an attacker trained against
 token_mask@ban still gets caught by gain_scale@mno at 0.955 and gaussian@bm
-at 0.926. The attacker's penalty optimises against one Jacobian; a different
+at 0.926. The attacker's penalty optimizes against 1 Jacobian. A different
 operator produces a different Jacobian, so the gradient never touches the
 features that operator reads. The union of k such probes survives unless the
 attacker evades all k simultaneously, which requires k forward graphs in the
 backward pass and may face conflicting gradients (token_mask wants to spread
-information across patches; gain_scale wants the backdoor direction to stay
+information across patches. Gain_scale wants the backdoor direction to stay
 close to the clean manifold).
 
 ## Why it might fail
@@ -72,7 +72,7 @@ close to the clean manifold).
 - **Inverted operators poison the union.** An operator whose PSU is inverted
   (backdoor samples have higher PSU than clean) flags clean samples as
   poisoned. Under the union rule this adds false positives without true
-  positives. The defence against this is to exclude known-inverted operators
+  positives. The defense against this is to exclude known-inverted operators
   from the pool, which the probe selection in H17 and H26 already does.
 
 ## Mechanism
@@ -82,7 +82,7 @@ close to the clean manifold).
     where rank_j(v) = percentile of v within the clean-validation distribution
     of probe j's PSU, and j indexes the k probes.
 
-Two thresholding rules are reported, both reading clean validation data only,
+2 thresholding rules are reported, both reading clean validation data only,
 so both stay defender-legal:
 
 | rule | threshold | achieved FPR |
@@ -112,7 +112,7 @@ same number under either rule.
    an inverted member that never fires contributes nothing.
 
 2. **Simultaneous perturbation failed** (`docs/results/combined-position-test.md`,
-   `both_sublayer_inputs`). Two operators in one forward pass diluted each
+   `both_sublayer_inputs`). 2 operators in 1 forward pass diluted each
    other at matched sigma (delta -0.045 on Tiny). This design runs each probe
    independently at its own full-strength rate.
 
@@ -176,7 +176,7 @@ marginal gain.
 The min-rank rule can only be as good as its best member on each sample, and
 can be worse when an underperforming probe's rank is the minimum. On samples
 where all transfer operators agree (most of them), the min-rank matches the
-best. On samples where one transfer operator has a middling rank, the min-rank
+best. On samples where 1 transfer operator has a middling rank, the min-rank
 gets pulled down. This is the FPR/TPR tradeoff: the union rule catches more
 true positives (any probe suffices) at the cost of more false positives (any
 probe can falsely fire).
@@ -195,7 +195,7 @@ of the attack to pick the right operator.
 
 Swin benefits more because its 3 transfer operators (token_mask@ban,
 gain_scale@mno, dropout@pre_res) are more diverse than ViT's (dropout@ban,
-gain_scale@mno, gaussian@bm), and dropout@ban partially leaks from token_mask
+gain_scale@mno, gaussian@bm) and dropout@ban partially leaks from token_mask
 evasion on ViT, pulling ViT's min-rank down on those checkpoints. The ViT
 column is also the one that lost the gaussian probe: every ViT Tiny cell now
 runs at k=3, and all 5 cells at or below 0.80 sit there.
@@ -221,8 +221,8 @@ correction.
 | Above 0.90, all operators | 48/56 | 40/56 | gaussian archive |
 | Checkpoints running at k=4 | 42/56 | 28/56 | gaussian archive |
 
-The two causes separate cleanly on the 42 high-ASR checkpoints whose probe pool
-is byte-for-byte unchanged between the two runs:
+The 2 causes separate cleanly on the 42 high-ASR checkpoints whose probe pool
+is byte-for-byte unchanged between the 2 runs:
 
 | Rule | TPR | FPR | AUROC |
 |---|---:|---:|---:|
@@ -249,7 +249,7 @@ on most ViT Tiny cells. Neither is the final number.
 sweeps and 28 hold 3. Analysis ran entirely on CPU.
 
 `results/multi_probe_analysis.json` still holds the superseded run, which is
-why the two sets of numbers can be compared at all. Re-running
+why the 2 sets of numbers can be compared at all. Re-running
 `experiments/multi_probe/analyze.py` with its default `--output` overwrites it with
 the current figures. The right time to do that is after the queued
 `psbd_gauss_*` jobs restore `before_mlp_gaussian` with the per-sample noise

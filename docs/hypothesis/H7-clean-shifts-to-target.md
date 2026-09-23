@@ -1,4 +1,4 @@
-# H7 — Clean samples under dropout shift specifically to the target class
+# H7: Clean samples under dropout shift specifically to the target class
 
 **Status: PARTIALLY REFUTED, and the exception is the most important result in the
 ledger.**
@@ -25,13 +25,13 @@ histogram reflects a real bias rather than universal collapse). Chance is 0.10.
 | `badnet_a2a` | 0.040 | 0.016 | 0.018 | 0.510 |
 
 **The effect is real for `bpp`, `lf`, and `badnet_a2o` at higher poisoning** (2 to 5
-times chance), and it strengthens with poison rate for the two `badnet` variants,
+times chance), and it strengthens with poison rate for the 2 `badnet` variants,
 exactly as the neuron-bias story predicts.
 
-**It is absent for `blend`** (0.052 at 10% poisoning, *below* chance) — and `blend`
+**It is absent for `blend`** (0.052 at 10% poisoning, *below* chance) and `blend`
 is the **best-detected attack in the entire grid**, at AUROC 0.978 to 0.986.
 
-## Why this is the important one
+## Why this is the important 1
 
 PSBD works on `blend` better than on anything else, while the mechanism PSBD's
 authors give for why it works is measurably absent there. So on ViT the method and
@@ -44,7 +44,7 @@ confidence gap. Candidates, none yet tested:
 - Clean samples shift to a *different* consistent class (an ImageNet-pretraining
   prior rather than the poisoned target). Directly checkable: the full histogram is
   already cached, only the argmax over classes has not been taken.
-- The backdoor feature is simply far more robust to perturbation than clean
+- The backdoor feature is just far more robust to perturbation than clean
   features, and PSU measures that robustness gap without any class-collapse being
   involved. This would make PSU a *stability* measure rather than a bias measure,
   which is a different and simpler story than the paper's.
@@ -52,7 +52,7 @@ confidence gap. Candidates, none yet tested:
 `badnet_a2a` at 0.016 to 0.040, well *below* chance, is consistent with
 [H5](H5-all-to-all-breaks-psbd.md): there is no single `y_t` to collapse onto, and
 detection there is also at chance. So where the mechanism is absent *and* detection
-fails, the story holds together; `blend` is the case where detection succeeds
+fails, the story holds together. `blend` is the case where detection succeeds
 without it.
 
 ## Caveat on how this was measured
@@ -60,13 +60,13 @@ without it.
 At the adaptive rate the clean shift ratio is 0.83 to 0.87, i.e. nearly everything
 shifts, and the histogram then measures the model's unconditional fallback rather
 than a backdoor-driven bias. The table above deliberately uses a lower rate. Both
-are in `psbd_metrics.json`; reading the saturated one would have made `bpp` look
+are in `psbd_metrics.json`. Reading the saturated 1 would have made `bpp` look
 like 0.75 and inflated the whole effect.
 
 ## Independent verification in latent space
 
 Everything above is prediction-space: it counts which class *label* the model outputs.
-That is one technique, and the neuron-bias claim is really about representations, so it
+That is 1 technique, and the neuron-bias claim is really about representations, so it
 was checked again with a different measurement entirely
 (`experiments/shift_in_latent_space/`).
 
@@ -93,10 +93,10 @@ So a second, independent technique reaches the same conclusion the label histogr
 and supplies the control the label version lacked. The drift toward class 0 is a
 property of the perturbation and the pretrained backbone, not of the poisoning.
 
-Note the one place the two measurements diverge, which is informative: displacement
+Note the one place the 2 measurements diverge, which is informative: displacement
 along the *backdoor direction* is clearly larger for backdoored models (0.62 to 1.86)
 than for benign (0.42). So dropout does push clean samples along the trigger's
-direction more in a poisoned model. It simply does not push them far enough, or in the
+direction more in a poisoned model. It just does not push them far enough, or in the
 right way, to land on the target class. The mechanism is present in the representation
 and absent in the decision.
 
@@ -107,7 +107,7 @@ class-centroid displacement cosine plus backdoor-direction projection (latent sp
 
 **Not used**: UMAP and the Lipschitz tooling. Both exist in `analysis/` and neither has
 been run. UMAP would add a qualitative picture of the same displacement and is worth
-doing; the Lipschitz tools are weight-space and data-free, so they bear on detector
+doing. The Lipschitz tools are weight-space and data-free, so they bear on detector
 design rather than on this claim.
 
 ## Reproduce
@@ -141,7 +141,7 @@ pre-residual, same non-saturating rate, `y_t` = 0 = airplane throughout:
 | `badnet_a2a_0_05` | cat (3) | 0.682 | 0.016 |
 
 **The concentration half of PSBD's mechanism holds, robustly.** Every model collapses
-onto one dominant class with a share of 0.27 to 0.79, against a 0.10 chance line.
+onto 1 dominant class with a share of 0.27 to 0.79, against a 0.10 chance line.
 Prediction shift under dropout is emphatically not diffuse on ViT.
 
 **The target-class half does not.** The dominant class is usually *not* `y_t`. Only
@@ -164,8 +164,8 @@ fallback rather than redirect it toward the attacker's target.
 
 So the honest statement for ViT is: dropout-induced prediction shift concentrates on
 a single class, that class is a property of the model rather than of the attacker's
-target, and PSU separates clean from backdoor samples anyway. The method survives;
-the explanation does not transfer.
+target, and PSU separates clean from backdoor samples anyway. The method survives.
+The explanation does not transfer.
 
 ## Subquestion that follows, and it is a design fix
 

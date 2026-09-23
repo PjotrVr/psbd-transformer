@@ -1,4 +1,4 @@
-# H44 — PSBD's failure is a continuous law in content dependence, and it is a free attack
+# H44: PSBD's failure is a continuous law in content dependence, and it is a free attack
 
 **Status: SUPPORTED as a measurement, but the FRAMING IS ANTICIPATED by A2X (AAAI 2026),
 which sweeps the same knob. See the prior-art section immediately below before citing any
@@ -12,9 +12,9 @@ surface the best cell an oracle could pick is **0.532**.
 ## PRIOR ART: the law itself is substantially anticipated
 
 **A2X, "Enhancing All-to-X Backdoor Attacks with Optimized Target Class Mapping"** (Wang,
-Tian, Han, Xu; arXiv 2511.13356, 17 Nov 2025; AAAI 2026) sweeps the target count over
-X in {1, 2, 5, 8, 10}, which is the same knob as `all_to_m`, and reports that
-representative state-of-the-art defences are ineffective against A2X attacks. The framing
+Tian, Han, Xu, arXiv 2511.13356, 17 Nov 2025, AAAI 2026) sweeps the target count over
+X in {1, 2, 5, 8, 10} (the same knob as `all_to_m`) and reports that
+representative state-of-the-art defenses are ineffective against A2X attacks. The framing
 "detectability falls as the number of target classes rises" is therefore **theirs, not
 ours**, and must be cited as the primary reference rather than as related work.
 
@@ -23,14 +23,14 @@ the AAAI proceedings version is public.
 
 What is left after that citation is narrower and has to be stated as such:
 
-1. **The decoupling, with numbers.** A2X optimises the target MAPPING to raise ASR. This
+1. **The decoupling, with numbers.** A2X optimizes the target MAPPING to raise ASR. This
    measures the opposite margin: how much detectability an attacker can destroy at a fixed,
-   essentially zero ASR cost. On GTSRB at 10%, AUROC 0.999 to 0.491 for 1.3 ASR points.
+   near-zero ASR cost. On GTSRB at 10%, AUROC 0.999 to 0.491 for 1.3 ASR points.
 2. **The whole-rate-surface control.** The defender has a free parameter, and showing the
-   collapse at one matched rate proves nothing. Every rate from 0.05 to 0.90 is reported, and
+   collapse at 1 matched rate proves nothing. Every rate from 0.05 to 0.90 is reported, and
    the best cell an oracle could pick at m = 8 is 0.532. This project has inverted 4 of its
    own conclusions by omitting exactly this control.
-3. **Against PSBD specifically**, which is CVPR 2025 and does not appear in A2X's defence set.
+3. **Against PSBD specifically**, which is CVPR 2025 and does not appear in A2X's defense set.
 4. **On ViT-B/16**, where A2X's evaluation is CNN-centric.
 
 A "continuous law in log2(m)" is not a contribution on top of A2X. The free-evasion point
@@ -82,24 +82,24 @@ the defender recovers, so the effect is a property of the attack rather than of 
 
 ## Why it works
 
-The premise needs `B(x) = t`, a constant. `(y + 1) mod m` forces the model to recognise the
+The premise needs `B(x) = t`, a constant. `(y + 1) mod m` forces the model to recognize the
 source class before it can increment, so the backdoor pathway inherits and then exceeds the
 clean pathway's fragility, and the ordering that PSBD reads reverses. What is new here is
 that this is **continuous in `log2(m)`** rather than binary, and that the cost curve and the
 detectability curve **come apart**: on a dataset the model can fit comfortably, the attacker
-buys full evasion at essentially no ASR.
+buys full evasion at almost no ASR.
 
 The CIFAR-100 arm is the control that shows the cost is real where fitting is hard: ASR
 1.000, 0.887, 0.843, 0.805, 0.789 at m = 1, 2, 4, 8, 100. So the attack is free on GTSRB and
 CIFAR-10 and costs about 0.20 ASR on CIFAR-100. An attacker picks the dataset regime.
 
-## THE DETECTION VALLEY: the two channels fail at opposite ends, and the attacker aims between
+## THE DETECTION VALLEY: the 2 channels fail at opposite ends, and the attacker aims between
 
 The law above is only half the picture, and the other half changes what it means.
 
 PSU and predictive entropy are 2 different detection channels, and along the
 content-dependence axis they move in OPPOSITE directions. As `m` grows the trigger loses
-perturbation-robustness, so PSU dies; but a content-dependent map must contest the true
+perturbation-robustness, so PSU dies. But a content-dependent map must contest the true
 source class, so the margin narrows and entropy comes alive. Measured at 10% on GTSRB:
 
 | m | 1 | 2 | 4 | 8 | 16 | 32 | 43 |
@@ -111,7 +111,7 @@ source class, so the margin narrows and entropy comes alive. Measured at 10% on 
 So all-to-all, the endpoint H5 records as uncoverable, is **the easiest end for entropy**
 (0.849). The attack that actually evades is in the MIDDLE.
 
-**The attacker's optimum, minimising the best of the 2 channels:**
+**The attacker's optimum, minimizing the best of the 2 channels:**
 
 | dataset, rate | optimal m | best-of-2 | ASR | ASR cost |
 |---|---|---|---|---|
@@ -131,7 +131,7 @@ where it is needed and picks wrongly at both. The same collapse of the perturbat
 asymmetry that kills PSU also removes the router's evidence.
 
 This is what makes the law a result rather than a sweep. Detectability is **not monotone**
-in content dependence; it is a valley between 2 channels, and the valley is where an
+in content dependence. It is a valley between 2 channels, and the valley is where an
 attacker should sit.
 
 ## What this does not claim
@@ -139,7 +139,7 @@ attacker should sit.
 - Single seed, 1 architecture, 1 placement. `m = 32` reads 0.604 against `m = 16`'s 0.401,
   so the curve is not perfectly monotone and the non-monotonicity is unexplained.
 - 10% poisoning. The 5% arm and the Tiny and CIFAR-100 interiors are still training.
-- It says nothing about defences outside the perturbation-consistency family. The entropy
+- It says nothing about defenses outside the perturbation-consistency family. The entropy
   statistic in [H43](H43-entropy-covers-all-to-all.md) covers all-to-all at 0.761, so `m` at
   the far end is not undetectable in general, only undetectable *by PSBD*. Whether entropy
   also covers the interior of the curve is the obvious next measurement and it is unrun.
@@ -150,5 +150,5 @@ attacker should sit.
 python pbs/generate_content_dependence_jobs.py && bash pbs/vit_content/submit_all.sh
 ```
 
-Registry entries `badnet_a2m2` through `badnet_a2m128`; the label map is
+Registry entries `badnet_a2m2` through `badnet_a2m128`. The label map is
 `poison._grouped_target`.

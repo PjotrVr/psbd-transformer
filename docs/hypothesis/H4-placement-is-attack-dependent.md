@@ -1,4 +1,4 @@
-# H4 — The best placement tracks where the backdoor direction enters the CLS token
+# H4: The best placement tracks where the backdoor direction enters the CLS token
 
 **Status: SUPPORTED.** The layer ordering holds, and the placement consequence now has direct evidence.
 
@@ -23,17 +23,17 @@ Ranking the 9 atomic positions by AUROC produces a *different* ranking for
 restricting dropout to late blocks should help patch triggers more than
 distributed ones, and restricting it to middle blocks should do the reverse.
 
-Refuted if one placement dominates uniformly across all 5 attacks.
+Refuted if 1 placement dominates uniformly across all 5 attacks.
 
 ## Why it is interesting
 
-It is the bridge between the two papers, and it turns PSBD from a recipe into
+It is the bridge between the 2 papers, and it turns PSBD from a recipe into
 something with a predictive theory behind it. If placement really tracks the
 direction's entry layer, then measuring the entry layer (cheap, `analysis/`
 already implements it) *predicts* the best placement without running the sweep.
 That is a much more useful claim than any single winning position.
 
-It also suggests a per-attack adaptive defence, which is awkward for a defender
+It also suggests a per-attack adaptive defense, which is awkward for a defender
 who does not know the attack, and that tension is itself worth reporting.
 
 ## Evidence
@@ -71,7 +71,7 @@ post-residual, on the full grid, is not uniform. It tracks the trigger family:
 | `lf` | 8 | +0.030 |
 | `badnet_a2o` | 9 | **+0.226** |
 
-Placement barely matters for the three attacks whose direction is established by
+Placement barely matters for the 3 attacks whose direction is established by
 layer 8: both placements reach 0.89 to 0.99. Placement matters enormously for the
 static patch trigger, the one still being assembled in the last few blocks, where
 post-residual collapses to 0.50 to 0.67 and pre-residual holds 0.69 to 0.89.
@@ -80,7 +80,7 @@ Read with [H3](H3-why-post-residual-fails.md): post-residual masks the whole str
 once per block, and a trigger that only reaches `[CLS]` at layers 9 to 12 has almost
 no depth left in which to be redundantly re-encoded.
 
-Caveat: the ordering is not monotone in onset among the three easy attacks
+Caveat: the ordering is not monotone in onset among the 3 easy attacks
 (`blend` at layer 5 has a larger gap than `bpp` at 6 or `lf` at 8). The defensible
 statement is patch-versus-distributed, not a continuous function of onset layer.
 

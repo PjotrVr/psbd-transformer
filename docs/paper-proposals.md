@@ -11,7 +11,7 @@ Written after a literature review found that the framing this project had been
 building toward is partly published already. Everything below is graded by how
 well it survives that, and by whether the number behind it currently reproduces.
 
-Status key: **solid** means measured, reproducible, and not found in prior art.
+Status key: **solid** means measured, reproducible and not found in prior art.
 **Contested** means a reviewer has a specific counter available. **At risk** means
 a number or a claim that does not currently reconcile and must be fixed or
 dropped before submission.
@@ -30,7 +30,7 @@ input detection**, a different task with a different threat model and a **disjoi
 set of competitors**.
 
 The divergence is defensible and arguably the more useful task, but it has to be
-declared in the abstract rather than discovered by a reviewer. Two consequences
+declared in the abstract rather than discovered by a reviewer. 2 consequences
 follow immediately.
 
 **The baseline set changes.** For test time input detection the competitors are
@@ -39,7 +39,7 @@ filters (Spectral Signatures, Activation Clustering, SPECTRE, SCAn) that PSBD
 benchmarks against. BaDExpert (ICLR 2024) is the one that already covers ViT-B/16
 on ImageNet and is the strongest baseline we currently do not have.
 
-**One published rule half does not transfer, and the code already knows it.**
+**1 published rule half does not transfer, and the code already knows it.**
 `psbd.decision.select_rate_adaptively` documents that PSBD's second rate selection
 criterion, maximizing the gap between the training set shift ratio and the clean
 validation shift ratio, "carries signal in the paper because their scored pool is
@@ -55,12 +55,12 @@ Position and operator are separable axes of the same design space, and on ViT th
 position carries about 1.43 times the variance of the operator. No prior
 perturbation consistency detector factors the design space at all: STRIP
 superimposes inputs, SCALE-UP amplifies pixels, IBD-PSC scales normalization
-parameters, PSBD drops activations, and each proposes exactly 1 pair. None
+parameters, PSBD drops activations and each proposes exactly 1 pair. None
 compares at matched perturbation strength, so none can separate the site from the
 noise.
 
 The split that carries the effect is input-side against residual-adjacent,
-**+0.054 mean AUROC, bootstrap CI [+0.031, +0.080]**, and it reproduces from the
+**+0.054 mean AUROC, bootstrap CI [+0.031, +0.080]** and it reproduces from the
 cached sweep to 4 decimal places. The founding pre-versus-post distinction is
 **+0.002**, indistinguishable from noise.
 
@@ -105,7 +105,7 @@ attempt it because neither had a mechanistic claim to falsify.
 
 A structured operator shapes $\Sigma$'s eigenbasis to be axis aligned. That only
 concentrates $\operatorname{tr}(H\Sigma)$ on the backdoor if $H$'s large
-eigendirections are axis aligned too, and they are not. Four independent negative
+eigendirections are axis aligned too, and they are not. 4 independent negative
 results with 1 cause: head masking 0.539, targeted 3-head masking 0.580, the
 144-head sensitivity profile carrying no signal, channel masking losing to dropout
 at every matched position.
@@ -126,7 +126,7 @@ separates a symptom from a mechanism.
 
 ### 6. Effective rank collapse discriminates backdoored from benign (DOWNGRADED)
 
-**Read the three limits below before quoting any of this.** The measurement is
+**Read the 3 limits below before quoting any of this.** The measurement is
 real and unpublished, but 3 separate results cut it down from a mechanism to an
 observation.
 
@@ -135,7 +135,7 @@ only through its weight matrix, 100 by 768 on CIFAR-100, so a **668 dimensional
 null space** is invisible to the logits. Moving energy inside it takes the rank
 ratio from **0.210 to 0.999 while the logits change by at most 1.9e-5**, verified
 directly. An attacker can therefore set the rank ratio to nearly anything without
-touching predictions, ASR, or any downstream statistic. The "high ASR forces
+touching predictions, ASR or any downstream statistic. The "high ASR forces
 dimensional collapse" argument this document previously proposed as a theoretical
 contribution is **false**, and the naive contraction argument behind it does not
 survive: a class region is C-1 linear inequalities, which constrains no
@@ -191,7 +191,7 @@ $g(h+\delta)$ and $g(h-\delta)$ cancels it exactly, and the multiplicative
 analogue is the complementary mask. No detector in this family does it, and it is
 free at a fixed pass budget.
 
-### 9. Probe diversity as a defence, and the union rule it needs (solid)
+### 9. Probe diversity as a defense, and the union rule it needs (solid)
 
 An adaptive attacker minimizing the gap for a probe with covariance $\Sigma_1$
 constrains only $H$'s projection onto that eigenbasis. The probed operator's
@@ -216,7 +216,7 @@ have. **Retracted as a contribution.**
 The larger finding stands and is less comfortable: **neither union beats the best
 single probe** (-0.065 for min, -0.094 for median). The union is defensible as a
 threat-model argument, an attacker must evade every probe rather than guess the
-deployed one, and it is not an AUROC improvement. Report it that way.
+deployed probe, and it is not an AUROC improvement. Report it that way.
 
 ## What is at risk and must be resolved before submission
 
@@ -230,8 +230,8 @@ at matched sigma, stable +0.081 to +0.103 across sigma 0.2 to 0.8, and **+0.166*
 on CIFAR-100 at 1 percent.
 
 **The 0.911 headline survives verbatim, over 48 of 48 cells.** An earlier note in
-this document claimed only 39 exist and that the placement shows 41 inversions;
-both were wrong and are retracted. Coverage is complete, unexplained inversions on
+this document claimed only 39 exist and that the placement shows 41 inversions.
+Both were wrong and are retracted. Coverage is complete, unexplained inversions on
 normally trained implanted non-all-to-all checkpoints are **0**, and the 43
 inversions that do occur are on `_evade_*` checkpoints trained specifically to
 defeat this probe, which is a different claim.
@@ -248,7 +248,7 @@ Fixed in the backfill.
 likely reason for rejection at a security venue. See `docs/seed-replication-plan.md`.
 
 **No EOT over the dropout randomness.** Athalye et al. (ICML 2018) make Expectation
-Over Transformation mandatory for evaluating any defence with a stochastic
+Over Transformation mandatory for evaluating any defense with a stochastic
 component, and PSBD's own adaptive section does not do it. For a dropout based
 detector this is the single most likely reviewer objection, and the fix is
 mechanical: average the attacker's gradient over sampled masks, and run the

@@ -1,15 +1,15 @@
 # Reproducing PSBD's ResNet-18 numbers
 
-Status: 2026-09-07. All six cells complete (CIFAR-10 and GTSRB x BadNet, Blend, WaNet).
+Status: 2026-09-07. All 6 cells complete (CIFAR-10 and GTSRB x BadNet, Blend, WaNet).
 Epoch sweep running.
 
-**Five of six cells reproduce.** Both BadNet cells and both WaNet cells land on the published
-numbers directly; GTSRB Blend reproduces at the rate its published value implies but not at
-the rate the selection rule chose; CIFAR-10 Blend is short by 0.064 TPR under any rate.
+**5 of 6 cells reproduce.** Both BadNet cells and both WaNet cells land on the published
+numbers directly. GTSRB Blend reproduces at the rate its published value implies but not at
+the rate the selection rule chose. CIFAR-10 Blend is short by 0.064 TPR under any rate.
 
 Upstream clone at `scratch/psbd-upstream/` (commit `7c58a88`), run with this project's venv.
-Every deviation from upstream is listed in `scratch/psbd-upstream/REPRODUCTION.md`; the short
-version is that three edits were compatibility or upstream-bug fixes and one is a test
+Every deviation from upstream is listed in `scratch/psbd-upstream/REPRODUCTION.md`. The short
+version is that 3 edits were compatibility or upstream-bug fixes and 1 is a test
 convenience whose default is upstream's value. The training recipe, the dropout-rate
 selection rule and the 25th-percentile threshold are untouched.
 
@@ -27,7 +27,7 @@ Published TPR/FPR from PSBD Table 1, CA/ASR from Table A2.
 | CIFAR-10 WaNet | 1.000 | 1.000 | 0.112 | 0.116 | 0.836 | 0.828 | 0.960 | 0.955 |
 | GTSRB WaNet | 1.000 | 0.996 | 0.104 | 0.115 | 0.986 | 0.982 | 0.989 | 0.988 |
 
-**BadNet reproduces on both datasets.** On CIFAR-10 exactly; TPR identical, FPR off by 0.001, CA off by 0.004. on GTSRB slightly better than published on both metrics (+0.012 TPR, -0.013 FPR), with CA
+**BadNet reproduces on both datasets.** On CIFAR-10 exactly, TPR identical, FPR off by 0.001, CA off by 0.004. On GTSRB slightly better than published on both metrics (+0.012 TPR, -0.013 FPR), with CA
 within 0.003. The dropout rate their own `select_dropout_rate` chose was 0.7 on both, matching
 the value baked into the paper's appendix figure filenames
 (`..._badnet_pr_0.1_drop_0.7_seed_2333.pdf`). Nothing was tuned.
@@ -51,13 +51,13 @@ rule that picks it does not track the attack.
 
 GTSRB Blend at p 0.6 scores 0.903/0.217 against a published 0.910/0.207, so the published
 value corresponds to a rate one step below the one their rule selected. CIFAR-10 Blend tops
-out at 0.936 across every rate from 0.1 to 0.8 and never reaches its published 1.000; that
+out at 0.936 across every rate from 0.1 to 0.8 and never reaches its published 1.000. That
 cell has no rate-based explanation. It also carries the largest clean-accuracy deficit of the
-four, 0.832 against 0.848, while its ASR matches exactly. What remains for it is variance
-against the paper's 10-trial average or an optimistic published value, and the two cannot be
+4, 0.832 against 0.848, while its ASR matches exactly. What remains for it is variance
+against the paper's 10-trial average or an optimistic published value, and the 2 cannot be
 separated without more seeds.
 
-## The probe rate is decisive, attack-dependent, and not tracked by the selection rule
+## The probe rate is decisive, attack-dependent and not tracked by the selection rule
 
 `select_dropout_rate` chooses the rate, then PSU is scored at it. Holding the checkpoint and
 the 25th-percentile threshold fixed and sweeping the rate by hand (`detection/force_p.py`)
@@ -78,21 +78,21 @@ separates the score from the heuristic. Epoch 95, TPR at each forced rate:
 The rule selected 0.7, 0.7, 0.5 and 0.7 respectively.
 
 **The method is steeply rate-sensitive for every attack.** TPR spans 0.479 to 1.000 on
-CIFAR-10 BadNet, 0.202 to 0.999 on GTSRB BadNet, 0.692 to 0.936 on CIFAR-10 Blend, and 0.117
+CIFAR-10 BadNet, 0.202 to 0.999 on GTSRB BadNet, 0.692 to 0.936 on CIFAR-10 Blend and 0.117
 to 0.966 on GTSRB Blend. Nothing here is a flat curve that a roughly-right rate would land on.
 
 **The optimum moves with the attack, in opposite directions.** BadNet wants high rates and
-Blend wants low ones. At 0.3, GTSRB BadNet scores 0.202 while GTSRB Blend scores 0.950; at
+Blend wants low ones. At 0.3, GTSRB BadNet scores 0.202 while GTSRB Blend scores 0.950. At
 0.9 the ordering reverses, 0.664 against 0.117. A single rate cannot serve both.
 
 **The rule lands near 0.7 and therefore tracks BadNet.** That is the right answer for both
 BadNet cells, one of which sits on a genuine plateau from 0.6 to 0.9. It is the wrong side of
-a cliff for GTSRB Blend, where one step from 0.6 to 0.7 costs 0.226 TPR.
+a cliff for GTSRB Blend, where 1 step from 0.6 to 0.7 costs 0.226 TPR.
 
 So the published per-attack table is partly a record of where each attack's optimum happens to
 fall relative to a rule that lands near 0.7, rather than of the score's discriminative power
-alone. Two consequences for work that compares against these numbers: rate is not a nuisance
-parameter to be matched away, it is decisive and it interacts with the attack; and a
+alone. 2 consequences for work that compares against these numbers: rate is not a nuisance
+parameter to be matched away, it is decisive and it interacts with the attack. And a
 like-for-like comparison needs the rate rule held fixed, or it partly measures rate-selection
 luck.
 
@@ -120,7 +120,7 @@ paper's own rule:
 | 95 | 1.0000 | 0.847 | +0.153 | 1.000 | 0.7 | 1.000 | 0.103 |
 | 100 | 1.0000 | 0.845 | +0.155 | 1.000 | 0.7 | 1.000 | 0.103 |
 
-Three things fall out.
+3 things fall out.
 
 **Nothing happens after epoch 60.** TPR and FPR are constant from 60 to 100. Detecting at
 epoch 95 rather than 60 buys exactly zero. The last 40 epochs are wasted compute as far as
@@ -138,7 +138,7 @@ Once train accuracy hits 1.0 at epoch 60, FPR locks at 0.103 and stops respondin
 This is mechanistically coherent. PSU separates clean from backdoor because memorized clean
 training samples are predicted confidently and therefore shift a great deal under dropout,
 while backdoor samples ride a robust trigger-to-target path and shift little. Before the model
-interpolates, clean training samples are not confidently predicted either, and the two
+interpolates, clean training samples are not confidently predicted either, and the 2
 populations overlap.
 
 Interpolation is necessary but not sufficient: the Blend model is also fully interpolated at
@@ -148,16 +148,16 @@ epoch 95 and still only reaches TPR 0.920.
 
 At 15 epochs, this project's training length, PSBD scores TPR 0.781. The paper's own tables
 mark TPR below 0.8 as a failed case. A 15-epoch schedule is not a cheap stand-in for their
-setup; it is a regime where their method fails by their own criterion. Whether that is about
+setup. It is a regime where their method fails by their own criterion. Whether that is about
 epoch count or about reaching interpolation is an open question worth answering directly,
 since a ViT may interpolate CIFAR-10 in far fewer than 60 epochs.
 
 ## Caveats
 
 - Single trial at seed 42. The paper averages 10.
-- The epoch table is one cell. TPR saturates at 1.000 from epoch 30, so only FPR carries
+- The epoch table is 1 cell. TPR saturates at 1.000 from epoch 30, so only FPR carries
   information above that point. GTSRB Blend, published at TPR 0.910, is well off the ceiling
-  and is the useful check; it is in the queued sweep.
+  and is the useful check. It is in the queued sweep.
 - `select_dropout_rate` is unstable. At epoch 90 it chose 0.6 rather than 0.7 with no other
   change, costing 2 points of FPR. On Blend it chose 0.5 where 0.6 was better.
 

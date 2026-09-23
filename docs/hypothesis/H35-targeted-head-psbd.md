@@ -1,4 +1,4 @@
-# H35 -- Targeted head perturbation as PSBD operator
+# H35: Targeted head perturbation as PSBD operator
 
 **Status: REFUTED.** Masking the 3 backdoor heads (L5H0, L5H10, L6H3) from H31
 as a deterministic PSBD operator produces AUROC 0.47 to 0.63 (mean 0.58), only
@@ -24,7 +24,7 @@ dropout-based PSBD.
    `masked_attention_forward`.
 2. Compute PSU: base confidence minus perturbed confidence, divided by base.
 3. AUROC using negated PSU (low PSU = poisoned, one-sided).
-4. Two configurations: 3 heads (L5H0, L5H10, L6H3) and 5 heads (adding
+4. 2 configurations: 3 heads (L5H0, L5H10, L6H3) and 5 heads (adding
    badnet-specific L9H7, L10H9).
 5. Test on 9 checkpoints across CIFAR-100 (10%, 5%) and Tiny (10%).
 
@@ -80,7 +80,7 @@ produce a measurable prediction shift.
 
 Adding L9H7 and L10H9 (badnet's late heads) sometimes helps dramatically
 (blend 5%: 0.619 to 0.754) and sometimes hurts (badnet 10%: 0.608 to 0.527).
-The improvement on blend is likely because masking 5 heads is simply a larger
+The improvement on blend is likely because masking 5 heads is just a larger
 perturbation (3.5% of attention capacity), not because the extra heads are
 specific to blend's backdoor circuit. The degradation on badnet may reflect
 that the extra heads ARE part of badnet's backdoor pathway, and removing them
@@ -98,7 +98,7 @@ does not translate into per-sample detection:
 
 The backdoor heads are identifiable and real, but the per-sample signal they
 carry is too weak relative to the noise floor for sample-level detection. The
-backdoor's primary pathway is the residual stream (H30, H34), and the attention
+backdoor's primary pathway is the residual stream (H30 and H34), and the attention
 heads are a secondary contributor.
 
 ## Connection to other hypotheses

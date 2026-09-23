@@ -1,4 +1,4 @@
-# H33 — Weight-space spectral signature of the backdoor
+# H33: Weight-space spectral signature of the backdoor
 
 **Status: REFUTED.** The weight difference between a backdoored and benign model
 is NOT low-rank in encoder layers. The backdoor perturbation is distributed

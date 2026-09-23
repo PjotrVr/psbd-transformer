@@ -6,7 +6,7 @@
 
 **Setting.** All-to-one and clean-label only, which is what PSBD itself does and what the
 literature reports: a fraction of images from every class is stamped with the trigger and
-relabelled to one target class. All-to-all and the `all_to_m` family are out of scope here.
+relabeled to 1 target class. All-to-all and the `all_to_m` family are out of scope here.
 
 **Configuration.** ViT-B/16 finetuned 15 epochs from ImageNet weights, seed 0.
 Detector is `token_mask @ before_attention_norm`, fractional PSU, k = 3 stochastic passes,
@@ -178,7 +178,7 @@ AUROC >= 0.85 but TPR at a 1% false-positive budget below 0.05.
 
 # How to fix the weak cases
 
-Four attacks sit below 0.85: `adaptive_blend` 0.653, `lc` 0.756, `wanet` 0.777, `sig`
+4 attacks sit below 0.85: `adaptive_blend` 0.653, `lc` 0.756, `wanet` 0.777, `sig`
 0.778. They do not share a cause, and the evidence says they do not share a remedy either.
 
 ## 1. The deployed placement is 5th best on hard attacks
@@ -196,7 +196,7 @@ rate available to each placement:
 
 The weak cells could not show this, because `adaptive_blend`, `wanet` and `bpp` were
 retrained on 2026-09-08 and their caches were cleared, so they carry exactly **1**
-placement and their "best over placements" is the deployed one by construction.
+placement and their "best over placements" is the deployed placement by construction.
 
 Where a full grid does exist, the gain is large:
 
@@ -233,7 +233,7 @@ buys per unit of representational novelty. It is **refuted as a general detector
 | `vit_cifar100_adaptive_blend_0_05` | **0.801** | 0.580 |
 | `vit_tiny_adaptive_blend_0_05` | 0.671 | 0.789 |
 
-Two of three above PSBD, one of them by 0.22. Worth completing over every `adaptive_blend`
+2 of 3 above PSBD, 1 of them by 0.22. Worth completing over every `adaptive_blend`
 cell before drawing a conclusion.
 
 ## 3. WaNet is a depth problem, not a margin problem
@@ -252,7 +252,7 @@ statistic catching what a token-space perturbation misses is coherent rather tha
 
 ## 4. The pathology that is not about any attack
 
-**9 of 48 cells at 1% and 5% have AUROC >= 0.85 and catch essentially nothing at a 1%
+**9 of 48 cells at 1% and 5% have AUROC >= 0.85 and catch almost nothing at a 1%
 false-positive budget.** `vit_tiny_blend_0_01` reads AUROC 0.974 with TPR 0.002 at 1% FPR
 and 0.953 at 5%. Achieved FPR tracks nominal, so this is a genuine overlap in the extreme
 tail rather than a mis-set threshold, and it means the headline AUROC overstates what a

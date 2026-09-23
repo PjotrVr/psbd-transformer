@@ -1,4 +1,4 @@
-# H26 — Masking whole channels beats thinning every channel a little
+# H26: Masking whole channels beats thinning every channel a little
 
 **Status: REFUTED as stated. The consolation claim is PROVISIONAL.**
 
@@ -29,12 +29,12 @@ least where the signal is already strong.
 **But at 1% poisoning on the hardest checkpoint it is the best number in the
 study.** `channel_mask` / `before_attention_norm` on `badnet_a2o` at 1% scores
 **0.861** against `dropout`'s 0.839 at the same position, and 0.194 for the
-published configuration. Overall at 1% the two are a tie (0.928 against 0.934).
+published configuration. Overall at 1% the 2 are a tie (0.928 against 0.934).
 
 So the honest statement is narrower than the claim: structured removal buys
 nothing when the backdoor is easy to see and may buy a little when it is not.
-Whether that low-rate edge survives the other three datasets is exactly what the
-full grid is for; on one checkpoint it is an observation, not a result.
+Whether that low-rate edge survives the other 3 datasets is exactly what the
+full grid is for. On 1 checkpoint it is an observation, not a result.
 
 ---
 
@@ -49,7 +49,7 @@ sample: at p = 0.5 a channel is fully removed from a sample with probability
 2^-197, which never happens. Dropout therefore never removes a feature. It
 attenuates all of them by a random amount and adds variance.
 
-`channel_mask` draws one Bernoulli per `(sample, channel)` and shares it across
+`channel_mask` draws 1 Bernoulli per `(sample, channel)` and shares it across
 tokens, so a masked channel contributes nothing to that sample anywhere. 768
 decisions instead of 151k, and removal actually means removal.
 
@@ -95,7 +95,7 @@ with the largest gain on the attacks H16 localizes most sharply (`blend`, `bpp`,
 - `channel_mask` wins only at positions where LayerNorm does not immediately
   follow: the effect is about normalization, not about structure.
 - The benign control moves away from 0.5: the operator is damaging the model
-  rather than probing a backdoor, and any apparent gain is an artefact.
+  rather than probing a backdoor, and any apparent gain is an artifact.
 
 ## Reproduce
 

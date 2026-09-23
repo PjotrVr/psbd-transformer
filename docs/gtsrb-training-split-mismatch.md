@@ -6,7 +6,7 @@ completed normally and produced plausible numbers.
 
 ## The finding
 
-GTSRB ships two different training archives, and they are not the same size.
+GTSRB ships 2 different training archives, and they are not the same size.
 
 | archive | images | used by |
 |---|---|---|
@@ -32,15 +32,15 @@ elif args.dataset == 'gtsrb':
 Verified on disk. `raw_data/gtsrb/gtsrb/` contains `GTSRB-Training_fixed.zip` extracted to
 `GTSRB/Training/`, and the per-class `.ppm` counts sum to exactly 26,640, with each class's
 `GT-000XX.csv` row count matching its file count. The data is not corrupt or partially
-extracted; it is a complete copy of the smaller archive.
+extracted. It is a complete copy of the smaller archive.
 
 **The test split is fine.** Both sources use `GTSRB_Final_Test_Images.zip` (12,630 images)
 and `GTSRB_Final_Test_GT.zip`, and both are already correct in `raw_data/`.
 
 ## Blast radius: verified, and it is small
 
-329 checkpoint folders under `checkpoints/` are GTSRB runs. Three checks were run to size the
-actual exposure, and all three come back clean.
+329 checkpoint folders under `checkpoints/` are GTSRB runs. 3 checks were run to size the
+actual exposure, and all 3 come back clean.
 
 **No result of ours is compared against a published GTSRB number.** The only cross-paper
 comparison in the repo is `docs/results/comparison-to-published.md`, and every table in it is
@@ -54,14 +54,14 @@ to fix.
 **Every GTSRB comparison is internal.** All 329 runs used the same 26,640-image split, so
 pre-versus-post, input-side-versus-residual-adjacent, operator rankings and the seed
 replication are all like-for-like and stand as they are. GTSRB is also a completion dataset
-here, not a primary one; the headline claims rest on CIFAR-100 and Tiny.
+here, not a primary one. The headline claims rest on CIFAR-100 and Tiny.
 
 **The data itself is not defective.** All 43 classes are present, and each class's
 `GT-000XX.csv` row count matches its `.ppm` file count exactly. This is a complete, correctly
-labelled GTSRB training set, and it is precisely what `torchvision.datasets.GTSRB` gives
+labeled GTSRB training set, and it is precisely what `torchvision.datasets.GTSRB` gives
 anyone who asks for the train split. It is a smaller release, not a broken one.
 
-So the practical consequence is one sentence of hygiene: if a GTSRB number from this repo is
+So the practical consequence is 1 sentence of hygiene: if a GTSRB number from this repo is
 ever placed beside a published GTSRB number, or a paper table lists dataset sizes, say which
 split was used. Re-running is optional, not a correction.
 
@@ -88,7 +88,7 @@ what is in it.
 ## Re-running GTSRB
 
 Point the dataset registry at the new root. In `utils/config.py` the GTSRB `DatasetSpec`
-carries the data root; changing it to `raw_data/new_gtsrb` is enough for both
+carries the data root. Changing it to `raw_data/new_gtsrb` is enough for both
 `utils/datasets.py` and `psbd/data.py`, since both go through `tv_datasets.GTSRB` with the
 spec's root.
 

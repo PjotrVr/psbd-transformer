@@ -1,4 +1,4 @@
-# H6 — SAM training makes backdoors more detectable
+# H6: SAM training makes backdoors more detectable
 
 **Status, 2026-09-11: PARTIALLY SUPPORTED for the recommended placement, at
 10 percent poisoning, and unsettled below it.** SAM does amplify the
@@ -18,13 +18,13 @@ this line, including the +0.009 aggregate the 2026-09-07 drop rested on.
 backdoor and makes poisoned samples more detectable. Read closely, the claim is
 narrower than it sounds:
 
-- It is validated on **five feature-space detectors**: Activation Clustering, Beatrix,
+- It is validated on **5 feature-space detectors**: Activation Clustering, Beatrix,
   SCAn, Spectral Signatures, Spectre. All of them cluster penultimate-layer
   representations.
 - **PSBD is not among them, and is not cited anywhere in the paper.** Nor is anything
   else based on prediction shift or dropout uncertainty.
 - The only **prediction-space** detector they ever measured is STRIP, and it appears
-  in three table files that are **commented out** of the submitted paper
+  in 3 table files that are **commented out** of the submitted paper
   (`tables/cifar0.001.tex`, `0.005`, `0.01`, disabled at `main.tex:100-102`). STRIP's
   mean TPR change under SAM in those files: **-3.4, -3.4, +1.4**. It is the sole
   detector SAM does not help, and it was cut.
@@ -83,7 +83,7 @@ ratio both move the wrong sign for the paper's own separability claim.
   without FS" ablation row. That row is much weaker in their own table (79.8 against
   99.8 TPR for Blended/Beatrix). PSBD cannot use their fix, which is the point, but it
   must be said plainly.
-- They filter a poisoned **training set** before training; we score held-out inputs
+- They filter a poisoned **training set** before training. We score held-out inputs
   against an already-trained model.
 - SAM-on-AdamW here against SAM-on-SGD there.
 
@@ -126,7 +126,7 @@ on it.
 The measured effect is +0.009 mean AUROC. Detecting an effect that size against
 plausible seed to seed variance requires 10 to 89 training seeds per cell, by
 `n >= 8 * (sigma_seed / effect)^2` at 80 percent power. Every checkpoint here is
-seed 0, so the variance is unmeasured, and buying enough seeds to conclude that a
+seed 0, so the variance is unmeasured and buying enough seeds to conclude that a
 0.009 effect is really 0 is not a defensible use of compute.
 
 The decision is therefore to stop measuring it rather than to keep refining the

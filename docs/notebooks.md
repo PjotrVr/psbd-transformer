@@ -4,8 +4,8 @@
 package layout, so each notebook answers the question its matching section of
 the paper asks and reads the same files the paper's own table and figure
 generators under `scripts/paper/` read. Every notebook is committed with its
-outputs, runs from the repository root with `PYTHONPATH=.` set, and stays
-under 10 minutes on the A100 the project trains on. Re-execute one with:
+outputs, runs from the repository root with `PYTHONPATH=.` set and stays
+under 10 minutes on the A100 the project trains on. Re-execute a notebook with:
 
 ```bash
 PYTHONPATH=. .venv/bin/python -m jupyter nbconvert --to notebook --execute --inplace \
@@ -15,8 +15,8 @@ PYTHONPATH=. .venv/bin/python -m jupyter nbconvert --to notebook --execute --inp
 ## 00-start-here
 
 The vocabulary every other notebook assumes: site, perturbation, placement,
-rate, sweep and analysis, the basis, a band, PSBD-TM and PSBD-RD, and the
-prediction shift uncertainty statistic itself. It shows the two commands,
+rate, sweep and analysis, the basis, a band, PSBD-TM and PSBD-RD, as well as the
+prediction shift uncertainty statistic itself. It shows the 2 commands,
 `cli.sweep` and `cli.analyze`, that produce every detection number in the
 paper, states which file on disk each command reads and writes, and gives the
 reading order for the notebooks that follow. It runs no model and reads no
@@ -36,7 +36,7 @@ parameter and attack-success record. CPU only, under 15 seconds.
 
 ## 02-psbd-end-to-end
 
-Runs the method itself on one checkpoint, `vit_cifar100_badnet_a2o_0_01`:
+Runs the method itself on 1 checkpoint, `vit_cifar100_badnet_a2o_0_01`:
 attaches PSBD-TM and PSBD-RD in turn, sweeps a rate ladder for each, and
 reads off the adaptive, matched and oracle rate rules from
 `defences.decision`. Draws the PSU histograms `scripts/paper/fig_psu_histograms.py`
@@ -75,21 +75,21 @@ sections, about 35 seconds.
 Reads every `swin_*` checkpoint's `psbd_metrics.json` to check whether the
 ViT ranking transfers to windowed attention, reads
 `results/adaptive_attacker_analysis.json` and `results/multi_probe_analysis.json`
-to show an attacker trained against one probe collapsing that probe while
-leaving two untrained-against probes standing, and a rank-union defence
+to show an attacker trained against 1 probe collapsing that probe while
+leaving 2 untrained-against probes standing, and a rank-union defense
 restoring most of what was lost, and reads `results/_experiments/psbd_cost/cost.json`
-for the wall-clock cost of the defence at several pass counts. CPU only,
+for the wall-clock cost of the defense at several pass counts. CPU only,
 reads cached JSON exclusively, about 10 seconds.
 
 ## 06-reproducing-the-paper
 
 Shows how `scripts/paper/build_all.py` regenerates every table and figure in
-`paper/` from `results/` in one pass, and how it refuses a chapter that
+`paper/` from `results/` in 1 pass, and how it refuses a chapter that
 carries a number no generator produced. Reads `results/coverage/coverage.json`
 to show the attack-success and clean-accuracy bar that decides which of the
-105 trained models enter a detection table, and works through two kinds of
+105 trained models enter a detection table, and works through 2 kinds of
 mistakes that have previously produced a wrong published number, a comparison
-between two placements read at unmatched disturbance and a stage-2 record
+between 2 placements read at unmatched disturbance and a stage-2 record
 left stale by a regenerated stage-1 cache, together with the checks now in
 place against each. States what in the paper is still single-seed and what
 is still running. CPU only, under 10 seconds.
