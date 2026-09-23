@@ -242,6 +242,13 @@ def main() -> None:
         for placement, stats in ordered.items()
         if stats["adaptive_mean"] is not None
     ]
+    if not ranked:
+        raise ValueError(
+            "no basis placement reaches the adaptive shift target on any panel "
+            "cell, so there is no ranking to report. Check that the sweep cache "
+            "under --results-dir holds the placements configs/psbd_basis.json "
+            "declares."
+        )
     best_placement, best_stats = ranked[0]
     worst_placement, worst_stats = ranked[-1]
     recommended = ordered[RECOMMENDED_PLACEMENT]
@@ -296,9 +303,7 @@ def main() -> None:
             "cells the recommended placement reaches at the matched rule",
         ),
         "basis_spread_adaptive": (
-            fmt(
-                best_stats["adaptive_mean"] - worst_stats["adaptive_mean"]
-            ),
+            fmt(best_stats["adaptive_mean"] - worst_stats["adaptive_mean"]),
             "adaptive-rule mean AUROC spread between the best and worst basis placement",
         ),
     }

@@ -178,8 +178,8 @@ def aggregate(per_cell: dict[str, dict], k_values: tuple[int, ...]) -> dict:
 def draw_panel(ax, k_values, pilot_agg, all_cells_agg, metric, ylabel):
     """1 panel: what each extra pass buys, as the change from a single pass.
 
-    The 2 series are different populations, the pilot being 6 easy attacks at 1%
-    poisoning and the panel being all 65 backdoored models, so their absolute
+    The 2 series are different populations, the pilot being 8 cells at 1% poisoning
+    and the panel being all 65 backdoored models, so their absolute
     levels differ by more than 0.04 for reasons that have nothing to do with k.
     Plotting them together on an absolute axis invites the reader to read that gap
     as an effect of sampling. The question the figure answers is what an extra pass

@@ -227,38 +227,63 @@ def markdown_prose(path: str) -> list[tuple[int, str, str]]:
 
     A fenced block is code or output and carries none of the prose rules. A table
     row is usually generated, and its pipes and digits would swamp every count, so
-    it is skipped too.
+    it is skipped too. An indented block counts as code only where it opens after
+    a blank line, which is CommonMark's rule. Treating every 4-space line as code
+    hid the wrapped continuation of a list item, and that is 230 lines of docs/.
     """
     found = []
     in_fence = False
+    after_blank = True
     with open(path) as handle:
         for number, line in enumerate(handle.read().split("\n"), start=1):
             stripped = line.strip()
+            blank = not stripped
             if stripped.startswith("```") or stripped.startswith("~~~"):
                 in_fence = not in_fence
+                after_blank = False
                 continue
             if in_fence:
                 continue
-            # An indented block under a list item is prose, a 4-space block at the
-            # left margin is code.
-            if line.startswith("    ") and not line.lstrip().startswith(
-                ("-", "*", "+")
-            ):
+            if line.startswith("    ") and after_blank:
+                after_blank = blank
                 continue
             if stripped.startswith("|") or set(stripped) <= set("|-: "):
+                after_blank = blank
                 continue
             if stripped:
                 found.append((number, "markdown", line))
+            after_blank = blank
     return found
 
 
-# What a LaTeX line may hold that is notation or markup rather than prose.
+TEX_COMMENT = re.compile(r"(?<!\\)%")
+# Commands whose brace argument is prose a reader sees, so the argument stays and
+# only the command name goes. A caption carries as much prose as a paragraph.
+TEX_PROSE_COMMANDS = (
+    "caption",
+    "section",
+    "subsection",
+    "subsubsection",
+    "paragraph",
+    "title",
+    "footnote",
+    "emph",
+    "textbf",
+    "textit",
+    "item",
+)
+# What a LaTeX line may hold that is notation or markup rather than prose. Order
+# matters: the prose-carrying commands are unwrapped before the general command
+# pattern would eat their arguments.
 TEX_NOISE = (
     r"\\begin\{[^}]*\}(\[[^\]]*\])?(\{[^}]*\})*",
     r"\\end\{[^}]*\}",
     r"\$[^$]*\$",
     r"\\[A-Za-z@]+\*?(\[[^\]]*\])?(\{[^}]*\})*",
     r"\\[^A-Za-z]",
+)
+TEX_UNWRAP = re.compile(
+    r"\\(?:" + "|".join(TEX_PROSE_COMMANDS) + r")\*?(?:\[[^\]]*\])?\{"
 )
 # Environments whose body is notation, a generated table or verbatim code.
 TEX_SKIPPED_ENVIRONMENTS = (
@@ -279,32 +304,48 @@ def tex_prose(path: str) -> list[tuple[int, str, str]]:
 
     A comment line is the author talking to themselves and still carries the rules.
     A math or tabular environment is notation, so its body is skipped the way a
-    docstring's indented formula block is.
+    docstring's indented formula block is. A caption is prose, so the commands
+    that wrap prose are unwrapped rather than removed with their argument.
     """
     found = []
     depth = 0
     opening = re.compile(r"\\begin\{(" + "|".join(TEX_SKIPPED_ENVIRONMENTS) + r")\*?\}")
     closing = re.compile(r"\\end\{(" + "|".join(TEX_SKIPPED_ENVIRONMENTS) + r")\*?\}")
+    # A short environment that opens and closes on 1 line is cut out in place, so
+    # the sentence either side of it survives. Only a multi-line one sets depth.
+    inline = re.compile(
+        r"\\begin\{(" + "|".join(TEX_SKIPPED_ENVIRONMENTS) + r")\*?\}"
+        r".*?\\end\{\1\*?\}"
+    )
     with open(path) as handle:
-        for number, line in enumerate(handle.read().split("\n"), start=1):
+        for number, raw in enumerate(handle.read().split("\n"), start=1):
+            line = inline.sub(" ", raw)
             if opening.search(line):
                 depth += 1
             if depth:
                 if closing.search(line):
                     depth -= 1
                 continue
-            body = line.split("%", 1)[0] if not line.lstrip().startswith("%") else line
+            # A LaTeX comment starts at an UNESCAPED %. \% is a percent sign, and
+            # splitting on the literal character truncated every sentence that
+            # quoted a rate. A whole-line comment is still prose and is kept.
+            if line.lstrip().startswith("%"):
+                body = line
+            else:
+                body = TEX_COMMENT.split(line, maxsplit=1)[0]
+            body = TEX_UNWRAP.sub(" ", body)
             for pattern in TEX_NOISE:
                 body = re.sub(pattern, " ", body)
+            body = body.replace("{", " ").replace("}", " ")
             if body.strip():
                 found.append((number, "latex", body))
     return found
 
 
 # A sentence ends at a full stop, question mark or colon followed by a space and a
-# capital. An abbreviation such as "et al." keeps its following lowercase word, so
-# requiring the capital avoids splitting inside a citation.
-SENTENCE_END = re.compile(r"(?<=[.?:])\s+(?=[A-Z(\\])")
+# capital or a macro. The negative lookbehind keeps "et al." attached to what
+# follows it, so a citation is never split down the middle.
+SENTENCE_END = re.compile(r"(?<!\bet al)(?<=[.?:])\s+(?=[A-Z\\])")
 
 
 def as_sentences(

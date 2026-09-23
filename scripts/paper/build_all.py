@@ -124,9 +124,7 @@ def check_sections(paper_dir: str) -> list[str]:
     headline = load_json(os.path.join(paper_dir, "headline.json")) or {}
     defined = set(headline)
     # The preamble's own commands and environments are legitimate macro names too.
-    for preamble in (
-        os.path.join(paper_dir, "preamble.tex"),
-    ):
+    for preamble in (os.path.join(paper_dir, "preamble.tex"),):
         if not os.path.exists(preamble):
             continue
         with open(preamble) as handle:
