@@ -60,6 +60,12 @@ def perturb_all(model, loader, normalize, epsilon, steps, device, seed):
         total += len(labels)
         perturbed.append(adversarial.cpu())
 
+    if total == 0:
+        raise ValueError(
+            "the base loader yielded no samples, so no adversarial bases can be "
+            "generated. Check the dataset root and the target class."
+        )
+
     images = torch.cat(perturbed)  # (n, channels, height, width)
     clean_accuracy = clean_correct / total
     attacked_accuracy = attacked_correct / total

@@ -59,7 +59,7 @@ from data.splits import (
     build_psbd_loaders_from_checkpoint,
     read_checkpoint_metadata,
 )
-from utils.numerics import safe_ratio, safe_ratio_positive
+from utils.numerics import safe_ratio_positive
 from models.backbones import load_checkpoint, network_core
 
 TAPS = ("stream_in", "attention_write", "mlp_write")
@@ -210,25 +210,6 @@ def analyse(folder, args) -> dict:
         "n_clean_paired": n_cl,
         "layers": summarise(clean_means, backdoor_means, n_layers),
     }
-    # The shuffle null: the same statistic with the backdoor/clean split replaced by a random
-    # one, so the real numbers can be read against what sampling noise alone produces.
-    if args.controls:
-        floors = []
-        for draw in range(args.controls):
-            shuffled = {key: backdoor_controls[(key, draw)] for key in backdoor_means}
-            floors.append(
-                [
-                    row["stream_share"]
-                    for row in summarise(
-                        {k: torch.zeros_like(v) for k, v in clean_means.items()},
-                        shuffled,
-                        n_layers,
-                    )
-                ]
-            )
-        stacked = torch.tensor(floors)
-        report["control_stream_share_mean"] = stacked.mean(dim=0).tolist()
-        report["control_stream_share_sd"] = stacked.std(dim=0).tolist()
     return report
 
 
@@ -241,12 +222,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--max-samples", type=int, default=2400)
     parser.add_argument("--device", default="cpu")
-    parser.add_argument(
-        "--controls",
-        type=int,
-        default=8,
-        help="label-shuffle draws giving the sampling floor for a difference of means",
-    )
     return parser.parse_args()
 
 

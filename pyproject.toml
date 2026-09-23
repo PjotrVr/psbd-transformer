@@ -23,6 +23,11 @@ dev = ["ruff", "ipython", "jupyter", "ipykernel", "pytest>=9.1.1", "scikit-image
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+# Without this, pytest walks results/ (1250 dirs), checkpoints/ (1924) and
+# backdoor_bench_checkpoints/ (103) looking for tests, which takes 11 minutes and
+# then fails collection on a stale scratch/ script. Scoped, collection is 6
+# seconds. The documented `python -m pytest` gate depends on this line.
+testpaths = ["tests"]
 markers = [
     "slow: needs a GPU and real training, skipped by default (pytest -m slow to run)",
     "fast: the invariants whose breakage would silently corrupt a published number, under a minute (pytest -m fast)",

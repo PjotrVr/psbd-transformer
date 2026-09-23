@@ -102,8 +102,12 @@ class SAM(torch.optim.Optimizer):
             for parameter in group["params"]:
                 if parameter.grad is None:
                     continue
-                # same shape as parameter
-                parameter.data = self.state[parameter]["original"]
+                # Copy rather than rebind. Rebinding makes the parameter share
+                # storage with the saved copy, so the base optimizer's step
+                # mutates that copy in place, and popping it frees a full model
+                # copy that would otherwise stay resident for the whole run.
+                original = self.state[parameter].pop("original")  # same shape
+                parameter.data.copy_(original)
 
         self.base_optimizer.step()
 

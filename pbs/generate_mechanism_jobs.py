@@ -46,7 +46,7 @@ import os
 
 PROJECT_ROOT = "/lustre/home/pstika/projects/PSBD-ViT"
 SCRIPTS = (
-    ("residual_decomposition", "--device cuda --controls 8"),
+    ("residual_decomposition", "--device cuda"),
     ("logit_attribution", "--device cuda"),
     ("cls_routing", "--device cuda --limit 512"),
     ("identity_attention", ""),

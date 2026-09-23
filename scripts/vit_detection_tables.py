@@ -19,11 +19,29 @@ import json
 import os
 import sys
 
-PLACEMENT = "before_attention_norm_token_mask"
+from defences.decision import (  # noqa: E402
+    ADAPTIVE_SHIFT_TARGET,
+    HEADLINE_QUANTILE,
+    RECOMMENDED_PLACEMENT,
+)
+
+BASIS_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "configs",
+    "psbd_basis.json",
+)
+
+PLACEMENT = RECOMMENDED_PLACEMENT
 VARIANT = "detection_psu_ratio"  # fractional PSU, one-sided
-TARGET_SIGMA = 0.8
-OPERATING_POINTS = ("q0.10", "q0.25")
-ASR_FLOOR = 0.5  # below this the backdoor was never implanted
+TARGET_SIGMA = ADAPTIVE_SHIFT_TARGET
+# The user asks for AUROC, TPR at 10% FPR and TPR at 20% FPR, so those are the
+# quantiles read here, with the headline quantile kept for continuity.
+OPERATING_POINTS = ("q0.10", "q0.20", f"q{HEADLINE_QUANTILE:.2f}")
+# The bar the panel declares, not a second one. This file read 0.5 while
+# configs/psbd_basis.json declares 0.85, so it admitted cells the panel excludes
+# and its tables could not be reconciled with paper/.
+with open(BASIS_PATH) as _handle:
+    ASR_FLOOR = json.load(_handle)["asr_bar"]
 
 DATASETS = ("cifar10", "cifar100", "gtsrb", "tiny")
 ATTACKS = (
