@@ -128,3 +128,28 @@ def test_every_declared_basis_id_is_the_name_its_own_sweep_would_write():
         "these basis ids name a cache directory their own position and operator "
         f"would not produce: {mismatched}"
     )
+
+
+def test_every_metric_the_protocol_requires_is_one_the_report_writes():
+    """The selection protocol names its required metrics, and each must exist.
+
+    It declared auprc for months while nothing computed it, so a protocol that
+    required it could never have been followed. A name here that detection_report
+    does not write is a promise the pipeline cannot keep.
+    """
+    import torch
+
+    from defences.decision import detection_report
+
+    with open(BASIS_PATH) as handle:
+        declaration = json.load(handle)
+    required = declaration["selection_protocol"]["required_metrics"]
+
+    report = detection_report(
+        torch.arange(100).float(),
+        torch.arange(50, 70).float(),
+        torch.arange(20).float(),
+        quantile=0.25,
+    )
+    missing = [name for name in required if name not in report]
+    assert missing == [], f"required by the protocol, written by nothing: {missing}"

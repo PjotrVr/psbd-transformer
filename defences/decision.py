@@ -19,7 +19,7 @@ import os
 
 import numpy as np
 import torch
-from sklearn.metrics import roc_auc_score, roc_curve
+from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
 
 from .scores import critical_rate, multi_probe_score
 
@@ -116,6 +116,13 @@ def detection_report(
     auroc_two_sided is max(auroc, 1 - auroc), kept as a diagnostic field only. A
     two-sided statistic can flatter any result and needs oracle access to the
     labels, so no live consumer reads it.
+
+    auprc is the area under the precision-recall curve with triggered inputs as
+    the positive class, on the same negated scores. Unlike AUROC it depends on
+    the share of positives, so positive_share is reported beside it: that share
+    is what a detector with no signal scores, and the evaluation pairs every
+    triggered image with its clean copy, so it sits near 0.5 here and far above
+    the prevalence a deployment would see.
     """
     threshold = threshold_at_quantile(validation_psu, quantile)
     tpr = float((backdoor_psu < threshold).float().mean().item())
@@ -132,6 +139,12 @@ def detection_report(
         if len(set(labels.tolist())) > 1
         else float("nan")
     )
+    auprc = (
+        float(average_precision_score(labels, scores))
+        if len(set(labels.tolist())) > 1
+        else float("nan")
+    )
+    positive_share = float(labels.mean()) if len(labels) else float("nan")
     auroc_is_defined = not math.isnan(auroc)
     auroc_two_sided = max(auroc, 1.0 - auroc) if auroc_is_defined else float("nan")
 
@@ -148,6 +161,8 @@ def detection_report(
         "fpr": fpr,
         "auroc": auroc,
         "auroc_two_sided": auroc_two_sided,
+        "auprc": auprc,
+        "positive_share": positive_share,
         "direction": direction,
     }
     return report

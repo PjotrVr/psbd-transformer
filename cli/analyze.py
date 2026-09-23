@@ -328,10 +328,18 @@ def analyze_checkpoint(folder: str, checkpoints_dir: str, results_dir: str) -> d
 
 
 def save_report(results_dir: str, folder: str, report: dict) -> None:
-    """Write a checkpoint's stage-2 record next to its cache."""
+    """Write a checkpoint's stage-2 record next to its cache, atomically.
+
+    A sweep job analyzes its own checkpoint when it finishes while a re-analysis
+    or a paper generator may be reading the same file, so a plain write can hand
+    a reader half a JSON document. A private temp file renamed into place is
+    atomic within a filesystem, so a reader sees the old record or the new one.
+    """
     path = os.path.join(results_dir, folder, "psbd_metrics.json")
-    with open(path, "w") as handle:
+    temporary = f"{path}.tmp.{os.getpid()}"
+    with open(temporary, "w") as handle:
         json.dump(report, handle, indent=2)
+    os.replace(temporary, path)
 
 
 def summarize(report: dict) -> str:

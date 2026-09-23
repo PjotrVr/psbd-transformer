@@ -885,12 +885,13 @@
       0.48,
       0.52
     ],
+    "_required_metrics_comment": "Field names as detection_report writes them at every quantile. tpr and fpr are read at the q0.10 and q0.20 entries of the ladder, and fpr is the achieved false-positive rate rather than the nominal one. tests/test_canon.py holds every name here to the report's keys.",
     "required_metrics": [
       "auroc",
       "auprc",
-      "tpr_at_10_fpr",
-      "tpr_at_20_fpr",
-      "achieved_fpr"
+      "positive_share",
+      "tpr",
+      "fpr"
     ],
     "fusion_rule": "calibrated"
   },

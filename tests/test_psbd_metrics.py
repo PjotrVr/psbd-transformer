@@ -309,3 +309,41 @@ def test_interpolation_returns_none_outside_the_swept_range():
     shift_by_rate = {0.3: 0.523, 0.4: 0.751}
     value_by_rate = {0.3: 0.815, 0.4: 0.932}
     assert interpolate_at_target_shift(shift_by_rate, value_by_rate, 0.99) is None
+
+
+def test_auprc_is_1_on_perfect_separation_and_chance_is_the_positive_share():
+    """AUPRC treats triggered inputs as positives and low PSU as the evidence.
+
+    Perfect separation must give 1. A statistic with no signal must give roughly
+    the share of positives, which is why positive_share travels beside it: an
+    AUPRC means nothing without the chance level it is read against.
+    """
+    perfect = detection_report(
+        torch.arange(100).float(),
+        torch.arange(50, 70).float(),
+        torch.arange(20).float(),
+        quantile=0.25,
+    )
+    assert math.isclose(perfect["auprc"], 1.0, rel_tol=1e-9)
+    assert math.isclose(perfect["positive_share"], 0.5, rel_tol=1e-9)
+
+    generator = torch.Generator().manual_seed(0)
+    clean = torch.rand(3000, generator=generator)
+    backdoor = torch.rand(1000, generator=generator)
+    noise = detection_report(clean, clean, backdoor, quantile=0.25)
+    assert math.isclose(noise["positive_share"], 0.25, rel_tol=1e-9)
+    assert abs(noise["auprc"] - 0.25) < 0.03
+
+
+def test_auprc_matches_sklearn_on_the_negated_scores():
+    """The sign convention is the only thing detection_report adds to sklearn."""
+    from sklearn.metrics import average_precision_score
+
+    clean = torch.tensor([0.9, 0.8, 0.4, 0.7])
+    backdoor = torch.tensor([0.1, 0.5, 0.2])
+    report = detection_report(clean, clean, backdoor, quantile=0.25)
+    labels = [0, 0, 0, 0, 1, 1, 1]
+    scores = [-value for value in clean.tolist() + backdoor.tolist()]
+    assert math.isclose(
+        report["auprc"], average_precision_score(labels, scores), rel_tol=1e-9
+    )
