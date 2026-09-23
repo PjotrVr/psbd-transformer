@@ -176,44 +176,64 @@ def aggregate(per_cell: dict[str, dict], k_values: tuple[int, ...]) -> dict:
 
 
 def draw_panel(ax, k_values, pilot_agg, all_cells_agg, metric, ylabel):
-    """1 panel: pilot mean +- std band across all k, dashed all-cells mean at k in 1,2,3."""
+    """1 panel: what each extra pass buys, as the change from a single pass.
+
+    The 2 series are different populations, the pilot being 6 easy attacks at 1%
+    poisoning and the panel being all 65 backdoored models, so their absolute
+    levels differ by more than 0.04 for reasons that have nothing to do with k.
+    Plotting them together on an absolute axis invites the reader to read that gap
+    as an effect of sampling. The question the figure answers is what an extra pass
+    buys, so both series are drawn as the change from k = 1 and both start at 0,
+    which is the comparison that is actually licensed.
+    """
     pilot_k = list(k_values)
-    pilot_mean = [pilot_agg[k][metric]["mean"] for k in pilot_k]
+    pilot_base = pilot_agg[pilot_k[0]][metric]["mean"]
+    pilot_delta = [pilot_agg[k][metric]["mean"] - pilot_base for k in pilot_k]
+    pilot_n = pilot_agg[pilot_k[0]][metric]["n_cells"]
     ax.plot(
         pilot_k,
-        pilot_mean,
+        pilot_delta,
         marker="o",
         markersize=4,
         linewidth=1.4,
         color=PILOT_COLOUR,
-        label="6 models at 1% poisoning, k up to 20",
+        label=f"{pilot_n} models at 1% poisoning, k to {pilot_k[-1]}",
     )
 
     base_k = list(BASE_K_VALUES)
-    all_mean = [all_cells_agg[k][metric]["mean"] for k in base_k]
+    all_base = all_cells_agg[base_k[0]][metric]["mean"]
+    all_delta = [all_cells_agg[k][metric]["mean"] - all_base for k in base_k]
+    all_n = all_cells_agg[base_k[0]][metric]["n_cells"]
     ax.plot(
         base_k,
-        all_mean,
+        all_delta,
         marker="s",
         markersize=4,
         linewidth=1.2,
         linestyle="--",
         color=ALL_CELLS_COLOUR,
-        label="all 65 backdoored models, k up to 3",
+        label=f"all {all_n} backdoored models, k to {base_k[-1]}",
     )
+
+    # The paper's claim is that the third pass is worth having and the twentieth is
+    # not, so the k = 3 reading is marked rather than left to the reader to find.
+    ax.axhline(0.0, color="0.6", linewidth=0.6, zorder=1)
+    ax.axvline(3, color="0.6", linewidth=0.6, linestyle=":", zorder=1)
 
     ax.set_xscale("log", base=2)
     ax.set_xticks(list(k_values))
     ax.xaxis.set_major_formatter(mticker.ScalarFormatter())
     ax.xaxis.set_minor_formatter(mticker.NullFormatter())
     ax.set_xlabel("forward passes k")
-    ax.set_ylabel(ylabel)
+    ax.set_ylabel(f"{ylabel} gain")
 
 
 def write_figure(
     args, pilot_agg: dict, all_cells_agg: dict, pilot_folders: list[str]
 ) -> str:
-    fig, axes = plt.subplots(1, 3, figsize=(9.6, 3.0), sharex=True)
+    fig, axes = plt.subplots(
+        1, 3, figsize=(scripts.paper._style.TEXT_WIDTH, 2.4), sharex=True
+    )
 
     draw_panel(axes[0], ALL_K_VALUES, pilot_agg, all_cells_agg, "auroc", "AUROC")
     draw_panel(
@@ -232,8 +252,16 @@ def write_figure(
         "tpr20",
         "TPR at 20% FPR",
     )
-    axes[0].legend(loc="lower right", fontsize=6.5)
-    fig.tight_layout()
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(
+        handles,
+        labels,
+        loc="upper center",
+        ncol=2,
+        frameon=False,
+        bbox_to_anchor=(0.5, 1.02),
+    )
+    fig.tight_layout(rect=(0, 0, 1, 0.88))
 
     path = os.path.join(args.paper_dir, "figures", "fig_forward_passes.pdf")
     os.makedirs(os.path.dirname(path), exist_ok=True)
