@@ -1,10 +1,10 @@
-"""Build paper/ from results/ end to end, and refuse a chapter that carries a bare number.
+"""Build paper/ from results/ end to end, and refuse a section that carries a bare number.
 
 Runs every generator under scripts/paper/ (tab_*, fig_*, mech_*, app_*), folds
 their macro sidecars into headline.tex, renders the findings registry, runs the
-ledgers (ledger_*) that read the folded headline, then reads every chapter and
+ledgers (ledger_*) that read the folded headline, then reads every section and
 fails on a digit that is not inside a macro, a citation, a reference, a label, an
-input path or a year, and on a macro headline.tex does not define. A chapter that
+input path or a year, and on a macro headline.tex does not define. A section that
 passes quotes only numbers a script produced.
 
     PYTHONPATH=. python scripts/paper/build_all.py --results-dir results
@@ -87,15 +87,15 @@ def run_script(path: str, args) -> bool:
 
 
 def strip_allowed(text: str) -> str:
-    """The chapter text with every legitimate digit carrier removed."""
+    """The section text with every legitimate digit carrier removed."""
     stripped = text
     for pattern in ALLOWED:
         stripped = re.sub(pattern, " ", stripped)
     return stripped
 
 
-def chapter_problems(path: str, defined: set[str]) -> list[str]:
-    """Bare digits and undefined macros in 1 chapter, as messages with line numbers."""
+def section_problems(path: str, defined: set[str]) -> list[str]:
+    """Bare digits and undefined macros in 1 section, as messages with line numbers."""
     problems = []
     with open(path) as handle:
         lines = handle.read().split("\n")
@@ -119,14 +119,13 @@ def chapter_problems(path: str, defined: set[str]) -> list[str]:
     return problems
 
 
-def check_chapters(paper_dir: str) -> list[str]:
-    """Every problem in every chapter, or an empty list."""
+def check_sections(paper_dir: str) -> list[str]:
+    """Every problem in every section, or an empty list."""
     headline = load_json(os.path.join(paper_dir, "headline.json")) or {}
     defined = set(headline)
     # The preamble's own commands and environments are legitimate macro names too.
     for preamble in (
         os.path.join(paper_dir, "preamble.tex"),
-        os.path.join(paper_dir, "draft", "preamble.tex"),
     ):
         if not os.path.exists(preamble):
             continue
@@ -136,8 +135,8 @@ def check_chapters(paper_dir: str) -> list[str]:
         defined |= set(re.findall(r"\\newenvironment\{([A-Za-z]+)\}", text))
         defined |= set(re.findall(r"\\newif\\if([A-Za-z]+)", text))
     problems = []
-    for path in sorted(glob.glob(os.path.join(paper_dir, "chapters", "*.tex"))):
-        problems += chapter_problems(path, defined)
+    for path in sorted(glob.glob(os.path.join(paper_dir, "sections", "*.tex"))):
+        problems += section_problems(path, defined)
     return problems
 
 
@@ -159,10 +158,10 @@ def main() -> int:
             if not run_script(path, args):
                 failed.append(path)
 
-    problems = check_chapters(args.paper_dir)
+    problems = check_sections(args.paper_dir)
     for problem in problems:
         print(problem)
-    print(f"{len(failed)} generators failed, {len(problems)} chapter problems")
+    print(f"{len(failed)} generators failed, {len(problems)} section problems")
     status = 1 if failed or problems else 0
     return status
 

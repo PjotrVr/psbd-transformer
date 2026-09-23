@@ -92,9 +92,15 @@ def ranking_rows(
             "adaptive_floor": min(adaptive) if adaptive else None,
             "adaptive_inversions": sum(1 for value in adaptive if value < 0.5),
         }
+    # A placement whose rate ladder never reaches the adaptive target has no mean at
+    # all. Sorting it as if its AUROC were 0 would make it the worst placement in the
+    # basis, which is how a missing reading once leaked into the spread macro.
     ordered = sorted(
         measured.items(),
-        key=lambda item: -(item[1]["adaptive_mean"] or 0.0),
+        key=lambda item: (
+            item[1]["adaptive_mean"] is None,
+            -(item[1]["adaptive_mean"] or 0.0),
+        ),
     )
     entries = {entry["id"]: entry for entry in basis}
     rows = []
@@ -168,7 +174,9 @@ def variance_ratios(ordered: dict[str, dict], basis: list[dict]) -> dict[str, di
 
 def rank_of(ordered: dict[str, dict], placement: str, key: str) -> int:
     """The 1-based rank of a placement by 1 statistic, larger being better."""
-    values = sorted(((stats[key] or 0.0), name) for name, stats in ordered.items())
+    values = sorted(
+        (stats[key], name) for name, stats in ordered.items() if stats[key] is not None
+    )
     values.reverse()
     rank = next(
         index for index, (_, name) in enumerate(values, start=1) if name == placement
@@ -226,8 +234,16 @@ def main() -> None:
     )
 
     variance = variance_ratios(ordered, basis)
-    best_placement, best_stats = next(iter(ordered.items()))
-    worst_placement, worst_stats = list(ordered.items())[-1]
+    # Only a placement the rate ladder actually reached carries a mean. The basis
+    # declares more placements than the panel has swept, so best, worst and spread
+    # are read off the measured ones and the shortfall is reported as its own macro.
+    ranked = [
+        (placement, stats)
+        for placement, stats in ordered.items()
+        if stats["adaptive_mean"] is not None
+    ]
+    best_placement, best_stats = ranked[0]
+    worst_placement, worst_stats = ranked[-1]
     recommended = ordered[RECOMMENDED_PLACEMENT]
     published = ordered[PUBLISHED_PLACEMENT]
     macros = {
@@ -251,6 +267,14 @@ def main() -> None:
             fmt(best_stats["adaptive_mean"]),
             "the highest adaptive-rule mean AUROC in the basis",
         ),
+        "basis_measured_size": (
+            str(len(ranked)),
+            "basis placements whose rate ladder reaches the adaptive target on the panel",
+        ),
+        "basis_unmeasured_size": (
+            str(len(ordered) - len(ranked)),
+            "basis placements the panel declares but never reaches at the adaptive target",
+        ),
         "basis_worst_placement": (
             worst_placement.replace("_", r"\_"),
             "the basis placement with the lowest adaptive-rule mean AUROC",
@@ -273,7 +297,7 @@ def main() -> None:
         ),
         "basis_spread_adaptive": (
             fmt(
-                (best_stats["adaptive_mean"] or 0) - (worst_stats["adaptive_mean"] or 0)
+                best_stats["adaptive_mean"] - worst_stats["adaptive_mean"]
             ),
             "adaptive-rule mean AUROC spread between the best and worst basis placement",
         ),
