@@ -1,9 +1,9 @@
 """Stage-2 arithmetic, checked against hand-computed values.
 
-Every detection number this project reports comes out of these five functions,
+Every detection number this project reports comes out of these 5 functions,
 so each one is pinned to a case whose answer can be worked out on paper. The
 synthetic PSU distributions are deliberately tiny and ordered, so a wrong
-quantile convention, a flipped comparison, or an inverted AUROC sign changes the
+quantile convention, a flipped comparison or an inverted AUROC sign changes the
 expected number visibly rather than by a rounding-sized amount.
 """
 
@@ -32,7 +32,7 @@ from defences.scores import (
 
 def test_psu_is_the_papers_subtraction():
     # 2 samples, 3 classes. Sample 0's argmax is class 2 at prob 0.7, sample 1's
-    # is class 0 at prob 0.5. Two dropout passes give that class 0.3/0.1 and
+    # is class 0 at prob 0.5. 2 dropout passes give that class 0.3/0.1 and
     # 0.4/0.2, so the means are 0.2 and 0.3 and PSU is 0.5 and 0.2.
     baseline_probs = torch.tensor([[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]])
     baseline_labels = torch.tensor([2, 0])
@@ -60,7 +60,7 @@ def test_shift_ratio_counts_sample_pass_pairs():
 
 
 def test_shift_ratio_is_none_when_argmax_was_never_saved():
-    # Missing must read as unknown, never as zero shift, or the adaptive rate
+    # Missing must read as unknown and never as 0 shift, else the adaptive rate
     # rule would pick the smallest rate for every placement.
     assert shift_ratio(torch.tensor([0]), torch.empty(0, 0, dtype=torch.int16)) is None
 
@@ -68,7 +68,7 @@ def test_shift_ratio_is_none_when_argmax_was_never_saved():
 def test_shift_target_histogram_counts_only_shifted_predictions():
     # Baseline [0, 1]. Pass 0: sample 0 stays, sample 1 moves to class 0.
     # Pass 1: sample 0 moves to class 2, sample 1 moves to class 0.
-    # So class 0 gains 2, class 2 gains 1, and the unshifted prediction is excluded.
+    # So class 0 gains 2 and class 2 gains 1. The unshifted prediction is excluded.
     baseline_labels = torch.tensor([0, 1])
     per_pass_argmax = torch.tensor([[0, 0], [2, 0]], dtype=torch.int16)
     assert shift_target_histogram(baseline_labels, per_pass_argmax, 3) == [2, 0, 1]
@@ -85,7 +85,7 @@ def test_detection_report_hand_computed():
     # Threshold from validation 0..99 at the 25th percentile is 24.75.
     # Backdoor PSU is 0..19, all below it, so TPR = 1.0.
     # Clean PSU is 50..69, none below it, so FPR = 0.0.
-    # The two sets are perfectly separated with backdoor lower, and PSU is
+    # The 2 sets are perfectly separated with backdoor lower, and PSU is
     # negated before scoring, so AUROC is exactly 1.0.
     report = detection_report(
         torch.arange(100).float(),
@@ -171,9 +171,9 @@ def test_captured_subset_must_restrict_both_sides():
     the WHOLE clean pool therefore compares hard images against easy images and
     reports it as detection. Both sides must carry the same mask.
 
-    Constructed so the two readings disagree maximally: clean and backdoor PSU are
-    identical per sample (zero real signal), but the captured half is the
-    low-PSU half. Subsetting both sides must give 0.5; subsetting only the
+    Constructed so the 2 readings disagree maximally: clean and backdoor PSU are
+    identical per sample (0 real signal), but the captured half is the
+    low-PSU half. Subsetting both sides must give 0.5. Subsetting only the
     backdoor side must not.
     """
     clean = torch.arange(100).float()
@@ -195,12 +195,12 @@ def test_captured_subset_must_restrict_both_sides():
 def test_psu_ratio_divides_out_the_starting_confidence():
     """The fractional form must be scale-free in the baseline confidence.
 
-    Two samples with the same PROPORTIONAL drop but very different starting
+    2 samples with the same PROPORTIONAL drop but very different starting
     confidence must score identically. Absolute PSU cannot do this, which is the
     whole point: it is why absolute PSU is open to the objection that it proxies
     confidence.
     """
-    # Sample 0 starts at 0.9 and halves; sample 1 starts at 0.2 and halves.
+    # Sample 0 starts at 0.9 and halves. Sample 1 starts at 0.2 and halves.
     baseline_probs = torch.tensor([[0.9, 0.1], [0.2, 0.8]])
     baseline_labels = torch.tensor([0, 0])
     per_pass_probs = torch.tensor([[0.45, 0.10]])
@@ -224,7 +224,7 @@ def test_psu_ratio_is_zero_without_perturbation():
 
 
 def test_two_sided_auroc_recovers_an_inverted_detector():
-    """PSBD's rule is one-tailed; all-to-all backdoors invert the tail.
+    """PSBD's rule is one-tailed, and all-to-all backdoors invert the tail.
 
     A detector at AUROC 0.159 is not failing, it is separating almost perfectly with
     the sign reversed. The one-sided number must keep reporting 0.159, so nothing

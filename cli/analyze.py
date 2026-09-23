@@ -183,7 +183,7 @@ def analyze_one_rate(
             for quantile in PSBD_QUANTILES
         }
 
-    # The same detection, scored on the confidence-normalised PSU. Reported beside
+    # The same detection, scored on the confidence-normalized PSU. Reported beside
     # the paper's absolute form rather than replacing it, so the headline numbers
     # stay comparable to the published method while the improvement is visible.
     ratio_detection = {

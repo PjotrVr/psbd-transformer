@@ -174,7 +174,7 @@ def threshold_diagnostics(
     backdoor_psu: torch.Tensor,
     quantile: float,
 ) -> dict:
-    """How much of detection_report's TPR at this quantile is a tie artefact.
+    """How much of detection_report's TPR at this quantile is a tie artifact.
 
     Takes the same 3 PSU tensors as detection_report: validation_psu
     (n_validation,), clean_psu (n_clean,) and backdoor_psu (n_backdoor,).
@@ -377,7 +377,7 @@ def pair_clean_to_backdoor(clean_scores: torch.Tensor, manifest: dict) -> torch.
     only the eligible subset (all_to_one drops the target class, clean_label
     keeps only non-target sources). Comparing the 2 as served would contrast
     different image populations, so FPR and AUROC would partly measure which
-    classes were dropped rather than the defence. The manifest records both index
+    classes were dropped rather than the defense. The manifest records both index
     lists in loader-row order, so this maps backdoor rows back onto their clean
     counterparts and returns the clean scores in backdoor row order.
 
@@ -501,7 +501,7 @@ def multi_probe_detection(
     rule: str = "calibrated",
     reduction: str = "min",
 ) -> dict:
-    """TPR, FPR and AUROC of the multi-probe defence.
+    """TPR, FPR and AUROC of the multi-probe defense.
 
     2 thresholding rules, both reading clean validation data only, so both stay
     defender-legal:
