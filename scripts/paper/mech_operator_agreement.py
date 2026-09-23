@@ -11,7 +11,7 @@ of a pair.
 
 The slow step is disk I/O: up to 18 placements times 2 splits times 65 cells of
 stage-1 tensors. The baseline tensors are shared across placements within a cell
-(defences.cache), so they are read once per cell, and --max-cells truncates the
+(defences.cache), so they are read once per cell. --max-cells truncates the
 panel for a quick check before the full run.
 
     PYTHONPATH=. python scripts/paper/mech_operator_agreement.py \
@@ -43,11 +43,13 @@ from defences.decision import RECOMMENDED_PLACEMENT
 from defences.scores import psu_ratio_from_cache
 from scripts.paper._common import (
     build_parser,
+    family_label,
     clearing_cells,
     figure_sidecar,
     load_coverage,
     load_declaration,
     load_psbd_metrics,
+    placement_words,
     write_macros,
     write_table,
 )
@@ -272,8 +274,10 @@ def write_agreement_table(
         i = index_of[placement_id]
         rows.append(
             [
-                placement_id,
-                family_of.get(placement_id, "--"),
+                placement_words(placement_id),
+                family_label(family_of[placement_id])
+                if placement_id in family_of
+                else "--",
                 rho_text(mean_clean[recommended_index, i]),
                 str(n_clean[recommended_index, i]),
                 rho_text(mean_backdoor[recommended_index, i]),
@@ -289,11 +293,11 @@ def write_agreement_table(
             f"{args.results_dir}/<folder>/psbd/<placement>/rate_*_{{clean,backdoor}}.pt"
         ],
         caption=(
-            "B1: mean Spearman correlation, over the models whose attack succeeded, "
-            "between each basis placement's per-sample fractional PSU and the "
-            f"token\\_mask placement's at the attention input ({RECOMMENDED_PLACEMENT}), "
-            "at each placement's own matched-0.6 rate. n is the number of models "
-            "carrying both placements at a usable rate."
+            "Whether placements agree on which inputs are fragile. Mean Spearman "
+            "correlation, over the models whose attack succeeded, between each basis "
+            "placement's per-sample fractional PSU and that of token masking at the "
+            "attention input, each at its own matched 0.6 rate. n is the number of "
+            "models carrying both placements at a usable rate."
         ),
         label="tab:mech-operator-agreement",
         header=header,
@@ -306,10 +310,10 @@ def write_family_table(args, accumulator, family_of) -> None:
     header = ["comparison", "clean rho", "n pairs", "backdoor rho", "n pairs"]
     rows = []
     for label, family_a, family_b in (
-        ("within input_side", INPUT_SIDE_FAMILY, INPUT_SIDE_FAMILY),
-        ("within residual_adjacent", RESIDUAL_FAMILY, RESIDUAL_FAMILY),
+        ("within the input-side family", INPUT_SIDE_FAMILY, INPUT_SIDE_FAMILY),
+        ("within the residual-adjacent family", RESIDUAL_FAMILY, RESIDUAL_FAMILY),
         (
-            "across families (input_side vs residual_adjacent)",
+            "across the 2 families",
             INPUT_SIDE_FAMILY,
             RESIDUAL_FAMILY,
         ),
@@ -338,9 +342,9 @@ def write_family_table(args, accumulator, family_of) -> None:
             f"{args.results_dir}/<folder>/psbd/<placement>/rate_*_{{clean,backdoor}}.pt"
         ],
         caption=(
-            "B1: mean per-sample PSU agreement (Spearman rho, averaged over placement "
-            "pairs and over models) within and across the input-side and "
-            "residual-adjacent families, the axis H20 splits on."
+            "Mean per-sample PSU agreement, Spearman correlation averaged over "
+            "placement pairs and over models, within and across the input-side and "
+            "residual-adjacent families."
         ),
         label="tab:mech-operator-agreement-family",
         header=header,

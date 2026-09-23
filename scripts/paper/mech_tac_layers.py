@@ -131,6 +131,9 @@ def main() -> None:
     table_rows = []
     onsets: dict[str, list[int]] = {}
     benign_peaks = []
+    # The appendix contrasts the benign rows with TaCT, whose averaged direction
+    # is small because only its source classes move.
+    benign_ckas, tact_peaks, tact_ckas = [], [], []
     for item in sorted(
         records,
         key=lambda r: (
@@ -143,6 +146,11 @@ def main() -> None:
         final = item["layers"][-1]
         if item["attack"] == "benign":
             benign_peaks.append(peak["rel_direction_norm"])
+            benign_ckas.append(final["cka"])
+        elif item["attack"] == "tact":
+            tact_peaks.append(peak["rel_direction_norm"])
+            tact_ckas.append(final["cka"])
+            onsets.setdefault(item["attack"], []).append(onset)
         else:
             onsets.setdefault(item["attack"], []).append(onset)
         table_rows.append(
@@ -186,6 +194,26 @@ def main() -> None:
         "tac_layers_samples": (
             str(record["samples"]),
             "paired images per checkpoint in the per-layer TAC pass",
+        ),
+        "tac_layers_benign_cka_min": (
+            fmt(min(benign_ckas), places=2) if benign_ckas else "--",
+            "smallest final-layer CKA between clean and triggered activations on a benign reference",
+        ),
+        "tac_layers_tact_peak_min": (
+            fmt(min(tact_peaks), places=2) if tact_peaks else "--",
+            "smallest peak relative direction norm over the TaCT models",
+        ),
+        "tac_layers_tact_peak_max": (
+            fmt(max(tact_peaks), places=2) if tact_peaks else "--",
+            "largest peak relative direction norm over the TaCT models",
+        ),
+        "tac_layers_tact_cka_min": (
+            fmt(min(tact_ckas), places=2) if tact_ckas else "--",
+            "smallest final-layer CKA over the TaCT models",
+        ),
+        "tac_layers_tact_cka_max": (
+            fmt(max(tact_ckas), places=2) if tact_ckas else "--",
+            "largest final-layer CKA over the TaCT models",
         ),
         "tac_layers_benign_peak_max": (
             fmt(max(benign_peaks), places=2) if benign_peaks else "--",

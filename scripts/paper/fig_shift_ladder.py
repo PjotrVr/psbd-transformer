@@ -30,6 +30,8 @@ from defences.decision import (  # noqa: E402
 )
 from scripts.paper._common import (  # noqa: E402
     build_parser,
+    fmt,
+    write_macros,
     clearing_cells,
     figure_sidecar,
     load_coverage,
@@ -180,6 +182,28 @@ def write_figure(args, all_agg, rate_aggs) -> str:
     return path
 
 
+def target_macros(at_targets: dict) -> dict[str, tuple[str, str]]:
+    """Each metric at each reported shift target, with the models that reach it.
+
+    The appendix argues from these readings, and they had been typed from an
+    earlier version of the figure that plotted TPR at a 1% budget.
+    """
+    macros = {}
+    for metric, by_target in at_targets.items():
+        for target, reading in by_target.items():
+            stem = f"ladder_{metric}_at_{f'{target:g}'.replace('.', '_')}"
+            places = 3 if metric == "auroc" else 2
+            macros[stem] = (
+                fmt(reading["mean"], places=places),
+                f"mean {metric} of the recommended placement at clean shift ratio {target}",
+            )
+            macros[f"{stem}_n"] = (
+                str(reading["n_cells"]),
+                f"models whose rate ladder reaches clean shift ratio {target}",
+            )
+    return macros
+
+
 def main() -> None:
     args = build_parser(__doc__).parse_args()
     coverage = load_coverage(args.results_dir)
@@ -241,6 +265,12 @@ def main() -> None:
             f"placements.{RECOMMENDED_PLACEMENT}.rates)"
         ],
         plotted=plotted,
+    )
+    write_macros(
+        os.path.join(args.paper_dir, "tables", "shift_ladder.macros.json"),
+        GENERATOR,
+        [f"{args.results_dir}/<folder>/psbd_metrics.json"],
+        target_macros(all_targets_agg),
     )
     print(f"wrote {figure_path}, {figure_path.replace('.pdf', '.png')} and its sidecar")
 

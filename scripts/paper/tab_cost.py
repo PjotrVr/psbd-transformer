@@ -96,7 +96,7 @@ def main() -> None:
         inputs=inputs,
         caption=(
             "Wall-clock cost of PSBD-TM against the number of forward passes k for "
-            f"{architecture_names}, batch 128, fp32, on 1 {cost['gpu_name']}."
+            f"{architecture_names}, batch {cost['batch_size']}, fp32, on 1 {cost['gpu_name']}."
         ),
         label="tab:cost",
         header=header,
@@ -104,7 +104,12 @@ def main() -> None:
         align="l" + "rrr" * len(architectures),
     )
 
-    macros = {}
+    macros = {
+        "cost_batch_size": (
+            str(cost["batch_size"]),
+            "batch size the cost timing ran at",
+        ),
+    }
     for architecture in architectures:
         record = cost["architectures"][architecture]
         plain_seconds = record["plain"]["seconds_per_input"]

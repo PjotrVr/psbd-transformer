@@ -32,6 +32,7 @@ from scripts.paper._common import (  # noqa: E402
     dataset_label,
     fmt,
     load_coverage,
+    load_declaration,
     load_psbd_metrics,
     mean_or_none,
     write_macros,
@@ -42,6 +43,12 @@ GENERATOR = "scripts/paper/tab_gains.py"
 # The deployable rule. Every number in this table is read at it, so the table
 # cannot mix rules the way the typed version did.
 RULE = "adaptive"
+# Token masking on the attention branch output, the placement a selection on
+# AUROC alone could have picked instead of ours.
+TWIN_PLACEMENT = "before_attention_residual_token_mask"
+# The AUROC the results section calls strong when it lists the attacks the
+# recommended placement never falls below on any dataset or rate.
+STRONG_AUROC = 0.9
 
 
 def paired_cells(results_dir: str, cells: list[dict]) -> list[dict]:
@@ -55,6 +62,7 @@ def paired_cells(results_dir: str, cells: list[dict]) -> list[dict]:
         for name, placement in (
             ("ours", RECOMMENDED_PLACEMENT),
             ("published", PUBLISHED_PLACEMENT),
+            ("twin", TWIN_PLACEMENT),
         ):
             block = psbd_values(report, placement, RULE)
             quantile = (block or {}).get(HEADLINE_KEY)
@@ -70,6 +78,7 @@ def paired_cells(results_dir: str, cells: list[dict]) -> list[dict]:
                 "gain": readings["ours"] - readings["published"],
                 "ours": readings["ours"],
                 "published": readings["published"],
+                "twin": readings["twin"],
             }
         )
     return paired
@@ -108,6 +117,77 @@ def leave_one_attack_out(
         if worst is None or mean < worst[1]:
             worst = (attack, mean, low)
     return worst
+
+
+def half_macros(paired: list[dict], declaration_path: str) -> dict:
+    """The recommended placement and its twin on the selection and report halves.
+
+    The declared protocol selects on 1 set of datasets and reports on another, so
+    the recommendation is licensed on ViT only if it holds on the report half,
+    and the twin is what a selection on AUROC alone would have competed against.
+    """
+    protocol = load_declaration(declaration_path)["selection_protocol"]
+    macros = {}
+    for half, datasets in (
+        ("selection", protocol["select_on_datasets"]),
+        ("report", protocol["report_on_datasets"]),
+    ):
+        group = [record for record in paired if record["dataset"] in datasets]
+        twins = [record for record in group if record["twin"] is not None]
+        macros[f"gains_{half}_half_n"] = (str(len(group)), f"models on the {half} half")
+        macros[f"gains_{half}_half_ours"] = (
+            fmt(mean_or_none([record["ours"] for record in group])),
+            f"mean AUROC of the recommended placement on the {half} half",
+        )
+        macros[f"gains_{half}_half_twin"] = (
+            fmt(mean_or_none([record["twin"] for record in twins])),
+            f"mean AUROC of the branch-output twin on the {half} half",
+        )
+        macros[f"gains_{half}_half_twin_gap"] = (
+            fmt(
+                mean_or_none([record["ours"] - record["twin"] for record in twins]),
+                signed=True,
+            ),
+            f"paired AUROC gap, recommended minus twin, on the {half} half",
+        )
+    return macros
+
+
+def strong_attack_macros(paired: list[dict]) -> dict:
+    """The attacks the recommended placement never reads below STRONG_AUROC on.
+
+    The results section states this list, so it is computed rather than read off
+    a table by eye.
+    """
+    floor_by_attack: dict[str, float] = {}
+    for record in paired:
+        floor = floor_by_attack.get(record["attack"], 1.0)
+        floor_by_attack[record["attack"]] = min(floor, record["ours"])
+    strong = sorted(
+        attack for attack, floor in floor_by_attack.items() if floor >= STRONG_AUROC
+    )
+    macros = {
+        "gains_strong_auroc": (
+            f"{STRONG_AUROC:g}",
+            "the AUROC called strong in the results",
+        ),
+        "gains_strong_attacks": (
+            ", ".join(attack_label(attack) for attack in strong[:-1])
+            + (
+                f" and {attack_label(strong[-1])}"
+                if len(strong) > 1
+                else attack_label(strong[0])
+                if strong
+                else "none"
+            ),
+            "attacks whose every model reads at least the strong AUROC under the recommended placement",
+        ),
+        "gains_strong_attack_count": (
+            str(len(strong)),
+            "attacks in gains_strong_attacks",
+        ),
+    }
+    return macros
 
 
 def main() -> None:
@@ -218,6 +298,8 @@ def main() -> None:
             fmt(mean_or_none([r["gain"] for r in group]), signed=True),
             f"mean paired gain on {dataset_label(dataset)} over {len(group)} models",
         )
+    macros.update(half_macros(paired, args.declaration))
+    macros.update(strong_attack_macros(paired))
     write_macros(
         os.path.join(args.paper_dir, "tables", "gains.macros.json"),
         GENERATOR,

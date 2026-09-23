@@ -37,6 +37,7 @@ from defences.decision import (  # noqa: E402
 from data.registry import DATASET_REGISTRY  # noqa: E402
 from defences.operators import OPERATORS  # noqa: E402
 from detectors import DETECTOR_NAMES  # noqa: E402
+from models.backbones import MODEL_INPUT_SIZE  # noqa: E402
 from models.positions import (  # noqa: E402
     PORTED_POSITION_NAMES,
     SINGLE_POSITION_NAMES,
@@ -93,6 +94,18 @@ def training_epochs(checkpoints_dir: str, benign_folders: dict[str, str]) -> int
 def percent(rate: float) -> str:
     text = f"{rate * 100:g}\\%"
     return text
+
+
+def training_batch_size() -> int:
+    """The default batch size of cli.train_backdoor, read from its own parser.
+
+    Every panel model trains at the default, so the parser is the source of the
+    number rather than a copy of it typed into the paper.
+    """
+    from cli.train_backdoor import build_parser as training_parser
+
+    batch_size = training_parser().get_default("batch_size")
+    return batch_size
 
 
 def main() -> None:
@@ -198,6 +211,14 @@ def main() -> None:
             "patch tokens per image in ViT-B/16",
         ),
         "vit_width": (str(sizes["vit_width"]), "residual width of ViT-B/16"),
+        "model_input_size": (
+            str(MODEL_INPUT_SIZE),
+            "side of the square image both backbones read after the Resize front-end",
+        ),
+        "training_batch_size": (
+            str(training_batch_size()),
+            "the batch size cli.train_backdoor trains every panel model at",
+        ),
         "vit_heads": (str(sizes["vit_heads"]), "attention heads per block in ViT-B/16"),
         "vit_total_heads": (
             str(sizes["vit_heads"] * sizes["vit_blocks"]),
@@ -258,7 +279,7 @@ def main() -> None:
             "the target class every panel cell attacks",
         ),
     }
-    # The depth bands the basis declares, as "first to last" block ranges, and the
+    # The depth bands the basis declares as "first to last" block ranges, plus the
     # class count of every registered dataset, so a chapter names neither by hand.
     bands = sorted(
         {

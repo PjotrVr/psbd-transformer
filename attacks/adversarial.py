@@ -45,6 +45,13 @@ def bases_directory(
     return directory
 
 
+# Madry's step-size rule: each step is this multiple of epsilon over the step
+# count, enough total travel to cross the ball with room to turn around.
+STEP_SIZE_FACTOR = 2.5
+# Turner et al.'s budget for the Label-Consistent bases.
+DEFAULT_PGD_STEPS = 100
+
+
 def pgd_perturb(
     model,
     images: torch.Tensor,
@@ -69,7 +76,7 @@ def pgd_perturb(
     images is (batch, C, H, W) in 0 to 1 pixel space and labels is (batch,) long.
     The result has the shape of images and carries no gradient history.
     """
-    step_size = 2.5 * epsilon / steps
+    step_size = STEP_SIZE_FACTOR * epsilon / steps
     noise = torch.empty_like(images).uniform_(
         -epsilon, epsilon, generator=generator
     )  # (batch, C, H, W)

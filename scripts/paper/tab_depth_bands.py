@@ -151,6 +151,7 @@ def main() -> None:
                 f"mean paired AUROC delta, `{placement_id}` minus `{reference_id}`, "
                 f"at the matched 0.6 rate, over the {len(deltas)} cells it covers",
             )
+            macros[f"{stem}_n"] = (str(len(deltas)), f"cells behind {stem}")
             macros[f"{stem}_low"] = (
                 fmt(low, signed=True),
                 f"lower bound of the 95% bootstrap interval on {stem}",

@@ -5,9 +5,9 @@ experiments/whole_network_erasure/measure.py, 1 file per backdoored ViT-B/16
 checkpoint at 10% poisoning. Each record holds the baseline attack success rate
 (ASR) and clean accuracy (CA), the layer Eq. 1 of Karayalcin et al. selects from
 class-token steering (steer_cls_eq1_layer), and, at that same layer, ASR and CA
-after orthogonalising every residual-writing weight matrix against the layer's
+after orthogonalizing every residual-writing weight matrix against the layer's
 backdoor direction (whole_weights), ASR after the same edit restricted to blocks
-10 and 11 (h34_blocks_10_11), and ASR after orthogonalising a random unit
+10 and 11 (h34_blocks_10_11), and ASR after orthogonalizing a random unit
 direction against every weight (random_direction_whole, layer-independent). A
 sweep may still be writing files, so this generator reads whatever is present
 and is safe to rerun.
@@ -134,7 +134,18 @@ def main() -> None:
     ]
     asr_random = [report["random_direction_whole"]["asr"] for report in reports]
 
+    # LF is the attack the final-layer ablation cannot remove, so the section
+    # quotes where the whole-network edit leaves it, per model.
+    lf_after = [
+        report["whole_weights"][report["steer_cls_eq1_layer"]]["asr"]
+        for report in reports
+        if report["attack"] == "lf"
+    ]
     macros = {
+        "erasure_lf_asr_after_all_writes_max": (
+            fmt(max(lf_after)) if lf_after else "--",
+            "highest LF attack success left after the whole-network edit",
+        ),
         "erasure_checkpoints": (
             str(len(reports)),
             "backdoored ViT-B/16 checkpoints in the whole-network erasure record",
@@ -149,7 +160,7 @@ def main() -> None:
         ),
         "erasure_asr_after_all_writes_mean": (
             fmt(mean_or_none(asr_all_writes)),
-            "mean attack success rate after orthogonalising every residual-writing "
+            "mean attack success rate after orthogonalizing every residual-writing "
             "weight against the Eq. 1 layer's backdoor direction",
         ),
         "erasure_asr_after_all_writes_max": (
@@ -168,7 +179,7 @@ def main() -> None:
         ),
         "erasure_asr_after_random_direction_mean": (
             fmt(mean_or_none(asr_random)),
-            "mean attack success rate after orthogonalising a random unit "
+            "mean attack success rate after orthogonalizing a random unit "
             "direction against every residual-writing weight",
         ),
     }

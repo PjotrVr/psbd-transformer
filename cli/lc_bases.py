@@ -21,7 +21,13 @@ import torch
 import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader, Subset
 
-from attacks.adversarial import accuracy_on, bases_directory, pgd_perturb, save_bases
+from attacks.adversarial import (
+    DEFAULT_PGD_STEPS,
+    accuracy_on,
+    bases_directory,
+    pgd_perturb,
+    save_bases,
+)
 from data.registry import DATASET_REGISTRY
 from data.loading import base_image_transform, extract_labels, load_clean_datasets
 from models.backbones import load_checkpoint
@@ -83,7 +89,7 @@ def parse_args() -> argparse.Namespace:
         default=[8 / 255, 16 / 255, 32 / 255],
         help="L-inf budget in 0-to-1 pixel units; Turner reports 8, 16 and 32 over 255",
     )
-    parser.add_argument("--steps", type=int, default=100)
+    parser.add_argument("--steps", type=int, default=DEFAULT_PGD_STEPS)
     parser.add_argument("--surrogate-architecture", default="vit")
     parser.add_argument(
         "--surrogate-folder",

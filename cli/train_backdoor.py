@@ -393,7 +393,7 @@ def resolve_evasion(
         "weight": args.evade_weight,
         "passes": args.evade_passes,
         # Read by training.loop.train_classifier at each epoch boundary.
-        # recalibrate_every 0 is the historical behaviour: the rate calibrated
+        # recalibrate_every 0 is the historical behavior: the rate calibrated
         # above on the initial weights is never touched again.
         "recalibrate_every": args.evade_recalibrate_every,
         "calibration_target": args.evade_calibration_target,
@@ -401,7 +401,8 @@ def resolve_evasion(
     return evasion, probes
 
 
-def parse_args() -> argparse.Namespace:
+def build_parser() -> argparse.ArgumentParser:
+    """The parser, separate from parsing so a generator can read its defaults."""
     parser = argparse.ArgumentParser(description="Train a backdoored ViT or Swin")
     parser.add_argument("--dataset", choices=tuple(DATASET_REGISTRY), required=True)
     parser.add_argument("--attack", choices=ATTACK_NAMES, required=True)
@@ -616,7 +617,12 @@ def parse_args() -> argparse.Namespace:
         "resolution (scale 0.6 to 1.0) plus a random horizontal flip, on the "
         "training loader only, applied after the trigger is stamped.",
     )
-    return parser.parse_args()
+    return parser
+
+
+def parse_args() -> argparse.Namespace:
+    arguments = build_parser().parse_args()
+    return arguments
 
 
 def snapshot_epochs(total: int, dense_until: int, freq: int) -> set[int]:
