@@ -5,43 +5,43 @@
     "configs/psbd_basis.json",
     "results/<folder>/psbd_metrics.json (65 cells)"
   ],
-  "written_at": "2026-09-11T04:14:12.993206+00:00",
-  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
+  "written_at": "2026-09-23T11:28:28.036366+00:00",
+  "git_commit": "d73256eebad186e04a1df1a387fc7c90e8742ffb-dirty",
   "macros": {
     "FamilyGapMatched": {
-      "value": "+0.005",
-      "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the matched 0.6 rate, over the 65 cells it covers"
+      "value": "+0.016",
+      "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the matched 0.6 rate, over the 71 cells it covers"
     },
     "FamilyGapMatchedLow": {
-      "value": "-0.010",
+      "value": "-0.001",
       "meaning": "lower bound of the 95% bootstrap interval on family_gap_matched"
     },
     "FamilyGapMatchedHigh": {
-      "value": "+0.023",
+      "value": "+0.036",
       "meaning": "upper bound of the 95% bootstrap interval on family_gap_matched"
     },
     "FamilyGapAdaptive": {
-      "value": "+0.033",
-      "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the adaptive 0.8 rate, over the 65 cells it covers"
+      "value": "+0.045",
+      "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the adaptive 0.8 rate, over the 71 cells it covers"
     },
     "FamilyGapAdaptiveLow": {
-      "value": "+0.006",
+      "value": "+0.016",
       "meaning": "lower bound of the 95% bootstrap interval on family_gap_adaptive"
     },
     "FamilyGapAdaptiveHigh": {
-      "value": "+0.063",
+      "value": "+0.075",
       "meaning": "upper bound of the 95% bootstrap interval on family_gap_adaptive"
     },
     "FamilyGapConfoundedMatched": {
-      "value": "-0.035",
-      "meaning": "mean paired AUROC gap under the basis file's operator-mixing family tags, at the matched 0.6 rate, over the 65 cells it covers"
+      "value": "-0.029",
+      "meaning": "mean paired AUROC gap under the basis file's operator-mixing family tags, at the matched 0.6 rate, over the 71 cells it covers"
     },
     "FamilyGapConfoundedMatchedLow": {
-      "value": "-0.053",
+      "value": "-0.047",
       "meaning": "lower bound of the 95% bootstrap interval on family_gap_confounded_matched"
     },
     "FamilyGapConfoundedMatchedHigh": {
-      "value": "-0.017",
+      "value": "-0.010",
       "meaning": "upper bound of the 95% bootstrap interval on family_gap_confounded_matched"
     },
     "FamilyGapLocal": {
@@ -57,19 +57,19 @@
       "meaning": "upper bound of the 95% bootstrap interval on family_gap_local"
     },
     "FamilyGapGlobal": {
-      "value": "+0.013",
-      "meaning": "mean paired token_mask family gap at the matched 0.6 rate, global-trigger cells only, over the 42 cells it covers"
+      "value": "+0.029",
+      "meaning": "mean paired token_mask family gap at the matched 0.6 rate, global-trigger cells only, over the 48 cells it covers"
     },
     "FamilyGapGlobalLow": {
-      "value": "-0.006",
+      "value": "+0.007",
       "meaning": "lower bound of the 95% bootstrap interval on family_gap_global"
     },
     "FamilyGapGlobalHigh": {
-      "value": "+0.036",
+      "value": "+0.053",
       "meaning": "upper bound of the 95% bootstrap interval on family_gap_global"
     },
     "FamilyGapMinLeaveOneAttackOut": {
-      "value": "+0.000",
+      "value": "+0.006",
       "meaning": "smallest mean matched-06 token_mask family gap over the leave-one-attack-out refits, the weakest the gap gets when any single attack is removed"
     }
   }

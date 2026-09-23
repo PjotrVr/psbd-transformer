@@ -1,66 +1,66 @@
 {
   "generator": "scripts/paper/tab_swin.py",
   "inputs": [
-    "results/swin_*/psbd_metrics.json (64 implanted cells)",
+    "results/swin_*/psbd_metrics.json (83 implanted cells)",
     "checkpoints/swin_*/args.json"
   ],
-  "written_at": "2026-09-11T04:18:01.098657+00:00",
-  "git_commit": "9df2ce36e6044bb46e4438e652a6afdb83e4895c-dirty",
+  "written_at": "2026-09-23T11:34:27.037176+00:00",
+  "git_commit": "2fb3169f973b846e39a6f585b342a893fa1af109-dirty",
   "macros": {
     "SwinCells": {
-      "value": "64",
+      "value": "83",
       "meaning": "Swin cells whose attack cleared the bar and carry PSBD metrics"
     },
     "SwinDatasets": {
-      "value": "3",
+      "value": "4",
       "meaning": "datasets with at least 1 implanted Swin cell"
     },
     "SwinGainRecommendedMinusPublished": {
-      "value": "+0.091",
-      "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after residual add, adaptive rule, over 53 cells"
+      "value": "+0.115",
+      "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after residual add, adaptive rule, over 80 cells"
     },
     "SwinGainRecommendedMinusPublishedN": {
-      "value": "53",
+      "value": "80",
       "meaning": "cells behind swin_gain_recommended_minus_published"
     },
     "SwinGainRecommendedMinusPublishedLow": {
-      "value": "+0.044",
+      "value": "+0.070",
       "meaning": "lower bootstrap bound of swin_gain_recommended_minus_published"
     },
     "SwinGainRecommendedMinusPublishedHigh": {
-      "value": "+0.142",
+      "value": "+0.162",
       "meaning": "upper bootstrap bound of swin_gain_recommended_minus_published"
     },
     "SwinGainDropoutInputMinusPublished": {
-      "value": "-0.022",
-      "meaning": "Swin paired AUROC gain, dropout, attention input minus dropout, after residual add, adaptive rule, over 56 cells"
+      "value": "+0.020",
+      "meaning": "Swin paired AUROC gain, dropout, attention input minus dropout, after residual add, adaptive rule, over 80 cells"
     },
     "SwinGainDropoutInputMinusPublishedN": {
-      "value": "56",
+      "value": "80",
       "meaning": "cells behind swin_gain_dropout_input_minus_published"
     },
     "SwinGainDropoutInputMinusPublishedLow": {
-      "value": "-0.084",
+      "value": "-0.037",
       "meaning": "lower bootstrap bound of swin_gain_dropout_input_minus_published"
     },
     "SwinGainDropoutInputMinusPublishedHigh": {
-      "value": "+0.039",
+      "value": "+0.079",
       "meaning": "upper bootstrap bound of swin_gain_dropout_input_minus_published"
     },
     "SwinGainRecommendedMinusPreResidual": {
-      "value": "+0.128",
-      "meaning": "Swin paired AUROC gain, token mask, attention input minus pre_residual, adaptive rule, over 51 cells"
+      "value": "+0.124",
+      "meaning": "Swin paired AUROC gain, token mask, attention input minus pre_residual, adaptive rule, over 80 cells"
     },
     "SwinGainRecommendedMinusPreResidualN": {
-      "value": "51",
+      "value": "80",
       "meaning": "cells behind swin_gain_recommended_minus_pre_residual"
     },
     "SwinGainRecommendedMinusPreResidualLow": {
-      "value": "+0.064",
+      "value": "+0.077",
       "meaning": "lower bootstrap bound of swin_gain_recommended_minus_pre_residual"
     },
     "SwinGainRecommendedMinusPreResidualHigh": {
-      "value": "+0.197",
+      "value": "+0.174",
       "meaning": "upper bootstrap bound of swin_gain_recommended_minus_pre_residual"
     },
     "SwinSeedReplicates": {
@@ -68,11 +68,11 @@
       "meaning": "Swin training-seed replicate checkpoints on disk"
     },
     "SwinRecommendedAurocAdaptive": {
-      "value": "0.968",
-      "meaning": "Swin mean AUROC of the recommended placement at the adaptive rule over 53 cells"
+      "value": "0.969",
+      "meaning": "Swin mean AUROC of the recommended placement at the adaptive rule over 80 cells"
     },
     "SwinRecommendedN": {
-      "value": "53",
+      "value": "80",
       "meaning": "Swin cells carrying the recommended placement"
     }
   }

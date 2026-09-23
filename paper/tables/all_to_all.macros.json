@@ -4,8 +4,8 @@
     "results/all_to_all_entropy.json",
     "results/regime_router.json"
   ],
-  "written_at": "2026-09-11T04:11:43.672315+00:00",
-  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
+  "written_at": "2026-09-23T11:25:12.664658+00:00",
+  "git_commit": "f1f66f0f3193c870a356da474fc6d456c51a7a19-dirty",
   "macros": {
     "ATwoaCells": {
       "value": "12",

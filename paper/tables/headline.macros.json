@@ -4,40 +4,40 @@
     "results/coverage/coverage.json",
     "results/<folder>/psbd_metrics.json (65 cells)"
   ],
-  "written_at": "2026-09-11T04:14:41.579085+00:00",
-  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
+  "written_at": "2026-09-23T11:29:05.452383+00:00",
+  "git_commit": "07121b0ea68df7b530651d80d1c561600b445e34-dirty",
   "macros": {
     "HeadlineAurocAdaptive": {
-      "value": "0.935",
-      "meaning": "mean AUROC of the recommended placement at the adaptive rule, over the 65 cells it covers of the 65-cell panel"
+      "value": "0.927",
+      "meaning": "mean AUROC of the recommended placement at the adaptive rule, over the 69 cells it covers of the 65-cell panel"
     },
     "HeadlineAurocMatched": {
-      "value": "0.926",
-      "meaning": "mean AUROC of the recommended placement at the matched 0.6 rule, over the 65 cells it covers of the 65-cell panel"
+      "value": "0.921",
+      "meaning": "mean AUROC of the recommended placement at the matched 0.6 rule, over the 71 cells it covers of the 65-cell panel"
     },
     "PublishedAurocAdaptive": {
-      "value": "0.832",
-      "meaning": "mean AUROC of the published placement at the adaptive rule, over the 65 cells it covers of the 65-cell panel"
+      "value": "0.818",
+      "meaning": "mean AUROC of the published placement at the adaptive rule, over the 71 cells it covers of the 65-cell panel"
     },
     "HeadlineGainAdaptiveAuroc": {
-      "value": "+0.103",
+      "value": "+0.104",
       "meaning": "mean AUROC gain of the recommended placement over the published placement, both at the adaptive rule, paired over the 65-cell panel"
     },
     "HeadlineGainAdaptiveAurocLow": {
-      "value": "+0.048",
+      "value": "+0.052",
       "meaning": "lower bound of the 95% bootstrap interval on headline_gain_adaptive_auroc"
     },
     "HeadlineGainAdaptiveAurocHigh": {
-      "value": "+0.160",
+      "value": "+0.158",
       "meaning": "upper bound of the 95% bootstrap interval on headline_gain_adaptive_auroc"
     },
     "HeadlineGainMatchedAuroc": {
-      "value": "+0.094",
+      "value": "+0.103",
       "meaning": "mean AUROC gain of the recommended placement at the matched 0.6 rule over the published placement at the adaptive rule, paired over the 65-cell panel"
     },
     "HeadlineTprAtOnePercent": {
-      "value": "0.629",
-      "meaning": "mean TPR of the recommended placement at the adaptive rule, at the 1% FPR budget, over the 65 cells it covers"
+      "value": "0.602",
+      "meaning": "mean TPR of the recommended placement at the adaptive rule, at the 1% FPR budget, over the 69 cells it covers"
     },
     "HeadlineFloorAuroc": {
       "value": "0.418",

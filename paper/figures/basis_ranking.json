@@ -1,0 +1,39 @@
+{
+  "generator": "scripts/paper/fig_basis_ranking.py",
+  "inputs": [
+    "results/coverage/coverage.json",
+    "configs/psbd_basis.json"
+  ],
+  "written_at": "2026-09-23T11:17:17.000410+00:00",
+  "git_commit": "1a0f3cf2754543268bfb78a46b3ba2d037f8ed7a-dirty",
+  "plotted": {
+    "placements": [
+      "input_pixels_scale_up",
+      "after_attention_residual_token_mask",
+      "before_attention_norm_gaussian",
+      "pre_residual_blocks_1_4",
+      "mlp_neurons_channel_mask",
+      "post_residual",
+      "before_mlp_norm_token_mask",
+      "pre_residual",
+      "before_mlp_gaussian",
+      "pre_residual_blocks_5_8",
+      "before_attention_norm_channel_mask",
+      "both_sublayer_inputs_token_mask"
+    ],
+    "adaptive_mean": [
+      0.7563992183450504,
+      0.7610795694866463,
+      0.8040492477209739,
+      0.8048000727513446,
+      0.8078163003775125,
+      0.8181883594126359,
+      0.8256027878693836,
+      0.8376152627188825,
+      0.8707336081029082,
+      0.8732124581717048,
+      0.8826866733242228,
+      0.8979066605966158
+    ]
+  }
+}

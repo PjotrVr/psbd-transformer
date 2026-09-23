@@ -3,8 +3,8 @@
   "inputs": [
     "results/coverage/coverage.json"
   ],
-  "written_at": "2026-09-11T04:15:56.405653+00:00",
-  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
+  "written_at": "2026-09-23T11:30:41.689453+00:00",
+  "git_commit": "07121b0ea68df7b530651d80d1c561600b445e34-dirty",
   "macros": {
     "PanelCellsClearing": {
       "value": "71",

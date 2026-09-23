@@ -3,8 +3,8 @@
   "inputs": [
     "results/_experiments/psbd_cost/cost.json"
   ],
-  "written_at": "2026-09-11T04:39:32.063924+00:00",
-  "git_commit": "152daf8d7b528cd377fdc22e649d0d0da0e2f9c3-dirty",
+  "written_at": "2026-09-23T11:26:13.904414+00:00",
+  "git_commit": "f1f66f0f3193c870a356da474fc6d456c51a7a19-dirty",
   "macros": {
     "CostPlainSecondsVit": {
       "value": "0.0022",

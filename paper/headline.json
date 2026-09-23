@@ -144,7 +144,7 @@
     ]
   },
   "AdaptiveVitUnion": {
-    "value": "0.973",
+    "value": "0.967",
     "meaning": "vit mean AUROC of the best probe union on the evasive checkpoints",
     "generator": "scripts/paper/tab_adaptive.py",
     "inputs": [
@@ -279,7 +279,7 @@
     ]
   },
   "BasisRankRecommendedAdaptive": {
-    "value": "2",
+    "value": "1",
     "meaning": "rank of the recommended placement among the basis by adaptive-rule mean AUROC",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -309,7 +309,7 @@
     ]
   },
   "BasisBestPlacement": {
-    "value": "before\\_attention\\_residual\\_token\\_mask",
+    "value": "before\\_attention\\_norm\\_token\\_mask",
     "meaning": "the basis placement with the highest adaptive-rule mean AUROC",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -319,7 +319,7 @@
     ]
   },
   "BasisBestAurocAdaptive": {
-    "value": "0.936",
+    "value": "0.927",
     "meaning": "the highest adaptive-rule mean AUROC in the basis",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -328,8 +328,28 @@
       "results/<folder>/psbd_metrics.json (71 cells)"
     ]
   },
+  "BasisMeasuredSize": {
+    "value": "26",
+    "meaning": "basis placements whose rate ladder reaches the adaptive target on the panel",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
+  "BasisUnmeasuredSize": {
+    "value": "1",
+    "meaning": "basis placements the panel declares but never reaches at the adaptive target",
+    "generator": "scripts/paper/app_basis.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "configs/psbd_basis.json",
+      "results/<folder>/psbd_metrics.json (71 cells)"
+    ]
+  },
   "BasisWorstPlacement": {
-    "value": "before\\_attention\\_norm\\_blocks\\_1\\_4\\_token\\_mask",
+    "value": "input\\_pixels\\_scale\\_up",
     "meaning": "the basis placement with the lowest adaptive-rule mean AUROC",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -339,7 +359,7 @@
     ]
   },
   "BasisWorstAurocAdaptive": {
-    "value": "--",
+    "value": "0.756",
     "meaning": "the lowest adaptive-rule mean AUROC in the basis",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -369,7 +389,7 @@
     ]
   },
   "RecommendedReachMatched": {
-    "value": "65",
+    "value": "71",
     "meaning": "cells the recommended placement reaches at the matched rule",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -379,7 +399,7 @@
     ]
   },
   "BasisSpreadAdaptive": {
-    "value": "0.936",
+    "value": "0.171",
     "meaning": "adaptive-rule mean AUROC spread between the best and worst basis placement",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -389,7 +409,7 @@
     ]
   },
   "PositionRangeTokenMaskMatched": {
-    "value": "0.109",
+    "value": "0.102",
     "meaning": "range of mean AUROC across the all-blocks token_mask positions, matched rule",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -399,7 +419,7 @@
     ]
   },
   "OperatorRangeAttentionNormMatched": {
-    "value": "0.206",
+    "value": "0.183",
     "meaning": "range of mean AUROC across the operators at before_attention_norm, matched rule",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -409,7 +429,7 @@
     ]
   },
   "OperatorRangeAttentionNormMasksMatched": {
-    "value": "0.094",
+    "value": "0.106",
     "meaning": "range of mean AUROC across the 2 masking operators at before_attention_norm, matched rule",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -419,7 +439,7 @@
     ]
   },
   "PositionOverOperatorRatioMatched": {
-    "value": "0.53",
+    "value": "0.56",
     "meaning": "position range over operator range at matched rule, gaussian included",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -429,7 +449,7 @@
     ]
   },
   "PositionOverOperatorRatioMasksMatched": {
-    "value": "1.16",
+    "value": "0.96",
     "meaning": "position range over operator range at matched rule, masking operators only",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -439,7 +459,7 @@
     ]
   },
   "PositionRangeTokenMaskAdaptive": {
-    "value": "0.167",
+    "value": "0.166",
     "meaning": "range of mean AUROC across the all-blocks token_mask positions, adaptive rule",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -449,7 +469,7 @@
     ]
   },
   "OperatorRangeAttentionNormAdaptive": {
-    "value": "0.139",
+    "value": "0.123",
     "meaning": "range of mean AUROC across the operators at before_attention_norm, adaptive rule",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -459,7 +479,7 @@
     ]
   },
   "OperatorRangeAttentionNormMasksAdaptive": {
-    "value": "0.055",
+    "value": "0.068",
     "meaning": "range of mean AUROC across the 2 masking operators at before_attention_norm, adaptive rule",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -469,7 +489,7 @@
     ]
   },
   "PositionOverOperatorRatioAdaptive": {
-    "value": "1.19",
+    "value": "1.35",
     "meaning": "position range over operator range at adaptive rule, gaussian included",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -479,7 +499,7 @@
     ]
   },
   "PositionOverOperatorRatioMasksAdaptive": {
-    "value": "3.02",
+    "value": "2.44",
     "meaning": "position range over operator range at adaptive rule, masking operators only",
     "generator": "scripts/paper/app_basis.py",
     "inputs": [
@@ -498,7 +518,7 @@
     ]
   },
   "SigGtsrbRuns": {
-    "value": "15",
+    "value": "18",
     "meaning": "GTSRB SIG runs at the tagged target class",
     "generator": "scripts/paper/tab_clean_label.py",
     "inputs": [
@@ -579,7 +599,7 @@
     ]
   },
   "GtsrbDivergedRuns": {
-    "value": "12",
+    "value": "11",
     "meaning": "ViT GTSRB training runs whose clean accuracy collapsed below half the benign reference",
     "generator": "scripts/paper/tab_clean_label.py",
     "inputs": [
@@ -588,7 +608,7 @@
     ]
   },
   "GtsrbRunsScored": {
-    "value": "186",
+    "value": "240",
     "meaning": "ViT GTSRB training runs with a recorded clean accuracy",
     "generator": "scripts/paper/tab_clean_label.py",
     "inputs": [
@@ -717,9 +737,9 @@
       "/lustre/home/pstika/projects/PSBD-ViT/results/psu_vs_confidence.json"
     ]
   },
-  "CostPlainMsVit": {
-    "value": "2.196",
-    "meaning": "ViT-B/16 milliseconds per input, 1 plain unperturbed forward pass",
+  "CostPlainSecondsVit": {
+    "value": "0.0022",
+    "meaning": "ViT-B/16 seconds per input, 1 plain unperturbed forward pass",
     "generator": "scripts/paper/tab_cost.py",
     "inputs": [
       "results/_experiments/psbd_cost/cost.json"
@@ -749,9 +769,9 @@
       "results/_experiments/psbd_cost/cost.json"
     ]
   },
-  "CostPlainMsSwin": {
-    "value": "1.677",
-    "meaning": "Swin-S milliseconds per input, 1 plain unperturbed forward pass",
+  "CostPlainSecondsSwin": {
+    "value": "0.0017",
+    "meaning": "Swin-S seconds per input, 1 plain unperturbed forward pass",
     "generator": "scripts/paper/tab_cost.py",
     "inputs": [
       "results/_experiments/psbd_cost/cost.json"
@@ -782,8 +802,8 @@
     ]
   },
   "BandFiveEightMinusAllInputSide": {
-    "value": "-0.063",
-    "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_5_8_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 65 cells it covers",
+    "value": "-0.055",
+    "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_5_8_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -791,7 +811,7 @@
     ]
   },
   "BandFiveEightMinusAllInputSideLow": {
-    "value": "-0.100",
+    "value": "-0.089",
     "meaning": "lower bound of the 95% bootstrap interval on band_5_8_minus_all_input_side",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -800,7 +820,7 @@
     ]
   },
   "BandFiveEightMinusAllInputSideHigh": {
-    "value": "-0.031",
+    "value": "-0.026",
     "meaning": "upper bound of the 95% bootstrap interval on band_5_8_minus_all_input_side",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -809,8 +829,8 @@
     ]
   },
   "BandNineOneTwoMinusAllInputSide": {
-    "value": "-0.062",
-    "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_9_12_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 65 cells it covers",
+    "value": "-0.077",
+    "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_9_12_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -818,7 +838,7 @@
     ]
   },
   "BandNineOneTwoMinusAllInputSideLow": {
-    "value": "-0.108",
+    "value": "-0.125",
     "meaning": "lower bound of the 95% bootstrap interval on band_9_12_minus_all_input_side",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -827,7 +847,7 @@
     ]
   },
   "BandNineOneTwoMinusAllInputSideHigh": {
-    "value": "-0.021",
+    "value": "-0.034",
     "meaning": "upper bound of the 95% bootstrap interval on band_9_12_minus_all_input_side",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -836,8 +856,8 @@
     ]
   },
   "BandOneFourMinusAllResidual": {
-    "value": "-0.062",
-    "meaning": "mean paired AUROC delta, `pre_residual_blocks_1_4` minus `pre_residual`, at the matched 0.6 rate, over the 65 cells it covers",
+    "value": "-0.060",
+    "meaning": "mean paired AUROC delta, `pre_residual_blocks_1_4` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -845,7 +865,7 @@
     ]
   },
   "BandOneFourMinusAllResidualLow": {
-    "value": "-0.081",
+    "value": "-0.079",
     "meaning": "lower bound of the 95% bootstrap interval on band_1_4_minus_all_residual",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -854,7 +874,7 @@
     ]
   },
   "BandOneFourMinusAllResidualHigh": {
-    "value": "-0.042",
+    "value": "-0.041",
     "meaning": "upper bound of the 95% bootstrap interval on band_1_4_minus_all_residual",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -863,8 +883,8 @@
     ]
   },
   "BandFiveEightMinusAllResidual": {
-    "value": "+0.052",
-    "meaning": "mean paired AUROC delta, `pre_residual_blocks_5_8` minus `pre_residual`, at the matched 0.6 rate, over the 65 cells it covers",
+    "value": "+0.043",
+    "meaning": "mean paired AUROC delta, `pre_residual_blocks_5_8` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -872,7 +892,7 @@
     ]
   },
   "BandFiveEightMinusAllResidualLow": {
-    "value": "+0.027",
+    "value": "+0.018",
     "meaning": "lower bound of the 95% bootstrap interval on band_5_8_minus_all_residual",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -881,7 +901,7 @@
     ]
   },
   "BandFiveEightMinusAllResidualHigh": {
-    "value": "+0.079",
+    "value": "+0.071",
     "meaning": "upper bound of the 95% bootstrap interval on band_5_8_minus_all_residual",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -890,8 +910,8 @@
     ]
   },
   "BandNineOneTwoMinusAllResidual": {
-    "value": "+0.033",
-    "meaning": "mean paired AUROC delta, `pre_residual_blocks_9_12` minus `pre_residual`, at the matched 0.6 rate, over the 65 cells it covers",
+    "value": "+0.014",
+    "meaning": "mean paired AUROC delta, `pre_residual_blocks_9_12` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -899,7 +919,7 @@
     ]
   },
   "BandNineOneTwoMinusAllResidualLow": {
-    "value": "-0.012",
+    "value": "-0.030",
     "meaning": "lower bound of the 95% bootstrap interval on band_9_12_minus_all_residual",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -908,7 +928,7 @@
     ]
   },
   "BandNineOneTwoMinusAllResidualHigh": {
-    "value": "+0.076",
+    "value": "+0.056",
     "meaning": "upper bound of the 95% bootstrap interval on band_9_12_minus_all_residual",
     "generator": "scripts/paper/tab_depth_bands.py",
     "inputs": [
@@ -1225,8 +1245,8 @@
     ]
   },
   "FamilyGapMatched": {
-    "value": "+0.005",
-    "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the matched 0.6 rate, over the 65 cells it covers",
+    "value": "+0.016",
+    "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1235,7 +1255,7 @@
     ]
   },
   "FamilyGapMatchedLow": {
-    "value": "-0.010",
+    "value": "-0.001",
     "meaning": "lower bound of the 95% bootstrap interval on family_gap_matched",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1245,7 +1265,7 @@
     ]
   },
   "FamilyGapMatchedHigh": {
-    "value": "+0.023",
+    "value": "+0.036",
     "meaning": "upper bound of the 95% bootstrap interval on family_gap_matched",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1255,8 +1275,8 @@
     ]
   },
   "FamilyGapAdaptive": {
-    "value": "+0.033",
-    "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the adaptive 0.8 rate, over the 65 cells it covers",
+    "value": "+0.045",
+    "meaning": "mean paired AUROC gap, input-side minus residual-adjacent, token_mask at every position, at the adaptive 0.8 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1265,7 +1285,7 @@
     ]
   },
   "FamilyGapAdaptiveLow": {
-    "value": "+0.006",
+    "value": "+0.016",
     "meaning": "lower bound of the 95% bootstrap interval on family_gap_adaptive",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1275,7 +1295,7 @@
     ]
   },
   "FamilyGapAdaptiveHigh": {
-    "value": "+0.063",
+    "value": "+0.075",
     "meaning": "upper bound of the 95% bootstrap interval on family_gap_adaptive",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1285,8 +1305,8 @@
     ]
   },
   "FamilyGapConfoundedMatched": {
-    "value": "-0.035",
-    "meaning": "mean paired AUROC gap under the basis file's operator-mixing family tags, at the matched 0.6 rate, over the 65 cells it covers",
+    "value": "-0.029",
+    "meaning": "mean paired AUROC gap under the basis file's operator-mixing family tags, at the matched 0.6 rate, over the 71 cells it covers",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1295,7 +1315,7 @@
     ]
   },
   "FamilyGapConfoundedMatchedLow": {
-    "value": "-0.053",
+    "value": "-0.047",
     "meaning": "lower bound of the 95% bootstrap interval on family_gap_confounded_matched",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1305,7 +1325,7 @@
     ]
   },
   "FamilyGapConfoundedMatchedHigh": {
-    "value": "-0.017",
+    "value": "-0.010",
     "meaning": "upper bound of the 95% bootstrap interval on family_gap_confounded_matched",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1345,8 +1365,8 @@
     ]
   },
   "FamilyGapGlobal": {
-    "value": "+0.013",
-    "meaning": "mean paired token_mask family gap at the matched 0.6 rate, global-trigger cells only, over the 42 cells it covers",
+    "value": "+0.029",
+    "meaning": "mean paired token_mask family gap at the matched 0.6 rate, global-trigger cells only, over the 48 cells it covers",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1355,7 +1375,7 @@
     ]
   },
   "FamilyGapGlobalLow": {
-    "value": "-0.006",
+    "value": "+0.007",
     "meaning": "lower bound of the 95% bootstrap interval on family_gap_global",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1365,7 +1385,7 @@
     ]
   },
   "FamilyGapGlobalHigh": {
-    "value": "+0.036",
+    "value": "+0.053",
     "meaning": "upper bound of the 95% bootstrap interval on family_gap_global",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1375,7 +1395,7 @@
     ]
   },
   "FamilyGapMinLeaveOneAttackOut": {
-    "value": "+0.000",
+    "value": "+0.006",
     "meaning": "smallest mean matched-06 token_mask family gap over the leave-one-attack-out refits, the weakest the gap gets when any single attack is removed",
     "generator": "scripts/paper/tab_family_split.py",
     "inputs": [
@@ -1385,8 +1405,8 @@
     ]
   },
   "HeadlineAurocAdaptive": {
-    "value": "0.935",
-    "meaning": "mean AUROC of the recommended placement at the adaptive rule, over the 65 cells it covers of the 65-cell panel",
+    "value": "0.927",
+    "meaning": "mean AUROC of the recommended placement at the adaptive rule, over the 69 cells it covers of the 65-cell panel",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1394,8 +1414,8 @@
     ]
   },
   "HeadlineAurocMatched": {
-    "value": "0.926",
-    "meaning": "mean AUROC of the recommended placement at the matched 0.6 rule, over the 65 cells it covers of the 65-cell panel",
+    "value": "0.921",
+    "meaning": "mean AUROC of the recommended placement at the matched 0.6 rule, over the 71 cells it covers of the 65-cell panel",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1403,8 +1423,8 @@
     ]
   },
   "PublishedAurocAdaptive": {
-    "value": "0.832",
-    "meaning": "mean AUROC of the published placement at the adaptive rule, over the 65 cells it covers of the 65-cell panel",
+    "value": "0.818",
+    "meaning": "mean AUROC of the published placement at the adaptive rule, over the 71 cells it covers of the 65-cell panel",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1412,7 +1432,7 @@
     ]
   },
   "HeadlineGainAdaptiveAuroc": {
-    "value": "+0.103",
+    "value": "+0.104",
     "meaning": "mean AUROC gain of the recommended placement over the published placement, both at the adaptive rule, paired over the 65-cell panel",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
@@ -1421,7 +1441,7 @@
     ]
   },
   "HeadlineGainAdaptiveAurocLow": {
-    "value": "+0.048",
+    "value": "+0.052",
     "meaning": "lower bound of the 95% bootstrap interval on headline_gain_adaptive_auroc",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
@@ -1430,7 +1450,7 @@
     ]
   },
   "HeadlineGainAdaptiveAurocHigh": {
-    "value": "+0.160",
+    "value": "+0.158",
     "meaning": "upper bound of the 95% bootstrap interval on headline_gain_adaptive_auroc",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
@@ -1439,7 +1459,7 @@
     ]
   },
   "HeadlineGainMatchedAuroc": {
-    "value": "+0.094",
+    "value": "+0.103",
     "meaning": "mean AUROC gain of the recommended placement at the matched 0.6 rule over the published placement at the adaptive rule, paired over the 65-cell panel",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
@@ -1448,8 +1468,8 @@
     ]
   },
   "HeadlineTprAtOnePercent": {
-    "value": "0.629",
-    "meaning": "mean TPR of the recommended placement at the adaptive rule, at the 1% FPR budget, over the 65 cells it covers",
+    "value": "0.602",
+    "meaning": "mean TPR of the recommended placement at the adaptive rule, at the 1% FPR budget, over the 69 cells it covers",
     "generator": "scripts/paper/tab_headline.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1502,7 +1522,7 @@
     ]
   },
   "PanelCellsCached": {
-    "value": "65",
+    "value": "69",
     "meaning": "clearing cells whose sweep has landed and that carry the recommended placement",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1520,7 +1540,7 @@
     ]
   },
   "PanelCellsAwaitingSweep": {
-    "value": "6",
+    "value": "2",
     "meaning": "clearing cells whose PSBD sweep has not landed",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1529,7 +1549,7 @@
     ]
   },
   "PanelDatasetsCached": {
-    "value": "4",
+    "value": "6",
     "meaning": "datasets among the clearing cells whose sweep has landed",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1547,7 +1567,7 @@
     ]
   },
   "HeadlineGainMinLeaveOneAttackOutAdaptive": {
-    "value": "+0.046",
+    "value": "+0.051",
     "meaning": "smallest leave-one-attack-out refit of the adaptive-rule headline gain",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1556,7 +1576,7 @@
     ]
   },
   "HeadlineGainMinLeaveOneAttackOutAdaptiveLow": {
-    "value": "-0.004",
+    "value": "+0.005",
     "meaning": "lowest bootstrap lower bound over the adaptive-rule leave-one-attack-out refits",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1565,7 +1585,7 @@
     ]
   },
   "HeadlineGainMinLeaveOneAttackOutMatched": {
-    "value": "+0.049",
+    "value": "+0.046",
     "meaning": "smallest leave-one-attack-out refit of the matched-rule headline gain",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1574,7 +1594,7 @@
     ]
   },
   "HeadlineGainMinLeaveOneAttackOutMatchedLow": {
-    "value": "+0.005",
+    "value": "+0.006",
     "meaning": "lowest bootstrap lower bound over the matched-rule leave-one-attack-out refits",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1583,7 +1603,7 @@
     ]
   },
   "PreMinusPostMatched": {
-    "value": "+0.009",
+    "value": "+0.010",
     "meaning": "pre_residual minus post_residual dropout, matched rule, paired over the basis panel",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1592,7 +1612,7 @@
     ]
   },
   "PreMinusPostMatchedLow": {
-    "value": "-0.028",
+    "value": "-0.024",
     "meaning": "lower bootstrap bound of pre_minus_post_matched",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1601,7 +1621,7 @@
     ]
   },
   "PreMinusPostMatchedHigh": {
-    "value": "+0.047",
+    "value": "+0.045",
     "meaning": "upper bootstrap bound of pre_minus_post_matched",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1610,7 +1630,7 @@
     ]
   },
   "PreMinusPostAdaptive": {
-    "value": "+0.001",
+    "value": "+0.012",
     "meaning": "pre_residual minus post_residual dropout, adaptive rule, paired over the basis panel",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1619,7 +1639,7 @@
     ]
   },
   "PreMinusPostAdaptiveLow": {
-    "value": "-0.027",
+    "value": "-0.016",
     "meaning": "lower bootstrap bound of pre_minus_post_adaptive",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1628,7 +1648,7 @@
     ]
   },
   "PreMinusPostAdaptiveHigh": {
-    "value": "+0.027",
+    "value": "+0.040",
     "meaning": "upper bootstrap bound of pre_minus_post_adaptive",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1637,7 +1657,7 @@
     ]
   },
   "PreMinusPostN": {
-    "value": "65",
+    "value": "69",
     "meaning": "cells behind the pre against post comparison",
     "generator": "scripts/paper/tab_headline_checks.py",
     "inputs": [
@@ -1670,7 +1690,7 @@
     ]
   },
   "HypothesisPartial": {
-    "value": "4",
+    "value": "5",
     "meaning": "hypotheses whose leading verdict is partial",
     "generator": "scripts/paper/app_hypothesis_ledger.py",
     "inputs": [
@@ -1686,7 +1706,7 @@
     ]
   },
   "AgreementWithinInputSideClean": {
-    "value": "0.507",
+    "value": "0.472",
     "meaning": "B1: mean clean-split PSU Spearman rho within the input-side family, 55 placement pairs",
     "generator": "scripts/paper/mech_operator_agreement.py",
     "inputs": [
@@ -1694,24 +1714,24 @@
     ]
   },
   "AgreementAcrossFamiliesClean": {
-    "value": "0.501",
-    "meaning": "B1: mean clean-split PSU Spearman rho between input-side and residual-adjacent placements, 55 placement pairs",
+    "value": "0.509",
+    "meaning": "B1: mean clean-split PSU Spearman rho between input-side and residual-adjacent placements, 77 placement pairs",
     "generator": "scripts/paper/mech_operator_agreement.py",
     "inputs": [
       "results/<folder>/psbd/<placement>/rate_*_{clean,backdoor}.pt"
     ]
   },
   "AgreementGainScaleVsRecommendedClean": {
-    "value": "0.385",
-    "meaning": "B1: clean-split PSU Spearman rho, mlp_norm_out_gain_scale vs the recommended placement, n=65 cells",
+    "value": "0.384",
+    "meaning": "B1: clean-split PSU Spearman rho, mlp_norm_out_gain_scale vs the recommended placement, n=71 cells",
     "generator": "scripts/paper/mech_operator_agreement.py",
     "inputs": [
       "results/<folder>/psbd/<placement>/rate_*_{clean,backdoor}.pt"
     ]
   },
   "AgreementGaussianVsTokenMaskClean": {
-    "value": "0.370",
-    "meaning": "B1: clean-split PSU Spearman rho, before_attention_norm_gaussian vs before_attention_norm_token_mask, same position different operator, n=65 cells",
+    "value": "0.396",
+    "meaning": "B1: clean-split PSU Spearman rho, before_attention_norm_gaussian vs before_attention_norm_token_mask, same position different operator, n=71 cells",
     "generator": "scripts/paper/mech_operator_agreement.py",
     "inputs": [
       "results/<folder>/psbd/<placement>/rate_*_{clean,backdoor}.pt"
@@ -1750,8 +1770,8 @@
     ]
   },
   "GaussianMinusTokenMaskAttentionNorm": {
-    "value": "-0.206",
-    "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus token_mask at before_attention_norm, over the 65 cells it covers of the 65-cell panel",
+    "value": "-0.183",
+    "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus token_mask at before_attention_norm, over the 71 cells it covers of the 65-cell panel",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1759,7 +1779,7 @@
     ]
   },
   "GaussianMinusTokenMaskAttentionNormLow": {
-    "value": "-0.259",
+    "value": "-0.234",
     "meaning": "lower bound of the 95% bootstrap interval on gaussian_minus_token_mask_attention_norm",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -1768,7 +1788,7 @@
     ]
   },
   "GaussianMinusTokenMaskAttentionNormHigh": {
-    "value": "-0.156",
+    "value": "-0.133",
     "meaning": "upper bound of the 95% bootstrap interval on gaussian_minus_token_mask_attention_norm",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -1777,8 +1797,8 @@
     ]
   },
   "GaussianMinusChannelMaskAttentionNorm": {
-    "value": "-0.113",
-    "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus channel_mask at before_attention_norm, over the 65 cells it covers of the 65-cell panel",
+    "value": "-0.103",
+    "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus channel_mask at before_attention_norm, over the 71 cells it covers of the 65-cell panel",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1786,7 +1806,7 @@
     ]
   },
   "GaussianMinusChannelMaskAttentionNormLow": {
-    "value": "-0.151",
+    "value": "-0.137",
     "meaning": "lower bound of the 95% bootstrap interval on gaussian_minus_channel_mask_attention_norm",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -1795,7 +1815,7 @@
     ]
   },
   "GaussianMinusChannelMaskAttentionNormHigh": {
-    "value": "-0.078",
+    "value": "-0.070",
     "meaning": "upper bound of the 95% bootstrap interval on gaussian_minus_channel_mask_attention_norm",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -1804,8 +1824,8 @@
     ]
   },
   "GaussianMinusTokenMaskMlp": {
-    "value": "+0.056",
-    "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus token_mask at before_mlp, over the 65 cells it covers of the 65-cell panel",
+    "value": "+0.057",
+    "meaning": "mean paired AUROC delta at the matched 0.6 rate, A2: gaussian minus token_mask at before_mlp, over the 71 cells it covers of the 65-cell panel",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1813,7 +1833,7 @@
     ]
   },
   "GaussianMinusTokenMaskMlpLow": {
-    "value": "+0.026",
+    "value": "+0.027",
     "meaning": "lower bound of the 95% bootstrap interval on gaussian_minus_token_mask_mlp",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -1822,7 +1842,7 @@
     ]
   },
   "GaussianMinusTokenMaskMlpHigh": {
-    "value": "+0.087",
+    "value": "+0.088",
     "meaning": "upper bound of the 95% bootstrap interval on gaussian_minus_token_mask_mlp",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -1831,8 +1851,8 @@
     ]
   },
   "AttentionInputMinusMlpInputTokenMask": {
-    "value": "+0.109",
-    "meaning": "mean paired AUROC delta at the matched 0.6 rate, C1: before_attention_norm minus before_mlp_norm, both token_mask, over the 65 cells it covers of the 65-cell panel",
+    "value": "+0.102",
+    "meaning": "mean paired AUROC delta at the matched 0.6 rate, C1: before_attention_norm minus before_mlp_norm, both token_mask, over the 71 cells it covers of the 65-cell panel",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -1840,7 +1860,7 @@
     ]
   },
   "AttentionInputMinusMlpInputTokenMaskLow": {
-    "value": "+0.079",
+    "value": "+0.074",
     "meaning": "lower bound of the 95% bootstrap interval on attention_input_minus_mlp_input_token_mask",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -1849,7 +1869,7 @@
     ]
   },
   "AttentionInputMinusMlpInputTokenMaskHigh": {
-    "value": "+0.138",
+    "value": "+0.133",
     "meaning": "upper bound of the 95% bootstrap interval on attention_input_minus_mlp_input_token_mask",
     "generator": "scripts/paper/tab_operators.py",
     "inputs": [
@@ -1997,6 +2017,54 @@
       "results/coverage/coverage.json",
       "results/<folder>/prediction_depth.json (65 cells)",
       "results/<folder>/psbd_metrics.json"
+    ]
+  },
+  "ProbeUnionNModels": {
+    "value": "65",
+    "meaning": "backdoored ViT-B/16 models the probe-union check reads, the models with both headline placements",
+    "generator": "scripts/paper/tab_probe_union.py",
+    "inputs": [
+      "results/_experiments/probe_union/probe_union.json"
+    ]
+  },
+  "ProbeUnionPsbdTmAuroc": {
+    "value": "0.935",
+    "meaning": "mean AUROC of PSBD-TM alone over the models the probe-union check reads",
+    "generator": "scripts/paper/tab_probe_union.py",
+    "inputs": [
+      "results/_experiments/probe_union/probe_union.json"
+    ]
+  },
+  "ProbeUnionTmRdGain": {
+    "value": "+0.006",
+    "meaning": "paired AUROC gain of the PSBD-TM + PSBD-RD union over PSBD-TM alone",
+    "generator": "scripts/paper/tab_probe_union.py",
+    "inputs": [
+      "results/_experiments/probe_union/probe_union.json"
+    ]
+  },
+  "ProbeUnionTmRdGainCi": {
+    "value": "[-0.016, +0.032]",
+    "meaning": "95% bootstrap interval of that gain",
+    "generator": "scripts/paper/tab_probe_union.py",
+    "inputs": [
+      "results/_experiments/probe_union/probe_union.json"
+    ]
+  },
+  "ProbeUnionWanetCifarOneZeroTm": {
+    "value": "0.459",
+    "meaning": "PSBD-TM alone on WaNet at 10% on CIFAR-10, the inverted cell the headline names",
+    "generator": "scripts/paper/tab_probe_union.py",
+    "inputs": [
+      "results/_experiments/probe_union/probe_union.json"
+    ]
+  },
+  "ProbeUnionWanetCifarOneZeroTmRd": {
+    "value": "0.910",
+    "meaning": "PSBD-TM + PSBD-RD union on the same cell",
+    "generator": "scripts/paper/tab_probe_union.py",
+    "inputs": [
+      "results/_experiments/probe_union/probe_union.json"
     ]
   },
   "AdaptiveShiftTarget": {
@@ -2238,7 +2306,7 @@
     ]
   },
   "BasisSize": {
-    "value": "24",
+    "value": "27",
     "meaning": "placements the basis declares for every panel cell",
     "generator": "scripts/paper/app_protocol.py",
     "inputs": [
@@ -2848,7 +2916,7 @@
     ]
   },
   "ResultsMissingSweep": {
-    "value": "6",
+    "value": "0",
     "meaning": "checkpoints that cleared the ASR bar but have no psbd_metrics.json yet, printed as pending across the 3 rate tables",
     "generator": "scripts/paper/tab_results_by_rate.py",
     "inputs": [
@@ -2857,7 +2925,7 @@
     ]
   },
   "ResultsPartialMissing": {
-    "value": "0",
+    "value": "2",
     "meaning": "checkpoint, placement pairs where the sweep exists but the token-mask or the post-residual dropout placement has no reading yet",
     "generator": "scripts/paper/tab_results_by_rate.py",
     "inputs": [
@@ -3056,14 +3124,14 @@
   },
   "SamPairs": {
     "value": "120",
-    "meaning": "matched architecture, dataset, attack and poison-rate cells with both an Adam and a SAM checkpoint, badnet_a2a excluded",
+    "meaning": "matched architecture, dataset, attack and poison-rate combinations with both an Adam and a SAM checkpoint, badnet_a2a excluded",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
       "results/_experiments/sam_reading/sam_reading.json"
     ]
   },
   "SamAdamReferenceAurocTokenMask": {
-    "value": "0.940",
+    "value": "0.968",
     "meaning": "mean AUROC of the token-mask placement at the attention input on the Adam checkpoints in the matched grid",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
@@ -3078,32 +3146,32 @@
       "results/_experiments/sam_reading/sam_reading.json"
     ]
   },
-  "SamBestRhoTokenMaskDelta": {
-    "value": "+0.012",
-    "meaning": "largest paired AUROC gain of the token-mask placement, SAM minus Adam, over any rho, reached at rho 0.1, n=51",
+  "SamMaxRhoTokenMaskDelta": {
+    "value": "+0.035",
+    "meaning": "highest paired AUROC delta of the token-mask placement, SAM minus Adam, over any rho, reached at rho 0.1, n=24",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
       "results/_experiments/sam_reading/sam_reading.json"
     ]
   },
-  "SamWorstRhoTokenMaskDelta": {
-    "value": "-0.010",
-    "meaning": "largest paired AUROC loss of the token-mask placement, SAM minus Adam, over any rho, reached at rho 0.15, n=54",
+  "SamMinRhoTokenMaskDelta": {
+    "value": "+0.010",
+    "meaning": "lowest paired AUROC delta of the token-mask placement, SAM minus Adam, over any rho, reached at rho 0.15, n=24",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
       "results/_experiments/sam_reading/sam_reading.json"
     ]
   },
   "SamRhoZeroZeroFiveTokenMaskDelta": {
-    "value": "+0.009",
-    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.05 minus Adam, over the 54 cells both sides swept",
+    "value": "+0.034",
+    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.05 minus Adam, over the 24 combinations both sides swept",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
       "results/_experiments/sam_reading/sam_reading.json"
     ]
   },
   "SamRhoZeroZeroFiveTokenMaskDeltaCi": {
-    "value": "[-0.012, +0.035]",
+    "value": "[-0.000, +0.082]",
     "meaning": "95% bootstrap interval on sam_rho_0_05_token_mask_delta",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
@@ -3111,23 +3179,23 @@
     ]
   },
   "SamRhoZeroZeroFiveResidualDropoutDelta": {
-    "value": "-0.024",
-    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.05 minus Adam, over the 45 cells both sides swept",
+    "value": "-0.041",
+    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.05 minus Adam, over the 24 combinations both sides swept",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
       "results/_experiments/sam_reading/sam_reading.json"
     ]
   },
   "SamRhoZeroOneTokenMaskDelta": {
-    "value": "+0.012",
-    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.1 minus Adam, over the 51 cells both sides swept",
+    "value": "+0.035",
+    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.1 minus Adam, over the 24 combinations both sides swept",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
       "results/_experiments/sam_reading/sam_reading.json"
     ]
   },
   "SamRhoZeroOneTokenMaskDeltaCi": {
-    "value": "[-0.009, +0.037]",
+    "value": "[+0.002, +0.079]",
     "meaning": "95% bootstrap interval on sam_rho_0_1_token_mask_delta",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
@@ -3135,23 +3203,23 @@
     ]
   },
   "SamRhoZeroOneResidualDropoutDelta": {
-    "value": "-0.014",
-    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.1 minus Adam, over the 47 cells both sides swept",
+    "value": "+0.004",
+    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.1 minus Adam, over the 24 combinations both sides swept",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
       "results/_experiments/sam_reading/sam_reading.json"
     ]
   },
   "SamRhoZeroOneFiveTokenMaskDelta": {
-    "value": "-0.010",
-    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.15 minus Adam, over the 54 cells both sides swept",
+    "value": "+0.010",
+    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.15 minus Adam, over the 24 combinations both sides swept",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
       "results/_experiments/sam_reading/sam_reading.json"
     ]
   },
   "SamRhoZeroOneFiveTokenMaskDeltaCi": {
-    "value": "[-0.033, +0.015]",
+    "value": "[-0.032, +0.058]",
     "meaning": "95% bootstrap interval on sam_rho_0_15_token_mask_delta",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
@@ -3159,23 +3227,23 @@
     ]
   },
   "SamRhoZeroOneFiveResidualDropoutDelta": {
-    "value": "-0.064",
-    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.15 minus Adam, over the 46 cells both sides swept",
+    "value": "-0.074",
+    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.15 minus Adam, over the 24 combinations both sides swept",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
       "results/_experiments/sam_reading/sam_reading.json"
     ]
   },
   "SamRhoZeroTwoTokenMaskDelta": {
-    "value": "-0.008",
-    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.2 minus Adam, over the 48 cells both sides swept",
+    "value": "+0.023",
+    "meaning": "mean paired AUROC delta of the token-mask placement, SAM rho 0.2 minus Adam, over the 24 combinations both sides swept",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
       "results/_experiments/sam_reading/sam_reading.json"
     ]
   },
   "SamRhoZeroTwoTokenMaskDeltaCi": {
-    "value": "[-0.039, +0.025]",
+    "value": "[-0.024, +0.076]",
     "meaning": "95% bootstrap interval on sam_rho_0_2_token_mask_delta",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
@@ -3183,11 +3251,227 @@
     ]
   },
   "SamRhoZeroTwoResidualDropoutDelta": {
-    "value": "-0.072",
-    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.2 minus Adam, over the 45 cells both sides swept",
+    "value": "-0.069",
+    "meaning": "mean paired AUROC delta of the dropout placement after the residual add, SAM rho 0.2 minus Adam, over the 24 combinations both sides swept",
     "generator": "scripts/paper/tab_sam.py",
     "inputs": [
       "results/_experiments/sam_reading/sam_reading.json"
+    ]
+  },
+  "SamLowRateAsrGate": {
+    "value": "0.850",
+    "meaning": "the attack-success rate below which either side of a pair is dropped from every SAM-versus-Adam comparison in this table",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamLowRateNExcludedAsrGate": {
+    "value": "1",
+    "meaning": "pairs dropped from the per-rate table because the Adam or the SAM checkpoint fell below the attack-success bar",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamLowRateCoverage": {
+    "value": "40/40",
+    "meaning": "matched (dataset, attack, architecture) combinations with both an Adam checkpoint and at least 1 SAM checkpoint, at 1% and 5% poisoning",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroOneRhoZeroZeroFiveTokenMaskDelta": {
+    "value": "-0.001",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 1% poisoning and rho 0.05, n=7",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroOneRhoZeroZeroFiveTokenMaskDeltaCi": {
+    "value": "[-0.035, +0.027]",
+    "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_05_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroOneRhoZeroOneTokenMaskDelta": {
+    "value": "+0.010",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 1% poisoning and rho 0.1, n=7",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroOneRhoZeroOneTokenMaskDeltaCi": {
+    "value": "[-0.018, +0.039]",
+    "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_1_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroOneRhoZeroOneFiveTokenMaskDelta": {
+    "value": "-0.036",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 1% poisoning and rho 0.15, n=7",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroOneRhoZeroOneFiveTokenMaskDeltaCi": {
+    "value": "[-0.125, +0.025]",
+    "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_15_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroOneRhoZeroTwoTokenMaskDelta": {
+    "value": "-0.052",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 1% poisoning and rho 0.2, n=7",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroOneRhoZeroTwoTokenMaskDeltaCi": {
+    "value": "[-0.132, +0.024]",
+    "meaning": "95% bootstrap interval on sam_rate_0_01_rho_0_2_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroFiveRhoZeroZeroFiveTokenMaskDelta": {
+    "value": "+0.029",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 5% poisoning and rho 0.05, n=8",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroFiveRhoZeroZeroFiveTokenMaskDeltaCi": {
+    "value": "[+0.002, +0.071]",
+    "meaning": "95% bootstrap interval on sam_rate_0_05_rho_0_05_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroFiveRhoZeroOneTokenMaskDelta": {
+    "value": "+0.019",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 5% poisoning and rho 0.1, n=8",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroFiveRhoZeroOneTokenMaskDeltaCi": {
+    "value": "[-0.024, +0.071]",
+    "meaning": "95% bootstrap interval on sam_rate_0_05_rho_0_1_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroFiveRhoZeroOneFiveTokenMaskDelta": {
+    "value": "-0.026",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 5% poisoning and rho 0.15, n=7",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroFiveRhoZeroOneFiveTokenMaskDeltaCi": {
+    "value": "[-0.073, +0.014]",
+    "meaning": "95% bootstrap interval on sam_rate_0_05_rho_0_15_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroFiveRhoZeroTwoTokenMaskDelta": {
+    "value": "+0.027",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 5% poisoning and rho 0.2, n=7",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroZeroFiveRhoZeroTwoTokenMaskDeltaCi": {
+    "value": "[-0.003, +0.073]",
+    "meaning": "95% bootstrap interval on sam_rate_0_05_rho_0_2_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroOneRhoZeroZeroFiveTokenMaskDelta": {
+    "value": "+0.069",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 10% poisoning and rho 0.05, n=8",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroOneRhoZeroZeroFiveTokenMaskDeltaCi": {
+    "value": "[-0.010, +0.199]",
+    "meaning": "95% bootstrap interval on sam_rate_0_1_rho_0_05_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroOneRhoZeroOneTokenMaskDelta": {
+    "value": "+0.070",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 10% poisoning and rho 0.1, n=9",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroOneRhoZeroOneTokenMaskDeltaCi": {
+    "value": "[+0.008, +0.173]",
+    "meaning": "95% bootstrap interval on sam_rate_0_1_rho_0_1_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroOneRhoZeroOneFiveTokenMaskDelta": {
+    "value": "+0.067",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 10% poisoning and rho 0.15, n=10",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroOneRhoZeroOneFiveTokenMaskDeltaCi": {
+    "value": "[+0.011, +0.151]",
+    "meaning": "95% bootstrap interval on sam_rate_0_1_rho_0_15_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroOneRhoZeroTwoTokenMaskDelta": {
+    "value": "+0.074",
+    "meaning": "mean paired token-mask AUROC delta, SAM minus Adam, at 10% poisoning and rho 0.2, n=10",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
+    ]
+  },
+  "SamRateZeroOneRhoZeroTwoTokenMaskDeltaCi": {
+    "value": "[+0.007, +0.178]",
+    "meaning": "95% bootstrap interval on sam_rate_0_1_rho_0_2_token_mask_delta",
+    "generator": "scripts/paper/tab_sam_low_rate.py",
+    "inputs": [
+      "results/_experiments/sam_low_rate/sam_low_rate.json"
     ]
   },
   "SeedsPerCell": {
@@ -3271,7 +3555,7 @@
     ]
   },
   "StaircaseResidualPostResidualN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, after both residual adds, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3280,8 +3564,8 @@
     ]
   },
   "StaircaseResidualPostResidualAuroc": {
-    "value": "0.832",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, after both residual adds, over the 65 models it covers, staircase residual table",
+    "value": "0.823",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, after both residual adds, over the 69 models it covers, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3289,7 +3573,7 @@
     ]
   },
   "StaircaseResidualPostResidualTprAtOneZeroPercent": {
-    "value": "0.658",
+    "value": "0.634",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, after both residual adds, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3298,7 +3582,7 @@
     ]
   },
   "StaircaseResidualPostResidualTprAtTwoZeroPercent": {
-    "value": "0.721",
+    "value": "0.703",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, after both residual adds, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3316,7 +3600,7 @@
     ]
   },
   "StaircaseResidualAfterAttentionResidualN": {
-    "value": "9",
+    "value": "65",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, after the attention add only, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3325,8 +3609,8 @@
     ]
   },
   "StaircaseResidualAfterAttentionResidualAuroc": {
-    "value": "0.816",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, after the attention add only, over the 9 models it covers, staircase residual table",
+    "value": "0.804",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, after the attention add only, over the 65 models it covers, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3334,7 +3618,7 @@
     ]
   },
   "StaircaseResidualAfterAttentionResidualTprAtOneZeroPercent": {
-    "value": "0.534",
+    "value": "0.605",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, after the attention add only, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3343,7 +3627,7 @@
     ]
   },
   "StaircaseResidualAfterAttentionResidualTprAtTwoZeroPercent": {
-    "value": "0.665",
+    "value": "0.693",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, after the attention add only, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3352,7 +3636,7 @@
     ]
   },
   "StaircaseResidualAfterAttentionResidualBelowChance": {
-    "value": "1",
+    "value": "10",
     "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, after the attention add only, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3361,8 +3645,8 @@
     ]
   },
   "StaircaseResidualAfterAttentionResidualGain": {
-    "value": "-0.017",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, after the attention add only against this table's first row, over the 9 models it covers, staircase residual table",
+    "value": "-0.028",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, after the attention add only against this table's first row, over the 65 models it covers, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3370,7 +3654,7 @@
     ]
   },
   "StaircaseResidualAfterAttentionResidualGainLow": {
-    "value": "-0.039",
+    "value": "-0.043",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_after_attention_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3379,7 +3663,7 @@
     ]
   },
   "StaircaseResidualAfterAttentionResidualGainHigh": {
-    "value": "+0.011",
+    "value": "-0.015",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_residual_after_attention_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3388,7 +3672,7 @@
     ]
   },
   "StaircaseResidualPreResidualN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, before both residual adds, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3397,8 +3681,8 @@
     ]
   },
   "StaircaseResidualPreResidualAuroc": {
-    "value": "0.833",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, over the 65 models it covers, staircase residual table",
+    "value": "0.836",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, over the 69 models it covers, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3406,7 +3690,7 @@
     ]
   },
   "StaircaseResidualPreResidualTprAtOneZeroPercent": {
-    "value": "0.632",
+    "value": "0.631",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, before both residual adds, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3415,7 +3699,7 @@
     ]
   },
   "StaircaseResidualPreResidualTprAtTwoZeroPercent": {
-    "value": "0.715",
+    "value": "0.719",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, before both residual adds, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3433,8 +3717,8 @@
     ]
   },
   "StaircaseResidualPreResidualGain": {
-    "value": "+0.001",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds against this table's first row, over the 65 models it covers, staircase residual table",
+    "value": "+0.012",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds against this table's first row, over the 69 models it covers, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3442,7 +3726,7 @@
     ]
   },
   "StaircaseResidualPreResidualGainLow": {
-    "value": "-0.027",
+    "value": "-0.016",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_pre_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3451,7 +3735,7 @@
     ]
   },
   "StaircaseResidualPreResidualGainHigh": {
-    "value": "+0.027",
+    "value": "+0.040",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_residual_pre_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3460,7 +3744,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksOneFourN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, before both residual adds, blocks 1 to 4, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3469,8 +3753,8 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksOneFourAuroc": {
-    "value": "0.798",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 1 to 4, over the 65 models it covers, staircase residual table",
+    "value": "0.802",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 1 to 4, over the 69 models it covers, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3478,7 +3762,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksOneFourTprAtOneZeroPercent": {
-    "value": "0.547",
+    "value": "0.548",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, before both residual adds, blocks 1 to 4, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3487,7 +3771,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksOneFourTprAtTwoZeroPercent": {
-    "value": "0.678",
+    "value": "0.681",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, before both residual adds, blocks 1 to 4, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3505,8 +3789,8 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksOneFourGain": {
-    "value": "-0.034",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 1 to 4 against this table's first row, over the 65 models it covers, staircase residual table",
+    "value": "-0.022",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 1 to 4 against this table's first row, over the 69 models it covers, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3514,7 +3798,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksOneFourGainLow": {
-    "value": "-0.077",
+    "value": "-0.064",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_pre_residual_blocks_1_4_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3523,7 +3807,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksOneFourGainHigh": {
-    "value": "+0.009",
+    "value": "+0.020",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_residual_pre_residual_blocks_1_4_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3532,7 +3816,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksFiveEightN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, before both residual adds, blocks 5 to 8, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3541,8 +3825,8 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksFiveEightAuroc": {
-    "value": "0.875",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 5 to 8, over the 65 models it covers, staircase residual table",
+    "value": "0.876",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 5 to 8, over the 69 models it covers, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3550,7 +3834,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksFiveEightTprAtOneZeroPercent": {
-    "value": "0.690",
+    "value": "0.687",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, before both residual adds, blocks 5 to 8, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3559,7 +3843,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksFiveEightTprAtTwoZeroPercent": {
-    "value": "0.749",
+    "value": "0.750",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, before both residual adds, blocks 5 to 8, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3577,8 +3861,8 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksFiveEightGain": {
-    "value": "+0.043",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 5 to 8 against this table's first row, over the 65 models it covers, staircase residual table",
+    "value": "+0.052",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, blocks 5 to 8 against this table's first row, over the 69 models it covers, staircase residual table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3586,7 +3870,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksFiveEightGainLow": {
-    "value": "+0.017",
+    "value": "+0.025",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_residual_pre_residual_blocks_5_8_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3595,7 +3879,7 @@
     ]
   },
   "StaircaseResidualPreResidualBlocksFiveEightGainHigh": {
-    "value": "+0.072",
+    "value": "+0.082",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_residual_pre_residual_blocks_5_8_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3676,7 +3960,7 @@
     ]
   },
   "StaircaseDropoutSitesPostResidualN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, after both residual adds, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3685,8 +3969,8 @@
     ]
   },
   "StaircaseDropoutSitesPostResidualAuroc": {
-    "value": "0.832",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, after both residual adds, over the 65 models it covers, staircase dropout_sites table",
+    "value": "0.823",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, after both residual adds, over the 69 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3694,7 +3978,7 @@
     ]
   },
   "StaircaseDropoutSitesPostResidualTprAtOneZeroPercent": {
-    "value": "0.658",
+    "value": "0.634",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, after both residual adds, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3703,7 +3987,7 @@
     ]
   },
   "StaircaseDropoutSitesPostResidualTprAtTwoZeroPercent": {
-    "value": "0.721",
+    "value": "0.703",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, after both residual adds, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3721,7 +4005,7 @@
     ]
   },
   "StaircaseDropoutSitesPreResidualN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, before both residual adds, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3730,8 +4014,8 @@
     ]
   },
   "StaircaseDropoutSitesPreResidualAuroc": {
-    "value": "0.833",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, over the 65 models it covers, staircase dropout_sites table",
+    "value": "0.836",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds, over the 69 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3739,7 +4023,7 @@
     ]
   },
   "StaircaseDropoutSitesPreResidualTprAtOneZeroPercent": {
-    "value": "0.632",
+    "value": "0.631",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, before both residual adds, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3748,7 +4032,7 @@
     ]
   },
   "StaircaseDropoutSitesPreResidualTprAtTwoZeroPercent": {
-    "value": "0.715",
+    "value": "0.719",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, before both residual adds, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3766,8 +4050,8 @@
     ]
   },
   "StaircaseDropoutSitesPreResidualGain": {
-    "value": "+0.001",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds against this table's first row, over the 65 models it covers, staircase dropout_sites table",
+    "value": "+0.012",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, before both residual adds against this table's first row, over the 69 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3775,7 +4059,7 @@
     ]
   },
   "StaircaseDropoutSitesPreResidualGainLow": {
-    "value": "-0.027",
+    "value": "-0.016",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_pre_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3784,7 +4068,7 @@
     ]
   },
   "StaircaseDropoutSitesPreResidualGainHigh": {
-    "value": "+0.027",
+    "value": "+0.040",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_dropout_sites_pre_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3793,7 +4077,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionNormN": {
-    "value": "37",
+    "value": "65",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, attention input, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3802,8 +4086,8 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionNormAuroc": {
-    "value": "0.925",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, attention input, over the 37 models it covers, staircase dropout_sites table",
+    "value": "0.859",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, attention input, over the 65 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3811,7 +4095,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionNormTprAtOneZeroPercent": {
-    "value": "0.792",
+    "value": "0.625",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, attention input, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3820,7 +4104,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionNormTprAtTwoZeroPercent": {
-    "value": "0.897",
+    "value": "0.732",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, attention input, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3829,7 +4113,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionNormBelowChance": {
-    "value": "0",
+    "value": "4",
     "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, attention input, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3838,8 +4122,8 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionNormGain": {
-    "value": "+0.039",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, attention input against this table's first row, over the 37 models it covers, staircase dropout_sites table",
+    "value": "+0.027",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, attention input against this table's first row, over the 65 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3847,7 +4131,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionNormGainLow": {
-    "value": "-0.000",
+    "value": "-0.016",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_before_attention_norm_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3856,7 +4140,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionNormGainHigh": {
-    "value": "+0.086",
+    "value": "+0.070",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_dropout_sites_before_attention_norm_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3865,7 +4149,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionN": {
-    "value": "9",
+    "value": "65",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, attention input after norm, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3874,8 +4158,8 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionAuroc": {
-    "value": "0.897",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, attention input after norm, over the 9 models it covers, staircase dropout_sites table",
+    "value": "0.811",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, attention input after norm, over the 65 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3883,7 +4167,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionTprAtOneZeroPercent": {
-    "value": "0.707",
+    "value": "0.580",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, attention input after norm, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3892,7 +4176,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionTprAtTwoZeroPercent": {
-    "value": "0.825",
+    "value": "0.696",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, attention input after norm, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3901,7 +4185,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionBelowChance": {
-    "value": "0",
+    "value": "7",
     "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, attention input after norm, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3910,8 +4194,8 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionGain": {
-    "value": "+0.064",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, attention input after norm against this table's first row, over the 9 models it covers, staircase dropout_sites table",
+    "value": "-0.021",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, attention input after norm against this table's first row, over the 65 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3919,7 +4203,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionGainLow": {
-    "value": "-0.018",
+    "value": "-0.066",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_before_attention_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3928,7 +4212,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeAttentionGainHigh": {
-    "value": "+0.157",
+    "value": "+0.025",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_dropout_sites_before_attention_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3937,7 +4221,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeMlpNormN": {
-    "value": "9",
+    "value": "65",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, MLP input, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3946,8 +4230,8 @@
     ]
   },
   "StaircaseDropoutSitesBeforeMlpNormAuroc": {
-    "value": "0.812",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, MLP input, over the 9 models it covers, staircase dropout_sites table",
+    "value": "0.759",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, MLP input, over the 65 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3955,7 +4239,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeMlpNormTprAtOneZeroPercent": {
-    "value": "0.507",
+    "value": "0.514",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, MLP input, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3964,7 +4248,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeMlpNormTprAtTwoZeroPercent": {
-    "value": "0.641",
+    "value": "0.633",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, MLP input, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3973,7 +4257,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeMlpNormBelowChance": {
-    "value": "1",
+    "value": "12",
     "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, MLP input, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -3982,8 +4266,8 @@
     ]
   },
   "StaircaseDropoutSitesBeforeMlpNormGain": {
-    "value": "-0.022",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, MLP input against this table's first row, over the 9 models it covers, staircase dropout_sites table",
+    "value": "-0.073",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, MLP input against this table's first row, over the 65 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -3991,7 +4275,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeMlpNormGainLow": {
-    "value": "-0.053",
+    "value": "-0.111",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_before_mlp_norm_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4000,7 +4284,7 @@
     ]
   },
   "StaircaseDropoutSitesBeforeMlpNormGainHigh": {
-    "value": "+0.019",
+    "value": "-0.038",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_dropout_sites_before_mlp_norm_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4009,7 +4293,7 @@
     ]
   },
   "StaircaseDropoutSitesAfterEmbeddingN": {
-    "value": "9",
+    "value": "65",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, embedding output, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4018,8 +4302,8 @@
     ]
   },
   "StaircaseDropoutSitesAfterEmbeddingAuroc": {
-    "value": "0.873",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, embedding output, over the 9 models it covers, staircase dropout_sites table",
+    "value": "0.810",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, embedding output, over the 65 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4027,7 +4311,7 @@
     ]
   },
   "StaircaseDropoutSitesAfterEmbeddingTprAtOneZeroPercent": {
-    "value": "0.645",
+    "value": "0.521",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, embedding output, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4036,7 +4320,7 @@
     ]
   },
   "StaircaseDropoutSitesAfterEmbeddingTprAtTwoZeroPercent": {
-    "value": "0.732",
+    "value": "0.666",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, embedding output, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4045,7 +4329,7 @@
     ]
   },
   "StaircaseDropoutSitesAfterEmbeddingBelowChance": {
-    "value": "0",
+    "value": "5",
     "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, embedding output, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4054,8 +4338,8 @@
     ]
   },
   "StaircaseDropoutSitesAfterEmbeddingGain": {
-    "value": "+0.039",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, embedding output against this table's first row, over the 9 models it covers, staircase dropout_sites table",
+    "value": "-0.022",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, embedding output against this table's first row, over the 65 models it covers, staircase dropout_sites table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4063,7 +4347,7 @@
     ]
   },
   "StaircaseDropoutSitesAfterEmbeddingGainLow": {
-    "value": "-0.027",
+    "value": "-0.054",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_dropout_sites_after_embedding_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4072,7 +4356,7 @@
     ]
   },
   "StaircaseDropoutSitesAfterEmbeddingGainHigh": {
-    "value": "+0.119",
+    "value": "+0.014",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_dropout_sites_after_embedding_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4081,7 +4365,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormTokenMaskN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, token mask, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4090,8 +4374,8 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormTokenMaskAuroc": {
-    "value": "0.935",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, attention input, over the 65 models it covers, staircase operators table",
+    "value": "0.927",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, attention input, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4099,7 +4383,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormTokenMaskTprAtOneZeroPercent": {
-    "value": "0.800",
+    "value": "0.766",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4108,7 +4392,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormTokenMaskTprAtTwoZeroPercent": {
-    "value": "0.859",
+    "value": "0.835",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4126,7 +4410,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, channel mask, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4135,8 +4419,8 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskAuroc": {
-    "value": "0.880",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, channel mask, attention input, over the 65 models it covers, staircase operators table",
+    "value": "0.881",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, channel mask, attention input, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4144,7 +4428,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskTprAtOneZeroPercent": {
-    "value": "0.680",
+    "value": "0.682",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, channel mask, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4153,7 +4437,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskTprAtTwoZeroPercent": {
-    "value": "0.762",
+    "value": "0.765",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, channel mask, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4171,8 +4455,8 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskGain": {
-    "value": "-0.055",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, attention input against this table's first row, over the 65 models it covers, staircase operators table",
+    "value": "-0.046",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, attention input against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4180,7 +4464,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskGainLow": {
-    "value": "-0.095",
+    "value": "-0.084",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_channel_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4189,7 +4473,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormChannelMaskGainHigh": {
-    "value": "-0.020",
+    "value": "-0.011",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_channel_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4198,7 +4482,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, gaussian, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4207,8 +4491,8 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianAuroc": {
-    "value": "0.796",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, attention input, over the 65 models it covers, staircase operators table",
+    "value": "0.799",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, attention input, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4216,7 +4500,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianTprAtOneZeroPercent": {
-    "value": "0.532",
+    "value": "0.540",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4225,7 +4509,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianTprAtTwoZeroPercent": {
-    "value": "0.651",
+    "value": "0.655",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4243,8 +4527,8 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianGain": {
-    "value": "-0.139",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, attention input against this table's first row, over the 65 models it covers, staircase operators table",
+    "value": "-0.128",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, attention input against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4252,7 +4536,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianGainLow": {
-    "value": "-0.200",
+    "value": "-0.188",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gaussian_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4261,7 +4545,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGaussianGainHigh": {
-    "value": "-0.083",
+    "value": "-0.073",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gaussian_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4270,7 +4554,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormN": {
-    "value": "37",
+    "value": "65",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4279,8 +4563,8 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormAuroc": {
-    "value": "0.925",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, attention input, over the 37 models it covers, staircase operators table",
+    "value": "0.859",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, attention input, over the 65 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4288,7 +4572,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormTprAtOneZeroPercent": {
-    "value": "0.792",
+    "value": "0.625",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4297,7 +4581,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormTprAtTwoZeroPercent": {
-    "value": "0.897",
+    "value": "0.732",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4306,7 +4590,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormBelowChance": {
-    "value": "0",
+    "value": "4",
     "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, dropout, attention input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4315,8 +4599,8 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGain": {
-    "value": "-0.043",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, attention input against this table's first row, over the 37 models it covers, staircase operators table",
+    "value": "-0.076",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, attention input against this table's first row, over the 65 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4324,7 +4608,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGainLow": {
-    "value": "-0.078",
+    "value": "-0.121",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4333,7 +4617,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionNormGainHigh": {
-    "value": "-0.001",
+    "value": "-0.037",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_attention_norm_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4342,7 +4626,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionResidualTokenMaskN": {
-    "value": "65",
+    "value": "66",
     "meaning": "models covered at the adaptive 0.8 rule, token mask, attention output before the add, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4351,8 +4635,8 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionResidualTokenMaskAuroc": {
-    "value": "0.936",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, attention output before the add, over the 65 models it covers, staircase operators table",
+    "value": "0.933",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, attention output before the add, over the 66 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4360,7 +4644,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionResidualTokenMaskTprAtOneZeroPercent": {
-    "value": "0.812",
+    "value": "0.809",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, attention output before the add, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4369,7 +4653,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionResidualTokenMaskTprAtTwoZeroPercent": {
-    "value": "0.890",
+    "value": "0.887",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, attention output before the add, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4387,8 +4671,8 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionResidualTokenMaskGain": {
-    "value": "+0.001",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, attention output before the add against this table's first row, over the 65 models it covers, staircase operators table",
+    "value": "-0.002",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, attention output before the add against this table's first row, over the 66 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4396,7 +4680,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionResidualTokenMaskGainLow": {
-    "value": "-0.025",
+    "value": "-0.028",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_attention_residual_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4405,7 +4689,7 @@
     ]
   },
   "StaircaseOperatorsBeforeAttentionResidualTokenMaskGainHigh": {
-    "value": "+0.030",
+    "value": "+0.027",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_attention_residual_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4414,7 +4698,7 @@
     ]
   },
   "StaircaseOperatorsBothSublayerInputsTokenMaskN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, token mask, both sublayer inputs, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4423,8 +4707,8 @@
     ]
   },
   "StaircaseOperatorsBothSublayerInputsTokenMaskAuroc": {
-    "value": "0.903",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, both sublayer inputs, over the 65 models it covers, staircase operators table",
+    "value": "0.899",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, both sublayer inputs, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4432,7 +4716,7 @@
     ]
   },
   "StaircaseOperatorsBothSublayerInputsTokenMaskTprAtOneZeroPercent": {
-    "value": "0.724",
+    "value": "0.699",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, both sublayer inputs, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4441,7 +4725,7 @@
     ]
   },
   "StaircaseOperatorsBothSublayerInputsTokenMaskTprAtTwoZeroPercent": {
-    "value": "0.798",
+    "value": "0.787",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, both sublayer inputs, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4459,8 +4743,8 @@
     ]
   },
   "StaircaseOperatorsBothSublayerInputsTokenMaskGain": {
-    "value": "-0.033",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, both sublayer inputs against this table's first row, over the 65 models it covers, staircase operators table",
+    "value": "-0.029",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, both sublayer inputs against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4468,7 +4752,7 @@
     ]
   },
   "StaircaseOperatorsBothSublayerInputsTokenMaskGainLow": {
-    "value": "-0.062",
+    "value": "-0.058",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_both_sublayer_inputs_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4477,7 +4761,7 @@
     ]
   },
   "StaircaseOperatorsBothSublayerInputsTokenMaskGainHigh": {
-    "value": "-0.004",
+    "value": "+0.000",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_both_sublayer_inputs_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4486,7 +4770,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, token mask, MLP input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4496,7 +4780,7 @@
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskAuroc": {
     "value": "0.821",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, MLP input, over the 65 models it covers, staircase operators table",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, MLP input, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4504,7 +4788,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskTprAtOneZeroPercent": {
-    "value": "0.504",
+    "value": "0.502",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, MLP input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4513,7 +4797,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskTprAtTwoZeroPercent": {
-    "value": "0.684",
+    "value": "0.682",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, MLP input, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4531,8 +4815,8 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskGain": {
-    "value": "-0.114",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, MLP input against this table's first row, over the 65 models it covers, staircase operators table",
+    "value": "-0.106",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, MLP input against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4540,7 +4824,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskGainLow": {
-    "value": "-0.156",
+    "value": "-0.151",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4549,7 +4833,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpNormTokenMaskGainHigh": {
-    "value": "-0.073",
+    "value": "-0.064",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_mlp_norm_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4558,7 +4842,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpGaussianN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, gaussian, MLP input after norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4567,8 +4851,8 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpGaussianAuroc": {
-    "value": "0.868",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, MLP input after norm, over the 65 models it covers, staircase operators table",
+    "value": "0.872",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gaussian, MLP input after norm, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4576,7 +4860,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpGaussianTprAtOneZeroPercent": {
-    "value": "0.705",
+    "value": "0.703",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input after norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4585,7 +4869,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpGaussianTprAtTwoZeroPercent": {
-    "value": "0.778",
+    "value": "0.783",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, gaussian, MLP input after norm, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4603,8 +4887,8 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpGaussianGain": {
-    "value": "-0.068",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input after norm against this table's first row, over the 65 models it covers, staircase operators table",
+    "value": "-0.056",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gaussian, MLP input after norm against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4612,7 +4896,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpGaussianGainLow": {
-    "value": "-0.114",
+    "value": "-0.100",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_before_mlp_gaussian_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4621,7 +4905,7 @@
     ]
   },
   "StaircaseOperatorsBeforeMlpGaussianGainHigh": {
-    "value": "-0.025",
+    "value": "-0.014",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_before_mlp_gaussian_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4630,7 +4914,7 @@
     ]
   },
   "StaircaseOperatorsAfterAttentionResidualTokenMaskN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, token mask, after the attention add, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4639,8 +4923,8 @@
     ]
   },
   "StaircaseOperatorsAfterAttentionResidualTokenMaskAuroc": {
-    "value": "0.770",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, after the attention add, over the 65 models it covers, staircase operators table",
+    "value": "0.765",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, after the attention add, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4648,7 +4932,7 @@
     ]
   },
   "StaircaseOperatorsAfterAttentionResidualTokenMaskTprAtOneZeroPercent": {
-    "value": "0.466",
+    "value": "0.443",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, after the attention add, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4657,7 +4941,7 @@
     ]
   },
   "StaircaseOperatorsAfterAttentionResidualTokenMaskTprAtTwoZeroPercent": {
-    "value": "0.592",
+    "value": "0.577",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, after the attention add, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4666,7 +4950,7 @@
     ]
   },
   "StaircaseOperatorsAfterAttentionResidualTokenMaskBelowChance": {
-    "value": "12",
+    "value": "13",
     "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, after the attention add, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4675,8 +4959,8 @@
     ]
   },
   "StaircaseOperatorsAfterAttentionResidualTokenMaskGain": {
-    "value": "-0.166",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, after the attention add against this table's first row, over the 65 models it covers, staircase operators table",
+    "value": "-0.162",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, after the attention add against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4684,7 +4968,7 @@
     ]
   },
   "StaircaseOperatorsAfterAttentionResidualTokenMaskGainLow": {
-    "value": "-0.224",
+    "value": "-0.217",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_after_attention_residual_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4693,7 +4977,7 @@
     ]
   },
   "StaircaseOperatorsAfterAttentionResidualTokenMaskGainHigh": {
-    "value": "-0.110",
+    "value": "-0.109",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_after_attention_residual_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4702,7 +4986,7 @@
     ]
   },
   "StaircaseOperatorsMlpNeuronsChannelMaskN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, channel mask, MLP neurons, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4711,8 +4995,8 @@
     ]
   },
   "StaircaseOperatorsMlpNeuronsChannelMaskAuroc": {
-    "value": "0.802",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, channel mask, MLP neurons, over the 65 models it covers, staircase operators table",
+    "value": "0.806",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, channel mask, MLP neurons, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4729,7 +5013,7 @@
     ]
   },
   "StaircaseOperatorsMlpNeuronsChannelMaskTprAtTwoZeroPercent": {
-    "value": "0.657",
+    "value": "0.661",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, channel mask, MLP neurons, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4747,8 +5031,8 @@
     ]
   },
   "StaircaseOperatorsMlpNeuronsChannelMaskGain": {
-    "value": "-0.134",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, MLP neurons against this table's first row, over the 65 models it covers, staircase operators table",
+    "value": "-0.121",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, channel mask, MLP neurons against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4756,7 +5040,7 @@
     ]
   },
   "StaircaseOperatorsMlpNeuronsChannelMaskGainLow": {
-    "value": "-0.180",
+    "value": "-0.168",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_mlp_neurons_channel_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4765,7 +5049,7 @@
     ]
   },
   "StaircaseOperatorsMlpNeuronsChannelMaskGainHigh": {
-    "value": "-0.087",
+    "value": "-0.074",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_mlp_neurons_channel_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4774,7 +5058,7 @@
     ]
   },
   "StaircaseOperatorsMlpNormOutGainScaleN": {
-    "value": "65",
+    "value": "68",
     "meaning": "models covered at the adaptive 0.8 rule, gain scale, MLP norm output, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4783,8 +5067,8 @@
     ]
   },
   "StaircaseOperatorsMlpNormOutGainScaleAuroc": {
-    "value": "0.896",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gain scale, MLP norm output, over the 65 models it covers, staircase operators table",
+    "value": "0.897",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, gain scale, MLP norm output, over the 68 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4792,7 +5076,7 @@
     ]
   },
   "StaircaseOperatorsMlpNormOutGainScaleTprAtOneZeroPercent": {
-    "value": "0.773",
+    "value": "0.774",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, gain scale, MLP norm output, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4819,8 +5103,8 @@
     ]
   },
   "StaircaseOperatorsMlpNormOutGainScaleGain": {
-    "value": "-0.039",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gain scale, MLP norm output against this table's first row, over the 65 models it covers, staircase operators table",
+    "value": "-0.032",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, gain scale, MLP norm output against this table's first row, over the 68 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4828,7 +5112,7 @@
     ]
   },
   "StaircaseOperatorsMlpNormOutGainScaleGainLow": {
-    "value": "-0.072",
+    "value": "-0.067",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_mlp_norm_out_gain_scale_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4837,7 +5121,7 @@
     ]
   },
   "StaircaseOperatorsMlpNormOutGainScaleGainHigh": {
-    "value": "-0.009",
+    "value": "-0.000",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_mlp_norm_out_gain_scale_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4846,7 +5130,7 @@
     ]
   },
   "StaircaseOperatorsInputPixelsScaleUpN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, scale up, input pixels, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4855,8 +5139,8 @@
     ]
   },
   "StaircaseOperatorsInputPixelsScaleUpAuroc": {
-    "value": "0.746",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, scale up, input pixels, over the 65 models it covers, staircase operators table",
+    "value": "0.752",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, scale up, input pixels, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4864,7 +5148,7 @@
     ]
   },
   "StaircaseOperatorsInputPixelsScaleUpTprAtOneZeroPercent": {
-    "value": "0.453",
+    "value": "0.461",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, scale up, input pixels, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4873,7 +5157,7 @@
     ]
   },
   "StaircaseOperatorsInputPixelsScaleUpTprAtTwoZeroPercent": {
-    "value": "0.591",
+    "value": "0.598",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, scale up, input pixels, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4891,8 +5175,8 @@
     ]
   },
   "StaircaseOperatorsInputPixelsScaleUpGain": {
-    "value": "-0.190",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, scale up, input pixels against this table's first row, over the 65 models it covers, staircase operators table",
+    "value": "-0.176",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, scale up, input pixels against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4900,7 +5184,7 @@
     ]
   },
   "StaircaseOperatorsInputPixelsScaleUpGainLow": {
-    "value": "-0.249",
+    "value": "-0.235",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_input_pixels_scale_up_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4909,7 +5193,7 @@
     ]
   },
   "StaircaseOperatorsInputPixelsScaleUpGainHigh": {
-    "value": "-0.133",
+    "value": "-0.117",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_input_pixels_scale_up_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4918,7 +5202,7 @@
     ]
   },
   "StaircaseOperatorsPostResidualN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, dropout, after both residual adds, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4927,8 +5211,8 @@
     ]
   },
   "StaircaseOperatorsPostResidualAuroc": {
-    "value": "0.832",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, after both residual adds, over the 65 models it covers, staircase operators table",
+    "value": "0.823",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, dropout, after both residual adds, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4936,7 +5220,7 @@
     ]
   },
   "StaircaseOperatorsPostResidualTprAtOneZeroPercent": {
-    "value": "0.658",
+    "value": "0.634",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, dropout, after both residual adds, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4945,7 +5229,7 @@
     ]
   },
   "StaircaseOperatorsPostResidualTprAtTwoZeroPercent": {
-    "value": "0.721",
+    "value": "0.703",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, dropout, after both residual adds, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4963,8 +5247,8 @@
     ]
   },
   "StaircaseOperatorsPostResidualGain": {
-    "value": "-0.103",
-    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, after both residual adds against this table's first row, over the 65 models it covers, staircase operators table",
+    "value": "-0.104",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, dropout, after both residual adds against this table's first row, over the 69 models it covers, staircase operators table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -4972,7 +5256,7 @@
     ]
   },
   "StaircaseOperatorsPostResidualGainLow": {
-    "value": "-0.160",
+    "value": "-0.158",
     "meaning": "lower bound of the 95% bootstrap interval on staircase_operators_post_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4981,7 +5265,7 @@
     ]
   },
   "StaircaseOperatorsPostResidualGainHigh": {
-    "value": "-0.048",
+    "value": "-0.052",
     "meaning": "upper bound of the 95% bootstrap interval on staircase_operators_post_residual_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4990,7 +5274,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormTokenMaskN": {
-    "value": "65",
+    "value": "69",
     "meaning": "models covered at the adaptive 0.8 rule, token mask, attention input, all 12 blocks, staircase bands table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -4999,8 +5283,8 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormTokenMaskAuroc": {
-    "value": "0.935",
-    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, attention input, all 12 blocks, over the 65 models it covers, staircase bands table",
+    "value": "0.927",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, attention input, all 12 blocks, over the 69 models it covers, staircase bands table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -5008,7 +5292,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormTokenMaskTprAtOneZeroPercent": {
-    "value": "0.800",
+    "value": "0.766",
     "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, all 12 blocks, staircase bands table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5017,7 +5301,7 @@
     ]
   },
   "StaircaseBandsBeforeAttentionNormTokenMaskTprAtTwoZeroPercent": {
-    "value": "0.859",
+    "value": "0.835",
     "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, all 12 blocks, staircase bands table",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
@@ -5028,6 +5312,78 @@
   "StaircaseBandsBeforeAttentionNormTokenMaskBelowChance": {
     "value": "2",
     "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, attention input, all 12 blocks, staircase bands table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskN": {
+    "value": "12",
+    "meaning": "models covered at the adaptive 0.8 rule, token mask, attention input, blocks 1 to 4, staircase bands table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskAuroc": {
+    "value": "0.924",
+    "meaning": "mean AUROC at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 1 to 4, over the 12 models it covers, staircase bands table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskTprAtOneZeroPercent": {
+    "value": "0.795",
+    "meaning": "mean TPR at the q0.10 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, blocks 1 to 4, staircase bands table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskTprAtTwoZeroPercent": {
+    "value": "0.902",
+    "meaning": "mean TPR at the q0.20 clean-validation quantile at the adaptive 0.8 rule, token mask, attention input, blocks 1 to 4, staircase bands table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskBelowChance": {
+    "value": "0",
+    "meaning": "models scoring AUROC under 0.5 at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 1 to 4, staircase bands table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskGain": {
+    "value": "-0.053",
+    "meaning": "mean paired AUROC gain at q0.25 at the adaptive 0.8 rule, token mask, attention input, blocks 1 to 4 against this table's first row, over the 12 models it covers, staircase bands table",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskGainLow": {
+    "value": "-0.102",
+    "meaning": "lower bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_1_4_token_mask_gain",
+    "generator": "scripts/paper/tab_staircase.py",
+    "inputs": [
+      "results/coverage/coverage.json",
+      "results/<folder>/psbd_metrics.json (65 models)"
+    ]
+  },
+  "StaircaseBandsBeforeAttentionNormBlocksOneFourTokenMaskGainHigh": {
+    "value": "-0.022",
+    "meaning": "upper bound of the 95% bootstrap interval on staircase_bands_before_attention_norm_blocks_1_4_token_mask_gain",
     "generator": "scripts/paper/tab_staircase.py",
     "inputs": [
       "results/coverage/coverage.json",
@@ -5179,128 +5535,128 @@
     ]
   },
   "SwinCells": {
-    "value": "64",
+    "value": "83",
     "meaning": "Swin cells whose attack cleared the bar and carry PSBD metrics",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinDatasets": {
-    "value": "3",
+    "value": "4",
     "meaning": "datasets with at least 1 implanted Swin cell",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainRecommendedMinusPublished": {
-    "value": "+0.091",
-    "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after residual add, adaptive rule, over 53 cells",
+    "value": "+0.115",
+    "meaning": "Swin paired AUROC gain, token mask, attention input minus dropout, after residual add, adaptive rule, over 80 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainRecommendedMinusPublishedN": {
-    "value": "53",
+    "value": "80",
     "meaning": "cells behind swin_gain_recommended_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainRecommendedMinusPublishedLow": {
-    "value": "+0.044",
+    "value": "+0.070",
     "meaning": "lower bootstrap bound of swin_gain_recommended_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainRecommendedMinusPublishedHigh": {
-    "value": "+0.142",
+    "value": "+0.162",
     "meaning": "upper bootstrap bound of swin_gain_recommended_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainDropoutInputMinusPublished": {
-    "value": "-0.022",
-    "meaning": "Swin paired AUROC gain, dropout, attention input minus dropout, after residual add, adaptive rule, over 56 cells",
+    "value": "+0.020",
+    "meaning": "Swin paired AUROC gain, dropout, attention input minus dropout, after residual add, adaptive rule, over 80 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainDropoutInputMinusPublishedN": {
-    "value": "56",
+    "value": "80",
     "meaning": "cells behind swin_gain_dropout_input_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainDropoutInputMinusPublishedLow": {
-    "value": "-0.084",
+    "value": "-0.037",
     "meaning": "lower bootstrap bound of swin_gain_dropout_input_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainDropoutInputMinusPublishedHigh": {
-    "value": "+0.039",
+    "value": "+0.079",
     "meaning": "upper bootstrap bound of swin_gain_dropout_input_minus_published",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainRecommendedMinusPreResidual": {
-    "value": "+0.128",
-    "meaning": "Swin paired AUROC gain, token mask, attention input minus pre_residual, adaptive rule, over 51 cells",
+    "value": "+0.124",
+    "meaning": "Swin paired AUROC gain, token mask, attention input minus pre_residual, adaptive rule, over 80 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainRecommendedMinusPreResidualN": {
-    "value": "51",
+    "value": "80",
     "meaning": "cells behind swin_gain_recommended_minus_pre_residual",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainRecommendedMinusPreResidualLow": {
-    "value": "+0.064",
+    "value": "+0.077",
     "meaning": "lower bootstrap bound of swin_gain_recommended_minus_pre_residual",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinGainRecommendedMinusPreResidualHigh": {
-    "value": "+0.197",
+    "value": "+0.174",
     "meaning": "upper bootstrap bound of swin_gain_recommended_minus_pre_residual",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5309,25 +5665,25 @@
     "meaning": "Swin training-seed replicate checkpoints on disk",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinRecommendedAurocAdaptive": {
-    "value": "0.968",
-    "meaning": "Swin mean AUROC of the recommended placement at the adaptive rule over 53 cells",
+    "value": "0.969",
+    "meaning": "Swin mean AUROC of the recommended placement at the adaptive rule over 80 cells",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
   "SwinRecommendedN": {
-    "value": "53",
+    "value": "80",
     "meaning": "Swin cells carrying the recommended placement",
     "generator": "scripts/paper/tab_swin.py",
     "inputs": [
-      "results/swin_*/psbd_metrics.json (64 implanted cells)",
+      "results/swin_*/psbd_metrics.json (83 implanted cells)",
       "checkpoints/swin_*/args.json"
     ]
   },
@@ -5372,7 +5728,7 @@
     ]
   },
   "TacLayersEarliestOnsetAttack": {
-    "value": "Blend",
+    "value": "blend",
     "meaning": "the attack with the earliest mean onset layer in the per-layer TAC pass",
     "generator": "scripts/paper/mech_tac_layers.py",
     "inputs": [
@@ -5380,7 +5736,7 @@
     ]
   },
   "TacLayersLatestOnsetAttack": {
-    "value": "TaCT",
+    "value": "tact",
     "meaning": "the attack with the latest mean onset layer in the per-layer TAC pass",
     "generator": "scripts/paper/mech_tac_layers.py",
     "inputs": [

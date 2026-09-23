@@ -4,67 +4,67 @@
     "results/coverage/coverage.json",
     "results/<folder>/psbd_metrics.json (65 cells)"
   ],
-  "written_at": "2026-09-11T04:12:49.532854+00:00",
-  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
+  "written_at": "2026-09-23T11:26:40.658715+00:00",
+  "git_commit": "f1f66f0f3193c870a356da474fc6d456c51a7a19-dirty",
   "macros": {
     "BandFiveEightMinusAllInputSide": {
-      "value": "-0.063",
-      "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_5_8_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 65 cells it covers"
+      "value": "-0.055",
+      "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_5_8_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 71 cells it covers"
     },
     "BandFiveEightMinusAllInputSideLow": {
-      "value": "-0.100",
+      "value": "-0.089",
       "meaning": "lower bound of the 95% bootstrap interval on band_5_8_minus_all_input_side"
     },
     "BandFiveEightMinusAllInputSideHigh": {
-      "value": "-0.031",
+      "value": "-0.026",
       "meaning": "upper bound of the 95% bootstrap interval on band_5_8_minus_all_input_side"
     },
     "BandNineOneTwoMinusAllInputSide": {
-      "value": "-0.062",
-      "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_9_12_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 65 cells it covers"
+      "value": "-0.077",
+      "meaning": "mean paired AUROC delta, `before_attention_norm_blocks_9_12_token_mask` minus `before_attention_norm_token_mask`, at the matched 0.6 rate, over the 71 cells it covers"
     },
     "BandNineOneTwoMinusAllInputSideLow": {
-      "value": "-0.108",
+      "value": "-0.125",
       "meaning": "lower bound of the 95% bootstrap interval on band_9_12_minus_all_input_side"
     },
     "BandNineOneTwoMinusAllInputSideHigh": {
-      "value": "-0.021",
+      "value": "-0.034",
       "meaning": "upper bound of the 95% bootstrap interval on band_9_12_minus_all_input_side"
     },
     "BandOneFourMinusAllResidual": {
-      "value": "-0.062",
-      "meaning": "mean paired AUROC delta, `pre_residual_blocks_1_4` minus `pre_residual`, at the matched 0.6 rate, over the 65 cells it covers"
+      "value": "-0.060",
+      "meaning": "mean paired AUROC delta, `pre_residual_blocks_1_4` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers"
     },
     "BandOneFourMinusAllResidualLow": {
-      "value": "-0.081",
+      "value": "-0.079",
       "meaning": "lower bound of the 95% bootstrap interval on band_1_4_minus_all_residual"
     },
     "BandOneFourMinusAllResidualHigh": {
-      "value": "-0.042",
+      "value": "-0.041",
       "meaning": "upper bound of the 95% bootstrap interval on band_1_4_minus_all_residual"
     },
     "BandFiveEightMinusAllResidual": {
-      "value": "+0.052",
-      "meaning": "mean paired AUROC delta, `pre_residual_blocks_5_8` minus `pre_residual`, at the matched 0.6 rate, over the 65 cells it covers"
+      "value": "+0.043",
+      "meaning": "mean paired AUROC delta, `pre_residual_blocks_5_8` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers"
     },
     "BandFiveEightMinusAllResidualLow": {
-      "value": "+0.027",
+      "value": "+0.018",
       "meaning": "lower bound of the 95% bootstrap interval on band_5_8_minus_all_residual"
     },
     "BandFiveEightMinusAllResidualHigh": {
-      "value": "+0.079",
+      "value": "+0.071",
       "meaning": "upper bound of the 95% bootstrap interval on band_5_8_minus_all_residual"
     },
     "BandNineOneTwoMinusAllResidual": {
-      "value": "+0.033",
-      "meaning": "mean paired AUROC delta, `pre_residual_blocks_9_12` minus `pre_residual`, at the matched 0.6 rate, over the 65 cells it covers"
+      "value": "+0.014",
+      "meaning": "mean paired AUROC delta, `pre_residual_blocks_9_12` minus `pre_residual`, at the matched 0.6 rate, over the 71 cells it covers"
     },
     "BandNineOneTwoMinusAllResidualLow": {
-      "value": "-0.012",
+      "value": "-0.030",
       "meaning": "lower bound of the 95% bootstrap interval on band_9_12_minus_all_residual"
     },
     "BandNineOneTwoMinusAllResidualHigh": {
-      "value": "+0.076",
+      "value": "+0.056",
       "meaning": "upper bound of the 95% bootstrap interval on band_9_12_minus_all_residual"
     }
   }

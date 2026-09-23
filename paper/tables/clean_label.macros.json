@@ -4,15 +4,15 @@
     "checkpoints/<folder>/args.json",
     "configs/psbd_basis.json"
   ],
-  "written_at": "2026-09-11T04:12:14.828802+00:00",
-  "git_commit": "4a04e5dd204b14d8368fb7eeef7092bd331e00d9-dirty",
+  "written_at": "2026-09-23T11:25:55.127382+00:00",
+  "git_commit": "f1f66f0f3193c870a356da474fc6d456c51a7a19-dirty",
   "macros": {
     "SigGtsrbTargetClass": {
       "value": "1",
       "meaning": "the target class of the GTSRB SIG runs with the target tag"
     },
     "SigGtsrbRuns": {
-      "value": "15",
+      "value": "18",
       "meaning": "GTSRB SIG runs at the tagged target class"
     },
     "SigGtsrbRates": {
@@ -48,11 +48,11 @@
       "meaning": "seeds per SVHN and EuroSAT cell"
     },
     "GtsrbDivergedRuns": {
-      "value": "12",
+      "value": "11",
       "meaning": "ViT GTSRB training runs whose clean accuracy collapsed below half the benign reference"
     },
     "GtsrbRunsScored": {
-      "value": "186",
+      "value": "240",
       "meaning": "ViT GTSRB training runs with a recorded clean accuracy"
     },
     "SigGtsrbTlOneFivePercentMeanAsr": {
