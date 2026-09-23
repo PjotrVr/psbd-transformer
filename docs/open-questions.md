@@ -7,6 +7,32 @@ strength something in it asserts.
 
 Opened 2026-09-23 during the no-compute cleanup window.
 
+## Status after the 2026-09-23 evening pass
+
+Read this table first. It says which questions below are closed, which are only
+disclosed in the paper, and which are still open, so nobody re-derives a settled
+one.
+
+| # | Status | What changed |
+|---|---|---|
+| Q1 | Closed | The introduction says the gain is largest at the lowest poison rate, from `\GainsLowestRate` |
+| Q2, Q3 | Partly closed | The k = 20 curve reads its population off disk, 21 cells, and the gain past k = 3 is +0.011 there rather than under 0.003. 44 more cells are queued as GPU jobs (`pbs/vit_k20_panel/`) |
+| Q4, Q24, Q29 | Closed | The panel is 69 compared cells over 6 datasets and every headline macro is rebuilt from the current tree |
+| Q5 | Closed | All 27 declared placements are measured. The 27th was declared under a cache name no sweep writes, `before_attention_residual_dropout`, and `tests/test_canon.py` now holds every id to its cache name |
+| Q6 | Closed | The detector count is a macro read from the registry |
+| Q7, Q8 | Closed | Neither record was missing. Commit 2aea959 moved both under `results/_experiments/`, 2 generators kept the old path, and `experiment_artifact` now resolves either layout |
+| Q15, Q20, Q21 | Disclosed, not resolved | The appendix states that the ViT selection half picks the twin by -0.029 and that the recommendation rests on the Swin selection half (+0.166), seed stability and the mechanism. The Q21 claim is removed |
+| Q19 | Closed | The staircase reads Gaussian noise on both sides of the MLP LayerNorm and the finding is stated as a LayerNorm-side effect |
+| Q22 | Closed | The paper no longer says a benign reading checks a sign convention |
+| Q23 | Disclosed | The paper reports SentiNet's below-chance reading and says the stated mechanism explains chance, not the sign |
+| Q32 | Closed | `method.tex` carries the fractional PSU equation |
+| Q9 to Q14, Q16, Q17, Q18, Q25 to Q28, Q30, Q31, Q33 | Open | Untouched this pass |
+| Q36 | New, open | A CPU node runs float32 where every GPU cache is bfloat16, because `defences.inference` enters autocast only on CUDA. 1 detector moved 7.4e-3 AUROC between the 2. `sw_parity` measures it on PSBD before the 10 CPU-swept Swin cells are pooled with the 80 GPU ones |
+| Q37 | New, disclosed | Against the calibrated IBD-PSC port on the same 69 models PSBD-TM leads by +0.013 AUROC and +0.023 TPR at 10% FPR and trails by 0.002 at 20%. The paper calls it a tie |
+| Q38 | New, disclosed | Token masking restricted to blocks 1 to 4 reads near the top of the ranking on the 12 models that reach the adaptive target and is the worst band on the 65 models read at matched disturbance. `app:bands` says to read a band's n beside its mean |
+| Q39 | New, closed | The paper said PSBD-TM stays at or above 0.9 on BadNets, Blend, LF and BPP. Only BadNets and LF do, and `tab_gains.py` now computes the list |
+| Q40 | New, closed | The weight-detector reproduction said 4 benign models, all 5 WaNet models and BPP named only on CIFAR-10. The record holds 3 benign and 4 WaNet models, and BPP is also named on CIFAR-100 at 1%. `app_weight_detector.py` now writes those counts |
+
 ## Numbers a document asserts and the data does not support
 
 | # | Claim | Where | What the data says | Settles it |
