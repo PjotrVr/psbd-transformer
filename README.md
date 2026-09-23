@@ -279,8 +279,9 @@ spelling.
 ## Notebooks
 
 `notebooks/` is the guided tour and is committed with its outputs. It follows the
-paper rather than the package layout. Start at `00-start-here.ipynb`. Run them
-from the repository root so the packages import:
+paper rather than the package layout. Start at `start-here.ipynb`, and
+`notebooks/README.md` gives the reading order. Run them from the repository root
+so the packages import:
 
 ```bash
 PYTHONPATH=. .venv/bin/jupyter lab
