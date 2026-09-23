@@ -9,7 +9,7 @@ ran clean.
 0.6 is a real constant in this codebase, but a different one. It belongs to
 SHIFT_MATCH_TARGETS, the grid for comparing placements at matched perturbation
 strength. The 2 protocols are both legitimate and a bare literal cannot say which
-one it meant. An import can.
+it meant. An import can.
 """
 
 import json
